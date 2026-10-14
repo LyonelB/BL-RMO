@@ -310,23 +310,40 @@ def probe_snmp(cfg, timeout):
         return _result(False, "Commande snmpget absente (sudo apt install snmp)")
     metrics_cfg = cfg['metrics']
     target = f"{cfg['host']}:{cfg.get('port', 161)}"
-    cmd = ['snmpget', '-v', cfg.get('version', '2c'), '-c', cfg['community'],
-           '-t', str(max(1, int(round(timeout)))), '-r', '0', '-OqvteU', '-m', '',
-           target] + [m['oid'] for m in metrics_cfg]
+    base = ['snmpget', '-v', cfg.get('version', '2c'), '-c', cfg['community'],
+            '-t', str(max(1, int(round(timeout)))), '-r', '0', '-OqvteU', '-m', '', '-Cf', target]
+
+    def _get(oids):
+        return subprocess.run(base + oids, capture_output=True, text=True, timeout=timeout + 3)
+
     t0 = time.perf_counter()
     try:
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout + 3)
+        p = _get([m['oid'] for m in metrics_cfg])
     except subprocess.TimeoutExpired:
         return _result(False, 'Pas de réponse SNMP')
     lat = (time.perf_counter() - t0) * 1000
-    if p.returncode != 0:
-        err = (p.stderr or '').strip().splitlines()
-        msg = err[-1] if err else 'Erreur SNMP'
-        if 'Timeout' in msg:
-            msg = 'Pas de réponse SNMP (communauté ou SNMP désactivé ?)'
+    err = (p.stderr or '').strip()
+
+    if p.returncode != 0 and 'Timeout' in err:
+        hint = ' (essayer la version v1)' if cfg.get('version', '2c') == '2c' else ''
+        return _result(False, f'Pas de réponse SNMP{hint}')
+
+    if p.returncode == 0:
+        lines = p.stdout.rstrip('\n').split('\n')
+    elif 'noSuchName' in err or 'Error in packet' in err:
+        # SNMP v1 : un seul OID inconnu fait échouer toute la requête.
+        # On interroge alors chaque OID séparément.
+        lines = []
+        for m in metrics_cfg:
+            try:
+                q = _get([m['oid']])
+                lines.append(q.stdout.strip() if q.returncode == 0 else 'No Such Object')
+            except subprocess.TimeoutExpired:
+                lines.append('No Such Object')
+    else:
+        msg = err.splitlines()[-1] if err else 'Erreur SNMP'
         return _result(False, msg[:160])
 
-    lines = p.stdout.rstrip('\n').split('\n')
     metrics, warn, missing = [], False, 0
     for i, m in enumerate(metrics_cfg):
         raw = lines[i].strip() if i < len(lines) else ''
@@ -361,8 +378,10 @@ def probe_snmp(cfg, timeout):
     if missing == len(metrics_cfg):
         return _result(True, 'Répond en SNMP, mais aucun OID trouvé', lat, metrics, warn=True)
     if missing:
+        msg = f"{missing} OID absent{'s' if missing > 1 else ''} (vérifier le modèle)"
         warn = True
-    msg = 'Valeur hors seuil' if warn else 'SNMP OK'
+    else:
+        msg = 'Valeur hors seuil' if warn else 'SNMP OK'
     return _result(True, msg, lat, metrics, warn=warn)
 
 

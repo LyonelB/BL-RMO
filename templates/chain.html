@@ -270,10 +270,11 @@ const SNMP_PRESETS = {
     { label: 'CPU',         oid: '.1.3.6.1.2.1.25.3.3.1.2.1', format: 'number', unit: '%', max: 80 },
     { label: 'Température', oid: '.1.3.6.1.4.1.14988.1.1.3.10.0', format: 'number', scale: 0.1, unit: '°C', max: 70 },
   ]},
-  airmax: { label: 'Ubiquiti airMAX (airOS)', metrics: [
+  airmax: { label: 'Ubiquiti airMAX (airOS, SNMP v1)', version: '1', metrics: [
     { label: 'Uptime', oid: '.1.3.6.1.2.1.1.3.0', format: 'uptime' },
     { label: 'Signal', oid: '.1.3.6.1.4.1.41112.1.4.5.1.5.1', format: 'number', unit: 'dBm', min: -70 },
     { label: 'Bruit',  oid: '.1.3.6.1.4.1.41112.1.4.5.1.8.1', format: 'number', unit: 'dBm' },
+    { label: 'CCQ',    oid: '.1.3.6.1.4.1.41112.1.4.5.1.7.1', format: 'number', unit: '%', min: 80 },
   ]},
 };
 
@@ -658,6 +659,7 @@ function addMetric() { snmpMetrics.push({ label: '', oid: '', format: 'number', 
 function applyPreset(k) {
   if (!k) return;
   snmpMetrics = SNMP_PRESETS[k].metrics.map(m => ({ ...m }));
+  if (SNMP_PRESETS[k].version) document.getElementById('c-version').value = SNMP_PRESETS[k].version;
   renderMetrics();
   document.getElementById('snmp-preset').value = '';
 }
