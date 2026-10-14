@@ -57,7 +57,7 @@ SESSION_TIMEOUT = timedelta(minutes=60)
 @app.before_request
 def check_session_timeout():
     # Endpoints exclus du check session (polling automatique)
-    POLLING_ENDPOINTS = ('stream_stats', 'proxy_stream', 'static',
+    POLLING_ENDPOINTS = ('chain_status', 'stream_stats', 'proxy_stream', 'static',
                          'get_stats', 'get_signal_history', 'get_record_status',
                          'pige_status')
     if request.endpoint in POLLING_ENDPOINTS:
@@ -1084,6 +1084,128 @@ def pige_export():
     return send_file(path, mimetype='audio/mpeg', as_attachment=True,
                      download_name=download_name)
 
+# ══════════════════════════════════════════════════════════════════════════
+#  Chaîne de diffusion (CHAIN_MONITOR_PATCH)
+# ══════════════════════════════════════════════════════════════════════════
+chain_monitor = None
+
+
+def _chain_ready():
+    if chain_monitor is None:
+        return jsonify({'status': 'error', 'message': 'Supervision de la chaîne non démarrée'}), 503
+    return None
+
+
+@app.route('/chain')
+@auth.login_required
+def chain_page():
+    # Page de supervision de la chaîne de diffusion
+    return render_template('chain.html')
+
+
+@app.route('/api/chain/status')
+@auth.login_required
+@limiter.exempt
+def chain_status():
+    err = _chain_ready()
+    if err:
+        return err
+    from chain_probe import tools_available
+    return jsonify({'devices': chain_monitor.get_status(), 'tools': tools_available()})
+
+
+@app.route('/api/chain/devices', methods=['GET', 'POST'])
+@auth.login_required
+@limiter.exempt
+def chain_devices():
+    err = _chain_ready()
+    if err:
+        return err
+    if request.method == 'GET':
+        return jsonify({'devices': chain_monitor.list_devices()})
+    try:
+        new_id = chain_monitor.create_device(request.get_json(silent=True) or {})
+    except ValueError as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+    logger.info(f"Chaîne : appareil {new_id} ajouté")
+    return jsonify({'status': 'success', 'id': new_id})
+
+
+@app.route('/api/chain/devices/<int:device_id>', methods=['GET', 'PUT', 'DELETE'])
+@auth.login_required
+@limiter.exempt
+def chain_device(device_id):
+    err = _chain_ready()
+    if err:
+        return err
+    from chain_probe import public_device
+    dev = chain_monitor.get_device(device_id)
+    if not dev:
+        return jsonify({'status': 'error', 'message': 'Appareil introuvable'}), 404
+    if request.method == 'GET':
+        return jsonify(public_device(dev))
+    if request.method == 'DELETE':
+        chain_monitor.delete_device(device_id)
+        logger.info(f"Chaîne : appareil {device_id} ({dev['name']}) supprimé")
+        return jsonify({'status': 'success'})
+    try:
+        chain_monitor.update_device(device_id, request.get_json(silent=True) or {})
+    except ValueError as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+    return jsonify({'status': 'success'})
+
+
+@app.route('/api/chain/reorder', methods=['POST'])
+@auth.login_required
+@limiter.exempt
+def chain_reorder():
+    err = _chain_ready()
+    if err:
+        return err
+    ids = (request.get_json(silent=True) or {}).get('ids') or []
+    try:
+        chain_monitor.reorder(ids)
+    except (TypeError, ValueError):
+        return jsonify({'status': 'error', 'message': 'Ordre invalide'}), 400
+    return jsonify({'status': 'success'})
+
+
+@app.route('/api/chain/test', methods=['POST'])
+@auth.login_required
+@limiter.exempt
+def chain_test():
+    err = _chain_ready()
+    if err:
+        return err
+    try:
+        return jsonify(chain_monitor.test(request.get_json(silent=True) or {}))
+    except ValueError as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+
+
+@app.route('/api/chain/probe/<int:device_id>', methods=['POST'])
+@auth.login_required
+@limiter.exempt
+def chain_probe_now(device_id):
+    err = _chain_ready()
+    if err:
+        return err
+    chain_monitor.trigger(device_id)
+    return jsonify({'status': 'success'})
+
+
+@app.route('/api/chain/events')
+@auth.login_required
+@limiter.exempt
+def chain_events():
+    err = _chain_ready()
+    if err:
+        return err
+    limit = request.args.get('limit', 100, type=int)
+    device_id = request.args.get('device_id', type=int)
+    return jsonify({'events': chain_monitor.get_events(limit, device_id)})
+
+
 # Démarrage du monitor (exécuté aussi bien par Gunicorn que par python app.py)
 try:
     cleanup_orphan_records()
@@ -1092,6 +1214,18 @@ try:
     monitor.start()
 except Exception as e:
     logger.error(f"Erreur démarrage monitor: {e}")
+
+# Démarrage de la supervision de la chaîne (CHAIN_MONITOR_PATCH)
+try:
+    from chain_probe import ChainMonitor
+    chain_monitor = ChainMonitor(
+        'fm_monitor.db',
+        fm_getter=lambda: monitor,
+        alert_getter=lambda: getattr(monitor, 'email_alert', None),
+    )
+    chain_monitor.start()
+except Exception as e:
+    logger.error(f"Erreur démarrage supervision chaîne: {e}")
 
 
 if __name__ == '__main__':

@@ -51,6 +51,8 @@ PACKAGES=(
     libfftw3-dev libsamplerate0-dev libopenblas-dev
     # — Réseau / accès —
     avahi-daemon nginx mkcert libnss3-tools
+    # — Supervision de la chaîne (sondes ping et SNMP) —
+    iputils-ping snmp
 )
 
 log "Installation des paquets système (${#PACKAGES[@]} paquets)…"
