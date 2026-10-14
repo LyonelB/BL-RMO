@@ -81,6 +81,10 @@
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
       Statistiques
     </a>
+    <a href="/pige" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+      Pige
+    </a>
     <a href="/about" class="sidebar-link">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       À propos
@@ -267,6 +271,72 @@
           <audio id="audio-player" preload="none"></audio>
         </div>
 
+
+        <!-- ── Pige audio (résumé, clic = page Pige) ──────────────── -->
+        <a id="pige-widget" href="/pige" class="card block hover:border-blue-300 hover:shadow-sm transition" style="text-decoration:none" title="Ouvrir la pige audio">
+          <div class="flex items-center justify-between mb-2">
+            <span class="section-label flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+              Pige audio
+            </span>
+            <span class="text-xs font-medium text-blue-600">Ouvrir la pige &rarr;</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-1 xl:grid-cols-3 gap-3">
+            <div class="rounded-lg bg-slate-50 px-3 py-2">
+              <div class="section-label mb-1">État</div>
+              <div class="flex items-center gap-2">
+                <span id="pige-w-dot" class="w-2 h-2 rounded-full bg-gray-300"></span>
+                <span class="text-sm font-semibold text-gray-900" id="pige-w-state">...</span>
+              </div>
+            </div>
+            <div class="rounded-lg bg-slate-50 px-3 py-2">
+              <div class="section-label mb-1">Disponible depuis</div>
+              <div class="text-sm font-semibold text-gray-900" id="pige-w-since">-</div>
+            </div>
+            <div class="rounded-lg bg-slate-50 px-3 py-2">
+              <div class="section-label mb-1">Espace pige / libre</div>
+              <div class="text-sm font-semibold text-gray-900 font-mono" id="pige-w-disk">-</div>
+            </div>
+          </div>
+        </a>
+        <script>
+        (function () {
+          const $ = id => document.getElementById(id);
+          const pad = n => String(n).padStart(2, '0');
+          const fmtBytes = b => b == null ? '?' : b >= 1e9 ? (b / 1e9).toFixed(1) + ' Go' : (b / 1e6).toFixed(0) + ' Mo';
+          function fmtSince(ts) {
+            const d = new Date(ts * 1000), now = new Date();
+            const day0 = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+            const diff = Math.round((day0(now) - day0(d)) / 86400000);
+            const hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
+            if (diff === 0) return "Aujourd'hui " + hm;
+            if (diff === 1) return 'Hier ' + hm;
+            return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) + ' ' + hm;
+          }
+          function show(dotClass, state, since, disk) {
+            $('pige-w-dot').className = 'w-2 h-2 rounded-full ' + dotClass;
+            $('pige-w-state').textContent = state;
+            $('pige-w-since').textContent = since;
+            $('pige-w-disk').textContent = disk;
+          }
+          async function refresh() {
+            try {
+              const r = await fetch('/api/pige/status', { credentials: 'include' });
+              if (!r.ok || r.redirected) throw new Error('indisponible');
+              const s = await r.json();
+              const on = s.enabled && s.recording;
+              const dot = on ? 'bg-red-500 animate-pulse' : (s.enabled ? 'bg-amber-500' : 'bg-gray-300');
+              const state = !s.enabled ? 'Désactivée' : on ? 'Enregistrement' : 'Arrêtée';
+              const since = s.segments.length ? fmtSince(s.segments[0].start) : 'Aucun enregistrement';
+              show(dot, state, since, fmtBytes(s.used_bytes) + ' / ' + fmtBytes(s.free_bytes));
+            } catch (e) {
+              show('bg-gray-300', 'Indisponible', '-', '-');
+            }
+          }
+          refresh();
+          setInterval(refresh, 30000);
+        })();
+        </script>
       </div><!-- /col gauche -->
 
       <!-- ══ Col droite : Analyse MPX (RTL-SDR) ══ -->

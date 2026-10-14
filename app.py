@@ -58,7 +58,8 @@ SESSION_TIMEOUT = timedelta(minutes=60)
 def check_session_timeout():
     # Endpoints exclus du check session (polling automatique)
     POLLING_ENDPOINTS = ('stream_stats', 'proxy_stream', 'static',
-                         'get_stats', 'get_signal_history', 'get_record_status')
+                         'get_stats', 'get_signal_history', 'get_record_status',
+                         'pige_status')
     if request.endpoint in POLLING_ENDPOINTS:
         # Vérifier expiration mais NE PAS mettre à jour last_active
         if session.get('logged_in'):
@@ -995,6 +996,93 @@ def mpx_spectrum():
             'fft_size': 512
         })
     return jsonify({'spectrum': [], 'sample_rate': 171000, 'fft_size': 512})
+
+
+# =============================================
+# PIGE AUDIO 24H
+# =============================================
+from pige import PigeStore, PigeError
+
+pige_store = PigeStore()
+
+
+@app.route('/pige')
+@auth.login_required
+def pige_page():
+    """Page de la pige audio"""
+    return render_template('pige.html')
+
+
+@app.route('/api/pige/status')
+@auth.login_required
+@limiter.exempt
+def pige_status():
+    pige_store.reload()
+    return jsonify(pige_store.status())
+
+
+@app.route('/api/pige/segment/<name>')
+@auth.login_required
+@limiter.exempt
+def pige_segment(name):
+    """Sert un segment brut (écoute de contrôle, requêtes Range pour le seek)"""
+    from flask import send_file, abort
+    path = pige_store.segment_path(name)
+    if not path:
+        abort(404)
+    return send_file(path, mimetype='audio/mpeg', conditional=True, max_age=0)
+
+
+@app.route('/api/pige/export')
+@auth.login_required
+@limiter.exempt
+def pige_export():
+    """Exporte un créneau. ?start=&end= en secondes epoch. &check=1 : vérification seule."""
+    from flask import send_file
+    import threading
+    try:
+        start = float(request.args['start'])
+        end = float(request.args['end'])
+    except (KeyError, ValueError):
+        return jsonify({'status': 'error', 'message': 'Paramètres start/end invalides'}), 400
+
+    pige_store.reload()
+    try:
+        if request.args.get('check'):
+            plan = pige_store.plan_export(start, end)
+            return jsonify({'status': 'ok', 'duration': plan['duration'],
+                            'recorded': plan['recorded'], 'gaps': plan['gaps']})
+
+        station = 'radio'
+        try:
+            with open('config.json') as f:
+                station = json.load(f).get('station', {}).get('name') or station
+        except Exception:
+            pass
+        d0, d1 = datetime.fromtimestamp(start), datetime.fromtimestamp(end)
+        title = f"Pige {station} {d0:%d/%m/%Y %H:%M:%S} - {d1:%H:%M:%S}"
+        safe = ''.join(c if c.isalnum() else '-' for c in station).strip('-').lower() or 'radio'
+        download_name = f"pige_{safe}_{d0:%Y%m%d_%H%M%S}-{d1:%H%M%S}.mp3"
+
+        path = pige_store.export(start, end, title=title)
+    except PigeError as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+    except Exception as e:
+        logger.error(f"Erreur export pige : {e}")
+        return jsonify({'status': 'error', 'message': 'Erreur interne pendant l\'export'}), 500
+
+    logger.info(f"Export pige : {download_name}")
+
+    def _cleanup(p):
+        time.sleep(600)
+        try:
+            os.remove(p)
+        except OSError:
+            pass
+    threading.Thread(target=_cleanup, args=(path,), daemon=True).start()
+
+    return send_file(path, mimetype='audio/mpeg', as_attachment=True,
+                     download_name=download_name)
 
 # Démarrage du monitor (exécuté aussi bien par Gunicorn que par python app.py)
 try:

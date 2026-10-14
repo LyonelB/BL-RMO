@@ -81,3 +81,6 @@ templates_backup_*
 
 # Scripts temporaires de migration
 *_to_icecast.py
+
+# Pige audio (enregistrements 24 h)
+pige/
