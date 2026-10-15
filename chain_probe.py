@@ -948,7 +948,9 @@ class ChainMonitor:
             if new != prev:
                 rt['state'] = new
                 rt['last_change'] = rt['last_check']
-                event = (prev, new, res['message'])
+                bad = [f"{m.get('label')} = {m.get('display')}{(' ' + m['unit']) if m.get('unit') else ''}"
+                       for m in res.get('metrics') or [] if m.get('state') == 'warn']
+                event = (prev, new, res['message'] + (' : ' + ', '.join(bad) if bad else ''))
 
         if event:
             prev, new, msg = event
@@ -976,8 +978,10 @@ class ChainMonitor:
             alert = self.alert_getter()
         except Exception:
             pass
-        # send_alert(skip_cooldown=True) ne vérifie pas email.enabled : on le fait ici
-        if alert is None or not (getattr(alert, 'config', None) or {}).get('enabled'):
+        # Même règle que les alertes FM : seul l'interrupteur « alertes email »
+        # (email.alerts_enabled, page Configuration) décide ; send_alert le vérifie aussi.
+        if alert is None or not getattr(alert, 'alerts_enabled', True):
+            logger.info(f"Chaîne : email non envoyé pour {dev['name']} (alertes email coupées)")
             return
         where = f"{dev.get('site', '')} / {dev.get('role', '')}".strip(' /')
         target = (dev.get('config') or {}).get('host') or (dev.get('config') or {}).get('url') or ''
