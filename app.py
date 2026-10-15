@@ -1252,6 +1252,31 @@ def chain_hook_token():
     return jsonify({'status': 'success'})
 
 
+# ── Export des journaux de la chaîne (CHAIN_EXPORT_PATCH) ────────────────
+@app.route('/api/chain/export')
+@auth.login_required
+def chain_export():
+    err = _chain_ready()
+    if err:
+        return err
+    from io import BytesIO
+    from flask import send_file
+    try:
+        if request.args.get('start') and request.args.get('end'):
+            start = datetime.fromisoformat(request.args['start'])
+            end = datetime.fromisoformat(request.args['end'])
+        else:
+            hours = float(request.args.get('hours', 24))
+            end = datetime.now()
+            start = end - timedelta(hours=hours)
+        data, counts = chain_monitor.export_zip(start, end)
+    except ValueError as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+    logger.info(f"Export chaîne {start:%d/%m %H:%M} au {end:%d/%m %H:%M} : {counts}")
+    name = f"blfmo-chaine_{start:%Y%m%d-%H%M}_{end:%Y%m%d-%H%M}.zip"
+    return send_file(BytesIO(data), mimetype='application/zip', as_attachment=True, download_name=name)
+
+
 # Démarrage du monitor (exécuté aussi bien par Gunicorn que par python app.py)
 try:
     cleanup_orphan_records()

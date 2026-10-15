@@ -186,9 +186,18 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
           Journal des changements d'état
         </div>
-        <select id="events-filter" onchange="loadEvents()" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white">
-          <option value="">Tous les appareils</option>
-        </select>
+        <div class="flex items-center gap-2 flex-wrap">
+          <select id="events-filter" onchange="loadEvents()" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white">
+            <option value="">Tous les appareils</option>
+          </select>
+          <span class="flex items-center gap-1" title="Archive ZIP : changements d'état, mesures de chaque sondage, alertes et niveaux FM">
+            <select id="export-hours" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white">
+              <option value="1">1 h</option><option value="6">6 h</option><option value="24" selected>24 h</option>
+              <option value="72">3 jours</option><option value="168">7 jours</option>
+            </select>
+            <button onclick="exportLogs()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
+          </span>
+        </div>
       </div>
       <div id="events" class="text-xs"></div>
     </div>
@@ -759,6 +768,17 @@ function renderFilterOptions() {
   if (sel.dataset.sig !== opts) { sel.innerHTML = opts; sel.value = cur; sel.dataset.sig = opts; }
 }
 
+function localIso(epoch) {
+  const d = new Date(epoch * 1000), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+function exportUrl(startEpoch, endEpoch) {
+  return `/api/chain/export?start=${encodeURIComponent(localIso(startEpoch))}&end=${encodeURIComponent(localIso(endEpoch))}`;
+}
+function exportLogs() {
+  window.location = '/api/chain/export?hours=' + document.getElementById('export-hours').value;
+}
+
 async function loadEvents() {
   const id = document.getElementById('events-filter').value;
   try {
@@ -781,6 +801,7 @@ async function loadEvents() {
         <span class="flex items-center gap-1">${badge(e.from_state, ext)}<span class="text-gray-300">›</span>${badge(e.to_state, ext)}</span>
         ${ext ? `<span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-medium" title="Événement reçu de ${esc(e.source)}">${esc(e.source)} · ${esc(e.probe || '')}</span>` : ''}
         <span class="text-gray-500 truncate flex-1 min-w-[8rem]">${esc(e.message)}</span>
+        <a href="${exportUrl(ts - 600, ts + 600)}" class="listen-link !text-gray-500" title="Exporter les journaux 10 min avant et après cet événement"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> ±10 min</a>
         <a href="/pige?t=${ts}" class="listen-link" title="Ouvrir la pige 30 s avant cet événement">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           Écouter

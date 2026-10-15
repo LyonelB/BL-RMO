@@ -18,7 +18,9 @@ Les appareils sont stockés dans la base SQLite de l'application
 (tables chain_devices et chain_events). Aucune dépendance Python nouvelle :
 requests est déjà dans requirements.txt, ping et snmpget sont des binaires.
 """
+import csv
 import hmac
+import io
 import json
 import secrets
 import logging
@@ -29,6 +31,7 @@ import sqlite3
 import subprocess
 import threading
 import time
+import zipfile
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
@@ -60,6 +63,8 @@ def infer_kind(dev):
 SECRET_MASK = '********'
 HISTORY_LEN = 120          # points de latence gardés en mémoire par appareil
 EVENTS_RETENTION_DAYS = 90
+SAMPLES_RETENTION_DAYS = 7      # mesures brutes (une ligne par sondage)
+EXPORT_MAX_DAYS = 7
 DOWN_EMAIL_MIN_INTERVAL = 300  # secondes entre deux emails "injoignable" pour un même appareil
 
 _HOST_RE = re.compile(r'^[A-Za-z0-9]([A-Za-z0-9\-\.]{0,251}[A-Za-z0-9])?$|^\[?[0-9A-Fa-f:]+\]?$')
@@ -609,6 +614,7 @@ class ChainMonitor:
         self._runtime = {}     # id -> état courant
         self._inflight = set()
         self._external = {}    # (source, probe) -> dernier état reçu
+        self._samples = []     # mesures en attente d'écriture (par lots)
         self._running = False
         self._thread = None
         self._pool = ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix='chain-probe')
@@ -653,6 +659,17 @@ class ChainMonitor:
             cols = [r[1] for r in c.execute('PRAGMA table_info(chain_events)').fetchall()]
             if 'source' not in cols:
                 c.execute('ALTER TABLE chain_events ADD COLUMN source TEXT')
+            c.execute('''CREATE TABLE IF NOT EXISTS chain_samples (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ts TEXT NOT NULL,
+                device_id INTEGER,
+                ok INTEGER,
+                warn INTEGER,
+                latency REAL,
+                message TEXT,
+                metrics TEXT
+            )''')
+            c.execute('CREATE INDEX IF NOT EXISTS idx_chain_samples_ts ON chain_samples(ts)')
             c.execute('''CREATE TABLE IF NOT EXISTS chain_settings (
                 key TEXT PRIMARY KEY,
                 value TEXT
@@ -873,6 +890,7 @@ class ChainMonitor:
 
     def _loop(self):
         last_cleanup = 0
+        last_flush = time.time()
         while self._running:
             now = time.time()
             due = []
@@ -887,10 +905,14 @@ class ChainMonitor:
                         due.append(json.loads(json.dumps(dev)))
             for dev in due:
                 self._pool.submit(self._probe_and_record, dev)
+            if now - last_flush >= 5:
+                last_flush = now
+                self._flush_samples()
             if now - last_cleanup > 3600:
                 last_cleanup = now
                 self._cleanup_events()
             time.sleep(1)
+        self._flush_samples()
 
     def _probe_and_record(self, dev):
         try:
@@ -911,6 +933,10 @@ class ChainMonitor:
             rt['last_check'] = now.isoformat(timespec='seconds')
             rt['result'] = res
             rt['history'].append([int(time.time() * 1000), res['latency_ms'] if res['ok'] else None, res['ok']])
+            mets = [[m.get('label'), m.get('display'), m.get('unit', ''), m.get('state')] for m in res.get('metrics') or []]
+            self._samples.append((now.isoformat(timespec='milliseconds'), did, int(bool(res['ok'])), int(bool(res['warn'])),
+                                  res['latency_ms'], res.get('message', ''),
+                                  json.dumps(mets, ensure_ascii=False) if mets else None))
             prev = rt['state']
             if res['ok']:
                 rt['fails'] = 0
@@ -979,13 +1005,137 @@ class ChainMonitor:
         except Exception as e:
             logger.error(f"Chaîne : envoi email impossible : {e}")
 
+    def _flush_samples(self):
+        with self._lock:
+            batch, self._samples = self._samples, []
+        if not batch:
+            return
+        try:
+            with self._conn() as c:
+                c.executemany('INSERT INTO chain_samples (ts, device_id, ok, warn, latency, message, metrics) '
+                              'VALUES (?,?,?,?,?,?,?)', batch)
+        except Exception as e:
+            logger.error(f"Chaîne : écriture des mesures impossible ({len(batch)} perdues) : {e}")
+
     def _cleanup_events(self):
         limit = (datetime.now() - timedelta(days=EVENTS_RETENTION_DAYS)).isoformat(timespec='seconds')
+        slimit = (datetime.now() - timedelta(days=SAMPLES_RETENTION_DAYS)).isoformat(timespec='seconds')
         try:
             with self._conn() as c:
                 c.execute('DELETE FROM chain_events WHERE timestamp < ?', (limit,))
+                c.execute('DELETE FROM chain_samples WHERE ts < ?', (slimit,))
         except Exception as e:
             logger.error(f"Chaîne : nettoyage du journal impossible : {e}")
+
+    # ── Export pour analyse ──────────────────────────────────────────────
+    def export_zip(self, start, end):
+        """Archive ZIP (CSV) de tout ce qui s'est passé entre start et end (datetime locaux)."""
+        if end <= start:
+            raise ValueError('Période invalide')
+        if end - start > timedelta(days=EXPORT_MAX_DAYS):
+            raise ValueError(f'Période limitée à {EXPORT_MAX_DAYS} jours')
+        self._flush_samples()
+        s_iso, e_iso = start.isoformat(timespec='seconds'), end.isoformat(timespec='seconds')
+        with self._lock:
+            devs = {d['id']: d for d in self._devices.values()}
+
+        def name(did):
+            return devs[did]['name'] if did in devs else f'#{did}'
+
+        def to_csv(header, rows):
+            buf = io.StringIO()
+            w = csv.writer(buf, delimiter=';', lineterminator='\n')
+            w.writerow(header)
+            w.writerows(rows)
+            return buf.getvalue().encode('utf-8-sig')   # BOM : s'ouvre correctement dans Excel/LibreOffice
+
+        files = {}
+        with self._conn() as c:
+            # 1. changements d'état (appareils, sondes, événements externes)
+            rows = c.execute('SELECT * FROM chain_events WHERE timestamp >= ? AND timestamp < ? ORDER BY id',
+                             (s_iso, e_iso)).fetchall()
+            ev = []
+            for r in rows:
+                msg, probe = r['message'], ''
+                if r['source']:
+                    try:
+                        info = json.loads(msg)
+                        msg, probe = info.get('text', ''), info.get('probe', '')
+                    except (TypeError, ValueError):
+                        pass
+                ev.append([r['timestamp'], r['device_name'], r['source'] or 'BL-FMO', probe,
+                           r['from_state'], r['to_state'], msg])
+            files['evenements.csv'] = to_csv(['horodatage', 'appareil', 'source', 'sonde_externe',
+                                              'etat_avant', 'etat_apres', 'detail'], ev)
+
+            # 2. mesures brutes, une ligne par sondage
+            rows = c.execute('SELECT * FROM chain_samples WHERE ts >= ? AND ts < ? ORDER BY ts',
+                             (s_iso, e_iso)).fetchall()
+            sm = []
+            for r in rows:
+                d = devs.get(r['device_id'], {})
+                vals = ''
+                if r['metrics']:
+                    try:
+                        vals = ' | '.join(f"{m[0]}={m[1]}{(' ' + m[2]) if m[2] else ''}{' (!)' if m[3] == 'warn' else ''}"
+                                          for m in json.loads(r['metrics']))
+                    except (TypeError, ValueError, IndexError):
+                        vals = r['metrics']
+                state = 'ok' if r['ok'] and not r['warn'] else ('alerte' if r['ok'] else 'echec')
+                sm.append([r['ts'], name(r['device_id']), 'sonde' if d.get('kind') == 'probe' else 'appareil',
+                           d.get('probe', ''), state,
+                           '' if r['latency'] is None else str(r['latency']).replace('.', ','),
+                           r['message'] or '', vals])
+            files['mesures.csv'] = to_csv(['horodatage', 'nom', 'categorie', 'type_sonde', 'etat',
+                                           'latence_ms', 'message', 'valeurs'], sm)
+
+            # 3. alertes FM et niveaux audio de BL-FMO (tables existantes, si présentes)
+            try:
+                rows = c.execute("SELECT timestamp, alert_type, level_db, duration_seconds, message FROM alerts "
+                                 "WHERE timestamp >= ? AND timestamp < ? ORDER BY timestamp",
+                                 (s_iso.replace('T', ' '), e_iso.replace('T', ' '))).fetchall()
+                files['alertes_fm.csv'] = to_csv(['horodatage', 'type', 'niveau_db', 'duree_s', 'message'],
+                                                 [list(r) for r in rows])
+            except sqlite3.Error:
+                pass
+            try:
+                rows = c.execute("SELECT datetime(timestamp, 'localtime') AS t, level_db, signal_ok FROM audio_levels "
+                                 "WHERE datetime(timestamp, 'localtime') >= ? AND datetime(timestamp, 'localtime') < ? "
+                                 "ORDER BY timestamp",
+                                 (s_iso.replace('T', ' '), e_iso.replace('T', ' '))).fetchall()
+                files['niveaux_fm.csv'] = to_csv(['horodatage', 'niveau_dbfs', 'signal_ok'],
+                                                 [[r[0], str(r[1]).replace('.', ','), r[2]] for r in rows])
+            except sqlite3.Error:
+                pass
+
+        # 4. configuration des appareils, sans secrets
+        conf = []
+        for d in sorted(devs.values(), key=lambda d: (d.get('kind') == 'probe', d['position'], d['id'])):
+            d = public_device(d)
+            cfg = d.get('config') or {}
+            if cfg.get('community'):
+                cfg['community'] = SECRET_MASK
+            conf.append(d)
+        files['appareils.json'] = json.dumps(conf, ensure_ascii=False, indent=2).encode('utf-8')
+
+        files['LISEZMOI.txt'] = (
+            f"Export BL-FMO, chaîne de diffusion\n"
+            f"Période : {start:%d/%m/%Y %H:%M:%S} au {end:%d/%m/%Y %H:%M:%S} (heure locale)\n"
+            f"Généré le {datetime.now():%d/%m/%Y %H:%M:%S}\n\n"
+            "evenements.csv  changements d'état (appareils, sondes, événements externes)\n"
+            "mesures.csv     une ligne par sondage : état, latence, valeurs lues (SNMP, pertes, gigue...)\n"
+            "                (!) signale une valeur hors seuil\n"
+            "alertes_fm.csv  alertes de la réception FM (signal, modulation, RDS...)\n"
+            "niveaux_fm.csv  niveau audio FM reçu, toutes les 5 s\n"
+            "appareils.json  configuration des appareils et sondes (communautés et mots de passe masqués)\n\n"
+            "Fichiers CSV séparés par des points-virgules, encodés en UTF-8.\n"
+        ).encode('utf-8')
+
+        out = io.BytesIO()
+        with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
+            for fname, data in files.items():
+                z.writestr(fname, data)
+        return out.getvalue(), {k: v for k, v in (('evenements', len(ev)), ('mesures', len(sm)))}
 
     # ── Lecture ──────────────────────────────────────────────────────────
     def get_status(self):
