@@ -376,6 +376,19 @@ const SNMP_PRESETS = {
     { label: 'Limite temp.',      oid: '.1.3.6.1.4.1.38508.137.15.2.0', format: 'text', expect: 'off' },
     { label: 'Fréquence',         oid: '.1.3.6.1.4.1.38508.137.17.1.0', format: 'number', scale: 0.000001, unit: 'MHz' },
   ]},
+  deva_rx: { label: 'Deva DB91-RX', version: '2c', metrics: [
+    { label: 'Source active',   oid: '.1.3.6.1.4.1.35833.23.3.1.0',  format: 'enum', labels: '3=Lecteur MP3,4=RTP,5=IP Audio 1,6=IP Audio 2,7=IP Audio 3' },
+    { label: 'Choix source',    oid: '.1.3.6.1.4.1.35833.23.3.2.0',  format: 'enum', labels: '0=Auto,1=Forcé (web),2=Forcé (horaire),3=Forcé (SNMP)' },
+    { label: 'Perte Main',      oid: '.1.3.6.1.4.1.35833.23.3.39.0', format: 'enum', labels: '1=Non,2=Oui', expect: '1' },
+    { label: 'Perte Backup 1',  oid: '.1.3.6.1.4.1.35833.23.3.40.0', format: 'enum', labels: '1=Non,2=Oui', expect: '1' },
+    { label: 'Perte Backup 2',  oid: '.1.3.6.1.4.1.35833.23.3.41.0', format: 'enum', labels: '1=Non,2=Oui', expect: '1' },
+    { label: 'Sortie G (moy.)', oid: '.1.3.6.1.4.1.35833.23.3.4.0',  format: 'number', scale: 0.00390625, unit: 'dB' },
+    { label: 'Sortie D (moy.)', oid: '.1.3.6.1.4.1.35833.23.3.7.0',  format: 'number', scale: 0.00390625, unit: 'dB' },
+    { label: 'Connexions',      oid: '.1.3.6.1.4.1.35833.23.3.42.0', format: 'number' },
+    { label: 'État RTP',        oid: '.1.3.6.1.4.1.35833.23.3.43.1.2.4', format: 'enum', labels: '0=Connexion,1=Réception,2=Erreur', expect: '1' },
+    { label: 'Débit RTP',       oid: '.1.3.6.1.4.1.35833.23.3.43.1.7.4', format: 'number', scale: 0.001, unit: 'kb/s' },
+    { label: 'Firmware',        oid: '.1.3.6.1.4.1.35833.23.1.1.0',  format: 'text' },
+  ]},
   airmax: { label: 'Ubiquiti airMAX (airOS, SNMP v1)', version: '1', metrics: [
     { label: 'Uptime', oid: '.1.3.6.1.2.1.1.3.0', format: 'uptime' },
     { label: 'Signal', oid: '.1.3.6.1.4.1.41112.1.4.5.1.5.1', format: 'number', unit: 'dBm', min: -70 },
@@ -865,11 +878,14 @@ function renderMetrics() {
         <option value="number" ${m.format === 'number' || !m.format ? 'selected' : ''}>Nombre</option>
         <option value="uptime" ${m.format === 'uptime' ? 'selected' : ''}>Durée</option>
         <option value="text" ${m.format === 'text' ? 'selected' : ''}>Texte</option>
+        <option value="enum" ${m.format === 'enum' ? 'selected' : ''}>Liste</option>
       </select>
-      <input type="number" step="any" value="${m.scale ?? 1}" ${m.format && m.format !== 'number' ? 'disabled' : ''} oninput="snmpMetrics[${i}].scale=this.value" title="Échelle">
-      <input value="${esc(m.unit || '')}" placeholder="unité" oninput="snmpMetrics[${i}].unit=this.value">
-      ${m.format === 'text'
-        ? `<input class="col-span-2" value="${esc(m.expect || '')}" placeholder="attendu (ex. Locked)" title="Valeur attendue ; plusieurs possibles séparées par |" oninput="snmpMetrics[${i}].expect=this.value">`
+      ${m.format === 'enum'
+        ? `<input class="col-span-2" value="${esc(m.labels || '')}" placeholder="1=Non,2=Oui" title="Correspondance code=libellé, séparée par des virgules" oninput="snmpMetrics[${i}].labels=this.value">`
+        : `<input type="number" step="any" value="${m.scale ?? 1}" ${m.format && m.format !== 'number' ? 'disabled' : ''} oninput="snmpMetrics[${i}].scale=this.value" title="Échelle">
+      <input value="${esc(m.unit || '')}" placeholder="unité" oninput="snmpMetrics[${i}].unit=this.value">`}
+      ${m.format === 'text' || m.format === 'enum'
+        ? `<input class="col-span-2" value="${esc(m.expect || '')}" placeholder="${m.format === 'enum' ? 'attendu (code ou libellé)' : 'attendu (ex. Locked)'}" title="Valeur attendue ; plusieurs possibles séparées par |" oninput="snmpMetrics[${i}].expect=this.value">`
         : `<input type="number" step="any" value="${m.min ?? ''}" ${m.format === 'uptime' ? 'disabled' : ''} placeholder="min" oninput="snmpMetrics[${i}].min=this.value">
       <input type="number" step="any" value="${m.max ?? ''}" ${m.format === 'uptime' ? 'disabled' : ''} placeholder="max" oninput="snmpMetrics[${i}].max=this.value">`}
       <button type="button" class="icon-btn" title="Retirer" onclick="snmpMetrics.splice(${i},1); renderMetrics()"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>

@@ -180,7 +180,7 @@ def validate_device(data, existing=None):
                 continue
             if not _OID_RE.match(oid):
                 raise ValueError(f"OID invalide : {oid}")
-            fmt = m.get('format') if m.get('format') in ('number', 'uptime', 'text') else 'number'
+            fmt = m.get('format') if m.get('format') in ('number', 'uptime', 'text', 'enum') else 'number'
             metrics.append({
                 'label': (str(m.get('label', '')).strip() or oid)[:40],
                 'oid': oid if oid.startswith('.') else '.' + oid,
@@ -189,7 +189,8 @@ def validate_device(data, existing=None):
                 'unit': str(m.get('unit', '')).strip()[:12],
                 'min': _num(m.get('min'), f'Min ({oid})', allow_none=True) if fmt == 'number' else None,
                 'max': _num(m.get('max'), f'Max ({oid})', allow_none=True) if fmt == 'number' else None,
-                'expect': str(m.get('expect') or '').strip()[:40] if fmt == 'text' else '',
+                'expect': str(m.get('expect') or '').strip()[:40] if fmt in ('text', 'enum') else '',
+                'labels': str(m.get('labels') or '').strip()[:200] if fmt == 'enum' else '',
             })
             if len(metrics) >= 12:
                 break
@@ -435,14 +436,22 @@ def probe_snmp(cfg, timeout):
             item['display'] = 'OID absent'
             item['state'] = 'warn'
             missing += 1
-        elif m['format'] == 'text':
+        elif m['format'] in ('text', 'enum'):
             item['value'] = raw.strip('"')
             item['display'] = item['value'][:60]
+            if m['format'] == 'enum':
+                # « 1=Non,2=Oui » : traduit le code numérique en libellé
+                code = re.search(r'-?\d+', item['value'])
+                code = code.group(0) if code else item['value']
+                labels = dict(p.split('=', 1) for p in re.split(r'[,;]', m.get('labels') or '') if '=' in p)
+                labels = {k.strip(): v.strip() for k, v in labels.items()}
+                item['value'] = code
+                item['display'] = labels.get(code, code)[:60]
             exp = m.get('expect')
             if exp:
                 # plusieurs valeurs acceptées possibles : « Locked|1 »
                 okv = [e.strip().lower() for e in exp.split('|') if e.strip()]
-                if item['value'].strip().lower() in okv:
+                if item['value'].strip().lower() in okv or item['display'].strip().lower() in okv:
                     item['state'] = 'ok'
                 else:
                     item['state'] = 'warn'
