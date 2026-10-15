@@ -189,6 +189,7 @@ def validate_device(data, existing=None):
                 'unit': str(m.get('unit', '')).strip()[:12],
                 'min': _num(m.get('min'), f'Min ({oid})', allow_none=True) if fmt == 'number' else None,
                 'max': _num(m.get('max'), f'Max ({oid})', allow_none=True) if fmt == 'number' else None,
+                'expect': str(m.get('expect') or '').strip()[:40] if fmt == 'text' else '',
             })
             if len(metrics) >= 12:
                 break
@@ -410,9 +411,11 @@ def probe_snmp(cfg, timeout):
 
     if p.returncode == 0:
         lines = p.stdout.rstrip('\n').split('\n')
-    elif 'noSuchName' in err or 'Error in packet' in err:
-        # SNMP v1 : un seul OID inconnu fait échouer toute la requête.
-        # On interroge alors chaque OID séparément.
+    if p.returncode == 0 and len(lines) >= len(metrics_cfg):
+        pass
+    elif p.returncode == 0 or 'noSuchName' in err or 'Error in packet' in err:
+        # Réponse incomplète (certains agents, ex. BW Broadcast, ne renvoient qu'une
+        # valeur par requête) ou SNMP v1 avec un OID inconnu : on interroge chaque OID.
         lines = []
         for m in metrics_cfg:
             try:
@@ -435,6 +438,15 @@ def probe_snmp(cfg, timeout):
         elif m['format'] == 'text':
             item['value'] = raw.strip('"')
             item['display'] = item['value'][:60]
+            exp = m.get('expect')
+            if exp:
+                # plusieurs valeurs acceptées possibles : « Locked|1 »
+                okv = [e.strip().lower() for e in exp.split('|') if e.strip()]
+                if item['value'].strip().lower() in okv:
+                    item['state'] = 'ok'
+                else:
+                    item['state'] = 'warn'
+                    warn = True
         else:
             num = re.search(r'-?\d+(\.\d+)?', raw)
             if not num:

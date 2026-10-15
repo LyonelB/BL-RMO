@@ -53,6 +53,7 @@
     .metric-row { display:grid; grid-template-columns: 1.2fr 2fr 0.9fr 0.7fr 0.7fr 0.7fr 0.7fr 26px; gap:6px; align-items:center; }
     .metric-row input, .metric-row select { border:1px solid #e2e8f0; border-radius:6px; padding:4px 6px; font-size:0.75rem; min-width:0; background:#fff; }
     .metric-row input:disabled { background:#f8fafc; color:#cbd5e1; }
+    .metric-row .col-span-2 { grid-column: span 2 / span 2; }
     @media (max-width: 640px) {
       .metric-row { grid-template-columns: 1fr 1fr 1fr 26px; padding:6px; background:#f8fafc; border-radius:8px; }
     }
@@ -360,6 +361,20 @@ const SNMP_PRESETS = {
     { label: 'Uptime',      oid: '.1.3.6.1.2.1.1.3.0', format: 'uptime' },
     { label: 'CPU',         oid: '.1.3.6.1.2.1.25.3.3.1.2.1', format: 'number', unit: '%', max: 80 },
     { label: 'Température', oid: '.1.3.6.1.4.1.14988.1.1.3.100.1.3.17', format: 'number', scale: 1, unit: '°C', max: 75 },
+  ]},
+  bwtx: { label: 'BW Broadcast TX V3 (SNMP v1)', version: '1', metrics: [
+    { label: 'Puissance directe', oid: '.1.3.6.1.4.1.38508.137.9.15.0', format: 'number', unit: 'W' },
+    { label: 'Puissance réglée',  oid: '.1.3.6.1.4.1.38508.137.17.4.0', format: 'number', unit: 'W' },
+    { label: 'Puissance réfléchie', oid: '.1.3.6.1.4.1.38508.137.9.16.0', format: 'number', unit: 'W', max: 20 },
+    { label: 'Temp. PA',          oid: '.1.3.6.1.4.1.38508.137.9.17.0', format: 'number', unit: '°C', max: 60 },
+    { label: 'Tension PA',        oid: '.1.3.6.1.4.1.38508.137.9.22.0', format: 'number', scale: 0.1, unit: 'V' },
+    { label: 'Courant PSU',       oid: '.1.3.6.1.4.1.38508.137.9.21.0', format: 'number', scale: 0.01, unit: 'A' },
+    { label: 'Déviation crête',   oid: '.1.3.6.1.4.1.38508.137.9.18.0', format: 'number', unit: 'kHz', max: 80 },
+    { label: 'Ventilateur',       oid: '.1.3.6.1.4.1.38508.137.9.9.0',  format: 'number', unit: '' },
+    { label: 'Régulation',        oid: '.1.3.6.1.4.1.38508.137.8.2.0',  format: 'text', expect: 'Locked' },
+    { label: 'Limite ROS',        oid: '.1.3.6.1.4.1.38508.137.15.3.0', format: 'text', expect: 'off' },
+    { label: 'Limite temp.',      oid: '.1.3.6.1.4.1.38508.137.15.2.0', format: 'text', expect: 'off' },
+    { label: 'Fréquence',         oid: '.1.3.6.1.4.1.38508.137.17.1.0', format: 'number', scale: 0.000001, unit: 'MHz' },
   ]},
   airmax: { label: 'Ubiquiti airMAX (airOS, SNMP v1)', version: '1', metrics: [
     { label: 'Uptime', oid: '.1.3.6.1.2.1.1.3.0', format: 'uptime' },
@@ -853,8 +868,10 @@ function renderMetrics() {
       </select>
       <input type="number" step="any" value="${m.scale ?? 1}" ${m.format && m.format !== 'number' ? 'disabled' : ''} oninput="snmpMetrics[${i}].scale=this.value" title="Échelle">
       <input value="${esc(m.unit || '')}" placeholder="unité" oninput="snmpMetrics[${i}].unit=this.value">
-      <input type="number" step="any" value="${m.min ?? ''}" ${m.format && m.format !== 'number' ? 'disabled' : ''} placeholder="min" oninput="snmpMetrics[${i}].min=this.value">
-      <input type="number" step="any" value="${m.max ?? ''}" ${m.format && m.format !== 'number' ? 'disabled' : ''} placeholder="max" oninput="snmpMetrics[${i}].max=this.value">
+      ${m.format === 'text'
+        ? `<input class="col-span-2" value="${esc(m.expect || '')}" placeholder="attendu (ex. Locked)" title="Valeur attendue ; plusieurs possibles séparées par |" oninput="snmpMetrics[${i}].expect=this.value">`
+        : `<input type="number" step="any" value="${m.min ?? ''}" ${m.format === 'uptime' ? 'disabled' : ''} placeholder="min" oninput="snmpMetrics[${i}].min=this.value">
+      <input type="number" step="any" value="${m.max ?? ''}" ${m.format === 'uptime' ? 'disabled' : ''} placeholder="max" oninput="snmpMetrics[${i}].max=this.value">`}
       <button type="button" class="icon-btn" title="Retirer" onclick="snmpMetrics.splice(${i},1); renderMetrics()"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>`).join('');
 }
