@@ -18,7 +18,9 @@ Les appareils sont stockés dans la base SQLite de l'application
 (tables chain_devices et chain_events). Aucune dépendance Python nouvelle :
 requests est déjà dans requirements.txt, ping et snmpget sont des binaires.
 """
+import hmac
 import json
+import secrets
 import logging
 import re
 import shutil
@@ -31,6 +33,7 @@ from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 
 import requests
 
@@ -42,7 +45,7 @@ except Exception:  # pragma: no cover
 
 logger = logging.getLogger(__name__)
 
-PROBE_TYPES = ('ping', 'tcp', 'http', 'snmp', 'icecast', 'fm_local')
+PROBE_TYPES = ('ping', 'burst', 'tcp', 'http', 'snmp', 'icecast', 'fm_local')
 STABLE_STATES = ('unknown', 'up', 'warn', 'down')
 SECRET_MASK = '********'
 HISTORY_LEN = 120          # points de latence gardés en mémoire par appareil
@@ -107,10 +110,11 @@ def validate_device(data, existing=None):
         'site': str(data.get('site', '')).strip()[:40] or 'Studio',
         'role': str(data.get('role', '')).strip()[:40],
         'probe': probe,
-        'interval': _num(data.get('interval'), 'Intervalle', 30, 5, 3600, integer=True),
+        'interval': _num(data.get('interval'), 'Intervalle', 30, 1, 3600, integer=True),
         'timeout': _num(data.get('timeout'), 'Délai', 3, 1, 30),
         'fail_threshold': _num(data.get('fail_threshold'), "Seuil d'échecs", 3, 1, 20, integer=True),
         'alert_email': bool(data.get('alert_email', False)),
+        'alert_on_warn': bool(data.get('alert_on_warn', False)),
         'enabled': bool(data.get('enabled', True)),
         'notes': str(data.get('notes', '')).strip()[:300],
     }
@@ -122,6 +126,14 @@ def validate_device(data, existing=None):
     if probe == 'ping':
         cfg['host'] = _host(raw.get('host'))
         cfg['warn_ms'] = _num(raw.get('warn_ms'), 'Latence max', None, 1, 10000, allow_none=True)
+
+    elif probe == 'burst':
+        cfg['host'] = _host(raw.get('host'))
+        cfg['count'] = _num(raw.get('count'), 'Nombre de pings', 20, 2, 100, integer=True)
+        cfg['spacing_ms'] = _num(raw.get('spacing_ms'), 'Espacement', 50, 10, 1000, integer=True)
+        cfg['loss_pct'] = _num(raw.get('loss_pct'), 'Seuil de pertes', 5, 0, 100)
+        cfg['max_ms'] = _num(raw.get('max_ms'), 'Latence max', 150, 1, 10000)
+        cfg['jitter_ms'] = _num(raw.get('jitter_ms'), 'Gigue max', None, 0.1, 10000, allow_none=True)
 
     elif probe == 'tcp':
         cfg['host'] = _host(raw.get('host'))
@@ -236,6 +248,63 @@ def probe_ping(cfg, timeout):
     if err and ('permitted' in err[-1].lower() or 'permission' in err[-1].lower()):
         return _result(False, "ping non autorisé pour ce service (utiliser une sonde TCP)")
     return _result(False, 'Pas de réponse au ping')
+
+
+_PING_STATS = re.compile(r'(\d+) packets transmitted, (\d+) received')
+_PING_RTT = re.compile(r'= ([\d.]+)/([\d.]+)/([\d.]+)/([\d.]+) ms')
+
+
+def probe_burst(cfg, timeout):
+    """Rafale de pings, équivalent d'une sonde netwatch MikroTik « icmp ».
+
+    Envoie `count` pings espacés de `spacing_ms` et mesure pertes, latence
+    moyenne/maximale et gigue (mdev). Dégradé si pertes > loss_pct, latence
+    max > max_ms ou gigue > jitter_ms. Hors service si aucune réponse.
+    """
+    if not shutil.which('ping'):
+        return _result(False, "Commande ping absente (sudo apt install iputils-ping)")
+    count, spacing = cfg['count'], cfg['spacing_ms'] / 1000.0
+    wait = max(1, int(round(timeout)))
+    cmd = ['ping', '-n', '-q', '-c', str(count), '-i', f'{spacing:.3f}', '-W', str(wait), cfg['host']]
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=count * spacing + wait + 5)
+    except subprocess.TimeoutExpired:
+        return _result(False, 'Rafale de pings bloquée (délai dépassé)')
+    st = _PING_STATS.search(p.stdout)
+    if not st:
+        err = (p.stderr or '').strip().splitlines()
+        msg = err[-1] if err else 'Ping impossible'
+        if 'interval' in msg.lower() or 'flood' in msg.lower():
+            msg = 'Espacement trop court pour ce système (essayer 200 ms)'
+        return _result(False, msg[:160])
+    sent, recv = int(st.group(1)), int(st.group(2))
+    loss = 100.0 * (sent - recv) / sent if sent else 100.0
+    metrics = [{'label': 'Pertes', 'value': loss, 'display': f'{loss:.0f}', 'unit': '%',
+                'state': 'warn' if loss > cfg['loss_pct'] else 'ok'}]
+    if recv == 0:
+        return _result(False, f'Aucune réponse sur {sent} pings', None, metrics)
+
+    rtt = _PING_RTT.search(p.stdout)
+    avg = mx = mdev = None
+    if rtt:
+        avg, mx, mdev = float(rtt.group(2)), float(rtt.group(3)), float(rtt.group(4))
+        metrics.append({'label': 'Latence moy.', 'value': avg, 'display': _fmt_number(avg), 'unit': 'ms', 'state': None})
+        metrics.append({'label': 'Latence max', 'value': mx, 'display': _fmt_number(mx), 'unit': 'ms',
+                        'state': 'warn' if mx > cfg['max_ms'] else None})
+        jit = cfg.get('jitter_ms')
+        metrics.append({'label': 'Gigue', 'value': mdev, 'display': _fmt_number(mdev), 'unit': 'ms',
+                        'state': 'warn' if jit and mdev > jit else None})
+
+    reasons = []
+    if loss > cfg['loss_pct']:
+        reasons.append(f'{loss:.0f} % de pertes')
+    if mx is not None and mx > cfg['max_ms']:
+        reasons.append(f'pic à {_fmt_number(mx)} ms')
+    if cfg.get('jitter_ms') and mdev is not None and mdev > cfg['jitter_ms']:
+        reasons.append(f'gigue {_fmt_number(mdev)} ms')
+    if reasons:
+        return _result(True, 'Dégradé : ' + ', '.join(reasons), avg, metrics, warn=True)
+    return _result(True, f'{recv}/{sent} réponses', avg, metrics)
 
 
 def probe_tcp(cfg, timeout):
@@ -472,6 +541,8 @@ def run_probe(dev, fm_getter=None):
     try:
         if probe == 'ping':
             return probe_ping(cfg, timeout)
+        if probe == 'burst':
+            return probe_burst(cfg, timeout)
         if probe == 'tcp':
             return probe_tcp(cfg, timeout)
         if probe == 'http':
@@ -497,7 +568,7 @@ def tools_available():
 # ══════════════════════════════════════════════════════════════════════════
 
 class ChainMonitor:
-    def __init__(self, db_path='fm_monitor.db', fm_getter=None, alert_getter=None, max_workers=6):
+    def __init__(self, db_path='fm_monitor.db', fm_getter=None, alert_getter=None, max_workers=10):
         self.db_path = db_path
         self.fm_getter = fm_getter
         self.alert_getter = alert_getter
@@ -505,6 +576,7 @@ class ChainMonitor:
         self._devices = {}     # id -> dict
         self._runtime = {}     # id -> état courant
         self._inflight = set()
+        self._external = {}    # (source, probe) -> dernier état reçu
         self._running = False
         self._thread = None
         self._pool = ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix='chain-probe')
@@ -546,6 +618,111 @@ class ChainMonitor:
                 message TEXT
             )''')
             c.execute('CREATE INDEX IF NOT EXISTS idx_chain_events_ts ON chain_events(timestamp)')
+            cols = [r[1] for r in c.execute('PRAGMA table_info(chain_events)').fetchall()]
+            if 'source' not in cols:
+                c.execute('ALTER TABLE chain_events ADD COLUMN source TEXT')
+            c.execute('''CREATE TABLE IF NOT EXISTS chain_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            )''')
+        self._load_external()
+
+    # ── Événements externes (netwatch MikroTik, etc.) ────────────────────
+    def _load_external(self):
+        """Recharge le dernier état connu de chaque sonde externe."""
+        q = '''SELECT e.* FROM chain_events e
+               JOIN (SELECT source, message, MAX(id) AS mid FROM chain_events
+                     WHERE source IS NOT NULL GROUP BY source, json_extract(message, '$.probe')) m
+               ON e.id = m.mid'''
+        try:
+            with self._conn() as c:
+                rows = c.execute(q).fetchall()
+        except sqlite3.Error:
+            rows = []
+        for r in rows:
+            try:
+                info = json.loads(r['message'])
+            except (TypeError, ValueError):
+                continue
+            key = (r['source'], info.get('probe', ''))
+            self._external[key] = {
+                'source': r['source'], 'probe': info.get('probe', ''), 'host': info.get('host', ''),
+                'state': r['to_state'], 'text': info.get('text', ''), 'ts': r['timestamp'],
+            }
+
+    def get_token(self):
+        with self._conn() as c:
+            row = c.execute("SELECT value FROM chain_settings WHERE key='hook_token'").fetchone()
+            if row and row['value']:
+                return row['value']
+            token = secrets.token_urlsafe(18)
+            c.execute("INSERT OR REPLACE INTO chain_settings (key, value) VALUES ('hook_token', ?)", (token,))
+            return token
+
+    def regenerate_token(self):
+        token = secrets.token_urlsafe(18)
+        with self._conn() as c:
+            c.execute("INSERT OR REPLACE INTO chain_settings (key, value) VALUES ('hook_token', ?)", (token,))
+        return token
+
+    def check_token(self, token):
+        return bool(token) and hmac.compare_digest(str(token), self.get_token())
+
+    @staticmethod
+    def _device_host(dev):
+        cfg = dev.get('config') or {}
+        if cfg.get('host'):
+            return cfg['host']
+        if cfg.get('url'):
+            return urlparse(cfg['url']).hostname or ''
+        return ''
+
+    def record_external(self, source, probe, host, state, text=''):
+        """Enregistre un événement reçu d'un équipement tiers (ex. netwatch du CRS).
+
+        state : 'up' ou 'down' (accepte aussi normal/degrade/perdu/retabli).
+        """
+        source = (str(source or '').strip() or 'externe')[:40]
+        probe = str(probe or '').strip()[:40]
+        host = str(host or '').strip()[:64]
+        text = str(text or '').strip()[:200]
+        st = str(state or '').strip().lower()
+        if st in ('up', 'normal', 'ok', 'retabli', 'rétabli', '1', 'true'):
+            st = 'up'
+        elif st in ('down', 'degrade', 'dégradé', 'perdu', 'ko', '0', 'false'):
+            st = 'down'
+        else:
+            raise ValueError("state : 'up' ou 'down' attendu")
+        if not probe:
+            raise ValueError('probe : nom de la sonde requis')
+
+        now = datetime.now().isoformat(timespec='seconds')
+        key = (source, probe)
+        with self._lock:
+            prev = (self._external.get(key) or {}).get('state', 'unknown')
+            self._external[key] = {'source': source, 'probe': probe, 'host': host,
+                                   'state': st, 'text': text, 'ts': now}
+            dev = None
+            if host:
+                for d in sorted(self._devices.values(), key=lambda d: (d['position'], d['id'])):
+                    if self._device_host(d) == host:
+                        dev = d
+                        break
+        payload = json.dumps({'probe': probe, 'host': host, 'text': text}, ensure_ascii=False)
+        with self._conn() as c:
+            c.execute('INSERT INTO chain_events (timestamp, device_id, device_name, from_state, to_state, message, source) '
+                      'VALUES (?,?,?,?,?,?,?)',
+                      (now, dev['id'] if dev else None, dev['name'] if dev else (host or probe),
+                       prev, st, payload, source))
+        level = logging.WARNING if st == 'down' else logging.INFO
+        logger.log(level, f"Chaîne : {source}/{probe} ({host}) {prev} → {st} {text}")
+        return {'device': dev['name'] if dev else None, 'state': st, 'previous': prev}
+
+    def _external_for(self, host):
+        if not host:
+            return []
+        items = [dict(v) for v in self._external.values() if v.get('host') == host]
+        return sorted(items, key=lambda v: (v['source'], v['probe']))
 
     def _load(self):
         with self._conn() as c:
@@ -577,6 +754,7 @@ class ChainMonitor:
             'last_change': last_change,
             'next_due': 0.0,
             'last_email': 0.0,
+            'alert_sent': False,
             'result': None,
             'history': deque(maxlen=HISTORY_LEN),
         }
@@ -746,16 +924,21 @@ class ChainMonitor:
         details = f"Appareil : {dev['name']}\nEmplacement : {where}\nAdresse : {target}\nDétail : {msg}"
         with self._lock:
             rt = self._runtime.get(dev['id'])
+        if rt is None:
+            return
+        bad = new == 'down' or (new == 'warn' and dev.get('alert_on_warn'))
         try:
-            if new == 'down':
-                if rt and time.time() - rt['last_email'] < DOWN_EMAIL_MIN_INTERVAL:
+            if bad and not rt['alert_sent']:
+                if time.time() - rt['last_email'] < DOWN_EMAIL_MIN_INTERVAL:
                     return
-                if rt:
-                    rt['last_email'] = time.time()
+                rt['last_email'] = time.time()
+                rt['alert_sent'] = True
+                what = 'injoignable' if new == 'down' else 'dégradé'
                 threading.Thread(target=alert.send_alert,
-                                 args=(f"Chaîne : {dev['name']} injoignable", details),
+                                 args=(f"Chaîne : {dev['name']} {what}", details),
                                  kwargs={'skip_cooldown': True}, daemon=True).start()
-            elif prev == 'down' and new in ('up', 'warn'):
+            elif not bad and rt['alert_sent'] and new in ('up', 'warn'):
+                rt['alert_sent'] = False
                 threading.Thread(target=alert.send_alert,
                                  args=(f"Chaîne : {dev['name']} rétabli", details),
                                  kwargs={'skip_cooldown': True}, daemon=True).start()
@@ -805,6 +988,7 @@ class ChainMonitor:
                     'message': res.get('message', ''),
                     'metrics': res.get('metrics', []),
                     'history': list(rt['history']),
+                    'external': self._external_for(self._device_host(d)),
                 })
         return out
 
@@ -817,4 +1001,13 @@ class ChainMonitor:
         q += ' ORDER BY id DESC LIMIT ?'
         args.append(max(1, min(int(limit), 1000)))
         with self._conn() as c:
-            return [dict(r) for r in c.execute(q, args).fetchall()]
+            rows = [dict(r) for r in c.execute(q, args).fetchall()]
+        for r in rows:
+            if r.get('source'):
+                try:
+                    info = json.loads(r['message'])
+                    r['probe'] = info.get('probe', '')
+                    r['message'] = info.get('text') or ''
+                except (TypeError, ValueError):
+                    pass
+        return rows

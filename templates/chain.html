@@ -31,6 +31,8 @@
       .chain-card + .chain-card::before { left:24px; top:-18px; width:2px; height:14px; }
       .chain-card + .chain-card::after { left:20px; top:-8px; border:5px solid transparent; border-top:6px solid #cbd5e1; }
     }
+    .listen-link { display:inline-flex; align-items:center; gap:4px; color:#2563eb; font-weight:500; padding:2px 6px; border-radius:6px; }
+    .listen-link:hover { background:#eff6ff; }
     .icon-btn { padding:4px; border-radius:6px; color:#94a3b8; }
     .icon-btn:hover:not(:disabled) { background:#f1f5f9; color:#334155; }
     .icon-btn:disabled { opacity:.3; cursor:default; }
@@ -154,6 +156,32 @@
       <div id="events" class="text-xs"></div>
     </div>
 
+    <!-- ── Remontée externe ─────────────────────────────────────── -->
+    <details class="section" id="hook-section">
+      <summary class="section-title !mb-0 cursor-pointer select-none">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Événements externes (netwatch MikroTik, scripts...)
+      </summary>
+      <div class="mt-4 space-y-3 text-xs text-gray-600">
+        <p>Un équipement tiers peut signaler ses propres sondes à BL-FMO par une requête HTTP. L'événement apparaît dans le journal et sur la carte de l'appareil qui a la même adresse IP.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-[7rem_1fr_auto] gap-2 items-center">
+          <span class="font-medium text-gray-700">URL</span>
+          <code id="hook-url" class="!text-xs break-all"></code><span></span>
+          <span class="font-medium text-gray-700">Jeton</span>
+          <code id="hook-token" class="!text-xs break-all">...</code>
+          <button onclick="regenToken()" class="text-xs text-red-500 hover:text-red-700 justify-self-start">Régénérer</button>
+        </div>
+        <div>
+          <div class="font-medium text-gray-700 mb-1">Paramètres (GET ou POST)</div>
+          <p><code>token</code>, <code>source</code> (ex. CRS-Studio), <code>probe</code> (nom de la sonde), <code>host</code> (IP surveillée), <code>state</code> (<code>up</code> ou <code>down</code>), <code>text</code> (facultatif).</p>
+        </div>
+        <div>
+          <div class="font-medium text-gray-700 mb-1">Exemple RouterOS (à ajouter dans le down-script d'une sonde netwatch)</div>
+          <pre id="hook-example" class="bg-slate-900 text-slate-100 rounded-lg p-3 overflow-x-auto text-[11px] leading-relaxed whitespace-pre"></pre>
+        </div>
+      </div>
+    </details>
+
     <!-- ── Gestion ──────────────────────────────────────────────── -->
     <div class="section">
       <div class="section-title">
@@ -211,12 +239,13 @@
       <details class="rounded-lg border border-gray-100 bg-slate-50 px-3 py-2" open>
         <summary class="text-xs font-medium text-gray-600 cursor-pointer select-none">Fréquence et alertes</summary>
         <div class="grid grid-cols-3 gap-3 mt-3">
-          <label class="field"><span>Intervalle (s)</span><input id="f-interval" type="number" min="5" max="3600" value="30"></label>
+          <label class="field"><span>Intervalle (s)</span><input id="f-interval" type="number" min="1" max="3600" value="30"></label>
           <label class="field"><span>Délai (s)</span><input id="f-timeout" type="number" min="1" max="30" step="0.5" value="3"></label>
           <label class="field"><span>Échecs avant HS</span><input id="f-fails" type="number" min="1" max="20" value="3"></label>
         </div>
         <div class="flex flex-wrap gap-x-5 gap-y-2 mt-3 text-xs text-gray-700">
-          <label class="flex items-center gap-2"><input id="f-alert" type="checkbox" class="rounded"> Alerte email (perte et rétablissement)</label>
+          <label class="flex items-center gap-2"><input id="f-alert" type="checkbox" class="rounded" onchange="document.getElementById('f-alert-warn').disabled=!this.checked"> Alerte email (perte et rétablissement)</label>
+          <label class="flex items-center gap-2"><input id="f-alert-warn" type="checkbox" class="rounded"> aussi en cas d'alerte (dégradé)</label>
           <label class="flex items-center gap-2"><input id="f-enabled" type="checkbox" class="rounded" checked> Sonde active</label>
         </div>
         <label class="field mt-3"><span>Notes</span><input id="f-notes" type="text" maxlength="300" placeholder="Emplacement, accès, contact..."></label>
@@ -243,6 +272,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 const PROBES = {
   ping:     { label: 'Ping',        desc: 'Répond-il sur le réseau ?' },
+  burst:    { label: 'Ping qualité', desc: 'Rafale : pertes, pics, gigue' },
   tcp:      { label: 'Port TCP',    desc: 'Un service écoute-t-il ?' },
   http:     { label: 'Page web',    desc: 'Interface web, code, mot-clé' },
   snmp:     { label: 'SNMP',        desc: 'Valeurs internes (OID)' },
@@ -265,10 +295,10 @@ const SNMP_PRESETS = {
     { label: 'Uptime', oid: '.1.3.6.1.2.1.1.3.0', format: 'uptime' },
     { label: 'Nom',    oid: '.1.3.6.1.2.1.1.5.0', format: 'text' },
   ]},
-  mikrotik: { label: 'MikroTik RouterOS', metrics: [
+  mikrotik: { label: 'MikroTik RouterOS 7', version: '2c', metrics: [
     { label: 'Uptime',      oid: '.1.3.6.1.2.1.1.3.0', format: 'uptime' },
     { label: 'CPU',         oid: '.1.3.6.1.2.1.25.3.3.1.2.1', format: 'number', unit: '%', max: 80 },
-    { label: 'Température', oid: '.1.3.6.1.4.1.14988.1.1.3.10.0', format: 'number', scale: 0.1, unit: '°C', max: 70 },
+    { label: 'Température', oid: '.1.3.6.1.4.1.14988.1.1.3.100.1.3.17', format: 'number', scale: 1, unit: '°C', max: 75 },
   ]},
   airmax: { label: 'Ubiquiti airMAX (airOS, SNMP v1)', version: '1', metrics: [
     { label: 'Uptime', oid: '.1.3.6.1.2.1.1.3.0', format: 'uptime' },
@@ -295,18 +325,36 @@ function csrf() {
   const m = document.querySelector('meta[name="csrf-token"]');
   return m ? m.content : '';
 }
-async function api(url, opts = {}) {
-  const o = Object.assign({ credentials: 'include', headers: {} }, opts);
+let csrfToken = null;
+function csrfHeader() { return csrfToken || csrf(); }
+async function refreshCsrf() {
+  try {
+    const r = await fetch('/api/csrf-token', { credentials: 'include' });
+    csrfToken = (await r.json()).csrf_token;
+  } catch (e) {}
+}
+async function api(url, opts = {}, retried = false) {
+  const o = Object.assign({ credentials: 'include' }, opts);
+  o.headers = Object.assign({}, opts.headers || {});
   if (o.body && typeof o.body !== 'string') {
     o.body = JSON.stringify(o.body);
     o.headers['Content-Type'] = 'application/json';
   }
-  if (o.method && o.method !== 'GET') o.headers['X-CSRFToken'] = csrf();
+  if (o.method && o.method !== 'GET') o.headers['X-CSRFToken'] = csrfHeader();
   const r = await fetch(url, o);
   if (r.status === 401) { window.location = '/login?next=/chain'; throw new Error('Session expirée'); }
-  let data = {};
-  try { data = await r.json(); } catch (e) {}
-  if (!r.ok) throw new Error(data.message || data.error || `Erreur ${r.status}`);
+  let data = null;
+  try { data = await r.clone().json(); } catch (e) {}
+  // Jeton CSRF expiré (page ouverte longtemps) : on en reprend un et on rejoue une fois
+  if (r.status === 400 && !data && !retried) {
+    await refreshCsrf();
+    return api(url, opts, true);
+  }
+  data = data || {};
+  if (!r.ok) {
+    if (r.status === 400 && retried && !data.message) throw new Error('Session expirée : rechargez la page (F5)');
+    throw new Error(data.message || data.error || `Erreur ${r.status}`);
+  }
   return data;
 }
 function ago(iso) {
@@ -432,6 +480,7 @@ function card(d) {
       </div>
       <div class="text-[11px] text-gray-500 mt-0.5 min-h-[1rem] truncate" title="${esc(d.message)}">${esc(d.enabled ? d.message : 'Sonde désactivée')}</div>
       ${metrics ? `<div class="mt-2 space-y-0.5 text-[11px]">${metrics}</div>` : ''}
+      ${externalRows(d)}
       <div class="mt-2 pt-2 border-t border-gray-50 flex items-end justify-between gap-2">
         <div class="text-[10px] text-gray-400 leading-tight">
           <div class="font-mono text-gray-600 text-[11px]">${lat}</div>
@@ -440,6 +489,17 @@ function card(d) {
         ${d.probe === 'fm_local' ? '' : `<canvas class="spark" id="spark-${d.id}" width="110" height="26"></canvas>`}
       </div>
     </div>`;
+}
+
+function externalRows(d) {
+  const ext = d.external || [];
+  if (!ext.length) return '';
+  return `<div class="mt-2 pt-1.5 border-t border-dashed border-gray-100 space-y-0.5 text-[11px]">` + ext.map(x => {
+    const down = x.state === 'down';
+    return `<div class="flex justify-between gap-2" title="${esc(x.source)} · ${esc(x.probe)} · ${esc(x.text)} · ${fmtDate(x.ts)}">
+      <span class="text-gray-400 truncate">${esc(x.source)} · ${esc(x.probe)}</span>
+      <span class="font-mono ${down ? 'text-red-600 font-semibold' : 'text-emerald-700'}">${down ? 'Dégradé' : 'Normal'}</span></div>`;
+  }).join('') + '</div>';
 }
 
 function drawSpark(d) {
@@ -533,14 +593,27 @@ async function loadEvents() {
     const ev = data.events || [];
     const el = document.getElementById('events');
     if (!ev.length) { el.innerHTML = '<div class="text-gray-400 py-3 text-center">Aucun changement d\'état enregistré</div>'; return; }
-    const badge = s => { const st = STATES[s] || STATES.unknown; return `<span class="px-1.5 py-0.5 rounded ${st.pill} font-medium">${esc(st.label)}</span>`; };
-    el.innerHTML = '<div class="divide-y divide-gray-50">' + ev.map(e => `
+    const badge = (s, ext) => {
+      const st = STATES[s] || STATES.unknown;
+      const label = ext ? ({ up: 'Normal', down: 'Dégradé' }[s] || st.label) : st.label;
+      return `<span class="px-1.5 py-0.5 rounded ${st.pill} font-medium">${esc(label)}</span>`;
+    };
+    el.innerHTML = '<div class="divide-y divide-gray-50">' + ev.map(e => {
+      const ts = Math.floor(new Date(e.timestamp).getTime() / 1000);
+      const ext = !!e.source;
+      return `
       <div class="py-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
         <span class="font-mono text-gray-400 w-28 flex-shrink-0">${fmtDate(e.timestamp)}</span>
         <span class="font-medium text-gray-800 w-36 truncate">${esc(e.device_name)}</span>
-        <span class="flex items-center gap-1">${badge(e.from_state)}<span class="text-gray-300">›</span>${badge(e.to_state)}</span>
+        <span class="flex items-center gap-1">${badge(e.from_state, ext)}<span class="text-gray-300">›</span>${badge(e.to_state, ext)}</span>
+        ${ext ? `<span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-medium" title="Événement reçu de ${esc(e.source)}">${esc(e.source)} · ${esc(e.probe || '')}</span>` : ''}
         <span class="text-gray-500 truncate flex-1 min-w-[8rem]">${esc(e.message)}</span>
-      </div>`).join('') + '</div>';
+        <a href="/pige?t=${ts}" class="listen-link" title="Ouvrir la pige 30 s avant cet événement">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Écouter
+        </a>
+      </div>`;
+    }).join('') + '</div>';
   } catch (e) { console.warn(e); }
 }
 
@@ -573,6 +646,19 @@ function renderProbeFields(cfg = {}) {
 
   if (currentProbe === 'ping') {
     f.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${hostField}${warnField()}</div>`;
+  } else if (currentProbe === 'burst') {
+    f.innerHTML = `
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="sm:col-span-1">${hostField}</div>
+        <label class="field"><span>Nombre de pings</span><input id="c-count" type="number" min="2" max="100" value="${cfg.count ?? 20}"></label>
+        <label class="field"><span>Espacement (ms)</span><input id="c-spacing_ms" type="number" min="10" max="1000" value="${cfg.spacing_ms ?? 50}"></label>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <label class="field"><span>Dégradé si pertes > (%)</span><input id="c-loss_pct" type="number" min="0" max="100" step="any" value="${cfg.loss_pct ?? 5}"></label>
+        <label class="field"><span>ou un ping > (ms)</span><input id="c-max_ms" type="number" min="1" step="any" value="${cfg.max_ms ?? 150}"></label>
+        <label class="field"><span>ou gigue > (ms)</span><input id="c-jitter_ms" type="number" min="0.1" step="any" value="${cfg.jitter_ms ?? ''}" placeholder="facultatif"></label>
+      </div>
+      <p class="hint">Équivalent d'une sonde netwatch MikroTik de type <code>icmp</code> : à chaque intervalle, une rafale de pings rapprochés mesure les pertes, la latence et la gigue. Détecte les micro-coupures qu'un ping isolé laisse passer. Réglages du CRS : 20 pings, 50 ms, 5 %, 150 ms, intervalle 10 s.</p>`;
   } else if (currentProbe === 'tcp') {
     f.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">${hostField}
       <label class="field"><span>Port</span><input id="c-port" type="number" min="1" max="65535" value="${cfg.port ?? ''}" placeholder="80"></label>
@@ -684,6 +770,8 @@ async function openEditor(id = null) {
   document.getElementById('f-timeout').value = dev.timeout;
   document.getElementById('f-fails').value = dev.fail_threshold;
   document.getElementById('f-alert').checked = !!dev.alert_email;
+  document.getElementById('f-alert-warn').checked = !!dev.alert_on_warn;
+  document.getElementById('f-alert-warn').disabled = !dev.alert_email;
   document.getElementById('f-enabled').checked = dev.enabled !== false;
   document.getElementById('f-notes').value = dev.notes || '';
   const sites = [...new Set(['Studio', 'Pylône', ...devices.map(d => d.site).filter(Boolean)])];
@@ -705,7 +793,7 @@ function closeEditor() {
 function collect() {
   const cfg = {};
   const get = id => document.getElementById(id);
-  ['host', 'port', 'warn_ms', 'url', 'expect_status', 'keyword', 'username', 'password',
+  ['host', 'port', 'warn_ms', 'count', 'spacing_ms', 'loss_pct', 'max_ms', 'jitter_ms', 'url', 'expect_status', 'keyword', 'username', 'password',
    'community', 'version', 'mount', 'min_listeners'].forEach(k => { if (get('c-' + k)) cfg[k] = get('c-' + k).value.trim(); });
   if (get('c-verify_tls')) cfg.verify_tls = get('c-verify_tls').checked;
   if (currentProbe === 'snmp') cfg.metrics = snmpMetrics.filter(m => (m.oid || '').trim());
@@ -719,6 +807,7 @@ function collect() {
     timeout: get('f-timeout').value,
     fail_threshold: get('f-fails').value,
     alert_email: get('f-alert').checked,
+    alert_on_warn: get('f-alert').checked && get('f-alert-warn').checked,
     enabled: get('f-enabled').checked,
     notes: get('f-notes').value.trim(),
     config: cfg,
@@ -791,6 +880,23 @@ async function addFmLocal() {
     refresh(); setTimeout(refresh, 2000);
   } catch (e) { alert(e.message); }
 }
+
+async function loadHookInfo() {
+  try {
+    const d = await api('/api/chain/hook/info');
+    const url = location.origin + d.path;
+    document.getElementById('hook-url').textContent = url;
+    document.getElementById('hook-token').textContent = d.token;
+    document.getElementById('hook-example').textContent =
+      `:do {/tool fetch url="${url}" http-method=post check-certificate=no output=none \\\n` +
+      `  http-data="token=${d.token}&source=CRS-Studio&probe=faisceau-60&host=192.168.1.60&state=down"} on-error={}`;
+  } catch (e) { console.warn(e); }
+}
+async function regenToken() {
+  if (!confirm("Régénérer le jeton ? Les scripts qui utilisent l'ancien cesseront de fonctionner.")) return;
+  try { await api('/api/chain/hook/token', { method: 'POST' }); loadHookInfo(); } catch (e) { alert(e.message); }
+}
+document.getElementById('hook-section').addEventListener('toggle', e => { if (e.target.open) loadHookInfo(); });
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEditor(); });
 

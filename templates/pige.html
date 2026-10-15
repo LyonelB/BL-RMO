@@ -448,7 +448,17 @@
   // ═══════════════════════════════════════════════
   // INIT
   // ═══════════════════════════════════════════════
-  loadStatus().then(() => quick(15));
+  // CHAIN_HOOK_PATCH : /pige?t=<horodatage> ouvre la pige 30 s avant l'événement
+  loadStatus().then(() => {
+    const t = parseInt(new URLSearchParams(location.search).get('t'), 10);
+    if (!t || !status) { quick(15); return; }
+    $('in-start').value = toInput(t - 30);
+    $('in-end').value = toInput(t + 90);
+    onRangeChange();
+    const f = findSeg(t - 30);
+    if (f) loadSeg(f.seg, f.offset, false);   // pas de lecture auto (navigateurs)
+    else $('play-date').textContent = "Cet instant n'est plus dans la pige";
+  });
   updateSidebarFrequency();
   setInterval(loadStatus, 15000);
   window.addEventListener('resize', renderTimeline);

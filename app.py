@@ -1206,6 +1206,52 @@ def chain_events():
     return jsonify({'events': chain_monitor.get_events(limit, device_id)})
 
 
+# ── Événements externes (CHAIN_HOOK_PATCH) ───────────────────────────────
+@app.route('/api/chain/hook', methods=['GET', 'POST'])
+@csrf.exempt
+@limiter.exempt
+def chain_hook():
+    # Reçoit un événement d'un équipement tiers (netwatch MikroTik...).
+    # Pas de session : l'accès est protégé par le jeton.
+    err = _chain_ready()
+    if err:
+        return err
+    data = {}
+    data.update(request.args.to_dict())
+    data.update(request.form.to_dict())
+    data.update(request.get_json(silent=True) or {})
+    token = data.get('token') or request.headers.get('X-Chain-Token', '')
+    if not chain_monitor.check_token(token):
+        logger.warning(f"Chaîne : jeton invalide depuis {request.remote_addr}")
+        return jsonify({'status': 'error', 'message': 'Jeton invalide'}), 403
+    try:
+        res = chain_monitor.record_external(data.get('source'), data.get('probe'), data.get('host'),
+                                            data.get('state'), data.get('text', ''))
+    except ValueError as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+    return jsonify({'status': 'success', **res})
+
+
+@app.route('/api/chain/hook/info')
+@auth.login_required
+def chain_hook_info():
+    err = _chain_ready()
+    if err:
+        return err
+    return jsonify({'path': '/api/chain/hook', 'token': chain_monitor.get_token()})
+
+
+@app.route('/api/chain/hook/token', methods=['POST'])
+@auth.login_required
+def chain_hook_token():
+    err = _chain_ready()
+    if err:
+        return err
+    chain_monitor.regenerate_token()
+    logger.info("Chaîne : jeton de remontée régénéré")
+    return jsonify({'status': 'success'})
+
+
 # Démarrage du monitor (exécuté aussi bien par Gunicorn que par python app.py)
 try:
     cleanup_orphan_records()
