@@ -31,6 +31,10 @@
       .chain-card + .chain-card::before { left:24px; top:-18px; width:2px; height:14px; }
       .chain-card + .chain-card::after { left:20px; top:-8px; border:5px solid transparent; border-top:6px solid #cbd5e1; }
     }
+    .kind-switch { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .kind-switch button { text-align:left; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px; font-size:0.75rem; font-weight:600; color:#334155; }
+    .kind-switch button span { display:block; font-weight:400; font-size:0.6875rem; opacity:.7; margin-top:1px; }
+    .kind-switch button.active { border-color:#2563eb; background:#eff6ff; color:#1d4ed8; box-shadow:0 0 0 1px #2563eb inset; }
     .listen-link { display:inline-flex; align-items:center; gap:4px; color:#2563eb; font-weight:500; padding:2px 6px; border-radius:6px; }
     .listen-link:hover { background:#eff6ff; }
     .icon-btn { padding:4px; border-radius:6px; color:#94a3b8; }
@@ -116,7 +120,7 @@
     </div>
     <div class="flex items-center gap-2 flex-wrap">
       <div id="summary" class="flex items-center gap-1.5 text-xs"></div>
-      <button onclick="openEditor()" class="flex items-center gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 transition">
+      <button onclick="openEditor(null, 'device')" class="flex items-center gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 transition">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Ajouter un appareil
       </button>
@@ -135,12 +139,44 @@
       <h2 class="text-sm font-semibold text-gray-900">Aucun appareil dans la chaîne</h2>
       <p class="text-xs text-gray-500 mt-1 max-w-md mx-auto">Ajoutez les appareils dans l'ordre du signal : codec studio, faisceau, codec côté émetteur, processeur, émetteur... Chacun est sondé par ping, port TCP, page web, SNMP ou Icecast.</p>
       <div class="mt-4 flex justify-center gap-2 flex-wrap">
-        <button onclick="openEditor()" class="text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5">Ajouter un appareil</button>
+        <button onclick="openEditor(null, 'device')" class="text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5">Ajouter un appareil</button>
         <button onclick="addFmLocal()" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">Ajouter la réception FM de ce BL-FMO</button>
       </div>
     </div>
 
     <div id="chain-flow" class="space-y-2"></div>
+
+    <!-- ── Sondes réseau ────────────────────────────────────────── -->
+    <div id="probes-section" class="section mt-6">
+      <div class="flex items-center justify-between gap-3 flex-wrap mb-3">
+        <div class="section-title !mb-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Sondes réseau
+          <span id="probes-summary" style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8"></span>
+        </div>
+        <button onclick="openEditor(null, 'probe')" class="flex items-center gap-1.5 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Ajouter une sonde
+        </button>
+      </div>
+      <p id="probes-empty" class="hidden text-xs text-gray-500">Aucune sonde. Une sonde mesure la qualité d'un lien (pertes, latence, gigue) sans faire partie de la chaîne : par exemple une rafale de pings vers le faisceau toutes les 10 s.</p>
+      <div id="probes-wrap" class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="text-left text-gray-400 border-b border-gray-100">
+              <th class="py-2 pr-3 font-medium">Sonde</th><th class="py-2 pr-3 font-medium">Cible</th><th class="py-2 pr-3 font-medium">État</th>
+              <th class="py-2 pr-3 font-medium text-right">Pertes</th>
+              <th class="py-2 pr-3 font-medium text-right">Moy.</th>
+              <th class="py-2 pr-3 font-medium text-right">Max</th>
+              <th class="py-2 pr-3 font-medium text-right">Gigue</th>
+              <th class="py-2 pr-3 font-medium">Historique</th>
+              <th class="py-2 font-medium text-right"></th>
+            </tr>
+          </thead>
+          <tbody id="probe-rows"></tbody>
+        </table>
+      </div>
+    </div>
 
     <!-- ── Journal ──────────────────────────────────────────────── -->
     <div class="section mt-6">
@@ -186,14 +222,14 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-        Appareils et ordre de la chaîne
+        Appareils de la chaîne (ordre du signal)
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-xs">
           <thead>
             <tr class="text-left text-gray-400 border-b border-gray-100">
               <th class="py-2 pr-2 w-16">Ordre</th>
-              <th class="py-2 pr-3">Appareil</th>
+              <th class="py-2 pr-3">Nom</th>
               <th class="py-2 pr-3">Site</th>
               <th class="py-2 pr-3">Sonde</th>
               <th class="py-2 pr-3">Cible</th>
@@ -203,6 +239,27 @@
             </tr>
           </thead>
           <tbody id="device-table"></tbody>
+        </table>
+      </div>
+      <div class="section-title mt-6">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+        Sondes réseau
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="text-left text-gray-400 border-b border-gray-100">
+              <th class="py-2 pr-2 w-16">Ordre</th>
+              <th class="py-2 pr-3">Nom</th>
+              <th class="py-2 pr-3">Site</th>
+              <th class="py-2 pr-3">Sonde</th>
+              <th class="py-2 pr-3">Cible</th>
+              <th class="py-2 pr-3 text-right">Intervalle</th>
+              <th class="py-2 pr-3 text-center">Email</th>
+              <th class="py-2 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="probe-table"></tbody>
         </table>
       </div>
     </div>
@@ -218,9 +275,13 @@
     </div>
 
     <div class="px-5 py-4 overflow-y-auto space-y-4 text-sm" id="editor-body">
+      <div class="kind-switch" role="radiogroup" aria-label="Catégorie">
+        <button type="button" data-kind="device" onclick="setKind('device')">Appareil de la chaîne<span>Un maillon du signal : codec, faisceau, émetteur...</span></button>
+        <button type="button" data-kind="probe" onclick="setKind('probe')">Sonde réseau<span>Une mesure de lien : pertes, latence, gigue</span></button>
+      </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <label class="field sm:col-span-1"><span>Nom</span><input id="f-name" type="text" maxlength="60" placeholder="DB91-RX"></label>
-        <label class="field"><span>Site</span><input id="f-site" type="text" maxlength="40" list="sites-list" placeholder="Studio"></label>
+        <label class="field" id="site-field"><span>Site</span><input id="f-site" type="text" maxlength="40" list="sites-list" placeholder="Studio"></label>
         <label class="field"><span>Rôle</span><input id="f-role" type="text" maxlength="40" list="roles-list" placeholder="Codec audio"></label>
       </div>
       <datalist id="sites-list"></datalist>
@@ -312,6 +373,9 @@ let devices = [];          // statut courant (API /status)
 let deviceDefs = {};       // définitions complètes (API /devices) indexées par id
 let tools = {};
 let editing = null;        // id en cours d'édition, ou null
+let editingKind = 'device';
+const chainDevs = () => devices.filter(d => d.kind !== 'probe');
+const probeDevs = () => devices.filter(d => d.kind === 'probe');
 let currentProbe = 'ping';
 let snmpMetrics = [];
 
@@ -386,6 +450,7 @@ async function refresh() {
     tools = data.tools || {};
     renderSummary();
     renderFlow();
+    renderProbes();
     renderTable();
     renderToolsWarning();
     renderFilterOptions();
@@ -417,12 +482,13 @@ function renderToolsWarning() {
 
 function renderFlow() {
   const flow = document.getElementById('chain-flow');
-  document.getElementById('chain-empty').classList.toggle('hidden', devices.length > 0);
-  if (!devices.length) { flow.innerHTML = ''; return; }
+  const list = chainDevs();
+  document.getElementById('chain-empty').classList.toggle('hidden', list.length > 0);
+  if (!list.length) { flow.innerHTML = ''; return; }
 
   // Regroupement par site, dans l'ordre d'apparition
   const sites = [];
-  devices.forEach(d => {
+  list.forEach(d => {
     const name = d.site || 'Sans site';
     let s = sites.find(x => x.name === name && x === sites[sites.length - 1]);
     if (!s) { s = { name, items: [] }; sites.push(s); }
@@ -445,7 +511,52 @@ function renderFlow() {
       </div>`;
   }).join('');
 
-  devices.forEach(d => drawSpark(d));
+  list.forEach(d => drawSpark(d));
+}
+
+function metricOf(d, label) {
+  const m = (d.metrics || []).find(x => x.label === label);
+  return m ? m : null;
+}
+function cellMetric(m, unit) {
+  if (!m) return '<span class="text-gray-300">·</span>';
+  const cls = m.state === 'warn' ? 'text-amber-700 font-semibold' : 'text-gray-800';
+  return `<span class="font-mono ${cls}">${esc(m.display)}</span> <span class="text-gray-400">${unit}</span>`;
+}
+function renderProbes() {
+  const list = probeDevs();
+  const tb = document.getElementById('probe-rows');
+  document.getElementById('probes-empty').classList.toggle('hidden', list.length > 0);
+  document.getElementById('probes-wrap').classList.toggle('hidden', !list.length);
+  const bad = list.filter(d => ['down', 'warn', 'unstable'].includes(d.state)).length;
+  document.getElementById('probes-summary').textContent = list.length
+    ? `${list.length} sonde${list.length > 1 ? 's' : ''}${bad ? ' · ' + bad + ' en alerte' : ''}` : '';
+  tb.innerHTML = list.map(d => {
+    const st = STATES[d.state] || STATES.unknown;
+    const isBurst = d.probe === 'burst';
+    const avg = isBurst ? metricOf(d, 'Latence moy.')
+      : (d.latency_ms != null ? { display: d.latency_ms < 10 ? d.latency_ms.toFixed(1) : Math.round(d.latency_ms), state: null } : null);
+    return `
+    <tr class="border-b border-gray-50 hover:bg-slate-50 ${d.enabled ? '' : 'opacity-50'}">
+      <td class="py-1.5 pr-3 whitespace-nowrap"><span class="font-medium text-gray-800">${esc(d.name)}</span>
+        <div class="text-[10px] text-gray-400">${esc(PROBES[d.probe]?.label || d.probe)} · ${d.interval} s</div></td>
+      <td class="py-1.5 pr-3 font-mono text-gray-500 whitespace-nowrap">${esc(d.target)}</td>
+      <td class="py-1.5 pr-3 whitespace-nowrap" title="${esc(d.message)}">
+        <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${st.dot} ${d.state === 'down' ? 'animate-pulse' : ''}"></span>
+        <span class="font-semibold ${st.text}">${esc(stateLabel(d))}</span></span>
+        <div class="text-[10px] text-gray-400 truncate max-w-[14rem]">${esc(d.enabled ? d.message : 'Sonde désactivée')}</div></td>
+      <td class="py-1.5 pr-3 text-right whitespace-nowrap">${cellMetric(metricOf(d, 'Pertes'), '%')}</td>
+      <td class="py-1.5 pr-3 text-right whitespace-nowrap">${cellMetric(avg, 'ms')}</td>
+      <td class="py-1.5 pr-3 text-right whitespace-nowrap">${cellMetric(metricOf(d, 'Latence max'), 'ms')}</td>
+      <td class="py-1.5 pr-3 text-right whitespace-nowrap">${cellMetric(metricOf(d, 'Gigue'), 'ms')}</td>
+      <td class="py-1.5 pr-3"><canvas class="spark" id="spark-${d.id}" width="110" height="26"></canvas></td>
+      <td class="py-1.5 text-right whitespace-nowrap">
+        <button class="icon-btn" title="Sonder maintenant" onclick="probeNow(${d.id})"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></button>
+        <button class="icon-btn" title="Modifier" onclick="openEditor(${d.id})"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
+      </td>
+    </tr>`;
+  }).join('');
+  list.forEach(d => drawSpark(d));
 }
 
 function siteWorst(items) {
@@ -543,19 +654,24 @@ async function probeNow(id) {
 //  Tableau de gestion
 // ═══════════════════════════════════════════════════════════════════════
 function renderTable() {
-  const tb = document.getElementById('device-table');
-  if (!devices.length) {
-    tb.innerHTML = '<tr><td colspan="8" class="py-4 text-center text-gray-400">Aucun appareil</td></tr>';
+  renderMgmt('device-table', chainDevs(), 'device', 'Aucun appareil');
+  renderMgmt('probe-table', probeDevs(), 'probe', 'Aucune sonde');
+}
+
+function renderMgmt(tbodyId, list, kind, emptyText) {
+  const tb = document.getElementById(tbodyId);
+  if (!list.length) {
+    tb.innerHTML = `<tr><td colspan="8" class="py-4 text-center text-gray-400">${emptyText}</td></tr>`;
     return;
   }
-  tb.innerHTML = devices.map((d, i) => `
+  tb.innerHTML = list.map((d, i) => `
     <tr class="border-b border-gray-50 hover:bg-slate-50">
       <td class="py-1.5 pr-2 whitespace-nowrap">
-        <button class="icon-btn" ${i === 0 ? 'disabled' : ''} onclick="move(${i}, -1)" title="Monter"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg></button>
-        <button class="icon-btn" ${i === devices.length - 1 ? 'disabled' : ''} onclick="move(${i}, 1)" title="Descendre"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+        <button class="icon-btn" ${i === 0 ? 'disabled' : ''} onclick="move('${kind}', ${i}, -1)" title="Monter"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg></button>
+        <button class="icon-btn" ${i === list.length - 1 ? 'disabled' : ''} onclick="move('${kind}', ${i}, 1)" title="Descendre"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
       </td>
       <td class="py-1.5 pr-3"><span class="inline-block w-2 h-2 rounded-full mr-1.5 ${(STATES[d.state] || STATES.unknown).dot}"></span><span class="font-medium text-gray-800">${esc(d.name)}</span>${d.role ? ' <span class="text-gray-400">' + esc(d.role) + '</span>' : ''}</td>
-      <td class="py-1.5 pr-3 text-gray-600">${esc(d.site)}</td>
+      <td class="py-1.5 pr-3 text-gray-600">${kind === 'probe' ? '' : esc(d.site)}</td>
       <td class="py-1.5 pr-3 text-gray-600">${esc(PROBES[d.probe]?.label || d.probe)}</td>
       <td class="py-1.5 pr-3 font-mono text-gray-500 truncate max-w-[14rem]">${esc(d.target)}</td>
       <td class="py-1.5 pr-3 text-right text-gray-600">${d.interval} s</td>
@@ -566,8 +682,8 @@ function renderTable() {
     </tr>`).join('');
 }
 
-async function move(i, dir) {
-  const ids = devices.map(d => d.id);
+async function move(kind, i, dir) {
+  const ids = (kind === 'probe' ? probeDevs() : chainDevs()).map(d => d.id);
   const j = i + dir;
   if (j < 0 || j >= ids.length) return;
   [ids[i], ids[j]] = [ids[j], ids[i]];
@@ -581,8 +697,9 @@ async function move(i, dir) {
 function renderFilterOptions() {
   const sel = document.getElementById('events-filter');
   const cur = sel.value;
-  const opts = '<option value="">Tous les appareils</option>' +
-    devices.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
+  const grp = (label, list) => list.length ? `<optgroup label="${label}">` +
+    list.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('') + '</optgroup>' : '';
+  const opts = '<option value="">Tout</option>' + grp('Appareils', chainDevs()) + grp('Sondes', probeDevs());
   if (sel.dataset.sig !== opts) { sel.innerHTML = opts; sel.value = cur; sel.dataset.sig = opts; }
 }
 
@@ -750,18 +867,33 @@ function applyPreset(k) {
   document.getElementById('snmp-preset').value = '';
 }
 
-async function openEditor(id = null) {
+function setKind(kind) {
+  editingKind = kind;
+  document.querySelectorAll('.kind-switch button').forEach(b => b.classList.toggle('active', b.dataset.kind === kind));
+  document.getElementById('site-field').style.display = kind === 'probe' ? 'none' : '';
+  if (editing == null) {
+    document.getElementById('editor-title').textContent = kind === 'probe' ? 'Ajouter une sonde' : 'Ajouter un appareil';
+    document.getElementById('f-name').placeholder = kind === 'probe' ? 'faisceau-60' : 'DB91-RX';
+    document.getElementById('f-role').placeholder = kind === 'probe' ? 'Faisceau vers le pylône' : 'Codec audio';
+  }
+}
+
+async function openEditor(id = null, kind = 'device') {
   editing = id;
   hideMsg();
-  let dev = { probe: 'ping', interval: 30, timeout: 3, fail_threshold: 3, alert_email: false, enabled: true, config: {} };
+  let dev = kind === 'probe'
+    ? { kind, probe: 'burst', interval: 10, timeout: 1, fail_threshold: 1, alert_email: false, enabled: true,
+        config: { count: 20, spacing_ms: 50, loss_pct: 5, max_ms: 150 } }
+    : { kind, probe: 'ping', interval: 30, timeout: 3, fail_threshold: 3, alert_email: false, enabled: true, config: {} };
   if (id != null) {
     try { dev = await api(`/api/chain/devices/${id}`); }
     catch (e) { alert(e.message); return; }
-  } else {
-    const last = devices[devices.length - 1];
+  } else if (kind === 'device') {
+    const list = chainDevs();
+    const last = list[list.length - 1];
     if (last) dev.site = last.site;
   }
-  document.getElementById('editor-title').textContent = id != null ? `Modifier ${dev.name}` : 'Ajouter un appareil';
+  document.getElementById('editor-title').textContent = id != null ? `Modifier ${dev.name}` : '';
   document.getElementById('btn-delete').classList.toggle('hidden', id == null);
   document.getElementById('f-name').value = dev.name || '';
   document.getElementById('f-site').value = dev.site || '';
@@ -774,11 +906,12 @@ async function openEditor(id = null) {
   document.getElementById('f-alert-warn').disabled = !dev.alert_email;
   document.getElementById('f-enabled').checked = dev.enabled !== false;
   document.getElementById('f-notes').value = dev.notes || '';
-  const sites = [...new Set(['Studio', 'Pylône', ...devices.map(d => d.site).filter(Boolean)])];
+  const sites = [...new Set(['Studio', 'Pylône', ...chainDevs().map(d => d.site).filter(Boolean)])];
   document.getElementById('sites-list').innerHTML = sites.map(s => `<option value="${esc(s)}">`).join('');
   currentProbe = dev.probe;
   renderProbePicker();
   renderProbeFields(dev.config || {});
+  setKind(dev.kind || 'device');
   document.getElementById('editor').classList.remove('hidden');
   document.body.classList.add('overflow-hidden');
   setTimeout(() => document.getElementById('f-name').focus(), 50);
@@ -799,6 +932,7 @@ function collect() {
   if (currentProbe === 'snmp') cfg.metrics = snmpMetrics.filter(m => (m.oid || '').trim());
   return {
     id: editing,
+    kind: editingKind,
     name: get('f-name').value.trim(),
     site: get('f-site').value.trim(),
     role: get('f-role').value.trim(),

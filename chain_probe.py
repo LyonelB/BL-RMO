@@ -47,6 +47,16 @@ logger = logging.getLogger(__name__)
 
 PROBE_TYPES = ('ping', 'burst', 'tcp', 'http', 'snmp', 'icecast', 'fm_local')
 STABLE_STATES = ('unknown', 'up', 'warn', 'down')
+KINDS = ('device', 'probe')   # appareil de la chaîne / sonde réseau
+
+
+def infer_kind(dev):
+    """Catégorie d'une entrée créée avant l'existence du champ 'kind'."""
+    if dev.get('kind') in KINDS:
+        return dev['kind']
+    if dev.get('probe') == 'burst' or dev.get('site') == 'Sondes réseau':
+        return 'probe'
+    return 'device'
 SECRET_MASK = '********'
 HISTORY_LEN = 120          # points de latence gardés en mémoire par appareil
 EVENTS_RETENTION_DAYS = 90
@@ -106,6 +116,7 @@ def validate_device(data, existing=None):
         raise ValueError("Type de sonde inconnu")
 
     dev = {
+        'kind': data.get('kind') if data.get('kind') in KINDS else infer_kind(data),
         'name': name[:60],
         'site': str(data.get('site', '')).strip()[:40] or 'Studio',
         'role': str(data.get('role', '')).strip()[:40],
@@ -704,7 +715,8 @@ class ChainMonitor:
                                    'state': st, 'text': text, 'ts': now}
             dev = None
             if host:
-                for d in sorted(self._devices.values(), key=lambda d: (d['position'], d['id'])):
+                for d in sorted(self._devices.values(),
+                                key=lambda d: (d.get('kind') == 'probe', d['position'], d['id'])):
                     if self._device_host(d) == host:
                         dev = d
                         break
@@ -736,6 +748,7 @@ class ChainMonitor:
                     continue
                 dev['id'] = r['id']
                 dev['position'] = r['position']
+                dev['kind'] = infer_kind(dev)
                 self._devices[r['id']] = dev
                 rt = self._runtime.get(r['id'])
                 if rt is None:
@@ -970,6 +983,7 @@ class ChainMonitor:
                     display = rt['state']
                 out.append({
                     'id': d['id'],
+                    'kind': d.get('kind', 'device'),
                     'name': d['name'],
                     'site': d.get('site', ''),
                     'role': d.get('role', ''),
@@ -988,7 +1002,7 @@ class ChainMonitor:
                     'message': res.get('message', ''),
                     'metrics': res.get('metrics', []),
                     'history': list(rt['history']),
-                    'external': self._external_for(self._device_host(d)),
+                    'external': self._external_for(self._device_host(d)) if d.get('kind') != 'probe' else [],
                 })
         return out
 
