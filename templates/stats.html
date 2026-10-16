@@ -129,12 +129,13 @@
               <th class="pb-2 pr-4 text-xs font-semibold text-gray-400 uppercase tracking-wide">Durée (s)</th>
               <th class="pb-2 pr-4 text-xs font-semibold text-gray-400 uppercase tracking-wide">Niveau perte / retour</th>
               <th class="pb-2 pr-4 text-xs font-semibold text-gray-400 uppercase tracking-wide">Statut</th>
-              <th class="pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Emails</th>
+              <th class="pb-2 pr-4 text-xs font-semibold text-gray-400 uppercase tracking-wide">Emails</th>
+              <th class="pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Pige</th>
             </tr>
           </thead>
           <tbody id="alerts-tbody" class="divide-y divide-gray-50">
             <tr>
-              <td colspan="7" class="py-8 text-center text-xs text-gray-400">Chargement…</td>
+              <td colspan="8" class="py-8 text-center text-xs text-gray-400">Chargement…</td>
             </tr>
           </tbody>
         </table>
@@ -175,7 +176,26 @@
   // ═══════════════════════════════════════════════
   // HISTORIQUE ALERTES
   // ═══════════════════════════════════════════════
+  // Pige : ce qui est encore enregistré (24 h par défaut), pour proposer l'écoute
+  let pigeFrom = null;
+  async function loadPigeRange() {
+    try {
+      const r = await fetch('/api/pige/status', {credentials: 'include'});
+      const st = await r.json();
+      pigeFrom = st.segments && st.segments.length ? st.segments[0].start : null;
+    } catch (e) { pigeFrom = null; }
+  }
+  function pigeLinks(startIso, endIso) {
+    const t0 = Math.floor(new Date(startIso).getTime() / 1000);
+    if (!pigeFrom || t0 < pigeFrom) return '<span class="text-xs text-gray-300">hors pige</span>';
+    const t1 = endIso ? Math.floor(new Date(endIso).getTime() / 1000) : t0 + 90;
+    const a = t0 - 30, b = Math.min(t1 + 30, Math.floor(Date.now() / 1000));
+    return `<a href="/pige?t=${t0}" class="text-xs font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Ouvrir la pige 30 s avant l'alerte">Écouter</a>`
+         + `<a href="/api/pige/export?start=${a}&end=${b}" class="text-xs font-medium text-blue-600 hover:text-blue-800" title="Extrait MP3 de 30 s avant à 30 s après">MP3</a>`;
+  }
+
   async function loadAlertsHistory() {
+    await loadPigeRange();
     try {
       const response = await fetch('/api/alerts/history/grouped', {credentials: 'include'});
       const data = await response.json();
@@ -185,7 +205,7 @@
         const tbody  = document.getElementById('alerts-tbody');
 
         if (alerts.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-xs text-gray-400">Aucune alerte enregistrée</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" class="py-8 text-center text-xs text-gray-400">Aucune alerte enregistrée</td></tr>';
           return;
         }
 
@@ -232,14 +252,15 @@
               <td class="py-2.5 pr-4 text-xs font-semibold text-gray-800">${alert.duration}s</td>
               <td class="py-2.5 pr-4 text-xs font-mono">${levelDisplay} dB</td>
               <td class="py-2.5 pr-4">${statusBadge}</td>
-              <td class="py-2.5">${emailInfo}</td>
+              <td class="py-2.5 pr-4">${emailInfo}</td>
+              <td class="py-2.5 whitespace-nowrap">${pigeLinks(alert.start_time, alert.end_time)}</td>
             </tr>`;
         }).join('');
       }
     } catch (error) {
       console.error('Erreur historique alertes:', error);
       document.getElementById('alerts-tbody').innerHTML =
-        '<tr><td colspan="7" class="py-8 text-center text-xs text-red-500">Erreur de chargement</td></tr>';
+        '<tr><td colspan="8" class="py-8 text-center text-xs text-red-500">Erreur de chargement</td></tr>';
     }
   }
 
