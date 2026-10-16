@@ -673,6 +673,7 @@ class ChainMonitor:
         self._inflight = set()
         self._external = {}    # (source, probe) -> dernier état reçu
         self._samples = []     # mesures en attente d'écriture (par lots)
+        self._trap_last_id = None   # dernier trap SNMP traité (journaux syslog.db)
         self._running = False
         self._thread = None
         self._pool = ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix='chain-probe')
@@ -966,11 +967,42 @@ class ChainMonitor:
             if now - last_flush >= 5:
                 last_flush = now
                 self._flush_samples()
+            self._check_traps()
             if now - last_cleanup > 3600:
                 last_cleanup = now
                 self._cleanup_events()
             time.sleep(1)
         self._flush_samples()
+
+    def _check_traps(self):
+        """Un trap SNMP reçu (service syslog) déclenche un relevé immédiat de l'appareil émetteur."""
+        sys_db = os.path.join(os.path.dirname(os.path.abspath(self.db_path)), 'syslog.db')
+        if not os.path.exists(sys_db):
+            return
+        try:
+            con = sqlite3.connect(sys_db, timeout=2)
+            try:
+                if self._trap_last_id is None:
+                    row = con.execute("SELECT MAX(id) FROM logs").fetchone()
+                    self._trap_last_id = row[0] or 0
+                    return
+                rows = con.execute("SELECT id, src FROM logs WHERE id > ? AND program = 'trap' ORDER BY id",
+                                   (self._trap_last_id,)).fetchall()
+                last = con.execute("SELECT MAX(id) FROM logs").fetchone()[0] or self._trap_last_id
+            finally:
+                con.close()
+        except sqlite3.Error:
+            return
+        self._trap_last_id = last
+        if not rows:
+            return
+        srcs = {r[1] for r in rows}
+        with self._lock:
+            targets = [d['id'] for d in self._devices.values() if self._device_host(d) in srcs and d.get('enabled', True)]
+        for did in targets:
+            self.trigger(did)
+        if targets:
+            logger.info(f"Chaîne : trap SNMP reçu, relevé immédiat de {len(targets)} appareil(s)")
 
     def _probe_and_record(self, dev):
         try:

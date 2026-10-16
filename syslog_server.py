@@ -42,6 +42,8 @@ DEFAULTS = {
     'bind': '0.0.0.0',
     'retention_days': 90,
     'max_rows': 3_000_000,      # garde-fou disque (≈ 600 Mo) en cas d'appareil trop bavard
+    'trap_port': 162,           # traps SNMP (0 : désactivé)
+    'trap_community': '',       # vide : traps acceptés quelle que soit la communauté
 }
 
 SEVERITIES = ['Urgence', 'Alerte', 'Critique', 'Erreur', 'Avertissement', 'Notice', 'Info', 'Debug']
@@ -304,6 +306,7 @@ class Receiver:
         self.stop_evt = threading.Event()
         self.received = 0
         self.dropped = 0
+        self.traps = 0
         self.started = datetime.now().isoformat(timespec='seconds')
 
     def run(self):
@@ -319,6 +322,8 @@ class Receiver:
         logger.info(f"Réception syslog sur UDP {self.cfg['bind']}:{self.cfg['port']}, "
                     f"conservation {self.cfg['retention_days']} jours")
         threading.Thread(target=self._writer, daemon=True).start()
+        if int(self.cfg.get('trap_port') or 0):
+            threading.Thread(target=self._traps, daemon=True).start()
         while not self.stop_evt.is_set():
             try:
                 data, addr = sock.recvfrom(8192)
@@ -337,6 +342,57 @@ class Receiver:
                     self.dropped += 1
         sock.close()
         self._flush()
+
+    def _queue(self, rec):
+        with self.lock:
+            if len(self.queue) < self.MAX_QUEUE:
+                self.queue.append(rec)
+                return True
+            self.dropped += 1
+            return False
+
+    def _traps(self):
+        """Réception des traps SNMP (v1, v2c) : une ligne de journal par trap, programme « trap »."""
+        from snmp_traps import decode, translate, inform_response, TrapError
+        port = int(self.cfg['trap_port'])
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            sock.bind((self.cfg['bind'], port))
+        except OSError as e:
+            logger.error(f"Traps SNMP : port UDP {port} indisponible ({e}), réception des traps désactivée")
+            return
+        sock.settimeout(1.0)
+        want = str(self.cfg.get('trap_community') or '')
+        logger.info(f"Réception des traps SNMP sur UDP {self.cfg['bind']}:{port}")
+        while not self.stop_evt.is_set():
+            try:
+                data, addr = sock.recvfrom(8192)
+            except socket.timeout:
+                continue
+            except OSError:
+                continue
+            ts = datetime.now().isoformat(timespec='milliseconds')
+            try:
+                trap = decode(data)
+            except (TrapError, IndexError, ValueError) as e:
+                self._queue({'ts': ts, 'src': addr[0], 'host': '', 'facility': 1, 'severity': 4,
+                             'program': 'trap', 'message': f'Trap illisible : {e}'})
+                continue
+            if want and trap['community'] != want:
+                logger.warning(f"Trap refusé de {addr[0]} : communauté inattendue")
+                continue
+            if trap['inform']:
+                try:
+                    resp = inform_response(data)
+                    if resp:
+                        sock.sendto(resp, addr)
+                except (OSError, TrapError, IndexError):
+                    pass
+            sev, alias, msg = translate(trap)
+            if self._queue({'ts': ts, 'src': addr[0], 'host': alias, 'facility': 1, 'severity': sev,
+                            'program': 'trap', 'message': msg}):
+                self.traps += 1
+        sock.close()
 
     def _flush(self):
         with self.lock:
@@ -360,6 +416,7 @@ class Receiver:
                                         started=self.started, port=int(self.cfg['port']),
                                         ip=local_ip(self.cfg.get('bind')),
                                         received=self.received, dropped=self.dropped,
+                                        trap_port=int(self.cfg.get('trap_port') or 0), traps=self.traps,
                                         retention_days=self.cfg['retention_days'])
                 except sqlite3.Error as e:
                     logger.warning(f"État non enregistré : {e}")
