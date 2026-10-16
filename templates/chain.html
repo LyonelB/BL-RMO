@@ -199,7 +199,7 @@ function dur(iso) {
 function when(iso) {
   if (!iso) return '';
   const d = new Date(iso);
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} à ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 // « 3.50 » devient « 3,50 » (mais pas « 3.4.2233 », une version de firmware)
 function fr(v) { const t = String(v ?? ''); return /^-?\d+\.\d+$/.test(t) ? t.replace('.', ',').replace(/^-/, '−') : t.replace(/^-(?=\d)/, '−'); }
@@ -583,7 +583,7 @@ async function loadLogs(e) {
   }
   if (!d.rows.length) {
     body.innerHTML = `<div class="text-center py-8 text-xs text-gray-500"><div class="font-semibold text-gray-700">Aucun journal reçu</div>
-      <div class="mt-1">Cet appareil n'envoie pas encore ses journaux à BL-FMO. Réglez son syslog vers ${esc(location.hostname)}, port 514, en UDP.</div></div>`;
+      <div class="mt-1">Cet appareil n'envoie pas encore ses journaux à BL-FMO. Réglez son syslog vers ${esc(d.server_ip || location.hostname)}, port 514, en UDP.</div></div>`;
     return;
   }
   body.innerHTML = d.rows.map(l => {

@@ -1400,8 +1400,9 @@ class ChainMonitor:
         if not host:
             return {'installed': True, 'host': '', 'rows': []}
         from syslog_server import SyslogStore
-        rows, _total = SyslogStore(sys_db).search(limit=limit, src=host)
-        return {'installed': True, 'host': host, 'rows': rows}
+        store = SyslogStore(sys_db)
+        rows, _total = store.search(limit=limit, src=host)
+        return {'installed': True, 'host': host, 'rows': rows, 'server_ip': store.meta().get('ip', '')}
 
     def get_events(self, limit=100, device_id=None):
         q = 'SELECT * FROM chain_events'

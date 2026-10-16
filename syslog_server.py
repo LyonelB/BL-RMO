@@ -136,6 +136,19 @@ def parse(data, src_ip):
     return rec
 
 
+def local_ip(bind='0.0.0.0'):
+    """Adresse IP de BL-FMO sur le réseau local (à indiquer aux appareils).
+    Les appareils embarqués ne résolvent pas les noms en .local : il leur faut l'IP."""
+    if bind and bind not in ('0.0.0.0', '::'):
+        return bind
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(('192.0.2.1', 9))      # aucun paquet n'est envoyé : choix de la route seulement
+            return s.getsockname()[0]
+    except OSError:
+        return ''
+
+
 # ════════════════════════════════════════════════════════════════════
 #  Stockage
 # ════════════════════════════════════════════════════════════════════
@@ -345,6 +358,7 @@ class Receiver:
                 try:
                     self.store.set_meta(heartbeat=datetime.now().isoformat(timespec='seconds'),
                                         started=self.started, port=int(self.cfg['port']),
+                                        ip=local_ip(self.cfg.get('bind')),
                                         received=self.received, dropped=self.dropped,
                                         retention_days=self.cfg['retention_days'])
                 except sqlite3.Error as e:

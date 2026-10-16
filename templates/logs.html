@@ -240,6 +240,7 @@ async function loadSources() {
       : `Le service de réception n'est pas installé. Depuis le dossier de l'application : <code>sudo bash install/build/66-syslog.sh</code>`;
   }
   if (m.port) $('h-port').textContent = m.port;
+  if (m.ip) setHelpIp(m.ip);
 
   const srcs = d.sources || [];
   $('src-count').textContent = srcs.length ? `${srcs.length}` : '';
@@ -334,8 +335,12 @@ $('f-q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTim
   if (p.get('src')) { const o = document.createElement('option'); o.value = p.get('src'); o.textContent = p.get('src'); $('f-src').appendChild(o); $('f-src').value = p.get('src'); }
 })();
 
-document.querySelectorAll('.h-ip-txt').forEach(e => e.textContent = location.hostname);
-$('h-ip').textContent = location.hostname;
+// Adresse à donner aux appareils : l'IP de BL-FMO (les noms en .local ne sont pas résolus par les appareils)
+function setHelpIp(ip) {
+  document.querySelectorAll('.h-ip-txt').forEach(e => e.textContent = ip);
+  $('h-ip').textContent = ip;
+}
+setHelpIp(location.hostname);
 
 // ── Démarrage ──────────────────────────────────────────────────────────
 loadSources().then(loadLogs);
