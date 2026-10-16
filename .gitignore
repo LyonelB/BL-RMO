@@ -84,3 +84,6 @@ templates_backup_*
 
 # Pige audio (enregistrements 24 h)
 pige/
+
+# Journaux reçus des appareils (syslog)
+syslog.db*

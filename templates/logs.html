@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>FM Monitor · Journaux</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .sidebar-link { display:flex; align-items:center; gap:10px; padding:10px 16px; border-radius:8px; color:#64748b; font-size:0.875rem; font-weight:500; transition:all 0.15s; text-decoration:none; }
+    .sidebar-link:hover, .sidebar-link.active { background:#eff6ff; color:#2563eb; }
+    .sidebar-link svg { width:18px; height:18px; flex-shrink:0; }
+    .section { background:white; border:1px solid #f1f5f9; border-radius:12px; padding:20px; margin-bottom:16px; }
+    .section-title { font-size:0.75rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-size:0.8em; }
+    details > summary { list-style:none; }
+    details > summary::-webkit-details-marker { display:none; }
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden bg-slate-50">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col flex-shrink-0 h-screen transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 ease-in-out">
+  <div class="p-5 border-b border-gray-100">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">FM</div>
+      <div>
+        <div class="text-sm font-semibold text-gray-900">FM Monitor</div>
+        <div class="text-xs text-gray-400 font-mono" id="sidebar-frequency">— MHz</div>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+    <a href="/" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </a>
+    <a href="/config" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      Configuration
+    </a>
+    <a href="/stats" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      Statistiques
+    </a>
+    <a href="/pige" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+      Pige
+    </a>
+    <a href="/chain" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+      Chaîne
+    </a>
+    <a href="/logs" class="sidebar-link active">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
+      Journaux
+    </a>
+    <a href="/about" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      À propos
+    </a>
+    <a href="https://github.com/LyonelB/fm-monitor" target="_blank" class="sidebar-link">
+      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+      GitHub
+    </a>
+  </nav>
+  <div class="p-4 border-t border-gray-100">
+    <a href="/logout" class="sidebar-link" style="color:#f87171" onmouseover="this.style.background='#fff1f2';this.style.color='#dc2626'" onmouseout="this.style.background='';this.style.color='#f87171'">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Déconnexion
+    </a>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
+<main class="flex-1 overflow-y-auto">
+
+  <header class="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">Journaux des appareils</h1></div>
+      <p class="text-xs text-gray-400 mt-0.5">Messages envoyés par les appareils de la radio (syslog)</p>
+    </div>
+    <div id="rx-status" class="flex items-center gap-1.5 text-xs"></div>
+  </header>
+
+  <div class="p-6 max-w-7xl">
+
+    <div id="rx-warning" class="hidden mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800"></div>
+
+    <!-- ── Appareils qui envoient ─────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+        Appareils <span id="src-count" class="text-gray-400 normal-case font-normal tracking-normal"></span>
+      </div>
+      <div id="sources" class="flex flex-wrap gap-2"></div>
+    </div>
+
+    <!-- ── Journal ────────────────────────────────────────────── -->
+    <div class="section">
+      <div class="flex flex-wrap items-center gap-2 mb-4">
+        <select id="f-src" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white max-w-[14rem]"><option value="">Tous les appareils</option></select>
+        <select id="f-sev" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
+          <option value="">Tous les niveaux</option>
+          <option value="4">Avertissement et plus grave</option>
+          <option value="3">Erreur et plus grave</option>
+        </select>
+        <select id="f-period" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
+          <option value="1">Dernière heure</option>
+          <option value="24" selected>24 h</option>
+          <option value="168">7 jours</option>
+          <option value="720">30 jours</option>
+          <option value="">Tout</option>
+        </select>
+        <div class="relative flex-1 min-w-[10rem]">
+          <svg class="w-3.5 h-3.5 absolute left-2.5 top-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/></svg>
+          <input id="f-q" type="search" placeholder="Rechercher (ex. link down, ether8, perdu)" class="w-full text-xs border border-gray-200 rounded-lg pr-2 py-1.5" style="padding-left:2rem">
+        </div>
+        <label class="flex items-center gap-1.5 text-xs text-gray-600 select-none"><input id="f-live" type="checkbox" checked class="rounded"> En direct</label>
+        <button onclick="exportCsv()" class="flex items-center gap-1.5 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Exporter
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="text-left text-gray-400 border-b border-gray-100">
+              <th class="font-medium py-2 pr-3 whitespace-nowrap">Date</th>
+              <th class="font-medium py-2 pr-3">Niveau</th>
+              <th class="font-medium py-2 pr-3">Appareil</th>
+              <th class="font-medium py-2 pr-3">Programme</th>
+              <th class="font-medium py-2 pr-3 w-full">Message</th>
+              <th class="py-2"></th>
+            </tr>
+          </thead>
+          <tbody id="log-body"></tbody>
+        </table>
+      </div>
+      <div id="log-empty" class="hidden text-center text-xs text-gray-400 py-10"></div>
+
+      <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
+        <span id="log-count"></span>
+        <div class="flex items-center gap-1">
+          <button id="pg-prev" onclick="page(-1)" class="px-2.5 py-1 rounded-md border border-gray-200 disabled:opacity-40">Plus récents</button>
+          <span id="pg-info" class="px-2"></span>
+          <button id="pg-next" onclick="page(1)" class="px-2.5 py-1 rounded-md border border-gray-200 disabled:opacity-40">Plus anciens</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Aide à la configuration ────────────────────────────── -->
+    <details id="help" class="section">
+      <summary class="section-title cursor-pointer select-none" style="margin-bottom:0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Envoyer les journaux d'un appareil vers BL-FMO
+      </summary>
+      <div class="mt-4 space-y-3 text-xs text-gray-600 leading-relaxed">
+        <p>Dans les réglages de l'appareil, cherchez « Syslog », « Remote log » ou « Journal distant » et indiquez :
+          serveur <code id="h-ip"></code>, port <code id="h-port">514</code>, protocole <code>UDP</code>.</p>
+        <p class="font-medium text-gray-700">MikroTik RouterOS</p>
+        <p>Repérer l'action d'envoi existante, puis la diriger vers BL-FMO :</p>
+        <pre class="bg-slate-50 border border-slate-100 rounded-lg p-3 overflow-x-auto"><code style="background:none;padding:0">/system logging action print where target=remote
+/system logging action set [find target=remote] remote=<span class="h-ip-txt"></span> remote-port=514</code></pre>
+        <p class="font-medium text-gray-700">Ubiquiti airOS</p>
+        <p>Onglet <b>Services</b>, section <b>System Log</b> : cocher <i>Remote Log</i>, adresse <code class="h-ip-txt"></code>, port 514.</p>
+        <p class="text-gray-500">Le nom affiché vient de la chaîne de diffusion : un appareil dont l'adresse IP figure dans la page Chaîne prend son nom. Sinon, BL-FMO affiche le nom d'hôte envoyé par l'appareil ou son adresse.</p>
+      </div>
+    </details>
+
+  </div>
+</main>
+
+<script>
+const PAGE_SIZE = 200;
+const SEV = [
+  { label: 'Urgence',       cls: 'bg-red-600 text-white' },
+  { label: 'Alerte',        cls: 'bg-red-100 text-red-700' },
+  { label: 'Critique',      cls: 'bg-red-100 text-red-700' },
+  { label: 'Erreur',        cls: 'bg-red-50 text-red-700' },
+  { label: 'Avertissement', cls: 'bg-amber-50 text-amber-700' },
+  { label: 'Notice',        cls: 'bg-blue-50 text-blue-700' },
+  { label: 'Info',          cls: 'bg-slate-100 text-slate-600' },
+  { label: 'Debug',         cls: 'bg-slate-50 text-slate-400' },
+];
+
+let names = {};        // IP → nom dans la chaîne
+let hostOf = {};       // IP → nom d'hôte envoyé
+let offset = 0, total = 0, loading = false;
+
+const $ = id => document.getElementById(id);
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function csrf() { const m = document.querySelector('meta[name="csrf-token"]'); return m ? m.content : ''; }
+async function api(url) {
+  const r = await fetch(url, { credentials: 'include' });
+  if (r.status === 401) { window.location = '/login?next=/logs'; throw new Error('Session expirée'); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.message || `Erreur ${r.status}`);
+  return data;
+}
+function ago(iso, nowIso) {
+  if (!iso) return 'jamais';
+  const now = nowIso ? new Date(nowIso).getTime() : Date.now();
+  const s = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000));
+  if (s < 60) return `il y a ${s} s`;
+  if (s < 3600) return `il y a ${Math.floor(s / 60)} min`;
+  if (s < 86400) return `il y a ${Math.floor(s / 3600)} h`;
+  return `il y a ${Math.floor(s / 86400)} j`;
+}
+function pad(n) { return String(n).padStart(2, '0'); }
+function localIso(d) {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+function displayName(src) { return names[src] || hostOf[src] || src; }
+
+// ── Appareils ──────────────────────────────────────────────────────────
+async function loadSources() {
+  let d;
+  try { d = await api('/api/syslog/sources'); } catch (e) { return; }
+  names = d.names || {};
+  hostOf = {};
+  (d.sources || []).forEach(s => { if (s.host) hostOf[s.src] = s.host; });
+
+  // État du service de réception (battement toutes les 15 s)
+  const m = d.meta || {};
+  const age = m.heartbeat ? (new Date(d.now) - new Date(m.heartbeat)) / 1000 : null;
+  const alive = age !== null && age < 60;
+  $('rx-status').innerHTML = alive
+    ? `<span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 rounded-full px-2.5 py-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Réception active · UDP ${esc(m.port)}</span>`
+    : `<span class="inline-flex items-center gap-1.5 bg-red-50 text-red-700 rounded-full px-2.5 py-1"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Réception arrêtée</span>`;
+  $('rx-warning').classList.toggle('hidden', alive);
+  if (!alive) {
+    $('rx-warning').innerHTML = m.heartbeat
+      ? `Le service de réception ne répond plus depuis ${esc(ago(m.heartbeat, d.now).replace('il y a ', ''))}. Vérifier : <code>sudo systemctl status fm-monitor-syslog</code>`
+      : `Le service de réception n'est pas installé. Depuis le dossier de l'application : <code>sudo bash install/build/66-syslog.sh</code>`;
+  }
+  if (m.port) $('h-port').textContent = m.port;
+
+  const srcs = d.sources || [];
+  $('src-count').textContent = srcs.length ? `${srcs.length}` : '';
+  $('sources').innerHTML = srcs.length ? srcs.map(s => {
+    const recent = (new Date(d.now) - new Date(s.last_seen)) / 1000 < 86400;
+    const sub = [s.src, s.host && s.host !== displayName(s.src) ? s.host : ''].filter(Boolean).join(' · ');
+    return `<button onclick="pickSource('${esc(s.src)}')" class="text-left border border-gray-100 hover:border-blue-300 rounded-lg px-3 py-2 bg-white ${$('f-src').value === s.src ? 'ring-1 ring-blue-500 border-blue-500' : ''}">
+      <div class="flex items-center gap-1.5 text-xs font-medium text-gray-800"><span class="w-1.5 h-1.5 rounded-full ${recent ? 'bg-emerald-500' : 'bg-slate-300'}"></span>${esc(displayName(s.src))}</div>
+      <div class="text-[11px] text-gray-400 font-mono mt-0.5">${esc(sub)}</div>
+      <div class="text-[11px] text-gray-400 mt-0.5">${esc(ago(s.last_seen, d.now))} · ${Number(s.count).toLocaleString('fr-FR')} msg</div>
+    </button>`;
+  }).join('') : '<p class="text-xs text-gray-400">Aucun appareil n\'a encore envoyé de journal. Voir l\'aide en bas de page.</p>';
+
+  // Liste déroulante
+  const sel = $('f-src'), cur = sel.value;
+  sel.innerHTML = '<option value="">Tous les appareils</option>' +
+    srcs.slice().sort((a, b) => displayName(a.src).localeCompare(displayName(b.src)))
+        .map(s => `<option value="${esc(s.src)}">${esc(displayName(s.src))}</option>`).join('');
+  sel.value = cur;
+}
+function pickSource(src) {
+  $('f-src').value = $('f-src').value === src ? '' : src;
+  offset = 0; loadLogs(); loadSources();
+}
+
+// ── Journal ────────────────────────────────────────────────────────────
+function query() {
+  const p = new URLSearchParams();
+  if ($('f-src').value) p.set('src', $('f-src').value);
+  if ($('f-sev').value) p.set('sev', $('f-sev').value);
+  if ($('f-q').value.trim()) p.set('q', $('f-q').value.trim());
+  const h = $('f-period').value;
+  if (h) p.set('start', localIso(new Date(Date.now() - h * 3600e3)));
+  return p;
+}
+async function loadLogs() {
+  if (loading) return;
+  loading = true;
+  const p = query();
+  p.set('limit', PAGE_SIZE); p.set('offset', offset);
+  try {
+    const d = await api('/api/syslog?' + p);
+    total = d.total;
+    render(d.rows);
+  } catch (e) {
+    $('log-body').innerHTML = '';
+    $('log-empty').textContent = e.message;
+    $('log-empty').classList.remove('hidden');
+  } finally { loading = false; }
+}
+function render(rows) {
+  $('log-empty').classList.toggle('hidden', rows.length > 0);
+  if (!rows.length) $('log-empty').textContent = 'Aucun message pour ces critères.';
+  $('log-body').innerHTML = rows.map(r => {
+    const sv = SEV[r.severity] || SEV[6];
+    const t = new Date(r.ts);
+    const epoch = Math.floor(t.getTime() / 1000);
+    return `<tr class="border-b border-gray-50 hover:bg-slate-50 align-top">
+      <td class="py-1.5 pr-3 font-mono text-gray-400 whitespace-nowrap">${pad(t.getDate())}/${pad(t.getMonth() + 1)} ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}</td>
+      <td class="py-1.5 pr-3"><span class="inline-block rounded px-1.5 py-0.5 text-[11px] whitespace-nowrap ${sv.cls}">${sv.label}</span></td>
+      <td class="py-1.5 pr-3 whitespace-nowrap text-gray-800" title="${esc(r.src)}${r.host ? ' · ' + esc(r.host) : ''}">${esc(displayName(r.src))}</td>
+      <td class="py-1.5 pr-3 whitespace-nowrap text-gray-500 font-mono">${esc(r.program)}</td>
+      <td class="py-1.5 pr-3 text-gray-700 break-all">${esc(r.message)}</td>
+      <td class="py-1.5 whitespace-nowrap"><a href="/pige?t=${epoch}" title="Écouter l'antenne à ce moment" class="text-blue-600 hover:text-blue-800 opacity-60 hover:opacity-100">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></a></td>
+    </tr>`;
+  }).join('');
+  const first = total ? offset + 1 : 0, last = Math.min(offset + PAGE_SIZE, total);
+  $('log-count').textContent = `${total.toLocaleString('fr-FR')} message${total > 1 ? 's' : ''}`;
+  $('pg-info').textContent = total ? `${first.toLocaleString('fr-FR')}-${last.toLocaleString('fr-FR')}` : '';
+  $('pg-prev').disabled = offset === 0;
+  $('pg-next').disabled = offset + PAGE_SIZE >= total;
+}
+function page(dir) {
+  offset = Math.max(0, offset + dir * PAGE_SIZE);
+  loadLogs();
+  document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+}
+function exportCsv() {
+  window.location = '/api/syslog/export?' + query();
+}
+
+// ── Filtres ────────────────────────────────────────────────────────────
+['f-src', 'f-sev', 'f-period'].forEach(id => $(id).addEventListener('change', () => { offset = 0; loadLogs(); if (id === 'f-src') loadSources(); }));
+let qTimer = null;
+$('f-q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(() => { offset = 0; loadLogs(); }, 350); });
+
+// Filtres initiaux depuis l'adresse : /logs?src=192.168.1.2&q=ether8
+(function initFromUrl() {
+  const p = new URLSearchParams(location.search);
+  if (p.get('q')) $('f-q').value = p.get('q');
+  if (p.get('src')) { const o = document.createElement('option'); o.value = p.get('src'); o.textContent = p.get('src'); $('f-src').appendChild(o); $('f-src').value = p.get('src'); }
+})();
+
+document.querySelectorAll('.h-ip-txt').forEach(e => e.textContent = location.hostname);
+$('h-ip').textContent = location.hostname;
+
+// ── Démarrage ──────────────────────────────────────────────────────────
+loadSources().then(loadLogs);
+setInterval(() => {
+  if (document.hidden || !$('f-live').checked || offset !== 0) return;
+  loadLogs();
+}, 5000);
+setInterval(() => { if (!document.hidden) loadSources(); }, 30000);
+
+fetch('/api/config/full', { credentials: 'include' }).then(r => r.json()).then(config => {
+  const freq = config.rtl_sdr?.frequency || '88.6M';
+  document.getElementById('sidebar-frequency').textContent = freq.replace('M', ' MHz');
+}).catch(() => {});
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('-translate-x-full');
+  document.getElementById('sidebar-overlay').classList.toggle('hidden');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.add('-translate-x-full');
+  document.getElementById('sidebar-overlay').classList.add('hidden');
+}
+</script>
+</body>
+</html>

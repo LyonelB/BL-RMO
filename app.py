@@ -57,7 +57,7 @@ SESSION_TIMEOUT = timedelta(minutes=60)
 @app.before_request
 def check_session_timeout():
     # Endpoints exclus du check session (polling automatique)
-    POLLING_ENDPOINTS = ('chain_status', 'stream_stats', 'proxy_stream', 'static',
+    POLLING_ENDPOINTS = ('logs_search', 'logs_sources', 'chain_status', 'stream_stats', 'proxy_stream', 'static',
                          'get_stats', 'get_signal_history', 'get_record_status',
                          'pige_status')
     if request.endpoint in POLLING_ENDPOINTS:
@@ -1275,6 +1275,141 @@ def chain_export():
     logger.info(f"Export chaîne {start:%d/%m %H:%M} au {end:%d/%m %H:%M} : {counts}")
     name = f"blfmo-chaine_{start:%Y%m%d-%H%M}_{end:%Y%m%d-%H%M}.zip"
     return send_file(BytesIO(data), mimetype='application/zip', as_attachment=True, download_name=name)
+
+
+# ══════════════════════════════════════════════════════════════════════════
+#  Journaux des appareils, réception syslog (SYSLOG_PATCH)
+# ══════════════════════════════════════════════════════════════════════════
+from syslog_server import SyslogStore, SEVERITIES, FACILITIES
+
+syslog_store = None
+
+
+def _syslog():
+    global syslog_store
+    if syslog_store is None:
+        syslog_store = SyslogStore()
+    return syslog_store
+
+
+def _syslog_names():
+    """Adresse IP → nom de l'appareil dans la chaîne (les appareils avant les sondes)."""
+    names = {}
+    try:
+        devs = sorted(chain_monitor.list_devices(), key=lambda d: d.get('kind') == 'probe')
+        for d in devs:
+            h = chain_monitor._device_host(d)
+            if h and h not in names:
+                names[h] = d['name']
+    except Exception:
+        pass
+    return names
+
+
+def _syslog_filters():
+    a = request.args
+    sev = a.get('sev', '')
+    return {
+        'src': [s for s in a.get('src', '').split(',') if s] or None,
+        'max_severity': int(sev) if sev.isdigit() else None,
+        'q': a.get('q', '').strip() or None,
+        'program': a.get('program', '').strip() or None,
+        'start': a.get('start') or None,
+        'end': a.get('end') or None,
+    }
+
+
+@app.route('/logs')
+@auth.login_required
+def logs_page():
+    return render_template('logs.html')
+
+
+@app.route('/api/syslog')
+@auth.login_required
+@limiter.exempt
+def logs_search():
+    try:
+        rows, total = _syslog().search(limit=request.args.get('limit', 200),
+                                       offset=request.args.get('offset', 0), **_syslog_filters())
+    except ValueError:
+        return jsonify({'status': 'error', 'message': 'Paramètres invalides'}), 400
+    return jsonify({'rows': rows, 'total': total})
+
+
+@app.route('/api/syslog/sources')
+@auth.login_required
+@limiter.exempt
+def logs_sources():
+    st = _syslog()
+    return jsonify({'sources': st.sources(), 'names': _syslog_names(), 'meta': st.meta(),
+                    'now': datetime.now().isoformat(timespec='seconds'),
+                    'severities': SEVERITIES, 'facilities': FACILITIES})
+
+
+@app.route('/api/syslog/export')
+@auth.login_required
+@limiter.exempt
+def logs_export():
+    import csv
+    import io
+    f = _syslog_filters()
+    names = _syslog_names()
+    st = _syslog()
+
+    def generate():
+        buf = io.StringIO()
+        w = csv.writer(buf, delimiter=';', lineterminator='\n')
+        w.writerow(['date', 'heure', 'niveau', 'appareil', 'adresse', 'nom_hote', 'categorie', 'programme', 'message'])
+        yield '﻿' + buf.getvalue()
+        n = 0
+        for r in st.iter_rows(**f):
+            buf.seek(0)
+            buf.truncate()
+            w.writerow([r['ts'][:10], r['ts'][11:19], SEVERITIES[r['severity']] if 0 <= (r['severity'] or 0) < 8 else r['severity'],
+                        names.get(r['src'], r['host'] or r['src']), r['src'], r['host'],
+                        FACILITIES[r['facility']] if 0 <= (r['facility'] or 0) < len(FACILITIES) else r['facility'],
+                        r['program'], r['message']])
+            yield buf.getvalue()
+            n += 1
+            if n >= 500000:
+                break
+
+    fname = f"blfmo-journaux_{datetime.now():%Y%m%d-%H%M}.csv"
+    return Response(generate(), mimetype='text/csv; charset=utf-8',
+                    headers={'Content-Disposition': f'attachment; filename="{fname}"'})
+
+
+# ── Synoptique de la chaîne (CHAIN_SYNOPTIC_PATCH) ───────────────────────
+@app.route('/chain/manage')
+@auth.login_required
+def chain_manage_page():
+    # Ajout, ordre et réglages des appareils et des sondes
+    return render_template('chain_manage.html')
+
+
+@app.route('/api/chain/devices/<int:device_id>/history')
+@auth.login_required
+@limiter.exempt
+def chain_device_history(device_id):
+    err = _chain_ready()
+    if err:
+        return err
+    labels = chain_monitor.numeric_labels(device_id)
+    metric = request.args.get('metric') or (labels[0] if labels else '')
+    hours = request.args.get('hours', 24, type=float)
+    points = chain_monitor.metric_history(device_id, metric, hours) if metric else []
+    return jsonify({'labels': labels, 'metric': metric, 'hours': hours, 'points': points})
+
+
+@app.route('/api/chain/devices/<int:device_id>/logs')
+@auth.login_required
+@limiter.exempt
+def chain_device_logs(device_id):
+    err = _chain_ready()
+    if err:
+        return err
+    return jsonify(chain_monitor.device_logs(device_id, request.args.get('limit', 50, type=int)))
 
 
 # Démarrage du monitor (exécuté aussi bien par Gunicorn que par python app.py)

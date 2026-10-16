@@ -14,49 +14,21 @@
     .section { background:white; border:1px solid #f1f5f9; border-radius:12px; padding:20px; margin-bottom:16px; }
     .section-title { font-size:0.75rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
     code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-size:0.8em; }
-
-    /* Chaîne : cartes reliées par des flèches */
-    .chain-row { display:flex; flex-wrap:wrap; gap:28px; }
-    .chain-card { position:relative; width:220px; flex:0 0 220px; background:#fff; border:1px solid #f1f5f9; border-radius:10px; padding:12px; box-shadow:0 1px 2px rgba(15,23,42,.04); }
-    .chain-card { border-left-width:4px; border-left-color:#cbd5e1; }
-    .chain-card[data-state=up] { border-left-color:#10b981; }
-    .chain-card[data-state=warn], .chain-card[data-state=unstable] { border-left-color:#f59e0b; }
-    .chain-card[data-state=down] { border-left-color:#ef4444; }
-    .chain-card[data-state=disabled] { border-left-color:#e2e8f0; }
-    .chain-card + .chain-card::before { content:''; position:absolute; left:-24px; top:26px; width:20px; height:2px; background:#cbd5e1; }
-    .chain-card + .chain-card::after { content:''; position:absolute; left:-9px; top:22px; border:5px solid transparent; border-left:6px solid #cbd5e1; }
-    @media (max-width: 640px) {
-      .chain-row { flex-direction:column; gap:22px; }
-      .chain-card { width:100%; flex-basis:auto; }
-      .chain-card + .chain-card::before { left:24px; top:-18px; width:2px; height:14px; }
-      .chain-card + .chain-card::after { left:20px; top:-8px; border:5px solid transparent; border-top:6px solid #cbd5e1; }
+    details > summary { list-style:none; }
+    details > summary::-webkit-details-marker { display:none; }
+    /* Panneau de détail : volet à droite sur grand écran, plein écran sur téléphone */
+    #panel { position:fixed; top:0; bottom:0; right:0; z-index:50; width:100%; }
+    @media (min-width: 640px) { #panel { width:384px; } }
+    @media (min-width: 1024px) { #panel { position:relative; z-index:auto; width:var(--panel-w, 384px); } }
+    #panel-resize { display:none; }
+    @media (min-width: 1024px) {
+      #panel-resize { display:block; position:absolute; left:-4px; top:0; bottom:0; width:8px; cursor:col-resize; z-index:5; }
+      #panel-resize:hover, #panel-resize.drag { background:linear-gradient(to right, transparent 3px, #93c5fd 3px, #93c5fd 5px, transparent 5px); }
     }
-    .kind-switch { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .kind-switch button { text-align:left; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px; font-size:0.75rem; font-weight:600; color:#334155; }
-    .kind-switch button span { display:block; font-weight:400; font-size:0.6875rem; opacity:.7; margin-top:1px; }
-    .kind-switch button.active { border-color:#2563eb; background:#eff6ff; color:#1d4ed8; box-shadow:0 0 0 1px #2563eb inset; }
-    .listen-link { display:inline-flex; align-items:center; gap:4px; color:#2563eb; font-weight:500; padding:2px 6px; border-radius:6px; }
-    .listen-link:hover { background:#eff6ff; }
-    .icon-btn { padding:4px; border-radius:6px; color:#94a3b8; }
-    .icon-btn:hover:not(:disabled) { background:#f1f5f9; color:#334155; }
-    .icon-btn:disabled { opacity:.3; cursor:default; }
-
-    /* Éditeur */
-    .field { display:flex; flex-direction:column; gap:4px; }
-    .field > span { font-size:0.75rem; font-weight:500; color:#475569; }
-    .field input, .field select { border:1px solid #e2e8f0; border-radius:8px; padding:6px 10px; font-size:0.8125rem; background:#fff; }
-    .field input:focus, .field select:focus, .metric-row input:focus, .metric-row select:focus { outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.15); }
-    .probe-opt { text-align:left; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px; color:#334155; transition:all .15s; }
-    .probe-opt:hover { border-color:#93c5fd; }
-    .probe-opt.active { border-color:#2563eb; background:#eff6ff; color:#1d4ed8; box-shadow:0 0 0 1px #2563eb inset; }
-    .hint { font-size:0.6875rem; color:#64748b; line-height:1.45; }
-    .metric-row { display:grid; grid-template-columns: 1.2fr 2fr 0.9fr 0.7fr 0.7fr 0.7fr 0.7fr 26px; gap:6px; align-items:center; }
-    .metric-row input, .metric-row select { border:1px solid #e2e8f0; border-radius:6px; padding:4px 6px; font-size:0.75rem; min-width:0; background:#fff; }
-    .metric-row input:disabled { background:#f8fafc; color:#cbd5e1; }
-    .metric-row .col-span-2 { grid-column: span 2 / span 2; }
-    @media (max-width: 640px) {
-      .metric-row { grid-template-columns: 1fr 1fr 1fr 26px; padding:6px; background:#f8fafc; border-radius:8px; }
-    }
+    body.resizing, body.resizing * { cursor:col-resize !important; user-select:none !important; }
+    #p-metrics { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; }
+    #panel-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:40; }
+    @media (max-width: 1023px) { #panel-backdrop.show { display:block; } }
   </style>
 </head>
 <body class="flex h-screen overflow-hidden bg-slate-50">
@@ -93,6 +65,10 @@
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
       Chaîne
     </a>
+    <a href="/logs" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
+      Journaux
+    </a>
     <a href="/about" class="sidebar-link">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       À propos
@@ -112,1017 +88,608 @@
 
 <!-- ═══ MAIN ═══ -->
 <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
-<main class="flex-1 overflow-y-auto">
+<main class="flex-1 min-w-0 flex flex-col h-screen">
 
-  <header class="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3">
+  <header class="bg-white border-b border-gray-100 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
     <div>
-      <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">Chaîne de diffusion</h1></div>
-      <p class="text-xs text-gray-400 mt-0.5">État de chaque appareil, du studio à l'antenne</p>
+      <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()" aria-label="Menu"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">Chaîne de diffusion</h1></div>
+      <p class="text-xs text-gray-400 mt-0.5">Du studio à l'antenne. Cliquez sur un appareil ou sur un lien pour voir le détail.</p>
     </div>
-    <div class="flex items-center gap-2 flex-wrap">
-      <div id="summary" class="flex items-center gap-1.5 text-xs"></div>
-      <button onclick="openEditor(null, 'device')" class="flex items-center gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 transition">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Ajouter un appareil
-      </button>
+    <div class="flex items-center gap-2 flex-wrap text-xs">
+      <div id="summary" class="flex items-center gap-1.5"></div>
+      <a href="/chain/manage" class="ml-1 border border-gray-200 hover:border-gray-400 rounded-lg px-3 py-1.5 text-gray-700 font-medium">Gérer la chaîne</a>
     </div>
   </header>
 
-  <div class="p-6 max-w-6xl">
+  <div class="flex-1 min-h-0 flex">
 
-    <div id="tools-warning" class="hidden mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800"></div>
-
-    <!-- ── Vue chaîne ───────────────────────────────────────────── -->
-    <div id="chain-empty" class="hidden section text-center py-10">
-      <div class="mx-auto w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mb-3">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+    <!-- Synoptique -->
+    <div class="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6">
+      <div id="tools-warning" class="hidden mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800"></div>
+      <div id="empty" class="hidden section text-center py-10">
+        <h2 class="text-sm font-semibold text-gray-900">Aucun appareil dans la chaîne</h2>
+        <p class="text-xs text-gray-500 mt-1">Ajoutez les appareils dans l'ordre du signal, du studio à l'antenne.</p>
+        <a href="/chain/manage" class="inline-block mt-4 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5">Gérer la chaîne</a>
       </div>
-      <h2 class="text-sm font-semibold text-gray-900">Aucun appareil dans la chaîne</h2>
-      <p class="text-xs text-gray-500 mt-1 max-w-md mx-auto">Ajoutez les appareils dans l'ordre du signal : codec studio, faisceau, codec côté émetteur, processeur, émetteur... Chacun est sondé par ping, port TCP, page web, SNMP ou Icecast.</p>
-      <div class="mt-4 flex justify-center gap-2 flex-wrap">
-        <button onclick="openEditor(null, 'device')" class="text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5">Ajouter un appareil</button>
-        <button onclick="addFmLocal()" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">Ajouter la réception FM de ce BL-FMO</button>
+      <div id="synoptic" class="flex flex-col gap-3"></div>
+      <div id="other-probes" class="hidden mt-4"></div>
+      <div id="legend" class="hidden mt-4 flex flex-wrap gap-x-5 gap-y-1 text-[11px] text-gray-500">
+        <span><span class="inline-block align-middle mr-1.5" style="width:16px;height:2px;background:#10b981"></span>sonde réseau OK</span>
+        <span><span class="inline-block align-middle mr-1.5" style="width:16px;height:2px;background:#f59e0b"></span>pertes ou latence anormales</span>
+        <span><span class="inline-block align-middle mr-1.5" style="width:16px;height:2px;background:#ef4444"></span>lien coupé</span>
+        <span><span class="inline-block align-middle mr-1.5" style="width:16px;height:2px;background:#cbd5e1"></span>sans sonde</span>
       </div>
     </div>
 
-    <div id="chain-flow" class="space-y-2"></div>
-
-    <!-- ── Sondes réseau ────────────────────────────────────────── -->
-    <div id="probes-section" class="section mt-6">
-      <div class="flex items-center justify-between gap-3 flex-wrap mb-3">
-        <div class="section-title !mb-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-          Sondes réseau
-          <span id="probes-summary" style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8"></span>
+    <!-- Panneau de détail -->
+    <div id="panel-backdrop" onclick="closePanel()"></div>
+    <aside id="panel" class="hidden bg-white border-l border-gray-200 flex-col min-h-0 flex-shrink-0">
+      <div id="panel-resize" title="Glisser pour élargir le panneau (double-clic : large / normal)"></div>
+      <div class="px-5 pt-4">
+        <div class="flex items-center justify-between">
+          <div id="p-kind" class="text-[11px] font-semibold tracking-wider text-gray-400"></div>
+          <button id="p-wide" onclick="toggleWide()" class="hidden lg:inline-flex ml-auto mr-1 text-gray-400 hover:text-gray-700 p-1" aria-label="Élargir le panneau" title="Élargir / réduire"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></button>
+          <button onclick="closePanel()" class="text-gray-400 hover:text-gray-700 p-1" aria-label="Fermer le panneau"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
-        <button onclick="openEditor(null, 'probe')" class="flex items-center gap-1.5 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          Ajouter une sonde
-        </button>
-      </div>
-      <p id="probes-empty" class="hidden text-xs text-gray-500">Aucune sonde. Une sonde mesure la qualité d'un lien (pertes, latence, gigue) sans faire partie de la chaîne : par exemple une rafale de pings vers le faisceau toutes les 10 s.</p>
-      <div id="probes-wrap" class="overflow-x-auto">
-        <table class="w-full text-xs">
-          <thead>
-            <tr class="text-left text-gray-400 border-b border-gray-100">
-              <th class="py-2 pr-3 font-medium">Sonde</th><th class="py-2 pr-3 font-medium">Cible</th><th class="py-2 pr-3 font-medium">État</th>
-              <th class="py-2 pr-3 font-medium text-right">Pertes</th>
-              <th class="py-2 pr-3 font-medium text-right">Moy.</th>
-              <th class="py-2 pr-3 font-medium text-right">Max</th>
-              <th class="py-2 pr-3 font-medium text-right">Gigue</th>
-              <th class="py-2 pr-3 font-medium">Historique</th>
-              <th class="py-2 font-medium text-right"></th>
-            </tr>
-          </thead>
-          <tbody id="probe-rows"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ── Journal ──────────────────────────────────────────────── -->
-    <div class="section mt-6">
-      <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
-        <div class="section-title !mb-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-          Journal des changements d'état
+        <div class="flex items-start justify-between gap-2 mt-1">
+          <div class="min-w-0">
+            <div id="p-name" class="text-base font-semibold text-gray-900 break-words"></div>
+            <div id="p-sub" class="text-xs text-gray-500 mt-0.5"></div>
+          </div>
+          <span id="p-pill" class="text-xs font-medium rounded-full px-2.5 py-1 whitespace-nowrap"></span>
         </div>
-        <div class="flex items-center gap-2 flex-wrap">
-          <select id="events-filter" onchange="loadEvents()" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white">
-            <option value="">Tous les appareils</option>
-          </select>
-          <span class="flex items-center gap-1" title="Archive ZIP : changements d'état, mesures de chaque sondage, alertes et niveaux FM">
-            <select id="export-hours" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white">
-              <option value="1">1 h</option><option value="6">6 h</option><option value="24" selected>24 h</option>
-              <option value="72">3 jours</option><option value="168">7 jours</option>
-            </select>
-            <button onclick="exportLogs()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
-          </span>
+        <div id="p-since" class="text-xs text-gray-700 mt-2.5"></div>
+        <div class="flex items-center justify-between gap-2 mt-1">
+          <span id="p-probe" class="text-[11px] text-gray-400"></span>
+          <a id="p-web" href="#" target="_blank" rel="noopener" class="hidden inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap">Interface web
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></svg></a>
         </div>
+        <div id="p-switch" class="hidden flex flex-wrap items-center gap-1.5 mt-2.5"></div>
+        <div id="p-tabs" role="tablist" class="flex gap-0.5 mt-3 border-b border-gray-100"></div>
       </div>
-      <div id="events" class="text-xs"></div>
-    </div>
-
-    <!-- ── Remontée externe ─────────────────────────────────────── -->
-    <details class="section" id="hook-section">
-      <summary class="section-title !mb-0 cursor-pointer select-none">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Événements externes (netwatch MikroTik, scripts...)
-      </summary>
-      <div class="mt-4 space-y-3 text-xs text-gray-600">
-        <p>Un équipement tiers peut signaler ses propres sondes à BL-FMO par une requête HTTP. L'événement apparaît dans le journal et sur la carte de l'appareil qui a la même adresse IP.</p>
-        <div class="grid grid-cols-1 sm:grid-cols-[7rem_1fr_auto] gap-2 items-center">
-          <span class="font-medium text-gray-700">URL</span>
-          <code id="hook-url" class="!text-xs break-all"></code><span></span>
-          <span class="font-medium text-gray-700">Jeton</span>
-          <code id="hook-token" class="!text-xs break-all">...</code>
-          <button onclick="regenToken()" class="text-xs text-red-500 hover:text-red-700 justify-self-start">Régénérer</button>
-        </div>
-        <div>
-          <div class="font-medium text-gray-700 mb-1">Paramètres (GET ou POST)</div>
-          <p><code>token</code>, <code>source</code> (ex. CRS-Studio), <code>probe</code> (nom de la sonde), <code>host</code> (IP surveillée), <code>state</code> (<code>up</code> ou <code>down</code>), <code>text</code> (facultatif).</p>
-        </div>
-        <div>
-          <div class="font-medium text-gray-700 mb-1">Exemple RouterOS (à ajouter dans le down-script d'une sonde netwatch)</div>
-          <pre id="hook-example" class="bg-slate-900 text-slate-100 rounded-lg p-3 overflow-x-auto text-[11px] leading-relaxed whitespace-pre"></pre>
-        </div>
-      </div>
-    </details>
-
-    <!-- ── Gestion ──────────────────────────────────────────────── -->
-    <div class="section">
-      <div class="section-title">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-        Appareils de la chaîne (ordre du signal)
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-xs">
-          <thead>
-            <tr class="text-left text-gray-400 border-b border-gray-100">
-              <th class="py-2 pr-2 w-16">Ordre</th>
-              <th class="py-2 pr-3">Nom</th>
-              <th class="py-2 pr-3">Site</th>
-              <th class="py-2 pr-3">Sonde</th>
-              <th class="py-2 pr-3">Cible</th>
-              <th class="py-2 pr-3 text-right">Intervalle</th>
-              <th class="py-2 pr-3 text-center">Email</th>
-              <th class="py-2 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="device-table"></tbody>
-        </table>
-      </div>
-      <div class="section-title mt-6">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-        Sondes réseau
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-xs">
-          <thead>
-            <tr class="text-left text-gray-400 border-b border-gray-100">
-              <th class="py-2 pr-2 w-16">Ordre</th>
-              <th class="py-2 pr-3">Nom</th>
-              <th class="py-2 pr-3">Site</th>
-              <th class="py-2 pr-3">Sonde</th>
-              <th class="py-2 pr-3">Cible</th>
-              <th class="py-2 pr-3 text-right">Intervalle</th>
-              <th class="py-2 pr-3 text-center">Email</th>
-              <th class="py-2 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="probe-table"></tbody>
-        </table>
-      </div>
-    </div>
+      <div id="p-body" class="flex-1 overflow-y-auto px-5 py-4"></div>
+    </aside>
   </div>
 </main>
 
-<!-- ═══ ÉDITEUR ═══ -->
-<div id="editor" class="hidden fixed inset-0 z-[60] bg-black/40 flex items-start sm:items-center justify-center p-0 sm:p-4" onclick="if(event.target===this) closeEditor()">
-  <div class="bg-white w-full sm:max-w-2xl sm:rounded-xl shadow-xl flex flex-col max-h-screen sm:max-h-[92vh]">
-    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-      <h2 id="editor-title" class="text-sm font-semibold text-gray-900">Ajouter un appareil</h2>
-      <button onclick="closeEditor()" class="text-gray-400 hover:text-gray-700"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-    </div>
-
-    <div class="px-5 py-4 overflow-y-auto space-y-4 text-sm" id="editor-body">
-      <div class="kind-switch" role="radiogroup" aria-label="Catégorie">
-        <button type="button" data-kind="device" onclick="setKind('device')">Appareil de la chaîne<span>Un maillon du signal : codec, faisceau, émetteur...</span></button>
-        <button type="button" data-kind="probe" onclick="setKind('probe')">Sonde réseau<span>Une mesure de lien : pertes, latence, gigue</span></button>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <label class="field sm:col-span-1"><span>Nom</span><input id="f-name" type="text" maxlength="60" placeholder="DB91-RX"></label>
-        <label class="field" id="site-field"><span>Site</span><input id="f-site" type="text" maxlength="40" list="sites-list" placeholder="Studio"></label>
-        <label class="field"><span>Rôle</span><input id="f-role" type="text" maxlength="40" list="roles-list" placeholder="Codec audio"></label>
-      </div>
-      <datalist id="sites-list"></datalist>
-      <datalist id="roles-list">
-        <option value="Codec audio"><option value="Faisceau"><option value="Processeur audio"><option value="Émetteur FM">
-        <option value="Switch"><option value="Routeur / box"><option value="Streaming"><option value="Console"><option value="Serveur"><option value="Réception FM">
-      </datalist>
-
-      <div>
-        <div class="text-xs font-medium text-gray-600 mb-1.5">Type de sonde</div>
-        <div id="probe-picker" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
-      </div>
-
-      <div id="probe-fields" class="space-y-3"></div>
-
-      <details class="rounded-lg border border-gray-100 bg-slate-50 px-3 py-2" open>
-        <summary class="text-xs font-medium text-gray-600 cursor-pointer select-none">Fréquence et alertes</summary>
-        <div class="grid grid-cols-3 gap-3 mt-3">
-          <label class="field"><span>Intervalle (s)</span><input id="f-interval" type="number" min="1" max="3600" value="30"></label>
-          <label class="field"><span>Délai (s)</span><input id="f-timeout" type="number" min="1" max="30" step="0.5" value="3"></label>
-          <label class="field"><span>Échecs avant HS</span><input id="f-fails" type="number" min="1" max="20" value="3"></label>
-        </div>
-        <div class="flex flex-wrap gap-x-5 gap-y-2 mt-3 text-xs text-gray-700">
-          <label class="flex items-center gap-2"><input id="f-alert" type="checkbox" class="rounded" onchange="document.getElementById('f-alert-warn').disabled=!this.checked"> Alerte email (perte et rétablissement)</label>
-          <label class="flex items-center gap-2"><input id="f-alert-warn" type="checkbox" class="rounded"> aussi en cas d'alerte (dégradé)</label>
-          <label class="flex items-center gap-2"><input id="f-enabled" type="checkbox" class="rounded" checked> Sonde active</label>
-        </div>
-        <label class="field mt-3"><span>Notes</span><input id="f-notes" type="text" maxlength="300" placeholder="Emplacement, accès, contact..."></label>
-      </details>
-
-      <div id="test-result" class="hidden rounded-lg border px-3 py-2.5 text-xs"></div>
-      <div id="editor-error" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"></div>
-    </div>
-
-    <div class="px-5 py-3 border-t border-gray-100 flex items-center gap-2">
-      <button id="btn-delete" onclick="deleteDevice()" class="hidden text-xs font-medium text-red-500 hover:text-red-700 mr-auto">Supprimer</button>
-      <div class="ml-auto flex gap-2">
-        <button onclick="testDevice()" id="btn-test" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">Tester</button>
-        <button onclick="closeEditor()" class="text-xs font-medium text-gray-500 hover:text-gray-800 px-3 py-1.5">Annuler</button>
-        <button onclick="saveDevice()" id="btn-save" class="text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5">Enregistrer</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script>
 // ═══════════════════════════════════════════════════════════════════════
-//  Constantes
+//  Synoptique de la chaîne de diffusion
 // ═══════════════════════════════════════════════════════════════════════
-const PROBES = {
-  ping:     { label: 'Ping',        desc: 'Répond-il sur le réseau ?' },
-  burst:    { label: 'Ping qualité', desc: 'Rafale : pertes, pics, gigue' },
-  tcp:      { label: 'Port TCP',    desc: 'Un service écoute-t-il ?' },
-  http:     { label: 'Page web',    desc: 'Interface web, code, mot-clé' },
-  snmp:     { label: 'SNMP',        desc: 'Valeurs internes (OID)' },
-  icecast:  { label: 'Icecast',     desc: 'Flux en ligne, auditeurs' },
-  fm_local: { label: 'Réception FM', desc: 'Ce BL-FMO, en bout de chaîne' },
-};
-
 const STATES = {
-  up:       { label: 'En service',   dot: 'bg-emerald-500', text: 'text-emerald-700', pill: 'bg-emerald-50 text-emerald-700' },
-  warn:     { label: 'Alerte',       dot: 'bg-amber-500',     text: 'text-amber-700',   pill: 'bg-amber-50 text-amber-700' },
-  unstable: { label: 'Instable',     dot: 'bg-amber-400',     text: 'text-amber-700',   pill: 'bg-amber-50 text-amber-700' },
-  down:     { label: 'Hors service', dot: 'bg-red-500',         text: 'text-red-700',     pill: 'bg-red-50 text-red-700' },
-  unknown:  { label: 'En attente',   dot: 'bg-slate-300',     text: 'text-slate-500',   pill: 'bg-slate-100 text-slate-600' },
-  disabled: { label: 'Désactivé',    dot: 'bg-slate-200',     text: 'text-slate-400',   pill: 'bg-slate-100 text-slate-500' },
+  up:       { label: 'OK',           dot: '#10b981', bg: '#ecfdf5', fg: '#047857' },
+  warn:     { label: 'Alerte',       dot: '#f59e0b', bg: '#fffbeb', fg: '#b45309' },
+  unstable: { label: 'Instable',     dot: '#f59e0b', bg: '#fffbeb', fg: '#b45309' },
+  down:     { label: 'Hors service', dot: '#ef4444', bg: '#fef2f2', fg: '#b91c1c' },
+  unknown:  { label: 'En attente',   dot: '#cbd5e1', bg: '#f1f5f9', fg: '#475569' },
+  disabled: { label: 'Désactivé',    dot: '#e2e8f0', bg: '#f1f5f9', fg: '#64748b' },
 };
+const NO_PROBE = { label: 'Non surveillé', dot: '#cbd5e1', bg: '#f1f5f9', fg: '#475569' };
+const PROBE_LABELS = { ping: 'Ping', burst: 'Ping qualité', tcp: 'Port TCP', http: 'Page web', snmp: 'SNMP', icecast: 'Icecast', fm_local: 'Récepteur FM local' };
+const LINE = { up: '#10b981', warn: '#f59e0b', unstable: '#f59e0b', down: '#ef4444' };
 
-// Modèles SNMP : points de départ, à vérifier avec le bouton Tester.
-const SNMP_PRESETS = {
-  system: { label: 'Standard (tout appareil SNMP)', metrics: [
-    { label: 'Uptime', oid: '.1.3.6.1.2.1.1.3.0', format: 'uptime' },
-    { label: 'Nom',    oid: '.1.3.6.1.2.1.1.5.0', format: 'text' },
-  ]},
-  mikrotik: { label: 'MikroTik RouterOS 7', version: '2c', metrics: [
-    { label: 'Uptime',      oid: '.1.3.6.1.2.1.1.3.0', format: 'uptime' },
-    { label: 'CPU',         oid: '.1.3.6.1.2.1.25.3.3.1.2.1', format: 'number', unit: '%', max: 80 },
-    { label: 'Température', oid: '.1.3.6.1.4.1.14988.1.1.3.100.1.3.17', format: 'number', scale: 1, unit: '°C', max: 75 },
-  ]},
-  bwtx: { label: 'BW Broadcast TX V3 (SNMP v1)', version: '1', metrics: [
-    { label: 'Puissance directe', oid: '.1.3.6.1.4.1.38508.137.9.15.0', format: 'number', unit: 'W' },
-    { label: 'Puissance réglée',  oid: '.1.3.6.1.4.1.38508.137.17.4.0', format: 'number', unit: 'W' },
-    { label: 'Puissance réfléchie', oid: '.1.3.6.1.4.1.38508.137.9.16.0', format: 'number', unit: 'W', max: 20 },
-    { label: 'Temp. PA',          oid: '.1.3.6.1.4.1.38508.137.9.17.0', format: 'number', unit: '°C', max: 60 },
-    { label: 'Tension PA',        oid: '.1.3.6.1.4.1.38508.137.9.22.0', format: 'number', scale: 0.1, unit: 'V' },
-    { label: 'Courant PSU',       oid: '.1.3.6.1.4.1.38508.137.9.21.0', format: 'number', scale: 0.01, unit: 'A' },
-    { label: 'Déviation crête',   oid: '.1.3.6.1.4.1.38508.137.9.18.0', format: 'number', unit: 'kHz', max: 80 },
-    { label: 'Ventilateur',       oid: '.1.3.6.1.4.1.38508.137.9.9.0',  format: 'number', unit: '' },
-    { label: 'Régulation',        oid: '.1.3.6.1.4.1.38508.137.8.2.0',  format: 'text', expect: 'Locked' },
-    { label: 'Limite ROS',        oid: '.1.3.6.1.4.1.38508.137.15.3.0', format: 'text', expect: 'off' },
-    { label: 'Limite temp.',      oid: '.1.3.6.1.4.1.38508.137.15.2.0', format: 'text', expect: 'off' },
-    { label: 'Fréquence',         oid: '.1.3.6.1.4.1.38508.137.17.1.0', format: 'number', scale: 0.000001, unit: 'MHz' },
-  ]},
-  sound4: { label: 'Sound4 PULSE / IMPACT', version: '2c', metrics: [
-    { label: 'État serveur',    oid: '.1.3.6.1.4.1.29932.1.1.0', format: 'enum', labels: '0=Inconnu,1=Nouveau,2=Démarrage,3=Chargement,4=OK,5=En panne,6=Pas de données,7=Mise à jour', expect: '4' },
-    { label: 'Traitement',      oid: '.1.3.6.1.4.1.29932.2.2.1.40.1', format: 'enum', labels: '0=Inconnu,1=Nouveau,2=Démarrage,3=Chargement,4=OK,5=En panne,6=Pas de données,7=Mise à jour', expect: '4' },
-    { label: 'Audio détecté',   oid: '.1.3.6.1.4.1.29932.2.30.1.1.6.1.1', format: 'enum', labels: '0=Non,1=Oui', expect: '1' },
-    { label: 'Flux 1',          oid: '.1.3.6.1.4.1.29932.2.30.2.1.2.1.1.1', format: 'enum', labels: '0=Arrêté,1=Erreur audio,2=Erreur config,3=Erreur,4=Connexion,5=En ligne,6=Surcharge réseau,7=Attente synchro,8=Resynchro,9=Pertes audio,10=Sans audio (arrêté),11=Sans audio,12=Indisponible', expect: '5' },
-    { label: 'Flux 2',          oid: '.1.3.6.1.4.1.29932.2.30.2.1.2.2.1.1', format: 'enum', labels: '0=Arrêté,1=Erreur audio,2=Erreur config,3=Erreur,4=Connexion,5=En ligne,6=Surcharge réseau,7=Attente synchro,8=Resynchro,9=Pertes audio,10=Sans audio (arrêté),11=Sans audio,12=Indisponible', expect: '5' },
-    { label: 'Flux 3',          oid: '.1.3.6.1.4.1.29932.2.30.2.1.2.3.1.1', format: 'enum', labels: '0=Arrêté,1=Erreur audio,2=Erreur config,3=Erreur,4=Connexion,5=En ligne,6=Surcharge réseau,7=Attente synchro,8=Resynchro,9=Pertes audio,10=Sans audio (arrêté),11=Sans audio,12=Indisponible', expect: '5' },
-    { label: 'Puissance MPX',   oid: '.1.3.6.1.4.1.29932.2.10.10.1.1.6.1', format: 'number', unit: 'dBr' },
-    { label: 'Entrée analog.',  oid: '.1.3.6.1.4.1.29932.2.10.10.1.1.1.1', format: 'enum', labels: '0=Absente,1=OK', expect: '1' },
-    { label: 'Entrée AES',      oid: '.1.3.6.1.4.1.29932.2.10.10.1.1.2.1', format: 'enum', labels: '0=Absente,1=OK', expect: '1' },
-    { label: 'Temp. CPU',       oid: '.1.3.6.1.4.1.29932.1.40.0', format: 'number', scale: 0.001, unit: '°C', max: 75 },
-    { label: 'Alim. 1',         oid: '.1.3.6.1.4.1.29932.1.20.0', format: 'enum', labels: '0=Défaut,1=OK', expect: '1' },
-    { label: 'Alim. 2',         oid: '.1.3.6.1.4.1.29932.1.21.0', format: 'enum', labels: '0=Défaut,1=OK', expect: '1' },
-  ]},
-  deva_tx: { label: 'Deva DB91-TX', version: '2c', metrics: [
-    { label: 'Entrée active',   oid: '.1.3.6.1.4.1.35833.24.3.1.0',  format: 'enum', labels: '11=Analogique,12=Numérique' },
-    { label: 'Perte Main',      oid: '.1.3.6.1.4.1.35833.24.3.15.0', format: 'enum', labels: '1=Non,2=Oui', expect: '1' },
-    { label: 'Perte Backup',    oid: '.1.3.6.1.4.1.35833.24.3.16.0', format: 'enum', labels: '1=Non,2=Oui' },
-    { label: 'Analog. G (moy.)', oid: '.1.3.6.1.4.1.35833.24.3.4.0', format: 'number', scale: 0.00390625, unit: 'dB' },
-    { label: 'Analog. D (moy.)', oid: '.1.3.6.1.4.1.35833.24.3.7.0', format: 'number', scale: 0.00390625, unit: 'dB' },
-    { label: 'Numér. G (moy.)', oid: '.1.3.6.1.4.1.35833.24.3.10.0', format: 'number', scale: 0.00390625, unit: 'dB' },
-    { label: 'Numér. D (moy.)', oid: '.1.3.6.1.4.1.35833.24.3.13.0', format: 'number', scale: 0.00390625, unit: 'dB' },
-    { label: 'Connexions',      oid: '.1.3.6.1.4.1.35833.24.3.17.0', format: 'number' },
-    { label: 'Envoi 1 : type',  oid: '.1.3.6.1.4.1.35833.24.3.18.1.2.1', format: 'enum', labels: '0=Non utilisé,1=RTP,2=Icecast,3=SHOUTcast,4=Client IP Audio' },
-    { label: 'Envoi 1 : état',  oid: '.1.3.6.1.4.1.35833.24.3.18.1.3.1', format: 'enum', labels: '0=Connexion,1=Émission,2=Erreur', expect: '1' },
-    { label: 'Envoi 1 : codec', oid: '.1.3.6.1.4.1.35833.24.3.18.1.6.1', format: 'enum', labels: '2=MP3,3=HE-AAC,4=PCM 32 kHz,5=PCM 44.1 kHz,6=PCM 48 kHz' },
-    { label: 'Firmware',        oid: '.1.3.6.1.4.1.35833.24.1.1.0',  format: 'text' },
-  ]},
-  deva_rx: { label: 'Deva DB91-RX', version: '2c', metrics: [
-    { label: 'Source active',   oid: '.1.3.6.1.4.1.35833.23.3.1.0',  format: 'enum', labels: '3=Lecteur MP3,4=RTP,5=IP Audio 1,6=IP Audio 2,7=IP Audio 3' },
-    { label: 'Choix source',    oid: '.1.3.6.1.4.1.35833.23.3.2.0',  format: 'enum', labels: '0=Auto,1=Forcé (web),2=Forcé (horaire),3=Forcé (SNMP)' },
-    { label: 'Perte Main',      oid: '.1.3.6.1.4.1.35833.23.3.39.0', format: 'enum', labels: '1=Non,2=Oui', expect: '1' },
-    { label: 'Perte Backup 1',  oid: '.1.3.6.1.4.1.35833.23.3.40.0', format: 'enum', labels: '1=Non,2=Oui', expect: '1' },
-    { label: 'Perte Backup 2',  oid: '.1.3.6.1.4.1.35833.23.3.41.0', format: 'enum', labels: '1=Non,2=Oui', expect: '1' },
-    { label: 'Sortie G (moy.)', oid: '.1.3.6.1.4.1.35833.23.3.4.0',  format: 'number', scale: 0.00390625, unit: 'dB' },
-    { label: 'Sortie D (moy.)', oid: '.1.3.6.1.4.1.35833.23.3.7.0',  format: 'number', scale: 0.00390625, unit: 'dB' },
-    { label: 'Connexions',      oid: '.1.3.6.1.4.1.35833.23.3.42.0', format: 'number' },
-    { label: 'État RTP',        oid: '.1.3.6.1.4.1.35833.23.3.43.1.2.4', format: 'enum', labels: '0=Connexion,1=Réception,2=Erreur', expect: '1' },
-    { label: 'Débit RTP',       oid: '.1.3.6.1.4.1.35833.23.3.43.1.7.4', format: 'number', scale: 0.001, unit: 'kb/s' },
-    { label: 'Firmware',        oid: '.1.3.6.1.4.1.35833.23.1.1.0',  format: 'text' },
-  ]},
-  airmax: { label: 'Ubiquiti airMAX (airOS, SNMP v1)', version: '1', metrics: [
-    { label: 'Uptime', oid: '.1.3.6.1.2.1.1.3.0', format: 'uptime' },
-    { label: 'Signal', oid: '.1.3.6.1.4.1.41112.1.4.5.1.5.1', format: 'number', unit: 'dBm', min: -70 },
-    { label: 'Bruit',  oid: '.1.3.6.1.4.1.41112.1.4.5.1.8.1', format: 'number', unit: 'dBm' },
-    { label: 'CCQ',    oid: '.1.3.6.1.4.1.41112.1.4.5.1.7.1', format: 'number', unit: '%', min: 80 },
-  ]},
-};
+let all = [];            // état complet renvoyé par /api/chain/status
+let byId = {};
+let sel = null;          // 'd:12' (appareil) ou 'l:12-13' (lien entre deux appareils)
+let tab = 'etat';
+let curveHours = 24;
+let curveTimer = 0;
 
-let devices = [];          // statut courant (API /status)
-let deviceDefs = {};       // définitions complètes (API /devices) indexées par id
-let tools = {};
-let editing = null;        // id en cours d'édition, ou null
-let editingKind = 'device';
-const chainDevs = () => devices.filter(d => d.kind !== 'probe');
-const probeDevs = () => devices.filter(d => d.kind === 'probe');
-let currentProbe = 'ping';
-let snmpMetrics = [];
-
-// ═══════════════════════════════════════════════════════════════════════
-//  Utilitaires
-// ═══════════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
 function esc(s) {
-  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
-function csrf() {
-  const m = document.querySelector('meta[name="csrf-token"]');
-  return m ? m.content : '';
-}
-let csrfToken = null;
-function csrfHeader() { return csrfToken || csrf(); }
-async function refreshCsrf() {
-  try {
-    const r = await fetch('/api/csrf-token', { credentials: 'include' });
-    csrfToken = (await r.json()).csrf_token;
-  } catch (e) {}
-}
-async function api(url, opts = {}, retried = false) {
+function csrf() { const m = document.querySelector('meta[name="csrf-token"]'); return m ? m.content : ''; }
+async function api(url, opts = {}) {
   const o = Object.assign({ credentials: 'include' }, opts);
   o.headers = Object.assign({}, opts.headers || {});
-  if (o.body && typeof o.body !== 'string') {
-    o.body = JSON.stringify(o.body);
-    o.headers['Content-Type'] = 'application/json';
-  }
-  if (o.method && o.method !== 'GET') o.headers['X-CSRFToken'] = csrfHeader();
+  if (o.method && o.method !== 'GET') o.headers['X-CSRFToken'] = csrf();
   const r = await fetch(url, o);
   if (r.status === 401) { window.location = '/login?next=/chain'; throw new Error('Session expirée'); }
-  let data = null;
-  try { data = await r.clone().json(); } catch (e) {}
-  // Jeton CSRF expiré (page ouverte longtemps) : on en reprend un et on rejoue une fois
-  if (r.status === 400 && !data && !retried) {
-    await refreshCsrf();
-    return api(url, opts, true);
-  }
-  data = data || {};
-  if (!r.ok) {
-    if (r.status === 400 && retried && !data.message) throw new Error('Session expirée : rechargez la page (F5)');
-    throw new Error(data.message || data.error || `Erreur ${r.status}`);
-  }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.message || `Erreur ${r.status}`);
   return data;
 }
-function ago(iso) {
-  if (!iso) return 'jamais';
-  const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
-  if (s < 60) return `il y a ${s} s`;
-  if (s < 3600) return `il y a ${Math.floor(s / 60)} min`;
-  if (s < 86400) return `il y a ${Math.floor(s / 3600)} h`;
-  return `il y a ${Math.floor(s / 86400)} j`;
+function pad(n) { return String(n).padStart(2, '0'); }
+function dur(iso) {
+  if (!iso) return '--:--:--';
+  const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s % 3600 / 60))}:${pad(s % 60)}`;
 }
-function fmtDate(iso) {
+function when(iso) {
   if (!iso) return '';
   const d = new Date(iso);
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' +
-         d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} à ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
-function stateLabel(d) {
-  if (d.state === 'unstable') return `Instable (${d.fails}/${d.fail_threshold})`;
-  return (STATES[d.state] || STATES.unknown).label;
+// « 3.50 » devient « 3,50 » (mais pas « 3.4.2233 », une version de firmware)
+function fr(v) { const t = String(v ?? ''); return /^-?\d+\.\d+$/.test(t) ? t.replace('.', ',').replace(/^-/, '−') : t.replace(/^-(?=\d)/, '−'); }
+function ms(v) { const n = Number(v); return isNaN(n) ? '' : (n < 10 ? n.toFixed(1) : n.toFixed(0)).replace('.', ',') + ' ms'; }
+function st(x) { return x ? (STATES[x.state] || STATES.unknown) : NO_PROBE; }
+function metric(d, label) { return (d.metrics || []).find(m => m.label === label); }
+
+// ── Données ────────────────────────────────────────────────────────────
+const chainDevs = () => all.filter(d => d.kind !== 'probe');
+const probes = () => all.filter(d => d.kind === 'probe');
+// Plusieurs sondes peuvent surveiller le même lien (ex. rafale toutes les 10 s + ping chaque seconde)
+const SEVERITY = { down: 4, warn: 3, unstable: 3, up: 1, unknown: 0, disabled: 0 };
+function linkProbes(a, b) {
+  return probes()
+    .filter(p => (p.link_from === a.id && p.link_to === b.id) || (p.link_from === b.id && p.link_to === a.id))
+    .sort((x, y) => (x.probe === 'burst' ? 0 : 1) - (y.probe === 'burst' ? 0 : 1) || x.id - y.id);
+}
+// Sonde qui représente le lien sur le schéma : la plus grave, sinon la principale (rafale)
+function linkProbe(a, b) {
+  const list = linkProbes(a, b);
+  if (!list.length) return null;
+  return list.reduce((w, p) => (SEVERITY[p.state] || 0) > (SEVERITY[w.state] || 0) ? p : w, list[0]);
+}
+const linkChoice = {};   // lien → sonde affichée dans le panneau
+// Lien vers la réception FM : c'est BL-FMO lui-même qui le mesure (champ, modulation, RDS)
+const airLink = b => b && b.probe === 'fm_local';
+function airFigures(b) {
+  const champ = metric(b, 'Champ'), rds = metric(b, 'RDS'), mod = metric(b, 'Modulation');
+  return [champ ? `${fr(champ.display)} dBf` : (mod ? `Modulation ${mod.display}` : st(b).label), rds ? `RDS ${rds.display}` : ''];
+}
+function linkFigures(p) {
+  // Deux lignes courtes sous la flèche
+  if (!p) return ['', ''];
+  if (p.state === 'down') return ['coupé', ''];
+  const loss = metric(p, 'Pertes'), avg = metric(p, 'Latence moy.');
+  if (loss) return [`${fr(loss.display)} %`, avg && avg.value != null ? ms(avg.value) : ''];
+  if (p.latency_ms != null) return [ms(p.latency_ms), ''];
+  return [st(p).label, ''];
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  Vue chaîne
-// ═══════════════════════════════════════════════════════════════════════
 async function refresh() {
   try {
     const data = await api('/api/chain/status');
-    devices = data.devices || [];
-    tools = data.tools || {};
-    renderSummary();
-    renderFlow();
-    renderProbes();
-    renderTable();
-    renderToolsWarning();
-    renderFilterOptions();
-  } catch (e) { console.warn(e); }
+    all = data.devices || [];
+    byId = Object.fromEntries(all.map(d => [d.id, d]));
+    const t = data.tools || {};
+    const miss = [!t.ping && 'ping (iputils-ping)', !t.snmpget && 'snmpget (snmp)'].filter(Boolean);
+    $('tools-warning').classList.toggle('hidden', !miss.length);
+    if (miss.length) $('tools-warning').innerHTML = `Outils absents : ${miss.map(esc).join(', ')}. <code>sudo apt install iputils-ping snmp</code>`;
+  } catch (e) { return; }
+  renderSynoptic();
+  if (sel) { if (!resolveSel()) closePanel(); else { renderHeader(); if (tab === 'etat') renderMetrics(); } }
 }
 
-function renderSummary() {
-  const c = { up: 0, warn: 0, down: 0 };
-  devices.forEach(d => {
-    if (d.state === 'up') c.up++;
-    else if (d.state === 'warn' || d.state === 'unstable') c.warn++;
-    else if (d.state === 'down') c.down++;
+// ── Synoptique ─────────────────────────────────────────────────────────
+function tileHtml(d) {
+  const s = st(d), on = sel === `d:${d.id}`;
+  return `<button onclick="openSel('d:${d.id}')" title="${esc(s.label)} depuis le ${esc(when(d.last_change))}"
+    class="flex flex-col text-left bg-white flex-shrink-0"
+    style="width:108px;height:116px;box-sizing:border-box;padding:9px;border-radius:10px;border:1px solid ${on ? '#2563eb' : '#e2e8f0'};box-shadow:${on ? '0 0 0 2px #bfdbfe' : '0 1px 2px rgba(15,23,42,.04)'}">
+    <span class="flex items-start gap-1.5" style="height:34px"><span class="rounded-full flex-shrink-0" style="width:8px;height:8px;margin-top:5px;background:${s.dot}"></span>
+      <span class="font-semibold text-gray-900 overflow-hidden" style="font-size:12.5px;line-height:17px;max-height:34px;overflow-wrap:anywhere">${esc(d.name)}</span></span>
+    <span class="block text-[11px] text-gray-500 truncate">${esc(d.role || PROBE_LABELS[d.probe] || '')}</span>
+    <span class="flex items-center gap-1.5" style="margin-top:6px"><span class="text-[11px] font-semibold rounded px-1.5" style="background:${s.bg};color:${s.fg}">${esc(s.label)}</span><span class="text-[11px] text-gray-500">depuis</span></span>
+    <span class="block text-[13px] text-gray-900 mt-0.5 font-mono" data-since="${esc(d.last_change || '')}">${dur(d.last_change)}</span>
+  </button>`;
+}
+function arrowHtml(a, b) {
+  const air = airLink(b);
+  const p = air ? b : linkProbe(a, b), key = air ? `d:${b.id}` : `l:${a.id}-${b.id}`, on = sel === key;
+  const color = p ? (LINE[p.state] || '#cbd5e1') : '#cbd5e1';
+  const [l1, l2] = air ? airFigures(b) : p ? linkFigures(p) : [a.out_label || '', ''];
+  const chip = p ? `background:${st(p).bg};color:${st(p).fg}` : 'color:#94a3b8';
+  return `<button onclick="openSel('${key}')" aria-label="Lien ${esc(a.name)} vers ${esc(b.name)}"
+    class="flex flex-col items-center gap-0.5 rounded-md py-1.5 flex-shrink-0" style="width:40px;background:${on ? '#eff6ff' : 'transparent'}">
+    <span class="flex items-center w-full"><span class="flex-1" style="height:${on ? 3 : 2}px;background:${color}"></span>
+      <svg width="6" height="10" viewBox="0 0 6 10" aria-hidden="true"><path d="M0 0 L6 5 L0 10 Z" fill="${color}"/></svg></span>
+    <span class="text-[10px] font-semibold font-mono rounded px-1 max-w-full truncate" style="${chip}">${esc(l1)}</span>
+    <span class="text-[10px] text-gray-500 font-mono">${esc(l2)}</span>
+  </button>`;
+}
+function bandHtml(a, b) {
+  const air = airLink(b);
+  const p = air ? b : linkProbe(a, b), key = air ? `d:${b.id}` : `l:${a.id}-${b.id}`, on = sel === key, s = st(p);
+  const [l1, l2] = air ? airFigures(b) : linkFigures(p);
+  const title = a.out_label || 'Liaison';
+  return `<button onclick="openSel('${key}')" class="w-full flex flex-wrap items-center gap-3 text-left rounded-xl px-4 py-2.5"
+    style="border:${on ? '1px solid #2563eb' : '1px dashed #cbd5e1'};background:${on ? '#eff6ff' : 'transparent'}">
+    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="${p ? (LINE[p.state] || '#94a3b8') : '#94a3b8'}" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16m0 0l-5-5m5 5l5-5"/></svg>
+    <span class="min-w-0">
+      <span class="block text-[13px] font-semibold text-gray-900">${esc(title)}</span>
+      <span class="block text-[11px] text-gray-500">${esc(a.name)} vers ${esc(b.name)}${air ? ' · mesuré par la réception FM de BL-FMO' : p ? ' · sonde ' + esc(p.name) : ' · sans sonde'}</span>
+    </span>
+    ${p ? `<span class="ml-auto flex flex-wrap items-center gap-2 text-[11px] font-mono">
+      <span class="rounded-md px-2 py-0.5" style="background:${s.bg};color:${s.fg}">${esc(s.label)} depuis <span data-since="${esc(p.last_change || '')}">${dur(p.last_change)}</span></span>
+      ${l1 ? `<span class="rounded-md px-2 py-0.5 bg-slate-100 text-slate-700">${esc([l1, l2].filter(Boolean).join(' · '))}</span>` : ''}
+    </span>` : ''}
+  </button>`;
+}
+
+function renderSynoptic() {
+  const devs = chainDevs();
+  $('empty').classList.toggle('hidden', devs.length > 0);
+  $('legend').classList.toggle('hidden', devs.length === 0);
+
+  // Sites dans l'ordre du signal (appareils consécutifs d'un même site)
+  const sections = [];
+  devs.forEach(d => {
+    const last = sections[sections.length - 1];
+    if (last && last.site === (d.site || '')) last.devs.push(d);
+    else sections.push({ site: d.site || '', devs: [d] });
   });
-  const pill = (n, st, txt) => n ? `<span class="px-2 py-0.5 rounded-full font-medium ${STATES[st].pill}">${n} ${txt}</span>` : '';
-  document.getElementById('summary').innerHTML =
-    pill(c.up, 'up', 'OK') + pill(c.warn, 'warn', 'alerte' + (c.warn > 1 ? 's' : '')) + pill(c.down, 'down', 'HS');
-}
-
-function renderToolsWarning() {
-  const el = document.getElementById('tools-warning');
-  const msgs = [];
-  if (!tools.snmpget && devices.some(d => d.probe === 'snmp'))
-    msgs.push("La commande <code>snmpget</code> est absente : installez-la avec <code>sudo apt install snmp</code>.");
-  if (!tools.ping && devices.some(d => d.probe === 'ping'))
-    msgs.push("La commande <code>ping</code> est absente : installez-la avec <code>sudo apt install iputils-ping</code>.");
-  el.innerHTML = msgs.join('<br>');
-  el.classList.toggle('hidden', !msgs.length);
-}
-
-function renderFlow() {
-  const flow = document.getElementById('chain-flow');
-  const list = chainDevs();
-  document.getElementById('chain-empty').classList.toggle('hidden', list.length > 0);
-  if (!list.length) { flow.innerHTML = ''; return; }
-
-  // Regroupement par site, dans l'ordre d'apparition
-  const sites = [];
-  list.forEach(d => {
-    const name = d.site || 'Sans site';
-    let s = sites.find(x => x.name === name && x === sites[sites.length - 1]);
-    if (!s) { s = { name, items: [] }; sites.push(s); }
-    s.items.push(d);
+  let html = '';
+  sections.forEach((sec, i) => {
+    if (i > 0) {
+      const prev = sections[i - 1].devs;
+      html += bandHtml(prev[prev.length - 1], sec.devs[0]);
+    }
+    html += `<section class="section" style="margin-bottom:0;padding:14px 16px">
+      <div class="text-[11px] font-bold tracking-wider text-blue-600 mb-2.5 uppercase">${esc(sec.site || 'Sans site')}</div>
+      <div class="flex flex-wrap items-center gap-y-3">`;
+    sec.devs.forEach((d, j) => {
+      html += tileHtml(d);
+      if (j < sec.devs.length - 1) html += arrowHtml(d, sec.devs[j + 1]);
+    });
+    html += '</div></section>';
   });
+  $('synoptic').innerHTML = html;
 
-  flow.innerHTML = sites.map((s, si) => {
-    const worst = siteWorst(s.items);
-    return `
-      ${si > 0 ? `<div class="flex justify-center"><svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg></div>` : ''}
-      <div class="section !mb-0">
-        <div class="flex items-center gap-2 mb-3">
-          <span class="w-2 h-2 rounded-full ${STATES[worst].dot}"></span>
-          <span class="text-xs font-bold uppercase tracking-wide text-gray-700">${esc(s.name)}</span>
-          <span class="text-xs text-gray-400">${s.items.length} appareil${s.items.length > 1 ? 's' : ''}</span>
-        </div>
-        <div class="chain-row">
-          ${s.items.map(card).join('')}
-        </div>
-      </div>`;
-  }).join('');
+  // Sondes qui ne sont rattachées à aucun lien affiché
+  const shown = new Set();
+  devs.forEach((d, i) => { if (devs[i + 1]) linkProbes(d, devs[i + 1]).forEach(p => shown.add(p.id)); });
+  const others = probes().filter(p => !shown.has(p.id));
+  $('other-probes').classList.toggle('hidden', !others.length);
+  $('other-probes').innerHTML = others.length ? `<div class="text-[11px] font-bold tracking-wider text-blue-600 mb-2">AUTRES SONDES</div>
+    <div class="flex flex-wrap gap-2">${others.map(p => {
+      const s = st(p), [l1, l2] = linkFigures(p);
+      return `<button onclick="openSel('p:${p.id}')" class="flex items-center gap-2 bg-white border rounded-lg px-3 py-2 text-left" style="border-color:${sel === 'p:' + p.id ? '#2563eb' : '#e2e8f0'}">
+        <span class="rounded-full" style="width:8px;height:8px;background:${s.dot}"></span>
+        <span><span class="block text-xs font-medium text-gray-800">${esc(p.name)}</span><span class="block text-[11px] text-gray-500 font-mono">${esc([l1, l2].filter(Boolean).join(' · ') || s.label)}</span></span>
+      </button>`;
+    }).join('')}</div><p class="text-[11px] text-gray-400 mt-1.5">Rattachez une sonde à un lien dans « Gérer la chaîne » pour l'afficher sur la flèche correspondante.</p>` : '';
 
-  list.forEach(d => drawSpark(d));
+  // Résumé
+  const count = k => devs.filter(d => d.state === k).length;
+  const bad = probes().filter(p => ['warn', 'unstable', 'down'].includes(p.state)).length;
+  const pills = [];
+  if (count('up')) pills.push(['up', `${count('up')} appareil${count('up') > 1 ? 's' : ''} OK`]);
+  const alertes = count('warn') + count('unstable');
+  if (alertes) pills.push(['warn', `${alertes} en alerte`]);
+  if (count('down')) pills.push(['down', `${count('down')} hors service`]);
+  if (bad) pills.push(['warn', `${bad} sonde${bad > 1 ? 's' : ''} en alerte`]);
+  $('summary').innerHTML = pills.map(([k, t]) => `<span class="rounded-full px-2.5 py-1 font-medium" style="background:${STATES[k].bg};color:${STATES[k].fg}">${esc(t)}</span>`).join('');
 }
 
-function metricOf(d, label) {
-  const m = (d.metrics || []).find(x => x.label === label);
-  return m ? m : null;
+// ── Sélection ──────────────────────────────────────────────────────────
+// Renvoie { kind: 'device' | 'link' | 'probe', ent (appareil ou sonde, ou null), a, b }
+function resolveSel() {
+  if (!sel) return null;
+  const [k, v] = sel.split(':');
+  if (k === 'd') { const d = byId[+v]; return d && d.kind !== 'probe' ? { kind: 'device', ent: d } : null; }
+  if (k === 'p') { const p = byId[+v]; return p ? { kind: 'probe', ent: p } : null; }
+  if (k === 'l') {
+    const [x, y] = v.split('-').map(Number), a = byId[x], b = byId[y];
+    if (!a || !b) return null;
+    const list = linkProbes(a, b);
+    const ent = list.find(p => p.id === linkChoice[sel]) || linkProbe(a, b);
+    return { kind: 'link', ent, a, b, list };
+  }
+  return null;
 }
-function cellMetric(m, unit) {
-  if (!m) return '<span class="text-gray-300">·</span>';
-  const cls = m.state === 'warn' ? 'text-amber-700 font-semibold' : 'text-gray-800';
-  return `<span class="font-mono ${cls}">${esc(m.display)}</span> <span class="text-gray-400">${unit}</span>`;
+function tabsFor(r) {
+  if (r.kind === 'device') return [['etat', 'État'], ['journaux', 'Journaux'], ['historique', 'Historique'], ['reglages', 'Réglages']];
+  if (!r.ent) return [['etat', 'État'], ['reglages', 'Réglages']];
+  return [['etat', 'État'], ['historique', 'Historique'], ['reglages', 'Réglages']];
 }
-function renderProbes() {
-  const list = probeDevs();
-  const tb = document.getElementById('probe-rows');
-  document.getElementById('probes-empty').classList.toggle('hidden', list.length > 0);
-  document.getElementById('probes-wrap').classList.toggle('hidden', !list.length);
-  const bad = list.filter(d => ['down', 'warn', 'unstable'].includes(d.state)).length;
-  document.getElementById('probes-summary').textContent = list.length
-    ? `${list.length} sonde${list.length > 1 ? 's' : ''}${bad ? ' · ' + bad + ' en alerte' : ''}` : '';
-  tb.innerHTML = list.map(d => {
-    const st = STATES[d.state] || STATES.unknown;
-    const isBurst = d.probe === 'burst';
-    const avg = isBurst ? metricOf(d, 'Latence moy.')
-      : (d.latency_ms != null ? { display: d.latency_ms < 10 ? d.latency_ms.toFixed(1) : Math.round(d.latency_ms), state: null } : null);
-    return `
-    <tr class="border-b border-gray-50 hover:bg-slate-50 ${d.enabled ? '' : 'opacity-50'}">
-      <td class="py-1.5 pr-3 whitespace-nowrap"><span class="font-medium text-gray-800">${esc(d.name)}</span>
-        <div class="text-[10px] text-gray-400">${esc(PROBES[d.probe]?.label || d.probe)} · ${d.interval} s</div></td>
-      <td class="py-1.5 pr-3 font-mono text-gray-500 whitespace-nowrap">${esc(d.target)}</td>
-      <td class="py-1.5 pr-3 whitespace-nowrap" title="${esc(d.message)}">
-        <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${st.dot} ${d.state === 'down' ? 'animate-pulse' : ''}"></span>
-        <span class="font-semibold ${st.text}">${esc(stateLabel(d))}</span></span>
-        <div class="text-[10px] text-gray-400 truncate max-w-[14rem]">${esc(d.enabled ? d.message : 'Sonde désactivée')}</div></td>
-      <td class="py-1.5 pr-3 text-right whitespace-nowrap">${cellMetric(metricOf(d, 'Pertes'), '%')}</td>
-      <td class="py-1.5 pr-3 text-right whitespace-nowrap">${cellMetric(avg, 'ms')}</td>
-      <td class="py-1.5 pr-3 text-right whitespace-nowrap">${cellMetric(metricOf(d, 'Latence max'), 'ms')}</td>
-      <td class="py-1.5 pr-3 text-right whitespace-nowrap">${cellMetric(metricOf(d, 'Gigue'), 'ms')}</td>
-      <td class="py-1.5 pr-3"><canvas class="spark" id="spark-${d.id}" width="110" height="26"></canvas></td>
-      <td class="py-1.5 text-right whitespace-nowrap">
-        <button class="icon-btn" title="Sonder maintenant" onclick="probeNow(${d.id})"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></button>
-        <button class="icon-btn" title="Modifier" onclick="openEditor(${d.id})"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
-      </td>
-    </tr>`;
-  }).join('');
-  list.forEach(d => drawSpark(d));
+function openSel(key) {
+  if (sel !== key) { sel = key; }
+  const r = resolveSel();
+  if (!r) return;
+  if (!tabsFor(r).some(t => t[0] === tab)) tab = 'etat';
+  try { history.replaceState(null, '', '#' + key); } catch (e) {}
+  $('panel').classList.remove('hidden');
+  $('panel').classList.add('flex');
+  $('panel-backdrop').classList.add('show');
+  renderSynoptic();
+  renderHeader();
+  renderTab();
+}
+function closePanel() {
+  sel = null;
+  $('panel').classList.add('hidden');
+  $('panel').classList.remove('flex');
+  $('panel-backdrop').classList.remove('show');
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  renderSynoptic();
+}
+function pickLinkProbe(id) { linkChoice[sel] = id; renderHeader(); renderTab(); }
+function setTab(t) { tab = t; renderHeader(); renderTab(); }
+
+function probeLine(e) {
+  const rafale = (e.settings || []).find(x => x[0] === 'Rafale');
+  if (e.probe === 'burst' && rafale) return `${rafale[1]}, toutes les ${e.interval} s`;
+  return `Sonde ${PROBE_LABELS[e.probe] || e.probe} · toutes les ${e.interval} s`;
 }
 
-function siteWorst(items) {
-  const order = ['down', 'warn', 'unstable', 'up', 'unknown', 'disabled'];
-  for (const st of order) if (items.some(d => d.state === st)) return st === 'unstable' ? 'warn' : st;
-  return 'unknown';
+function renderHeader() {
+  const r = resolveSel();
+  if (!r) return;
+  const e = r.ent, s = st(e);
+  let kind, name, sub, probe, web = '';
+  if (r.kind === 'device') {
+    kind = 'APPAREIL'; name = e.name;
+    sub = [e.role, e.site, e.host].filter(Boolean).join(' · ');
+    probe = probeLine(e); web = e.web || '';
+  } else if (e) {
+    kind = 'SONDE RÉSEAU'; name = e.name;
+    const a = r.a || byId[e.link_from], b = r.b || byId[e.link_to];
+    sub = `${PROBE_LABELS[e.probe] || e.probe}${a && b ? ` · ${a.name} → ${b.name}` : ''}${e.host ? ` (${e.host})` : ''}`;
+    probe = probeLine(e);
+  } else {
+    kind = 'LIEN SANS SONDE'; name = `${r.a.name} → ${r.b.name}`;
+    sub = r.a.out_label || 'Liaison'; probe = "Rien ne mesure ce lien pour l'instant";
+  }
+  $('p-kind').textContent = kind;
+  $('p-name').textContent = name;
+  $('p-sub').textContent = sub;
+  $('p-pill').textContent = s.label;
+  $('p-pill').style.cssText = `background:${s.bg};color:${s.fg}`;
+  $('p-since').innerHTML = e && e.last_change
+    ? `${esc(s.label)} depuis <span class="font-mono font-semibold" data-since="${esc(e.last_change)}">${dur(e.last_change)}</span> <span class="text-gray-500">· le ${esc(when(e.last_change))}</span>`
+    : (e ? 'Pas encore de relevé' : '');
+  $('p-probe').textContent = probe;
+  const sw = $('p-switch');
+  if (r.list && r.list.length > 1) {
+    sw.classList.remove('hidden');
+    sw.innerHTML = '<span class="text-[11px] text-gray-500 mr-1">Sondes sur ce lien :</span>' + r.list.map(p => {
+      const ps = st(p), on = p.id === e.id;
+      return `<button onclick="pickLinkProbe(${p.id})" class="inline-flex items-center gap-1.5 text-xs rounded-md px-2 py-1 border"
+        style="border-color:${on ? '#2563eb' : '#e2e8f0'};background:${on ? '#eff6ff' : '#fff'};color:${on ? '#1d4ed8' : '#334155'}">
+        <span class="rounded-full" style="width:7px;height:7px;background:${ps.dot}"></span>${esc(p.name)}</button>`;
+    }).join('');
+  } else {
+    sw.classList.add('hidden');
+    sw.innerHTML = '';
+  }
+  $('p-web').classList.toggle('hidden', !web);
+  if (web) $('p-web').href = web;
+  $('p-tabs').innerHTML = tabsFor(r).map(([k, l]) => `<button role="tab" aria-selected="${tab === k}" onclick="setTab('${k}')"
+    class="text-[13px] px-2.5 py-2 -mb-px border-b-2 ${tab === k ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-800 font-medium'}">${l}</button>`).join('');
 }
 
-function card(d) {
-  const st = STATES[d.state] || STATES.unknown;
-  const metrics = (d.metrics || []).map(m => {
-    const cls = m.state === 'warn' ? 'text-amber-700 font-semibold' : 'text-gray-800';
-    return `<div class="flex justify-between gap-2"><span class="text-gray-400 truncate">${esc(m.label)}</span><span class="font-mono ${cls} truncate">${esc(m.display)}${m.unit ? ' <span class="text-gray-400">' + esc(m.unit) + '</span>' : ''}</span></div>`;
-  }).join('');
-  const lat = d.latency_ms != null ? `${d.latency_ms < 10 ? d.latency_ms.toFixed(1) : Math.round(d.latency_ms)} ms` : '';
-  return `
-    <div class="chain-card ${d.enabled ? '' : 'opacity-60'}" data-state="${d.state}">
-      <div class="flex items-start justify-between gap-2">
-        <div class="min-w-0">
-          <div class="text-sm font-semibold text-gray-900 truncate" title="${esc(d.name)}">${esc(d.name)}</div>
-          <div class="text-[11px] text-gray-400 truncate">${esc(d.role || PROBES[d.probe]?.label || '')}${d.target ? ' · <span class="font-mono">' + esc(d.target) + '</span>' : ''}</div>
-        </div>
-        <div class="flex items-center gap-0.5 flex-shrink-0">
-          <button class="icon-btn" title="Sonder maintenant" onclick="probeNow(${d.id})"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></button>
-          <button class="icon-btn" title="Modifier" onclick="openEditor(${d.id})"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
-        </div>
-      </div>
-      <div class="flex items-center gap-1.5 mt-2">
-        <span class="w-2 h-2 rounded-full ${st.dot} ${d.state === 'down' ? 'animate-pulse' : ''}"></span>
-        <span class="text-xs font-semibold ${st.text}">${esc(stateLabel(d))}</span>
-        ${d.alert_email ? '<span title="Alerte email active" class="text-gray-300"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></span>' : ''}
-      </div>
-      <div class="text-[11px] text-gray-500 mt-0.5 min-h-[1rem] truncate" title="${esc(d.message)}">${esc(d.enabled ? d.message : 'Sonde désactivée')}</div>
-      ${metrics ? `<div class="mt-2 space-y-0.5 text-[11px]">${metrics}</div>` : ''}
-      ${externalRows(d)}
-      <div class="mt-2 pt-2 border-t border-gray-50 flex items-end justify-between gap-2">
-        <div class="text-[10px] text-gray-400 leading-tight">
-          <div class="font-mono text-gray-600 text-[11px]">${lat}</div>
-          <div>${d.last_check ? ago(d.last_check) : 'pas encore sondé'}</div>
-        </div>
-        ${d.probe === 'fm_local' ? '' : `<canvas class="spark" id="spark-${d.id}" width="110" height="26"></canvas>`}
-      </div>
-    </div>`;
+// ── Onglets ────────────────────────────────────────────────────────────
+function renderTab() {
+  const r = resolveSel();
+  if (!r) return;
+  clearInterval(curveTimer);
+  const body = $('p-body');
+  if (tab === 'etat') {
+    if (!r.ent) {
+      body.innerHTML = `<div class="text-center py-8 text-xs text-gray-500">
+        <div class="font-semibold text-gray-700">Pas de sonde sur ce lien</div>
+        <div class="mt-1">Son état se lit sur les appareils de part et d'autre.</div>
+        <a href="/chain/manage#probe=${r.a.id},${r.b.id}" class="inline-block mt-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 font-medium">Ajouter une sonde</a></div>`;
+      return;
+    }
+    body.innerHTML = `<div id="p-msg"></div><div id="p-metrics"></div><div id="p-curve" class="mt-4"></div>`;
+    renderMetrics();
+    loadCurve();
+    curveTimer = setInterval(() => { if (!document.hidden) loadCurve(); }, 60000);
+  } else if (tab === 'journaux') {
+    loadLogs(r.ent);
+  } else if (tab === 'historique') {
+    loadHistory(r.ent);
+  } else if (tab === 'reglages') {
+    renderSettings(r);
+  }
 }
 
-function externalRows(d) {
-  const ext = d.external || [];
-  if (!ext.length) return '';
-  return `<div class="mt-2 pt-1.5 border-t border-dashed border-gray-100 space-y-0.5 text-[11px]">` + ext.map(x => {
-    const down = x.state === 'down';
-    return `<div class="flex justify-between gap-2" title="${esc(x.source)} · ${esc(x.probe)} · ${esc(x.text)} · ${fmtDate(x.ts)}">
-      <span class="text-gray-400 truncate">${esc(x.source)} · ${esc(x.probe)}</span>
-      <span class="font-mono ${down ? 'text-red-600 font-semibold' : 'text-emerald-700'}">${down ? 'Dégradé' : 'Normal'}</span></div>`;
-  }).join('') + '</div>';
-}
-
-function drawSpark(d) {
-  const cv = document.getElementById('spark-' + d.id);
-  if (!cv) return;
-  const h = d.history || [];
-  const dpr = window.devicePixelRatio || 1;
-  const W = 110, H = 26;
-  cv.width = W * dpr; cv.height = H * dpr;
-  cv.style.width = W + 'px'; cv.style.height = H + 'px';
-  const ctx = cv.getContext('2d');
-  ctx.scale(dpr, dpr);
-  if (h.length < 2) return;
-  const vals = h.map(p => p[1]).filter(v => v != null);
-  const max = Math.max(1, ...vals) * 1.15;
-  const step = W / (HISTORY_POINTS - 1);
-  const x0 = W - (h.length - 1) * step;
-  // échecs : petites barres rouges
-  ctx.fillStyle = '#fca5a5';
-  h.forEach((p, i) => { if (p[2] === false) ctx.fillRect(x0 + i * step - 1, 2, 2, H - 4); });
-  if (!vals.length) return;
-  ctx.strokeStyle = '#3b82f6';
-  ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  let pen = false;
-  h.forEach((p, i) => {
-    if (p[1] == null) { pen = false; return; }
-    const x = x0 + i * step, y = H - 2 - (p[1] / max) * (H - 4);
-    if (!pen) { ctx.moveTo(x, y); pen = true; } else ctx.lineTo(x, y);
+// Valeurs gauche et droite sur une seule ligne : « Sortie G (moy.) » + « Sortie D (moy.) »
+function mergeStereo(ms) {
+  const out = [], used = new Set(), re = /\bG\b/;
+  ms.forEach((m, i) => {
+    if (used.has(i)) return;
+    if (re.test(m.label)) {
+      const j = ms.findIndex((x, k) => k !== i && !used.has(k) && x.label === m.label.replace(re, 'D') && (x.unit || '') === (m.unit || ''));
+      if (j >= 0) {
+        used.add(j);
+        out.push({ label: m.label.replace(re, 'G / D'), display: `${fr(m.display)} / ${fr(ms[j].display)}`, unit: m.unit,
+                   state: m.state === 'warn' || ms[j].state === 'warn' ? 'warn' : m.state });
+        return;
+      }
+    }
+    out.push(m);
   });
-  ctx.stroke();
+  return out;
 }
-const HISTORY_POINTS = 120;
-
-async function probeNow(id) {
-  try { await api(`/api/chain/probe/${id}`, { method: 'POST' }); setTimeout(refresh, 1500); }
-  catch (e) { alert(e.message); }
+function renderMetrics() {
+  const r = resolveSel();
+  if (!r || !r.ent || !$('p-metrics')) return;
+  const e = r.ent;
+  const okMsg = ['SNMP OK', 'Réception FM correcte', 'Répond au ping'].includes(e.message) || /^\d+\/\d+ réponses$/.test(e.message || '');
+  $('p-msg').innerHTML = e.message && !okMsg
+    ? `<div class="mb-3 rounded-lg px-3 py-2 text-xs" style="background:${st(e).bg};color:${st(e).fg}">${esc(e.message)}</div>` : '';
+  const ms = mergeStereo(e.metrics || []);
+  if (!ms.length && e.latency_ms != null) ms.push({ label: 'Latence', display: String(e.latency_ms), unit: 'ms' });
+  $('p-metrics').innerHTML = ms.length ? ms.map(m => `<div class="rounded-lg px-2.5 py-2" style="border:1px solid ${m.state === 'warn' ? '#fde68a' : '#f1f5f9'};background:${m.state === 'warn' ? '#fffbeb' : '#fff'}">
+      <div class="text-[11px] text-gray-500">${esc(m.label)}</div>
+      <div class="text-[15px] font-semibold font-mono mt-0.5 break-words">${esc(fr(m.display))} <span class="text-[11px] font-normal text-gray-400">${esc(m.unit || '')}</span></div>
+    </div>`).join('') : '<p class="text-xs text-gray-400 col-span-2">Aucune valeur lue.</p>';
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  Tableau de gestion
-// ═══════════════════════════════════════════════════════════════════════
-function renderTable() {
-  renderMgmt('device-table', chainDevs(), 'device', 'Aucun appareil');
-  renderMgmt('probe-table', probeDevs(), 'probe', 'Aucune sonde');
+// ── Courbe ─────────────────────────────────────────────────────────────
+function curveKey(id) { return `blfmo-curve-${id}`; }
+async function loadCurve() {
+  const r = resolveSel();
+  if (!r || !r.ent || !$('p-curve')) return;
+  const id = r.ent.id;
+  let metricName = '';
+  try { metricName = localStorage.getItem(curveKey(id)) || ''; } catch (e) {}
+  let d;
+  try { d = await api(`/api/chain/devices/${id}/history?hours=${curveHours}` + (metricName ? `&metric=${encodeURIComponent(metricName)}` : '')); }
+  catch (e) { if ($('p-curve')) $('p-curve').innerHTML = ''; return; }
+  if (!$('p-curve') || resolveSel()?.ent?.id !== id) return;   // panneau changé entre-temps
+  if (!d.labels.length) { $('p-curve').innerHTML = ''; return; }
+  if (!d.labels.includes(d.metric) && d.labels.length) {
+    try { localStorage.removeItem(curveKey(id)); } catch (e) {}
+  }
+  const unit = ((r.ent.metrics || []).find(m => m.label === d.metric) || {}).unit || (d.metric === 'Latence' ? 'ms' : '');
+  const W = 320, H = 90, pts = d.points;
+  let svg = '<p class="text-xs text-gray-400 py-6 text-center">Pas encore de mesures sur cette période.</p>';
+  let range = '';
+  if (pts.length) {
+    const t1 = Date.now(), t0 = t1 - curveHours * 3600e3;
+    let lo = Math.min(...pts.map(p => p[2])), hi = Math.max(...pts.map(p => p[3]));
+    const flat = hi - lo < 1e-9, rlo = lo, rhi = hi;
+    if (flat) { lo -= 1; hi += 1; }
+    const pad = (hi - lo) * 0.1;
+    const y = v => (H - 4 - (v - (lo - pad)) / ((hi + pad) - (lo - pad)) * (H - 8)).toFixed(1);
+    const x = t => ((t - t0) / (t1 - t0) * W).toFixed(1);
+    const line = pts.map(p => `${x(p[0])},${y(p[1])}`).join(' ');
+    const band = pts.map(p => `${x(p[0])},${y(p[3])}`).concat(pts.slice().reverse().map(p => `${x(p[0])},${y(p[2])}`)).join(' ');
+    const fmt = v => (Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(2)).replace('.', ',').replace(/^-/, '−');
+    svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="w-full block mt-2" style="height:110px" role="img" aria-label="Courbe ${esc(d.metric)}">
+      <line x1="0" y1="4" x2="${W}" y2="4" stroke="#f1f5f9"/><line x1="0" y1="${H - 4}" x2="${W}" y2="${H - 4}" stroke="#f1f5f9"/>
+      <polygon points="${band}" fill="#dbeafe" opacity=".7"/>
+      <polyline points="${line}" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
+    range = flat ? `${fmt(rlo)} ${unit}` : `${fmt(rlo)} à ${fmt(rhi)} ${unit}`;
+  }
+  const label = { 1: '1 h', 6: '6 h', 24: '24 h', 168: '7 j' };
+  $('p-curve').innerHTML = `<div class="border border-gray-100 rounded-xl p-3">
+    <div class="flex items-center gap-2">
+      <select onchange="pickCurve(${id}, this.value)" aria-label="Valeur affichée" class="text-xs border border-gray-200 rounded-md px-1.5 py-1 bg-white min-w-0 flex-1">
+        ${d.labels.map(l => `<option ${l === d.metric ? 'selected' : ''}>${esc(l)}</option>`).join('')}
+      </select>
+      <select onchange="curveHours=+this.value;loadCurve()" aria-label="Période" class="text-xs border border-gray-200 rounded-md px-1.5 py-1 bg-white">
+        ${[1, 6, 24, 168].map(h => `<option value="${h}" ${h === curveHours ? 'selected' : ''}>${label[h]}</option>`).join('')}
+      </select>
+    </div>
+    ${svg}
+    <div class="flex justify-between text-[10px] text-gray-400 font-mono mt-1"><span>il y a ${label[curveHours]}</span><span>${esc(range)}</span><span>maintenant</span></div>
+  </div>`;
+}
+function pickCurve(id, label) {
+  try { localStorage.setItem(curveKey(id), label); } catch (e) {}
+  loadCurve();
 }
 
-function renderMgmt(tbodyId, list, kind, emptyText) {
-  const tb = document.getElementById(tbodyId);
-  if (!list.length) {
-    tb.innerHTML = `<tr><td colspan="8" class="py-4 text-center text-gray-400">${emptyText}</td></tr>`;
+// ── Journaux ───────────────────────────────────────────────────────────
+const SEV = ['Urgence', 'Alerte', 'Critique', 'Erreur', 'Avertissement', 'Notice', 'Info', 'Debug'];
+async function loadLogs(e) {
+  const body = $('p-body');
+  body.innerHTML = '<p class="text-xs text-gray-400">Chargement…</p>';
+  let d;
+  try { d = await api(`/api/chain/devices/${e.id}/logs?limit=60`); } catch (err) { body.textContent = err.message; return; }
+  if (tab !== 'journaux' || resolveSel()?.ent?.id !== e.id) return;
+  if (!d.installed) {
+    body.innerHTML = `<div class="text-center py-8 text-xs text-gray-500"><div class="font-semibold text-gray-700">Réception des journaux non installée</div>
+      <div class="mt-1">Voir la page <a href="/logs" class="text-blue-600">Journaux</a>.</div></div>`;
     return;
   }
-  tb.innerHTML = list.map((d, i) => `
-    <tr class="border-b border-gray-50 hover:bg-slate-50">
-      <td class="py-1.5 pr-2 whitespace-nowrap">
-        <button class="icon-btn" ${i === 0 ? 'disabled' : ''} onclick="move('${kind}', ${i}, -1)" title="Monter"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg></button>
-        <button class="icon-btn" ${i === list.length - 1 ? 'disabled' : ''} onclick="move('${kind}', ${i}, 1)" title="Descendre"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-      </td>
-      <td class="py-1.5 pr-3"><span class="inline-block w-2 h-2 rounded-full mr-1.5 ${(STATES[d.state] || STATES.unknown).dot}"></span><span class="font-medium text-gray-800">${esc(d.name)}</span>${d.role ? ' <span class="text-gray-400">' + esc(d.role) + '</span>' : ''}</td>
-      <td class="py-1.5 pr-3 text-gray-600">${kind === 'probe' ? '' : esc(d.site)}</td>
-      <td class="py-1.5 pr-3 text-gray-600">${esc(PROBES[d.probe]?.label || d.probe)}</td>
-      <td class="py-1.5 pr-3 font-mono text-gray-500 truncate max-w-[14rem]">${esc(d.target)}</td>
-      <td class="py-1.5 pr-3 text-right text-gray-600">${d.interval} s</td>
-      <td class="py-1.5 pr-3 text-center">${d.alert_email ? '✓' : ''}</td>
-      <td class="py-1.5 text-right whitespace-nowrap">
-        <button class="text-blue-600 hover:text-blue-800 font-medium" onclick="openEditor(${d.id})">Modifier</button>
-      </td>
-    </tr>`).join('');
-}
-
-async function move(kind, i, dir) {
-  const ids = (kind === 'probe' ? probeDevs() : chainDevs()).map(d => d.id);
-  const j = i + dir;
-  if (j < 0 || j >= ids.length) return;
-  [ids[i], ids[j]] = [ids[j], ids[i]];
-  try { await api('/api/chain/reorder', { method: 'POST', body: { ids } }); refresh(); }
-  catch (e) { alert(e.message); }
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-//  Journal
-// ═══════════════════════════════════════════════════════════════════════
-function renderFilterOptions() {
-  const sel = document.getElementById('events-filter');
-  const cur = sel.value;
-  const grp = (label, list) => list.length ? `<optgroup label="${label}">` +
-    list.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('') + '</optgroup>' : '';
-  const opts = '<option value="">Tout</option>' + grp('Appareils', chainDevs()) + grp('Sondes', probeDevs());
-  if (sel.dataset.sig !== opts) { sel.innerHTML = opts; sel.value = cur; sel.dataset.sig = opts; }
-}
-
-function localIso(epoch) {
-  const d = new Date(epoch * 1000), p = n => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-}
-function exportUrl(startEpoch, endEpoch) {
-  return `/api/chain/export?start=${encodeURIComponent(localIso(startEpoch))}&end=${encodeURIComponent(localIso(endEpoch))}`;
-}
-function exportLogs() {
-  window.location = '/api/chain/export?hours=' + document.getElementById('export-hours').value;
-}
-
-async function loadEvents() {
-  const id = document.getElementById('events-filter').value;
-  try {
-    const data = await api('/api/chain/events?limit=60' + (id ? '&device_id=' + id : ''));
-    const ev = data.events || [];
-    const el = document.getElementById('events');
-    if (!ev.length) { el.innerHTML = '<div class="text-gray-400 py-3 text-center">Aucun changement d\'état enregistré</div>'; return; }
-    const badge = (s, ext) => {
-      const st = STATES[s] || STATES.unknown;
-      const label = ext ? ({ up: 'Normal', down: 'Dégradé' }[s] || st.label) : st.label;
-      return `<span class="px-1.5 py-0.5 rounded ${st.pill} font-medium">${esc(label)}</span>`;
-    };
-    el.innerHTML = '<div class="divide-y divide-gray-50">' + ev.map(e => {
-      const ts = Math.floor(new Date(e.timestamp).getTime() / 1000);
-      const ext = !!e.source;
-      return `
-      <div class="py-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span class="font-mono text-gray-400 w-28 flex-shrink-0">${fmtDate(e.timestamp)}</span>
-        <span class="font-medium text-gray-800 w-36 truncate">${esc(e.device_name)}</span>
-        <span class="flex items-center gap-1">${badge(e.from_state, ext)}<span class="text-gray-300">›</span>${badge(e.to_state, ext)}</span>
-        ${ext ? `<span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-medium" title="Événement reçu de ${esc(e.source)}">${esc(e.source)} · ${esc(e.probe || '')}</span>` : ''}
-        <span class="text-gray-500 truncate flex-1 min-w-[8rem]">${esc(e.message)}</span>
-        <a href="${exportUrl(ts - 600, ts + 600)}" class="listen-link !text-gray-500" title="Exporter les journaux 10 min avant et après cet événement"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> ±10 min</a>
-        <a href="/pige?t=${ts}" class="listen-link" title="Ouvrir la pige 30 s avant cet événement">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          Écouter
-        </a>
-      </div>`;
-    }).join('') + '</div>';
-  } catch (e) { console.warn(e); }
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-//  Éditeur
-// ═══════════════════════════════════════════════════════════════════════
-function renderProbePicker() {
-  document.getElementById('probe-picker').innerHTML = Object.entries(PROBES).map(([k, p]) => `
-    <button type="button" onclick="selectProbe('${k}')" class="probe-opt ${k === currentProbe ? 'active' : ''}">
-      <div class="font-semibold text-xs">${p.label}</div>
-      <div class="text-[11px] opacity-70">${p.desc}</div>
-    </button>`).join('');
-}
-
-function selectProbe(k) {
-  // garde l'adresse saisie si on change de type (ou la reprend depuis l'URL)
-  let host = val('c-host');
-  if (!host && val('c-url')) { try { host = new URL(val('c-url')).hostname; } catch (e) {} }
-  currentProbe = k;
-  renderProbePicker();
-  renderProbeFields({ host });
-}
-
-function val(id) { const el = document.getElementById(id); return el ? el.value : ''; }
-
-function renderProbeFields(cfg = {}) {
-  const f = document.getElementById('probe-fields');
-  const hostField = `<label class="field"><span>Adresse IP ou nom</span><input id="c-host" type="text" value="${esc(cfg.host || '')}" placeholder="192.168.1.64"></label>`;
-  const warnField = (label = 'Alerte si latence > (ms)') => `<label class="field"><span>${label}</span><input id="c-warn_ms" type="number" min="1" value="${cfg.warn_ms ?? ''}" placeholder="facultatif"></label>`;
-
-  if (currentProbe === 'ping') {
-    f.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${hostField}${warnField()}</div>`;
-  } else if (currentProbe === 'burst') {
-    f.innerHTML = `
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div class="sm:col-span-1">${hostField}</div>
-        <label class="field"><span>Nombre de pings</span><input id="c-count" type="number" min="2" max="100" value="${cfg.count ?? 20}"></label>
-        <label class="field"><span>Espacement (ms)</span><input id="c-spacing_ms" type="number" min="10" max="1000" value="${cfg.spacing_ms ?? 50}"></label>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <label class="field"><span>Dégradé si pertes > (%)</span><input id="c-loss_pct" type="number" min="0" max="100" step="any" value="${cfg.loss_pct ?? 5}"></label>
-        <label class="field"><span>ou un ping > (ms)</span><input id="c-max_ms" type="number" min="1" step="any" value="${cfg.max_ms ?? 150}"></label>
-        <label class="field"><span>ou gigue > (ms)</span><input id="c-jitter_ms" type="number" min="0.1" step="any" value="${cfg.jitter_ms ?? ''}" placeholder="facultatif"></label>
-      </div>
-      <p class="hint">Équivalent d'une sonde netwatch MikroTik de type <code>icmp</code> : à chaque intervalle, une rafale de pings rapprochés mesure les pertes, la latence et la gigue. Détecte les micro-coupures qu'un ping isolé laisse passer. Réglages du CRS : 20 pings, 50 ms, 5 %, 150 ms, intervalle 10 s.</p>`;
-  } else if (currentProbe === 'tcp') {
-    f.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">${hostField}
-      <label class="field"><span>Port</span><input id="c-port" type="number" min="1" max="65535" value="${cfg.port ?? ''}" placeholder="80"></label>
-      ${warnField('Latence max (ms)')}</div>
-      <p class="hint">Utile quand le ping est filtré, ou pour vérifier qu'un service précis tourne (flux audio TCP d'un codec, port web, SSH...).</p>`;
-  } else if (currentProbe === 'http') {
-    f.innerHTML = `
-      <label class="field"><span>URL</span><input id="c-url" type="text" value="${esc(cfg.url || '')}" placeholder="http://192.168.1.64/"></label>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <label class="field"><span>Code attendu</span><input id="c-expect_status" type="text" value="${esc(cfg.expect_status || '<400')}" placeholder="<400, 200 ou 200,401"></label>
-        <label class="field sm:col-span-2"><span>Mot-clé attendu dans la page</span><input id="c-keyword" type="text" value="${esc(cfg.keyword || '')}" placeholder="facultatif"></label>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <label class="field"><span>Utilisateur (Basic)</span><input id="c-username" type="text" autocomplete="off" value="${esc(cfg.username || '')}" placeholder="facultatif"></label>
-        <label class="field"><span>Mot de passe</span><input id="c-password" type="password" autocomplete="new-password" value="${esc(cfg.password || '')}"></label>
-        ${warnField('Latence max (ms)')}
-      </div>
-      <label class="flex items-center gap-2 text-xs text-gray-700"><input id="c-verify_tls" type="checkbox" class="rounded" ${cfg.verify_tls ? 'checked' : ''}> Vérifier le certificat HTTPS (décocher pour les certificats auto-signés)</label>
-      <p class="hint">Une page de connexion qui renvoie 401 prouve déjà que l'interface répond : mettez <code>200,401</code> comme code attendu.</p>`;
-  } else if (currentProbe === 'snmp') {
-    f.innerHTML = `
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="col-span-2">${hostField}</div>
-        <label class="field"><span>Communauté</span><input id="c-community" type="text" value="${esc(cfg.community || 'public')}"></label>
-        <div class="grid grid-cols-2 gap-2">
-          <label class="field"><span>Version</span><select id="c-version"><option value="2c" ${cfg.version !== '1' ? 'selected' : ''}>v2c</option><option value="1" ${cfg.version === '1' ? 'selected' : ''}>v1</option></select></label>
-          <label class="field"><span>Port</span><input id="c-port" type="number" value="${cfg.port ?? 161}"></label>
-        </div>
-      </div>
-      <div>
-        <div class="flex items-center justify-between mb-1.5 gap-2 flex-wrap">
-          <div class="text-xs font-medium text-gray-600">Valeurs lues</div>
-          <div class="flex gap-2">
-            <select id="snmp-preset" onchange="applyPreset(this.value)" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white">
-              <option value="">Charger un modèle...</option>
-              ${Object.entries(SNMP_PRESETS).map(([k, p]) => `<option value="${k}">${esc(p.label)}</option>`).join('')}
-            </select>
-            <button type="button" onclick="addMetric()" class="text-xs font-medium text-blue-600 hover:text-blue-800">+ OID</button>
-          </div>
-        </div>
-        <div id="snmp-metrics" class="space-y-1.5"></div>
-        <p class="hint mt-2">Les modèles sont des points de départ : les OID varient selon le firmware, vérifiez-les avec <b>Tester</b>. Échelle : 0.1 pour une valeur en dixièmes. Une valeur hors min/max passe l'appareil en alerte.</p>
-        ${tools.snmpget === false ? '<p class="hint !text-amber-700">snmpget est absent de ce BL-FMO : <code>sudo apt install snmp</code></p>' : ''}
-      </div>`;
-    snmpMetrics = (cfg.metrics && cfg.metrics.length) ? cfg.metrics.map(m => ({ ...m })) : SNMP_PRESETS.system.metrics.map(m => ({ ...m }));
-    renderMetrics();
-  } else if (currentProbe === 'icecast') {
-    f.innerHTML = `
-      <label class="field"><span>URL du serveur Icecast</span><input id="c-url" type="text" value="${esc(cfg.url || '')}" placeholder="http://192.168.1.30:8000"></label>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <label class="field"><span>Point de montage</span><input id="c-mount" type="text" value="${esc(cfg.mount || '')}" placeholder="/live.mp3 (facultatif)"></label>
-        <label class="field"><span>Auditeurs minimum</span><input id="c-min_listeners" type="number" min="0" value="${cfg.min_listeners ?? ''}" placeholder="facultatif"></label>
-      </div>
-      <label class="flex items-center gap-2 text-xs text-gray-700"><input id="c-verify_tls" type="checkbox" class="rounded" ${cfg.verify_tls ? 'checked' : ''}> Vérifier le certificat HTTPS</label>
-      <p class="hint">Lit <code>status-json.xsl</code>. Le point de montage absent signifie que la source (encodeur, processeur) n'alimente plus le serveur.</p>`;
-  } else if (currentProbe === 'fm_local') {
-    f.innerHTML = `<p class="hint">Reprend l'état de réception de ce BL-FMO (signal, modulation, RDS, stéréo). À placer en dernier : c'est ce qui sort réellement de l'antenne.</p>`;
+  if (!d.rows.length) {
+    body.innerHTML = `<div class="text-center py-8 text-xs text-gray-500"><div class="font-semibold text-gray-700">Aucun journal reçu</div>
+      <div class="mt-1">Cet appareil n'envoie pas encore ses journaux à BL-FMO. Réglez son syslog vers ${esc(location.hostname)}, port 514, en UDP.</div></div>`;
+    return;
   }
+  body.innerHTML = d.rows.map(l => {
+    const t = new Date(l.ts), warn = l.severity <= 4;
+    return `<div class="grid gap-2 py-1.5 border-b border-slate-50 text-xs" style="grid-template-columns:auto 1fr">
+      <span class="font-mono text-gray-400 whitespace-nowrap">${pad(t.getDate())}/${pad(t.getMonth() + 1)} ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}</span>
+      <span class="break-words"><span class="font-mono text-[11px] rounded px-1.5" style="${warn ? 'background:#fffbeb;color:#b45309' : 'background:#f1f5f9;color:#475569'}" title="${esc(SEV[l.severity] || '')}">${esc(l.program || '-')}</span> <span class="text-gray-700">${esc(l.message)}</span></span>
+    </div>`;
+  }).join('') + `<a href="/logs?src=${encodeURIComponent(d.host)}" class="inline-block mt-3 text-xs font-medium text-blue-600 hover:text-blue-800">Tous les journaux de cet appareil</a>`;
 }
 
-function renderMetrics() {
-  const el = document.getElementById('snmp-metrics');
-  if (!el) return;
-  el.innerHTML = `
-    <div class="hidden sm:grid metric-row text-[10px] uppercase tracking-wide text-gray-400 px-0.5">
-      <span>Libellé</span><span>OID</span><span>Format</span><span>Échelle</span><span>Unité</span><span>Min</span><span>Max</span><span></span>
-    </div>` + snmpMetrics.map((m, i) => `
-    <div class="metric-row">
-      <input value="${esc(m.label || '')}" placeholder="Libellé" oninput="snmpMetrics[${i}].label=this.value">
-      <input class="font-mono" value="${esc(m.oid || '')}" placeholder=".1.3.6.1..." oninput="snmpMetrics[${i}].oid=this.value">
-      <select onchange="snmpMetrics[${i}].format=this.value; renderMetrics()">
-        <option value="number" ${m.format === 'number' || !m.format ? 'selected' : ''}>Nombre</option>
-        <option value="uptime" ${m.format === 'uptime' ? 'selected' : ''}>Durée</option>
-        <option value="text" ${m.format === 'text' ? 'selected' : ''}>Texte</option>
-        <option value="enum" ${m.format === 'enum' ? 'selected' : ''}>Liste</option>
-      </select>
-      ${m.format === 'enum'
-        ? `<input class="col-span-2" value="${esc(m.labels || '')}" placeholder="1=Non,2=Oui" title="Correspondance code=libellé, séparée par des virgules" oninput="snmpMetrics[${i}].labels=this.value">`
-        : `<input type="number" step="any" value="${m.scale ?? 1}" ${m.format && m.format !== 'number' ? 'disabled' : ''} oninput="snmpMetrics[${i}].scale=this.value" title="Échelle">
-      <input value="${esc(m.unit || '')}" placeholder="unité" oninput="snmpMetrics[${i}].unit=this.value">`}
-      ${m.format === 'text' || m.format === 'enum'
-        ? `<input class="col-span-2" value="${esc(m.expect || '')}" placeholder="${m.format === 'enum' ? 'attendu (code ou libellé)' : 'attendu (ex. Locked)'}" title="Valeur attendue ; plusieurs possibles séparées par |" oninput="snmpMetrics[${i}].expect=this.value">`
-        : `<input type="number" step="any" value="${m.min ?? ''}" ${m.format === 'uptime' ? 'disabled' : ''} placeholder="min" oninput="snmpMetrics[${i}].min=this.value">
-      <input type="number" step="any" value="${m.max ?? ''}" ${m.format === 'uptime' ? 'disabled' : ''} placeholder="max" oninput="snmpMetrics[${i}].max=this.value">`}
-      <button type="button" class="icon-btn" title="Retirer" onclick="snmpMetrics.splice(${i},1); renderMetrics()"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-    </div>`).join('');
-}
-function addMetric() { snmpMetrics.push({ label: '', oid: '', format: 'number', scale: 1 }); renderMetrics(); }
-function applyPreset(k) {
-  if (!k) return;
-  snmpMetrics = SNMP_PRESETS[k].metrics.map(m => ({ ...m }));
-  if (SNMP_PRESETS[k].version) document.getElementById('c-version').value = SNMP_PRESETS[k].version;
-  renderMetrics();
-  document.getElementById('snmp-preset').value = '';
-}
-
-function setKind(kind) {
-  editingKind = kind;
-  document.querySelectorAll('.kind-switch button').forEach(b => b.classList.toggle('active', b.dataset.kind === kind));
-  document.getElementById('site-field').style.display = kind === 'probe' ? 'none' : '';
-  if (editing == null) {
-    document.getElementById('editor-title').textContent = kind === 'probe' ? 'Ajouter une sonde' : 'Ajouter un appareil';
-    document.getElementById('f-name').placeholder = kind === 'probe' ? 'faisceau-60' : 'DB91-RX';
-    document.getElementById('f-role').placeholder = kind === 'probe' ? 'Faisceau vers le pylône' : 'Codec audio';
-  }
-}
-
-async function openEditor(id = null, kind = 'device') {
-  editing = id;
-  hideMsg();
-  let dev = kind === 'probe'
-    ? { kind, probe: 'burst', interval: 10, timeout: 1, fail_threshold: 1, alert_email: false, enabled: true,
-        config: { count: 20, spacing_ms: 50, loss_pct: 5, max_ms: 150 } }
-    : { kind, probe: 'ping', interval: 30, timeout: 3, fail_threshold: 3, alert_email: false, enabled: true, config: {} };
-  if (id != null) {
-    try { dev = await api(`/api/chain/devices/${id}`); }
-    catch (e) { alert(e.message); return; }
-  } else if (kind === 'device') {
-    const list = chainDevs();
-    const last = list[list.length - 1];
-    if (last) dev.site = last.site;
-  }
-  document.getElementById('editor-title').textContent = id != null ? `Modifier ${dev.name}` : '';
-  document.getElementById('btn-delete').classList.toggle('hidden', id == null);
-  document.getElementById('f-name').value = dev.name || '';
-  document.getElementById('f-site').value = dev.site || '';
-  document.getElementById('f-role').value = dev.role || '';
-  document.getElementById('f-interval').value = dev.interval;
-  document.getElementById('f-timeout').value = dev.timeout;
-  document.getElementById('f-fails').value = dev.fail_threshold;
-  document.getElementById('f-alert').checked = !!dev.alert_email;
-  document.getElementById('f-alert-warn').checked = !!dev.alert_on_warn;
-  document.getElementById('f-alert-warn').disabled = !dev.alert_email;
-  document.getElementById('f-enabled').checked = dev.enabled !== false;
-  document.getElementById('f-notes').value = dev.notes || '';
-  const sites = [...new Set(['Studio', 'Pylône', ...chainDevs().map(d => d.site).filter(Boolean)])];
-  document.getElementById('sites-list').innerHTML = sites.map(s => `<option value="${esc(s)}">`).join('');
-  currentProbe = dev.probe;
-  renderProbePicker();
-  renderProbeFields(dev.config || {});
-  setKind(dev.kind || 'device');
-  document.getElementById('editor').classList.remove('hidden');
-  document.body.classList.add('overflow-hidden');
-  setTimeout(() => document.getElementById('f-name').focus(), 50);
-}
-
-function closeEditor() {
-  document.getElementById('editor').classList.add('hidden');
-  document.body.classList.remove('overflow-hidden');
-  editing = null;
-}
-
-function collect() {
-  const cfg = {};
-  const get = id => document.getElementById(id);
-  ['host', 'port', 'warn_ms', 'count', 'spacing_ms', 'loss_pct', 'max_ms', 'jitter_ms', 'url', 'expect_status', 'keyword', 'username', 'password',
-   'community', 'version', 'mount', 'min_listeners'].forEach(k => { if (get('c-' + k)) cfg[k] = get('c-' + k).value.trim(); });
-  if (get('c-verify_tls')) cfg.verify_tls = get('c-verify_tls').checked;
-  if (currentProbe === 'snmp') cfg.metrics = snmpMetrics.filter(m => (m.oid || '').trim());
-  return {
-    id: editing,
-    kind: editingKind,
-    name: get('f-name').value.trim(),
-    site: get('f-site').value.trim(),
-    role: get('f-role').value.trim(),
-    probe: currentProbe,
-    interval: get('f-interval').value,
-    timeout: get('f-timeout').value,
-    fail_threshold: get('f-fails').value,
-    alert_email: get('f-alert').checked,
-    alert_on_warn: get('f-alert').checked && get('f-alert-warn').checked,
-    enabled: get('f-enabled').checked,
-    notes: get('f-notes').value.trim(),
-    config: cfg,
-  };
-}
-
-function hideMsg() {
-  document.getElementById('editor-error').classList.add('hidden');
-  document.getElementById('test-result').classList.add('hidden');
-}
-function showError(msg) {
-  const el = document.getElementById('editor-error');
-  el.textContent = msg;
-  el.classList.remove('hidden');
-}
-
-async function testDevice() {
-  hideMsg();
-  const btn = document.getElementById('btn-test');
-  btn.disabled = true; btn.textContent = 'Test...';
-  try {
-    const r = await api('/api/chain/test', { method: 'POST', body: collect() });
-    const st = !r.ok ? STATES.down : (r.warn ? STATES.warn : STATES.up);
-    const el = document.getElementById('test-result');
-    el.className = `rounded-lg border px-3 py-2.5 text-xs ${r.ok ? (r.warn ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50') : 'border-red-200 bg-red-50'}`;
-    el.innerHTML = `
-      <div class="flex items-center gap-2 font-semibold ${st.text}">
-        <span class="w-2 h-2 rounded-full ${st.dot}"></span>${r.ok ? (r.warn ? 'Répond, avec une alerte' : 'Succès') : 'Échec'}
-        ${r.latency_ms != null ? `<span class="font-mono font-normal text-gray-500">${r.latency_ms} ms</span>` : ''}
+// ── Historique ─────────────────────────────────────────────────────────
+async function loadHistory(e) {
+  const body = $('p-body');
+  body.innerHTML = '<p class="text-xs text-gray-400">Chargement…</p>';
+  let d;
+  try { d = await api(`/api/chain/events?device_id=${e.id}&limit=60`); } catch (err) { body.textContent = err.message; return; }
+  if (tab !== 'historique' || resolveSel()?.ent?.id !== e.id) return;
+  const evs = (d.events || []).filter(x => x.from_state !== 'unknown' || x.to_state !== 'up');
+  if (!evs.length) { body.innerHTML = '<p class="text-center py-8 text-xs text-gray-500">Aucun changement d\'état enregistré.</p>'; return; }
+  body.innerHTML = evs.map(x => {
+    const s = STATES[x.to_state] || STATES.unknown, t = new Date(x.timestamp);
+    return `<div class="py-2 border-b border-slate-50 text-xs">
+      <div class="flex items-center gap-1.5">
+        <span class="font-mono text-gray-400 whitespace-nowrap">${pad(t.getDate())}/${pad(t.getMonth() + 1)} ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}</span>
+        <span class="rounded px-1.5 text-[11px]" style="background:${s.bg};color:${s.fg}">${esc(s.label)}</span>
+        ${x.source ? `<span class="text-[11px] text-gray-400">via ${esc(x.source)}</span>` : ''}
+        <a href="/pige?t=${Math.floor(t.getTime() / 1000)}" class="ml-auto text-[11px] font-medium text-blue-600 hover:text-blue-800">Écouter</a>
       </div>
-      <div class="text-gray-700 mt-0.5">${esc(r.message)}</div>
-      ${(r.metrics || []).length ? '<div class="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-0.5">' + r.metrics.map(m =>
-        `<div class="flex justify-between gap-2"><span class="text-gray-500">${esc(m.label)}</span><span class="font-mono ${m.state === 'warn' ? 'text-amber-700 font-semibold' : 'text-gray-800'}">${esc(m.display)} ${esc(m.unit || '')}</span></div>`).join('') + '</div>' : ''}`;
-    el.classList.remove('hidden');
-  } catch (e) { showError(e.message); }
-  finally { btn.disabled = false; btn.textContent = 'Tester'; }
+      <div class="text-gray-700 mt-0.5 break-words">${esc(x.message || '')}</div>
+    </div>`;
+  }).join('');
 }
 
-async function saveDevice() {
-  hideMsg();
-  const data = collect();
-  const btn = document.getElementById('btn-save');
+// ── Réglages ───────────────────────────────────────────────────────────
+function renderSettings(r) {
+  const body = $('p-body');
+  if (!r.ent) {
+    body.innerHTML = `<div class="text-xs text-gray-600 space-y-2">
+      <div class="flex justify-between gap-3 py-1.5 border-b border-slate-50"><span class="text-gray-500">Sonde</span><span>Aucune</span></div>
+      <div class="flex justify-between gap-3 py-1.5 border-b border-slate-50"><span class="text-gray-500">Mesure possible</span><span class="text-right">Ping qualité vers ${esc(r.b.host || r.b.name)}</span></div></div>
+      <a href="/chain/manage#probe=${r.a.id},${r.b.id}" class="inline-block mt-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-xs font-medium">Ajouter une sonde</a>`;
+    return;
+  }
+  const e = r.ent;
+  body.innerHTML = `<div class="text-xs">${(e.settings || []).map(([k, v]) => `<div class="flex justify-between gap-3 py-1.5 border-b border-slate-50"><span class="text-gray-500 flex-shrink-0">${esc(k)}</span><span class="text-gray-900 text-right break-words">${esc(v)}</span></div>`).join('')}</div>
+    <div class="flex gap-2 mt-4">
+      <a href="/chain/manage#edit=${e.id}" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-xs font-medium">Modifier</a>
+      <button onclick="probeNow(${e.id}, this)" class="border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5 text-xs font-medium">Sonder maintenant</button>
+    </div>`;
+}
+async function probeNow(id, btn) {
   btn.disabled = true;
-  try {
-    if (editing != null) await api(`/api/chain/devices/${editing}`, { method: 'PUT', body: data });
-    else await api('/api/chain/devices', { method: 'POST', body: data });
-    closeEditor();
-    await refresh();
-    setTimeout(refresh, 2500);
-  } catch (e) { showError(e.message); }
-  finally { btn.disabled = false; }
+  try { await api(`/api/chain/probe/${id}`, { method: 'POST' }); } catch (e) {}
+  setTimeout(() => { btn.disabled = false; refresh(); }, 2500);
 }
 
-async function deleteDevice() {
-  if (editing == null) return;
-  const name = document.getElementById('f-name').value;
-  if (!confirm(`Supprimer « ${name} » de la chaîne ?`)) return;
-  try {
-    await api(`/api/chain/devices/${editing}`, { method: 'DELETE' });
-    closeEditor();
-    refresh(); loadEvents();
-  } catch (e) { showError(e.message); }
+// ── Largeur du panneau (grand écran) ───────────────────────────────────
+const PANEL_MIN = 340, PANEL_NORMAL = 384, PANEL_WIDE = 720;
+function panelMax() { return Math.max(PANEL_MIN, window.innerWidth - 560); }
+function setPanelWidth(w, save = true) {
+  w = Math.round(Math.min(panelMax(), Math.max(PANEL_MIN, w)));
+  document.documentElement.style.setProperty('--panel-w', w + 'px');
+  if (save) { try { localStorage.setItem('blfmo-panel-w', String(w)); } catch (e) {} }
+  if (tab === 'etat' && $('p-curve')) loadCurve();
 }
+function currentPanelWidth() { return $('panel').getBoundingClientRect().width || PANEL_NORMAL; }
+function toggleWide() { setPanelWidth(currentPanelWidth() > (PANEL_NORMAL + PANEL_WIDE) / 2 ? PANEL_NORMAL : PANEL_WIDE); }
+(function initResize() {
+  let saved = 0;
+  try { saved = parseInt(localStorage.getItem('blfmo-panel-w'), 10) || 0; } catch (e) {}
+  if (saved) setPanelWidth(saved, false);
+  const h = $('panel-resize');
+  h.addEventListener('dblclick', toggleWide);
+  h.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    h.setPointerCapture(e.pointerId);
+    h.classList.add('drag');
+    document.body.classList.add('resizing');
+    const right = $('panel').getBoundingClientRect().right;
+    const move = ev => {
+      const w = Math.min(panelMax(), Math.max(PANEL_MIN, right - ev.clientX));
+      document.documentElement.style.setProperty('--panel-w', w + 'px');
+    };
+    const up = () => {
+      h.classList.remove('drag');
+      document.body.classList.remove('resizing');
+      h.removeEventListener('pointermove', move);
+      h.removeEventListener('pointerup', up);
+      setPanelWidth(currentPanelWidth());
+    };
+    h.addEventListener('pointermove', move);
+    h.addEventListener('pointerup', up);
+  });
+})();
 
-async function addFmLocal() {
-  try {
-    await api('/api/chain/devices', { method: 'POST', body: {
-      name: 'Réception FM', site: 'Antenne', role: 'Réception FM', probe: 'fm_local',
-      interval: 10, timeout: 3, fail_threshold: 3, alert_email: false, enabled: true, config: {} } });
-    refresh(); setTimeout(refresh, 2000);
-  } catch (e) { alert(e.message); }
-}
-
-async function loadHookInfo() {
-  try {
-    const d = await api('/api/chain/hook/info');
-    const url = location.origin + d.path;
-    document.getElementById('hook-url').textContent = url;
-    document.getElementById('hook-token').textContent = d.token;
-    document.getElementById('hook-example').textContent =
-      `:do {/tool fetch url="${url}" http-method=post check-certificate=no output=none \\\n` +
-      `  http-data="token=${d.token}&source=CRS-Studio&probe=faisceau-60&host=192.168.1.60&state=down"} on-error={}`;
-  } catch (e) { console.warn(e); }
-}
-async function regenToken() {
-  if (!confirm("Régénérer le jeton ? Les scripts qui utilisent l'ancien cesseront de fonctionner.")) return;
-  try { await api('/api/chain/hook/token', { method: 'POST' }); loadHookInfo(); } catch (e) { alert(e.message); }
-}
-document.getElementById('hook-section').addEventListener('toggle', e => { if (e.target.open) loadHookInfo(); });
-
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEditor(); });
-
-// ═══════════════════════════════════════════════════════════════════════
-//  Démarrage
-// ═══════════════════════════════════════════════════════════════════════
-refresh();
-loadEvents();
+// ── Démarrage ──────────────────────────────────────────────────────────
+setInterval(() => {
+  document.querySelectorAll('[data-since]').forEach(el => { if (el.dataset.since) el.textContent = dur(el.dataset.since); });
+}, 1000);
+refresh().then(() => {
+  const h = decodeURIComponent(location.hash.slice(1));
+  if (/^[dlp]:[\d-]+$/.test(h)) openSel(h);
+});
 setInterval(() => { if (!document.hidden) refresh(); }, 5000);
-setInterval(() => { if (!document.hidden) loadEvents(); }, 30000);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && sel) closePanel(); });
 
 fetch('/api/config/full', { credentials: 'include' }).then(r => r.json()).then(config => {
   const freq = config.rtl_sdr?.frequency || '88.6M';

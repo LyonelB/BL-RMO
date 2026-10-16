@@ -22,6 +22,7 @@ import csv
 import hmac
 import io
 import json
+import os
 import secrets
 import logging
 import re
@@ -70,6 +71,9 @@ DOWN_EMAIL_MIN_INTERVAL = 300  # secondes entre deux emails "injoignable" pour u
 _HOST_RE = re.compile(r'^[A-Za-z0-9]([A-Za-z0-9\-\.]{0,251}[A-Za-z0-9])?$|^\[?[0-9A-Fa-f:]+\]?$')
 _OID_RE = re.compile(r'^\.?\d+(\.\d+)+$')
 _COMMUNITY_RE = re.compile(r'^[\x21-\x7e]{1,64}$')
+SNMP3_LEVELS = ('noAuthNoPriv', 'authNoPriv', 'authPriv')
+SNMP3_AUTH = ('MD5', 'SHA', 'SHA-224', 'SHA-256', 'SHA-384', 'SHA-512')
+SNMP3_PRIV = ('DES', 'AES', 'AES192', 'AES256')
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -133,7 +137,20 @@ def validate_device(data, existing=None):
         'alert_on_warn': bool(data.get('alert_on_warn', False)),
         'enabled': bool(data.get('enabled', True)),
         'notes': str(data.get('notes', '')).strip()[:300],
+        # Synoptique : libellé de la liaison vers l'appareil suivant (AES, MPX, Faisceau 5 GHz...)
+        'out_label': str(data.get('out_label', '')).strip()[:40],
+        # Adresse de l'interface web de l'appareil (vide : pas de lien)
+        'web': _url(data['web']) if str(data.get('web') or '').strip() else '',
     }
+    # Une sonde réseau surveille le lien entre deux appareils de la chaîne
+    if dev['kind'] == 'probe':
+        lf = _num(data.get('link_from'), 'Lien (départ)', allow_none=True, integer=True)
+        lt = _num(data.get('link_to'), 'Lien (arrivée)', allow_none=True, integer=True)
+        if (lf is None) != (lt is None):
+            raise ValueError("Lien surveillé : choisir les deux appareils, ou aucun")
+        if lf is not None and lf == lt:
+            raise ValueError("Lien surveillé : deux appareils différents")
+        dev['link_from'], dev['link_to'] = lf, lt
 
     raw = data.get('config') or {}
     old = (existing or {}).get('config') or {}
@@ -171,13 +188,33 @@ def validate_device(data, existing=None):
     elif probe == 'snmp':
         cfg['host'] = _host(raw.get('host'))
         cfg['port'] = _num(raw.get('port'), 'Port SNMP', 161, 1, 65535, integer=True)
-        cfg['version'] = raw.get('version') if raw.get('version') in ('1', '2c') else '2c'
-        community = str(raw.get('community') or 'public').strip()
-        if community == SECRET_MASK:
-            community = old.get('community', 'public')
-        if not _COMMUNITY_RE.match(community):
-            raise ValueError("Communauté SNMP invalide")
-        cfg['community'] = community
+        cfg['version'] = raw.get('version') if raw.get('version') in ('1', '2c', '3') else '2c'
+        if cfg['version'] == '3':
+            # SNMPv3 : utilisateur, authentification et chiffrement (USM)
+            user = str(raw.get('user') or '').strip()
+            if not _COMMUNITY_RE.match(user):
+                raise ValueError("SNMPv3 : nom d'utilisateur requis")
+            level = raw.get('level') if raw.get('level') in SNMP3_LEVELS else 'authPriv'
+            cfg.update({'user': user, 'level': level, 'community': ''})
+            if level != 'noAuthNoPriv':
+                cfg['auth_proto'] = raw.get('auth_proto') if raw.get('auth_proto') in SNMP3_AUTH else 'SHA'
+                ap = str(raw.get('auth_pass') or '')
+                cfg['auth_pass'] = old.get('auth_pass', '') if ap == SECRET_MASK else ap
+                if not 8 <= len(cfg['auth_pass']) <= 64:
+                    raise ValueError("SNMPv3 : mot de passe d'authentification de 8 à 64 caractères")
+            if level == 'authPriv':
+                cfg['priv_proto'] = raw.get('priv_proto') if raw.get('priv_proto') in SNMP3_PRIV else 'AES'
+                pp = str(raw.get('priv_pass') or '')
+                cfg['priv_pass'] = old.get('priv_pass', '') if pp == SECRET_MASK else pp
+                if not 8 <= len(cfg['priv_pass']) <= 64:
+                    raise ValueError("SNMPv3 : mot de passe de chiffrement de 8 à 64 caractères")
+        else:
+            community = str(raw.get('community') or 'public').strip()
+            if community == SECRET_MASK:
+                community = old.get('community', 'public')
+            if not _COMMUNITY_RE.match(community):
+                raise ValueError("Communauté SNMP invalide")
+            cfg['community'] = community
         metrics = []
         for i, m in enumerate(raw.get('metrics') or []):
             oid = str(m.get('oid', '')).strip()
@@ -226,6 +263,9 @@ def public_device(dev):
     cfg = d.get('config') or {}
     if cfg.get('password'):
         cfg['password'] = SECRET_MASK
+    for k in ('community', 'auth_pass', 'priv_pass'):
+        if cfg.get(k):
+            cfg[k] = SECRET_MASK
     return d
 
 
@@ -397,8 +437,15 @@ def probe_snmp(cfg, timeout):
         return _result(False, "Commande snmpget absente (sudo apt install snmp)")
     metrics_cfg = cfg['metrics']
     target = f"{cfg['host']}:{cfg.get('port', 161)}"
-    base = ['snmpget', '-v', cfg.get('version', '2c'), '-c', cfg['community'],
-            '-t', str(max(1, int(round(timeout)))), '-r', '0', '-OqvteU', '-m', '', '-Cf', target]
+    if cfg.get('version') == '3':
+        base = ['snmpget', '-v', '3', '-u', cfg['user'], '-l', cfg.get('level', 'authPriv')]
+        if cfg.get('level') != 'noAuthNoPriv':
+            base += ['-a', cfg.get('auth_proto', 'SHA'), '-A', cfg.get('auth_pass', '')]
+        if cfg.get('level') == 'authPriv':
+            base += ['-x', cfg.get('priv_proto', 'AES'), '-X', cfg.get('priv_pass', '')]
+    else:
+        base = ['snmpget', '-v', cfg.get('version', '2c'), '-c', cfg['community']]
+    base += ['-t', str(max(1, int(round(timeout)))), '-r', '0', '-OqvteU', '-m', '', '-Cf', target]
 
     def _get(oids):
         return subprocess.run(base + oids, capture_output=True, text=True, timeout=timeout + 3)
@@ -412,8 +459,19 @@ def probe_snmp(cfg, timeout):
     err = (p.stderr or '').strip()
 
     if p.returncode != 0 and 'Timeout' in err:
-        hint = ' (essayer la version v1)' if cfg.get('version', '2c') == '2c' else ''
+        hint = {'2c': ' (essayer la version v1)',
+                '3': ' (vérifier le mot de passe de chiffrement et son protocole)'}.get(cfg.get('version', '2c'), '')
         return _result(False, f'Pas de réponse SNMP{hint}')
+    if p.returncode != 0 and cfg.get('version') == '3':
+        low = err.lower()
+        if 'unknown user' in low:
+            return _result(False, 'SNMPv3 : utilisateur inconnu de l\'appareil')
+        if 'authentication failure' in low or 'wrong digest' in low:
+            return _result(False, "SNMPv3 : échec d'authentification (mot de passe ou protocole)")
+        if 'unsupported security level' in low:
+            return _result(False, 'SNMPv3 : niveau de sécurité non accepté par l\'appareil')
+        if 'decrypt' in low:
+            return _result(False, 'SNMPv3 : échec du déchiffrement (mot de passe ou protocole de chiffrement)')
 
     if p.returncode == 0:
         lines = p.stdout.rstrip('\n').split('\n')
@@ -926,6 +984,7 @@ class ChainMonitor:
         did = dev['id']
         now = datetime.now()
         event = None
+        first_seen = False
         with self._lock:
             rt = self._runtime.get(did)
             if rt is None or did not in self._devices:
@@ -933,7 +992,9 @@ class ChainMonitor:
             rt['last_check'] = now.isoformat(timespec='seconds')
             rt['result'] = res
             rt['history'].append([int(time.time() * 1000), res['latency_ms'] if res['ok'] else None, res['ok']])
-            mets = [[m.get('label'), m.get('display'), m.get('unit', ''), m.get('state')] for m in res.get('metrics') or []]
+            mets = [[m.get('label'), m.get('display'), m.get('unit', ''), m.get('state'),
+                     m.get('value') if isinstance(m.get('value'), (int, float)) and not isinstance(m.get('value'), bool) else None]
+                    for m in res.get('metrics') or []]
             self._samples.append((now.isoformat(timespec='milliseconds'), did, int(bool(res['ok'])), int(bool(res['warn'])),
                                   res['latency_ms'], res.get('message', ''),
                                   json.dumps(mets, ensure_ascii=False) if mets else None))
@@ -951,7 +1012,18 @@ class ChainMonitor:
                 bad = [f"{m.get('label')} = {m.get('display')}{(' ' + m['unit']) if m.get('unit') else ''}"
                        for m in res.get('metrics') or [] if m.get('state') == 'warn']
                 event = (prev, new, res['message'] + (' : ' + ', '.join(bad) if bad else ''))
+            elif rt['last_change'] is None:
+                # Jamais de changement d'état connu : le premier relevé sert de point de départ
+                rt['last_change'] = rt['last_check']
+                first_seen = True
 
+        if first_seen:
+            try:
+                with self._conn() as c:
+                    c.execute('UPDATE chain_devices SET last_change=? WHERE id=? AND last_change IS NULL',
+                              (now.isoformat(timespec='seconds'), did))
+            except sqlite3.Error:
+                pass
         if event:
             prev, new, msg = event
             self._log_event(dev, prev, new, msg, now)
@@ -1112,7 +1184,30 @@ class ChainMonitor:
             except sqlite3.Error:
                 pass
 
-        # 4. configuration des appareils, sans secrets
+        # 4. journaux reçus des appareils (syslog), si le service de réception est installé
+        n_sys = 0
+        sys_db = os.path.join(os.path.dirname(os.path.abspath(self.db_path)), 'syslog.db')
+        if os.path.exists(sys_db):
+            try:
+                from syslog_server import SyslogStore, SEVERITIES
+                hosts = {}
+                for d in sorted(devs.values(), key=lambda d: d.get('kind') == 'probe'):
+                    h = self._device_host(d)
+                    if h and h not in hosts:
+                        hosts[h] = d['name']
+                sl = []
+                for r in SyslogStore(sys_db).iter_rows(start=s_iso, end=e_iso):
+                    sev = r['severity'] if isinstance(r['severity'], int) and 0 <= r['severity'] < 8 else 6
+                    sl.append([r['ts'], SEVERITIES[sev], hosts.get(r['src'], r['host'] or r['src']),
+                               r['src'], r['program'], r['message']])
+                    if len(sl) >= 500000:
+                        break
+                n_sys = len(sl)
+                files['journaux.csv'] = to_csv(['horodatage', 'niveau', 'appareil', 'adresse', 'programme', 'message'], sl)
+            except Exception as e:
+                logger.warning(f"Export : journaux syslog non inclus ({e})")
+
+        # 5. configuration des appareils, sans secrets
         conf = []
         for d in sorted(devs.values(), key=lambda d: (d.get('kind') == 'probe', d['position'], d['id'])):
             d = public_device(d)
@@ -1131,6 +1226,7 @@ class ChainMonitor:
             "                (!) signale une valeur hors seuil\n"
             "alertes_fm.csv  alertes de la réception FM (signal, modulation, RDS...)\n"
             "niveaux_fm.csv  niveau audio FM reçu, toutes les 5 s\n"
+            "journaux.csv    journaux envoyés par les appareils (syslog : switchs, faisceaux...)\n"
             "appareils.json  configuration des appareils et sondes (communautés et mots de passe masqués)\n\n"
             "Fichiers CSV séparés par des points-virgules, encodés en UTF-8.\n"
         ).encode('utf-8')
@@ -1139,7 +1235,7 @@ class ChainMonitor:
         with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
             for fname, data in files.items():
                 z.writestr(fname, data)
-        return out.getvalue(), {k: v for k, v in (('evenements', len(ev)), ('mesures', len(sm)))}
+        return out.getvalue(), {k: v for k, v in (('evenements', len(ev)), ('mesures', len(sm)), ('journaux', n_sys))}
 
     # ── Lecture ──────────────────────────────────────────────────────────
     def get_status(self):
@@ -1164,6 +1260,12 @@ class ChainMonitor:
                     'role': d.get('role', ''),
                     'probe': d['probe'],
                     'target': cfg.get('host') or cfg.get('url') or '',
+                    'host': self._device_host(d),
+                    'out_label': d.get('out_label', ''),
+                    'web': d.get('web', ''),
+                    'link_from': d.get('link_from'),
+                    'link_to': d.get('link_to'),
+                    'settings': self._settings_summary(d),
                     'enabled': d.get('enabled', True),
                     'alert_email': d.get('alert_email', False),
                     'state': display,
@@ -1180,6 +1282,126 @@ class ChainMonitor:
                     'external': self._external_for(self._device_host(d)) if d.get('kind') != 'probe' else [],
                 })
         return out
+
+    @staticmethod
+    def _settings_summary(d):
+        """Résumé lisible des réglages (onglet Réglages du synoptique), sans secrets."""
+        cfg = d.get('config') or {}
+        p = d['probe']
+        out = []
+        if p == 'snmp':
+            if cfg.get('version') == '3':
+                sec = {'noAuthNoPriv': 'sans authentification', 'authNoPriv': f"authentification {cfg.get('auth_proto', '')}",
+                       'authPriv': f"authentification {cfg.get('auth_proto', '')}, chiffrement {cfg.get('priv_proto', '')}"}.get(cfg.get('level'), '')
+                out.append(['Sonde', f"SNMP v3, port {cfg.get('port', 161)}, {sec}"])
+            else:
+                out.append(['Sonde', f"SNMP v{cfg.get('version', '2c')}, port {cfg.get('port', 161)}"])
+            seuils = []
+            for m in cfg.get('metrics') or []:
+                if m.get('min') is not None:
+                    seuils.append(f"{m['label']} min {_fmt_number(m['min'])} {m.get('unit', '')}".strip())
+                if m.get('max') is not None:
+                    seuils.append(f"{m['label']} max {_fmt_number(m['max'])} {m.get('unit', '')}".strip())
+                if m.get('expect'):
+                    seuils.append(f"{m['label']} = {m['expect']}")
+            out.append(['Seuils', ', '.join(seuils) or 'aucun'])
+        elif p == 'burst':
+            out.append(['Sonde', f"Ping qualité vers {cfg.get('host')}"])
+            out.append(['Rafale', f"{cfg.get('count')} pings espacés de {cfg.get('spacing_ms')} ms"])
+            s = [f"pertes max {_fmt_number(cfg.get('loss_pct', 5))} %", f"latence max {_fmt_number(cfg.get('max_ms', 150))} ms"]
+            if cfg.get('jitter_ms'):
+                s.append(f"gigue max {_fmt_number(cfg['jitter_ms'])} ms")
+            out.append(['Seuils', ', '.join(s)])
+        elif p == 'ping':
+            out.append(['Sonde', f"Ping vers {cfg.get('host')}"])
+        elif p == 'tcp':
+            out.append(['Sonde', f"Port TCP {cfg.get('port')} sur {cfg.get('host')}"])
+        elif p in ('http', 'icecast'):
+            out.append(['Sonde', f"{'Page web' if p == 'http' else 'Icecast'} : {cfg.get('url')}"])
+        elif p == 'fm_local':
+            out.append(['Sonde', 'Récepteur FM local'])
+        out.append(['Intervalle', f"{d.get('interval', 30)} s"])
+        out.append(['Échecs avant hors service', str(d.get('fail_threshold', 3))])
+        mail = 'Non'
+        if d.get('alert_email'):
+            mail = 'Panne et alerte' if d.get('alert_on_warn') else 'Panne seulement'
+        out.append(['Alerte email', mail])
+        if d.get('notes'):
+            out.append(['Notes', d['notes']])
+        return out
+
+    def numeric_labels(self, device_id):
+        """Valeurs qui peuvent faire une courbe (nombres), dans l'ordre de l'appareil."""
+        with self._lock:
+            d = self._devices.get(device_id)
+            rt = self._runtime.get(device_id)
+            if not d:
+                return []
+            res = (rt or {}).get('result') or {}
+        labels = []
+        if d['probe'] == 'snmp':
+            labels = [m['label'] for m in (d.get('config') or {}).get('metrics') or [] if m.get('format') == 'number']
+        else:
+            labels = [m.get('label') for m in res.get('metrics') or []
+                      if isinstance(m.get('value'), (int, float)) and not isinstance(m.get('value'), bool)]
+            if d['probe'] in ('ping', 'tcp', 'http'):
+                labels.insert(0, 'Latence')
+        return labels
+
+    def metric_history(self, device_id, label, hours=24, buckets=240):
+        """Courbe d'une valeur : liste [horodatage ms, moyenne, min, max] par tranche de temps."""
+        hours = max(1, min(float(hours), SAMPLES_RETENTION_DAYS * 24))
+        start = datetime.now() - timedelta(hours=hours)
+        self._flush_samples()
+        with self._conn() as c:
+            rows = c.execute('SELECT ts, latency, metrics FROM chain_samples WHERE device_id=? AND ts >= ? ORDER BY ts',
+                             (device_id, start.isoformat(timespec='seconds'))).fetchall()
+        num = re.compile(r'-?\d+(?:\.\d+)?')
+        pts = []
+        for r in rows:
+            v = None
+            if label == 'Latence':
+                v = r['latency']
+            elif r['metrics']:
+                try:
+                    for m in json.loads(r['metrics']):
+                        if m[0] == label:
+                            if len(m) > 4 and m[4] is not None:
+                                v = float(m[4])
+                            else:
+                                g = num.search(str(m[1]).replace('\u2212', '-'))
+                                v = float(g.group(0)) if g else None
+                            break
+                except (TypeError, ValueError, IndexError):
+                    v = None
+            if v is not None:
+                pts.append((datetime.fromisoformat(r['ts']).timestamp() * 1000, v))
+        if not pts:
+            return []
+        t0 = start.timestamp() * 1000
+        width = hours * 3600 * 1000 / buckets
+        acc = {}
+        for t, v in pts:
+            b = int((t - t0) // width)
+            a = acc.setdefault(b, [0.0, 0, v, v])
+            a[0] += v
+            a[1] += 1
+            a[2] = min(a[2], v)
+            a[3] = max(a[3], v)
+        return [[int(t0 + (b + 0.5) * width), round(a[0] / a[1], 3), a[2], a[3]] for b, a in sorted(acc.items())]
+
+    def device_logs(self, device_id, limit=50):
+        """Derniers journaux syslog reçus de l'appareil (si le service de réception est installé)."""
+        d = self.get_device(device_id)
+        sys_db = os.path.join(os.path.dirname(os.path.abspath(self.db_path)), 'syslog.db')
+        if not d or not os.path.exists(sys_db):
+            return {'installed': os.path.exists(sys_db), 'host': d and self._device_host(d), 'rows': []}
+        host = self._device_host(d)
+        if not host:
+            return {'installed': True, 'host': '', 'rows': []}
+        from syslog_server import SyslogStore
+        rows, _total = SyslogStore(sys_db).search(limit=limit, src=host)
+        return {'installed': True, 'host': host, 'rows': rows}
 
     def get_events(self, limit=100, device_id=None):
         q = 'SELECT * FROM chain_events'
