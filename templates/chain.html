@@ -372,6 +372,8 @@ function resolveSel() {
   return null;
 }
 function tabsFor(r) {
+  // La réception FM est BL-FMO lui-même : pas de journaux syslog à recevoir
+  if (r.kind === 'device' && r.ent.probe === 'fm_local') return [['etat', 'État'], ['historique', 'Historique'], ['reglages', 'Réglages']];
   if (r.kind === 'device') return [['etat', 'État'], ['journaux', 'Journaux'], ['historique', 'Historique'], ['reglages', 'Réglages']];
   if (!r.ent) return [['etat', 'État'], ['reglages', 'Réglages']];
   return [['etat', 'État'], ['historique', 'Historique'], ['reglages', 'Réglages']];

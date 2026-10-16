@@ -1428,13 +1428,14 @@ class ChainMonitor:
         sys_db = os.path.join(os.path.dirname(os.path.abspath(self.db_path)), 'syslog.db')
         if not d or not os.path.exists(sys_db):
             return {'installed': os.path.exists(sys_db), 'host': d and self._device_host(d), 'rows': []}
-        host = self._device_host(d)
-        if not host:
-            return {'installed': True, 'host': '', 'rows': []}
         from syslog_server import SyslogStore
         store = SyslogStore(sys_db)
+        server_ip = store.meta().get('ip', '')
+        host = self._device_host(d)
+        if not host:
+            return {'installed': True, 'host': '', 'rows': [], 'server_ip': server_ip}
         rows, _total = store.search(limit=limit, src=host)
-        return {'installed': True, 'host': host, 'rows': rows, 'server_ip': store.meta().get('ip', '')}
+        return {'installed': True, 'host': host, 'rows': rows, 'server_ip': server_ip}
 
     def get_events(self, limit=100, device_id=None):
         q = 'SELECT * FROM chain_events'
