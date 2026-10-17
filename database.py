@@ -80,6 +80,10 @@ class FMDatabase:
                     rt TEXT
                 )
             ''')
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_rds_history_timestamp
+                ON rds_history(timestamp)
+            ''')
             
             logger.info("Base de données initialisée")
     
@@ -120,6 +124,40 @@ class FMDatabase:
         except Exception as e:
             logger.error(f"Erreur sauvegarde RDS: {e}")
     
+    # ── Historique des RadioText diffusés (RT_HISTORY_PATCH) ──────────────
+    RT_HISTORY_KEEP = 1000   # lignes conservées dans rds_history
+
+    def save_rt_title(self, ps, rt):
+        """Enregistre un RadioText stable, horodaté en heure locale comme les alertes."""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT INTO rds_history (timestamp, ps, rt)
+                    VALUES (datetime('now', 'localtime'), ?, ?)
+                ''', (ps, rt))
+                cursor.execute('''
+                    DELETE FROM rds_history WHERE id <= (
+                        SELECT id FROM rds_history ORDER BY id DESC LIMIT 1 OFFSET ?)
+                ''', (self.RT_HISTORY_KEEP,))
+        except Exception as e:
+            logger.error(f"Erreur sauvegarde RadioText: {e}")
+
+    def get_rt_history(self, limit=10):
+        """Derniers RadioText enregistrés, du plus récent au plus ancien."""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT timestamp, ps, rt FROM rds_history
+                    WHERE rt IS NOT NULL AND rt != ''
+                    ORDER BY id DESC LIMIT ?
+                ''', (limit,))
+                return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            logger.error(f"Erreur récupération historique RadioText: {e}")
+            return []
+
     def get_audio_history(self, hours=24):
         """Récupère l'historique des niveaux audio"""
         try:
@@ -257,6 +295,7 @@ class FMDatabase:
             'signal_lost':   'signal_restored',
             'no_modulation': 'modulation_restored',
             'rds_lost':      'rds_restored',
+            'rt_lost':       'rt_restored',
         }
         try:
             with self.get_connection() as conn:

@@ -16,6 +16,12 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 - Données dans `fm_monitor.db` (tables `dab_events`, `dab_uptime`, `dab_services`), événements 90 jours, disponibilité 31 jours.
 - `install/build/67-dab.sh` : rtl-sdr, pilote TNT écarté, règle udev, script de réinitialisation USB, service ; `BUILD_WELLE=1` compile welle-cli (xxd requis pour intégrer l'interface web de welle-cli). Appelé par `install.sh` ; `update.sh` redémarre aussi `fm-monitor-dab`.
 
+### Journaux : titres diffusés via le RadioText
+- Onglet **Réception FM** : nouvelle fenêtre **Titres diffusés (RadioText)** avec les 10 derniers RadioText reçus et l'heure de leur premier affichage ; le texte en cours est marqué « À l'antenne ». Rafraîchie toutes les 15 s.
+- Un RadioText n'est enregistré qu'après 8 s de réception identique (textes partiels ou corrompus écartés) ; un texte en rotation (nom de la station, slogan) n'est repris qu'après 10 minutes.
+- **Correction** : en mode TEF, la réception du RadioText n'était jamais horodatée, donc l'alerte « RadioText absent » ne pouvait pas se déclencher. Elle fonctionne désormais (délai réglable, 5 min par défaut) et une alerte RadioText ouverte est clôturée au redémarrage du service, comme les autres.
+- Données dans la table `rds_history` de `fm_monitor.db` (1 000 dernières lignes conservées), route `/api/rds/rt_history` accessible au rôle Lecteur.
+
 ### Dépôt
 - Le dépôt GitHub devient [LyonelB/BL-RMO](https://github.com/LyonelB/BL-RMO) : liens mis à jour dans l'interface, le README et les scripts.
 

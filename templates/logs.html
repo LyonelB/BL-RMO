@@ -125,6 +125,32 @@
         </div>
       </div>
 
+      <!-- Titres diffusés via le RadioText (RT_HISTORY_PATCH) -->
+      <div class="section">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="section-title" style="margin-bottom:0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+            Titres diffusés (RadioText)
+          </div>
+          <span class="text-xs text-gray-400">10 derniers</span>
+        </div>
+        <p class="text-xs text-gray-500 mb-3">Chaque nouveau RadioText reçu par le tuner, avec l'heure de son premier affichage. Un texte qui revient en boucle (nom de la station, slogan) n'est repris qu'après 10 minutes.</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead>
+              <tr class="text-gray-400 border-b border-gray-100">
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">Heure</th>
+                <th class="font-medium py-2 pr-3">RadioText</th>
+                <th class="font-medium py-2"></th>
+              </tr>
+            </thead>
+            <tbody id="rt-body" class="divide-y divide-gray-50">
+              <tr><td colspan="3" class="py-8 text-center text-gray-400">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="section">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div class="section-title" style="margin-bottom:0">
@@ -593,7 +619,7 @@ function showTab(t, push) {
   $('rx-status').style.display = t === 'chaine' ? '' : 'none';
   if (push !== false) history.replaceState(null, '', location.pathname + location.search + '#' + t);
   try { localStorage.setItem('blfmo-logs-tab', t); } catch (e) {}
-  if (t === 'reception') loadReception();
+  if (t === 'reception') { loadReception(); loadRtHistory(); }
   if (t === 'dab') loadDab();
   if (t === 'blfmo' && !tabLoaded.blfmo) { tabLoaded.blfmo = true; loadSysLogs(); }
 }
@@ -662,6 +688,33 @@ async function loadReception() {
   sel.innerHTML = '<option value="">Tous les types</option>' + types.map(t => `<option>${esc(t)}</option>`).join('');
   sel.value = types.includes(cur) ? cur : '';
   renderReception();
+}
+async function loadRtHistory() {
+  let d;
+  try { d = await api('/api/rds/rt_history?limit=10'); }
+  catch (e) {
+    $('rt-body').innerHTML = `<tr><td colspan="3" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`;
+    return;
+  }
+  const rows = d.data || [];
+  if (!rows.length) {
+    $('rt-body').innerHTML = '<tr><td colspan="3" class="py-8 text-center text-gray-400">Aucun RadioText enregistré pour le moment</td></tr>';
+    return;
+  }
+  const cur = String(d.current || '').split(/\s+/).join(' ').trim();
+  const today = new Date(), yest = new Date(Date.now() - 86400e3);
+  const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  $('rt-body').innerHTML = rows.map((r, i) => {
+    const t = new Date(String(r.timestamp).replace(' ', 'T'));
+    const hm = isNaN(t) ? esc(r.timestamp) : `${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}`;
+    const day = isNaN(t) || sameDay(t, today) ? '' : sameDay(t, yest) ? 'hier' : `${pad(t.getDate())}-${pad(t.getMonth() + 1)}`;
+    const live = i === 0 && r.rt === cur;
+    return `<tr class="hover:bg-slate-50">
+      <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${hm}${day ? ` <span class="text-gray-400">${day}</span>` : ''}</td>
+      <td class="py-2 pr-3 ${live ? 'font-semibold text-gray-900' : 'text-gray-700'}">${esc(r.rt)}</td>
+      <td class="py-2 whitespace-nowrap text-right">${live ? '<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">À l\'antenne</span>' : ''}</td>
+    </tr>`;
+  }).join('');
 }
 function renderReception() {
   const type = $('rc-type').value;
@@ -800,6 +853,10 @@ setInterval(() => {
   const t = document.querySelector('.tab-btn.active')?.dataset.tab;
   if (t === 'reception') loadReception();
 }, 60000);
+setInterval(() => {   // RadioText : rafraîchi plus souvent que les alertes
+  if (document.hidden) return;
+  if (document.querySelector('.tab-btn.active')?.dataset.tab === 'reception') loadRtHistory();
+}, 15000);
 
 // Onglet de départ : #onglet dans l'adresse, sinon un filtre d'appareil (lien depuis la Chaîne), sinon le dernier ouvert
 (function () {

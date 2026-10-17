@@ -638,6 +638,20 @@ def read_rds_rt():
 # VOLUME DAC+
 # =============================================
 
+@app.route('/api/rds/rt_history')
+@limiter.exempt
+@auth.login_required
+def rt_history():
+    """Derniers RadioText diffusés (RT_HISTORY_PATCH)"""
+    try:
+        limit = max(1, min(int(request.args.get('limit', 10)), 100))
+    except ValueError:
+        limit = 10
+    if monitor and hasattr(monitor, 'db'):
+        return jsonify({'status': 'success', 'data': monitor.db.get_rt_history(limit=limit),
+                        'current': monitor.stats.get('rt', '-')})
+    return jsonify({'status': 'error', 'message': 'Database not available'}), 503
+
 @app.route('/api/volume')
 @auth.login_required
 def get_volume():
@@ -1673,7 +1687,7 @@ ROLE_LECTEUR = {
     'index', 'stats', 'about_page', 'pige_page', 'chain_page', 'logs_page', 'account_page',
     'get_stats', 'stream_stats', 'get_config_full', 'get_logs', 'get_signal_history', 'get_audio_history',
     'get_alerts_history', 'get_alerts_history_grouped', 'get_volume', 'proxy_stream', 'record_status',
-    'wifi_status', 'email_alerts_status', 'mpx_spectrum',
+    'wifi_status', 'email_alerts_status', 'mpx_spectrum', 'rt_history',
     'pige_status', 'pige_segment', 'pige_archives', 'pige_archive_audio',
     'chain_status', 'chain_events', 'chain_device_history', 'chain_device_logs',
     'logs_search', 'logs_sources', 'account_password',
