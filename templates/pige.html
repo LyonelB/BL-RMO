@@ -190,6 +190,17 @@
       </div>
     </div>
 
+
+    <!-- ── Extraits des dernières alertes (PIGE_ARCHIVE_PATCH) ── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        Extraits des dernières alertes
+      </div>
+      <p class="text-xs text-gray-400 mb-3" id="arch-help">De 30 s avant l'alerte à 30 s après le rétablissement. Ces extraits restent disponibles après la sortie de la pige.</p>
+      <div id="arch-list" class="text-sm text-gray-400">Chargement...</div>
+      <audio id="arch-audio" controls preload="none" class="w-full mt-3" style="display:none"></audio>
+    </div>
   </div>
 </main>
 
@@ -463,6 +474,40 @@
     if (f) loadSeg(f.seg, f.offset, false);   // pas de lecture auto (navigateurs)
     else $('play-date').textContent = "Cet instant n'est plus dans la pige";
   });
+  // PIGE_ARCHIVE_PATCH : extraits des dernières alertes
+  async function loadArchives() {
+    let d;
+    try {
+      const r = await fetch('/api/pige/archives', { credentials: 'include' });
+      d = await r.json();
+    } catch (e) { return; }
+    const box = $('arch-list');
+    if (d.keep) $('arch-help').textContent = `Les ${d.keep} derniers incidents, de 30 s avant l'alerte à 30 s après le rétablissement. Ces extraits restent disponibles après la sortie de la pige.`;
+    if (!d.archives || !d.archives.length) { box.innerHTML = '<span class="text-xs">Aucun extrait pour le moment.</span>'; return; }
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    box.innerHTML = '<div class="divide-y divide-gray-100">' + d.archives.map(a => {
+      const d0 = new Date(a.start * 1000);
+      const day = `${pad(d0.getDate())}-${pad(d0.getMonth() + 1)}-${d0.getFullYear()}`;
+      const causes = (a.causes && a.causes.length ? a.causes : [a.label]).map(esc).join('<br>');
+      return `<div class="flex flex-wrap items-center gap-x-4 gap-y-1 py-2.5">
+        <div class="font-mono text-xs text-gray-500" style="min-width:150px">${day} ${fmtTime(a.start)}</div>
+        <div class="flex-1 text-sm text-gray-800" style="min-width:200px">${causes}
+          <div class="text-xs text-gray-400">Durée de l'incident ${fmtDur(a.end - a.start)} · extrait ${fmtDur(a.clip_end - a.clip_start)} · ${fmtBytes(a.size)}</div></div>
+        <div class="flex gap-3 whitespace-nowrap">
+          <button class="text-xs font-medium text-blue-600 hover:text-blue-800" onclick="playArchive(${a.id})">Écouter</button>
+          <a class="text-xs font-medium text-blue-600 hover:text-blue-800" href="/api/pige/archives/${a.id}/audio?dl=1">MP3</a>
+        </div></div>`;
+    }).join('') + '</div>';
+  }
+  function playArchive(id) {
+    const p = $('arch-audio');
+    audio.pause();
+    p.style.display = '';
+    p.src = `/api/pige/archives/${id}/audio`;
+    p.play().catch(() => {});
+  }
+  loadArchives();
+  setInterval(loadArchives, 60000);
   updateSidebarFrequency();
   setInterval(loadStatus, 15000);
   window.addEventListener('resize', renderTimeline);

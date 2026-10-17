@@ -177,6 +177,7 @@
   // HISTORIQUE ALERTES
   // ═══════════════════════════════════════════════
   // Pige : ce qui est encore enregistré (24 h par défaut), pour proposer l'écoute
+  let pigeArchives = [];
   let pigeFrom = null;
   async function loadPigeRange() {
     try {
@@ -184,10 +185,20 @@
       const st = await r.json();
       pigeFrom = st.segments && st.segments.length ? st.segments[0].start : null;
     } catch (e) { pigeFrom = null; }
+    try {   // PIGE_ARCHIVE_PATCH : extraits archivés des dernières alertes
+      const r = await fetch('/api/pige/archives', {credentials: 'include'});
+      pigeArchives = (await r.json()).archives || [];
+    } catch (e) { pigeArchives = []; }
   }
   function pigeLinks(startIso, endIso) {
     const t0 = Math.floor(new Date(startIso).getTime() / 1000);
-    if (!pigeFrom || t0 < pigeFrom) return '<span class="text-xs text-gray-300">hors pige</span>';
+    if (!pigeFrom || t0 < pigeFrom) {
+      const arc = pigeArchives.find(a => t0 >= a.clip_start - 60 && t0 <= a.end + 60);
+      return arc
+        ? `<a href="/api/pige/archives/${arc.id}/audio" target="_blank" class="text-xs font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Extrait archivé, de 30 s avant à 30 s après">Écouter</a>`
+          + `<a href="/api/pige/archives/${arc.id}/audio?dl=1" class="text-xs font-medium text-blue-600 hover:text-blue-800" title="Extrait archivé (MP3)">MP3</a>`
+        : '<span class="text-xs text-gray-300">hors pige</span>';
+    }
     const t1 = endIso ? Math.floor(new Date(endIso).getTime() / 1000) : t0 + 90;
     const a = t0 - 30, b = Math.min(t1 + 30, Math.floor(Date.now() / 1000));
     return `<a href="/pige?t=${t0}" class="text-xs font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Ouvrir la pige 30 s avant l'alerte">Écouter</a>`

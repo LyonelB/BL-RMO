@@ -1085,6 +1085,33 @@ def pige_export():
                      download_name=download_name)
 
 # ══════════════════════════════════════════════════════════════════════════
+#  Extraits des dernières alertes (PIGE_ARCHIVE_PATCH)
+# ══════════════════════════════════════════════════════════════════════════
+pige_archiver = None
+
+
+@app.route('/api/pige/archives')
+@auth.login_required
+@limiter.exempt
+def pige_archives():
+    if pige_archiver is None:
+        return jsonify({'status': 'ok', 'keep': 0, 'archives': []})
+    return jsonify({'status': 'ok', 'keep': pige_archiver.keep, 'archives': pige_archiver.list()})
+
+
+@app.route('/api/pige/archives/<int:archive_id>/audio')
+@auth.login_required
+@limiter.exempt
+def pige_archive_audio(archive_id):
+    from flask import send_file, abort
+    path = pige_archiver.path(archive_id) if pige_archiver else None
+    if not path:
+        abort(404)
+    return send_file(path, mimetype='audio/mpeg', conditional=True, max_age=0,
+                     as_attachment=bool(request.args.get('dl')), download_name=os.path.basename(path))
+
+
+# ══════════════════════════════════════════════════════════════════════════
 #  Chaîne de diffusion (CHAIN_MONITOR_PATCH)
 # ══════════════════════════════════════════════════════════════════════════
 chain_monitor = None
@@ -1432,6 +1459,15 @@ try:
     chain_monitor.start()
 except Exception as e:
     logger.error(f"Erreur démarrage supervision chaîne: {e}")
+
+
+# Extraits des dernières alertes (PIGE_ARCHIVE_PATCH)
+try:
+    from pige_archive import PigeArchiver
+    pige_archiver = PigeArchiver(pige_store, 'fm_monitor.db', pige_store.cfg)
+    pige_archiver.start()
+except Exception as e:
+    logger.error(f"Erreur démarrage archivage des extraits d'alertes: {e}")
 
 
 if __name__ == '__main__':
