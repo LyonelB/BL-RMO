@@ -7,9 +7,9 @@ Remplace le Centre des journaux du NAS : les switchs, faisceaux, codecs,
 et les affiche sur la page /logs.
 
 Deux usages :
-  1. Service autonome (fm-monitor-syslog), lancé par systemd :
+  1. Service autonome (bl-rmo-syslog), lancé par systemd :
          python3 syslog_server.py
-     Écoute en UDP (514 par défaut). Indépendant de fm-monitor : les journaux
+     Écoute en UDP (514 par défaut). Indépendant de bl-rmo : les journaux
      continuent d'arriver pendant un redémarrage de l'application.
   2. Module importé par app.py (SyslogStore) : recherche, export, état.
 

@@ -428,7 +428,7 @@ def save_config():
         # SMTP utilises par les emails d'alerte. EmailAlert ne les lit qu'une fois au
         # demarrage du service : sans ce rechargement, changer le nom de station ou la
         # frequence dans ce formulaire laisse les emails d'alerte utiliser les anciennes
-        # valeurs tant que le service fm-monitor n'est pas redemarre.
+        # valeurs tant que le service bl-rmo n'est pas redemarre.
         if ('station' in data or 'email' in data) and monitor and getattr(monitor, 'email_alert', None):
             monitor.email_alert.reload_config()
 
@@ -487,15 +487,17 @@ def get_logs():
     """Récupère les derniers logs système"""
     try:
         import subprocess
-        unit = request.args.get('unit', 'fm-monitor')
-        if unit not in ('fm-monitor', 'fm-monitor-pige', 'fm-monitor-syslog'):
+        unit = request.args.get('unit', 'bl-rmo')
+        if unit not in ('bl-rmo', 'bl-rmo-pige', 'bl-rmo-syslog', 'bl-rmo-dab'):
             return jsonify({'status': 'error', 'message': 'Service inconnu'}), 400
+        # Ancien nom (avant migration vers BL-RMO) : son historique reste sous fm-monitor*
+        old_unit = unit.replace('bl-rmo', 'fm-monitor', 1)
         try:
             lines = max(10, min(int(request.args.get('lines', 100)), 2000))
         except ValueError:
             lines = 100
         result = subprocess.run(
-            ['journalctl', '-u', unit, '-n', str(lines), '--no-pager', '-o', 'short-iso'],
+            ['journalctl', '-u', unit, '-u', old_unit, '-n', str(lines), '--no-pager', '-o', 'short-iso'],
             capture_output=True,
             text=True,
             timeout=15
@@ -728,7 +730,7 @@ RECORD_MAX_AGE = 30 * 60  # 30 minutes
 def cleanup_orphan_records():
     """Supprime les fichiers d'enregistrement orphelins dans /tmp"""
     import glob, time
-    pattern = os.path.join(RECORD_DIR, 'fm-monitor_*.mp3')
+    pattern = os.path.join(RECORD_DIR, 'bl-rmo_*.mp3')
     for f in glob.glob(pattern):
         try:
             age = time.time() - os.path.getmtime(f)
@@ -757,7 +759,7 @@ def record_start():
 
     from datetime import datetime
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    record_filepath = os.path.join(RECORD_DIR, f'fm-monitor_{timestamp}.mp3')
+    record_filepath = os.path.join(RECORD_DIR, f'bl-rmo_{timestamp}.mp3')
 
     try:
         record_process = subprocess.Popen([
@@ -924,7 +926,7 @@ def select_source():
             json.dump(config, f, indent=2)
 
         # Redémarrage non-bloquant
-        subprocess.Popen(['sudo', 'systemctl', 'restart', 'fm-monitor'])
+        subprocess.Popen(['sudo', 'systemctl', 'restart', 'bl-rmo'])
         logger.info(f"Source sélectionnée : {source} ({port if source == 'tef' else 'RTL-SDR'})")
         return jsonify({'status': 'success', 'source': source})
 
@@ -1129,6 +1131,162 @@ def pige_archive_audio(archive_id):
         abort(404)
     return send_file(path, mimetype='audio/mpeg', conditional=True, max_age=0,
                      as_attachment=bool(request.args.get('dl')), download_name=os.path.basename(path))
+
+
+# ══════════════════════════════════════════════════════════════════════════
+#  Réception DAB+ (DAB_PATCH) : service bl-rmo-dab + lecture ici
+# ══════════════════════════════════════════════════════════════════════════
+from dab_monitor import DabReader, BAND_III, sid_decimal
+import threading as _dab_threading
+
+dab_reader = DabReader()
+_dab_listen = _dab_threading.BoundedSemaphore(1)     # une seule écoute à la fois (welle-cli et la clé)
+
+
+@app.context_processor
+def inject_dab():
+    try:
+        return {'dab_enabled': bool(dab_reader.config().get('enabled'))}
+    except Exception:
+        return {'dab_enabled': False}
+
+
+@app.route('/dab')
+@auth.login_required
+def dab_page():
+    return render_template('dab.html')
+
+
+@app.route('/api/dab/status')
+@auth.login_required
+@limiter.exempt
+def dab_status():
+    return jsonify({'status': 'ok', **dab_reader.status()})
+
+
+@app.route('/api/dab/events')
+@auth.login_required
+@limiter.exempt
+def dab_events():
+    limit = max(1, min(int(request.args.get('limit', 50) or 50), 500))
+    return jsonify({'status': 'ok', 'events': dab_reader.events(limit)})
+
+
+@app.route('/api/dab/uptime')
+@auth.login_required
+@limiter.exempt
+def dab_uptime():
+    hours = max(1, min(int(request.args.get('hours', 24) or 24), 24 * 30))
+    return jsonify({'status': 'ok', 'hours': hours, 'services': dab_reader.uptime(hours)})
+
+
+def _dab_welle(path, **kw):
+    import requests as _rq
+    cfg = dab_reader.config()
+    return _rq.get(f"http://127.0.0.1:{int(cfg['port'])}{path}", **kw)
+
+
+@app.route('/api/dab/slide/<sid>')
+@auth.login_required
+@limiter.exempt
+def dab_slide(sid):
+    from flask import abort
+    if not sid.replace('x', '').isalnum():
+        abort(404)
+    try:
+        r = _dab_welle(f'/slide/{sid_decimal(sid)}', timeout=3)
+        if r.status_code == 200 and r.content:
+            return app.response_class(r.content, mimetype=r.headers.get('Content-Type', 'image/jpeg'),
+                                      headers={'Cache-Control': 'max-age=30'})
+    except Exception:
+        pass
+    abort(404)
+
+
+@app.route('/api/dab/listen/<sid>')
+@auth.login_required
+@limiter.exempt
+def dab_listen(sid):
+    """Écoute d'un service, servie par welle-cli. Une écoute à la fois, durée limitée."""
+    import requests as _rq
+    if not sid.replace('x', '').isalnum():
+        return jsonify({'status': 'error', 'message': 'Service inconnu'}), 404
+    cfg = dab_reader.config()
+    if not cfg.get('enabled'):
+        return jsonify({'status': 'error', 'message': 'Réception DAB+ désactivée'}), 503
+    if not _dab_listen.acquire(blocking=False):
+        return jsonify({'status': 'error', 'message': 'Une écoute DAB+ est déjà en cours'}), 409
+    base = f"http://127.0.0.1:{int(cfg['port'])}"
+    try:
+        # Fork welle-monitor : décoder ce service tout de suite, sans attendre le carrousel
+        _rq.post(f"{base}/carousel/pin/{sid}", timeout=2)
+    except Exception:
+        pass
+    try:
+        up = _rq.get(f"{base}/mp3/{sid}", stream=True, timeout=(5, 30))
+        if up.status_code != 200:
+            up.close()
+            _dab_listen.release()
+            return jsonify({'status': 'error', 'message': 'Service non disponible'}), 503
+    except Exception:
+        _dab_listen.release()
+        return jsonify({'status': 'error', 'message': 'Récepteur DAB+ injoignable'}), 503
+    deadline = time.time() + 60 * float(cfg.get('listen_max_minutes', 15))
+
+    def generate():
+        try:
+            for chunk in up.iter_content(chunk_size=4096):
+                if chunk:
+                    yield chunk
+                if time.time() > deadline:
+                    break
+        except Exception:
+            pass
+        finally:
+            up.close()
+            _dab_listen.release()
+
+    return app.response_class(generate(), mimetype='audio/mpeg',
+                              headers={'Cache-Control': 'no-cache, no-store', 'X-Accel-Buffering': 'no'})
+
+
+DAB_EDITABLE = {
+    'enabled': bool, 'channel': str, 'ensemble_name': str, 'gain': int, 'carousel_size': int,
+    'snr_threshold': float, 'fic_quality_threshold': float, 'silence_threshold': float,
+    'silence_duration': int, 'service_loss_duration': int, 'ensemble_loss_duration': int,
+    'receiver_loss_duration': int, 'listen_max_minutes': int,
+}
+
+
+@app.route('/api/dab/settings', methods=['GET', 'POST'])
+@auth.login_required
+def dab_settings():
+    if request.method == 'GET':
+        cfg = dab_reader.config()
+        return jsonify({'status': 'ok', 'settings': {k: cfg.get(k) for k in list(DAB_EDITABLE) + ['watched_sids', 'frequency_mhz']},
+                        'channels': list(BAND_III)})
+    data = request.get_json(silent=True) or {}
+    with open('config.json') as f:
+        config = json.load(f)
+    dab = config.setdefault('dab', {})
+    try:
+        for k, typ in DAB_EDITABLE.items():
+            if k in data:
+                dab[k] = typ(data[k])
+        if 'watched_sids' in data:
+            dab['watched_sids'] = [str(x).lower() for x in (data['watched_sids'] or []) if str(x).strip()]
+    except (TypeError, ValueError):
+        return jsonify({'status': 'error', 'message': 'Valeur invalide'}), 400
+    if str(dab.get('channel', '9A')).upper() not in BAND_III:
+        return jsonify({'status': 'error', 'message': 'Canal inconnu (bande III : 5A à 13F)'}), 400
+    dab['channel'] = str(dab.get('channel', '9A')).upper()
+    dab['frequency_mhz'] = BAND_III[dab['channel']] / 1000
+    tmp = 'config.json.tmp'
+    with open(tmp, 'w') as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
+    os.replace(tmp, 'config.json')
+    logger.info(f"Réglages DAB+ enregistrés par {session.get('username', '?')}")
+    return jsonify({'status': 'ok', 'settings': dab})
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -1519,8 +1677,9 @@ ROLE_LECTEUR = {
     'pige_status', 'pige_segment', 'pige_archives', 'pige_archive_audio',
     'chain_status', 'chain_events', 'chain_device_history', 'chain_device_logs',
     'logs_search', 'logs_sources', 'account_password',
+    'dab_page', 'dab_status', 'dab_events', 'dab_uptime', 'dab_slide', 'dab_listen',
 }
-ROLE_LECTEUR_GET = {'chain_devices', 'chain_device', 'logs_rules'}      # lecture seule pour ces routes
+ROLE_LECTEUR_GET = {'chain_devices', 'chain_device', 'logs_rules', 'dab_settings'}      # lecture seule pour ces routes
 # Opérateur : exporter, enregistrer, intervenir sans rien régler
 ROLE_OPERATEUR = {
     'pige_export', 'chain_export', 'logs_export', 'record_start', 'record_stop', 'record_download',

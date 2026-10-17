@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>BL-RMO · DAB+</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .sidebar-link { display:flex; align-items:center; gap:10px; padding:10px 16px; border-radius:8px; color:#64748b; font-size:0.875rem; font-weight:500; transition:all 0.15s; text-decoration:none; }
+    .sidebar-link:hover, .sidebar-link.active { background:#eff6ff; color:#2563eb; }
+    .sidebar-link svg { width:18px; height:18px; flex-shrink:0; }
+    .section { background:white; border:1px solid #f1f5f9; border-radius:12px; padding:20px; margin-bottom:16px; }
+    .section-title { font-size:0.75rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+  </style>
+{% include '_roles.html' %}
+</head>
+<body class="flex h-screen overflow-hidden bg-slate-50">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col flex-shrink-0 h-screen transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 ease-in-out">
+  <div class="p-5 border-b border-gray-100">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">RMO</div>
+      <div>
+        <div class="text-sm font-semibold text-gray-900">BL-RMO</div>
+        <div class="text-xs text-gray-400 font-mono" id="sidebar-frequency">— MHz</div>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+    <a href="/" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </a>
+    <a href="/config" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      Configuration
+    </a>
+    <a href="/pige" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+      Pige
+    </a>
+    {% if dab_enabled or (current_user and current_user.role == 'admin') %}
+    <a href="/dab" class="sidebar-link active">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01"/></svg>
+      DAB+
+    </a>
+    {% endif %}
+    <a href="/chain" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+      Chaîne
+    </a>
+    <a href="/logs" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
+      Journaux
+    </a>
+    <a href="/about" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      À propos
+    </a>
+    <a href="https://github.com/LyonelB/BL-RMO" target="_blank" class="sidebar-link">
+      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+      GitHub
+    </a>
+  </nav>
+  <div class="p-4 border-t border-gray-100">
+    <a href="/logout" class="sidebar-link" style="color:#f87171" onmouseover="this.style.background='#fff1f2';this.style.color='#dc2626'" onmouseout="this.style.background='';this.style.color='#f87171'">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Déconnexion
+    </a>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
+<main class="flex-1 overflow-y-auto">
+
+  <header class="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10">
+    <div class="flex items-center gap-2">
+      <button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <h1 class="text-base font-semibold text-gray-900">Réception DAB+</h1>
+    </div>
+    <p class="text-xs text-gray-400 mt-0.5" id="subtitle">Multiplex reçu par la clé RTL-SDR et welle-cli</p>
+  </header>
+
+  <div class="p-6 max-w-6xl">
+
+    <!-- ── Désactivé / service arrêté ───────────────────────── -->
+    <div id="notice" class="section hidden" style="border-color:#fde68a;background:#fffbeb">
+      <div class="text-sm font-semibold text-amber-800" id="notice-title"></div>
+      <div class="text-xs text-amber-700 mt-1 leading-relaxed" id="notice-text"></div>
+    </div>
+
+    <!-- ── État ─────────────────────────────────────────────── -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Récepteur</div>
+        <div class="flex items-center gap-2">
+          <span id="rx-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+          <span class="text-base font-semibold text-gray-900" id="rx-state">…</span>
+        </div>
+        <div class="text-xs text-gray-400 mt-1 truncate" id="rx-sub">&nbsp;</div>
+      </div>
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Ensemble</div>
+        <div class="text-base font-semibold text-gray-900 truncate" id="ens-label">-</div>
+        <div class="text-xs text-gray-400 mt-1 font-mono" id="ens-sub">&nbsp;</div>
+      </div>
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">SNR</div>
+        <div class="text-base font-semibold font-mono" id="snr">-</div>
+        <div class="h-1.5 rounded bg-gray-100 mt-2 overflow-hidden"><div id="snr-bar" class="h-full bg-gray-300" style="width:0"></div></div>
+      </div>
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Qualité FIC</div>
+        <div class="text-base font-semibold font-mono" id="fic">-</div>
+        <div class="h-1.5 rounded bg-gray-100 mt-2 overflow-hidden"><div id="fic-bar" class="h-full bg-gray-300" style="width:0"></div></div>
+      </div>
+    </div>
+
+    <!-- ── Services ─────────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <span>Services du multiplex</span>
+        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400" id="svc-help"></span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-[11px] uppercase tracking-wide text-gray-400 border-b border-gray-100">
+              <th class="py-2 pr-3 font-semibold">Service</th>
+              <th class="py-2 pr-3 font-semibold" title="Alertes silence et absence">Surveillé</th>
+              <th class="py-2 pr-3 font-semibold">État</th>
+              <th class="py-2 pr-3 font-semibold" style="min-width:130px">Niveau</th>
+              <th class="py-2 pr-3 font-semibold">Diffusion</th>
+              <th class="py-2 pr-3 font-semibold">24 h</th>
+              <th class="py-2 font-semibold"></th>
+            </tr>
+          </thead>
+          <tbody id="svc-body"><tr><td colspan="7" class="py-6 text-center text-xs text-gray-400">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+      <div id="player" class="hidden mt-4 p-3 rounded-lg bg-blue-50 border border-blue-100">
+        <div class="flex flex-wrap items-center gap-3">
+          <img id="pl-slide" class="w-16 h-12 object-cover rounded bg-white hidden" alt="">
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-semibold text-gray-900" id="pl-name"></div>
+            <div class="text-xs text-gray-500 truncate" id="pl-dls"></div>
+          </div>
+          <audio id="pl-audio" controls preload="none" class="h-8"></audio>
+          <button class="text-xs font-medium text-gray-500 hover:text-gray-800" onclick="stopListen()">Fermer</button>
+        </div>
+        <div class="text-[11px] text-gray-400 mt-2" id="pl-help"></div>
+      </div>
+    </div>
+
+    <!-- ── Événements ───────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <span>Derniers événements</span>
+        <a href="/logs#dab" class="ml-auto text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">Journal de réception &rarr;</a>
+      </div>
+      <div id="events" class="text-xs text-gray-400">Chargement…</div>
+    </div>
+
+    <!-- ── Réglages (administrateur) ────────────────────────── -->
+    <div class="section need-admin">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+        Réglages
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+        <label class="flex items-center gap-2 sm:col-span-2 lg:col-span-3">
+          <input type="checkbox" id="s-enabled" class="w-4 h-4">
+          <span class="font-medium text-gray-800">Activer la réception DAB+</span>
+          <span class="text-xs text-gray-400">(clé RTL-SDR dédiée, welle-cli installé)</span>
+        </label>
+        <label class="block"><span class="text-xs text-gray-500">Canal</span>
+          <select id="s-channel" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"></select>
+          <span class="text-[11px] text-gray-400 font-mono" id="s-freq"></span></label>
+        <label class="block"><span class="text-xs text-gray-500">Nom de l'ensemble (affichage)</span>
+          <input id="s-ensemble_name" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="ex. LA ROCHE SUR YON"></label>
+        <label class="block"><span class="text-xs text-gray-500">Décodage</span>
+          <select id="s-carousel_size" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
+            <option value="0">Tous les services en continu</option>
+            <option value="1">Carrousel, 1 service à la fois</option>
+            <option value="2">Carrousel, 2 services à la fois</option>
+            <option value="4">Carrousel, 4 services à la fois</option>
+          </select></label>
+        <label class="block"><span class="text-xs text-gray-500">Seuil SNR (dB)</span>
+          <input id="s-snr_threshold" type="number" step="0.5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+        <label class="block"><span class="text-xs text-gray-500">Seuil qualité FIC (%)</span>
+          <input id="s-fic_quality_threshold" type="number" step="1" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+        <label class="block"><span class="text-xs text-gray-500">Ensemble dégradé : alerte après (s)</span>
+          <input id="s-ensemble_loss_duration" type="number" step="5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+        <label class="block"><span class="text-xs text-gray-500">Seuil de silence (dBFS)</span>
+          <input id="s-silence_threshold" type="number" step="1" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+        <label class="block"><span class="text-xs text-gray-500">Silence : alerte après (s)</span>
+          <input id="s-silence_duration" type="number" step="5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+        <label class="block"><span class="text-xs text-gray-500">Service absent : alerte après (s)</span>
+          <input id="s-service_loss_duration" type="number" step="5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+      </div>
+      <div class="flex items-center gap-3 mt-4">
+        <button onclick="saveSettings()" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Enregistrer</button>
+        <span class="text-xs" id="s-msg"></span>
+      </div>
+      <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">Les services à surveiller se cochent dans le tableau ci-dessus. Aucun coché : tous les services sont surveillés. Un changement de canal ou de décodage relance welle-cli.</p>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const csrf = () => document.querySelector('meta[name="csrf-token"]').content;
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const pad = n => String(n).padStart(2, '0');
+  const isAdmin = document.documentElement.dataset.role === 'admin';
+  let st = null, uptime = {}, listening = null, settings = null;
+
+  function fmtDur(s) {
+    if (s == null) return '';
+    s = Math.round(s);
+    if (s < 60) return `${s} s`;
+    if (s < 3600) return `${Math.floor(s / 60)} min ${pad(s % 60)} s`;
+    return `${Math.floor(s / 3600)} h ${pad(Math.floor(s % 3600 / 60))} min`;
+  }
+  function fmtDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return `${pad(d.getDate())}-${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+  function bar(el, pct, ok) {
+    el.style.width = Math.max(0, Math.min(100, pct)) + '%';
+    el.className = 'h-full ' + (ok ? 'bg-green-500' : 'bg-red-500');
+  }
+  function lvlBar(db, fresh) {
+    const pct = Math.max(0, Math.min(100, (db + 60) / 60 * 100));
+    const col = !fresh ? 'bg-gray-300' : db > -3 ? 'bg-red-500' : db > -12 ? 'bg-amber-400' : 'bg-green-500';
+    return `<div class="h-1.5 rounded bg-gray-100 overflow-hidden"><div class="h-full ${col}" style="width:${pct}%"></div></div>`;
+  }
+
+  async function loadStatus() {
+    try {
+      const r = await fetch('/api/dab/status', { credentials: 'include' });
+      st = await r.json();
+    } catch (e) { return; }
+    render();
+  }
+
+  function render() {
+    const s = st, rf = s.rf || {};
+    const freq = Number(s.frequency_mhz).toFixed(3).replace('.', ',');
+    $('subtitle').textContent = `Canal ${s.channel} · ${freq} MHz` + (s.ensemble_name ? ` · ${s.ensemble_name}` : '')
+      + (s.mode ? ` · décodage ${s.mode}` : '');
+    // Bandeau
+    const n = $('notice');
+    if (!s.enabled) {
+      n.classList.remove('hidden');
+      $('notice-title').textContent = 'Réception DAB+ désactivée';
+      $('notice-text').innerHTML = isAdmin
+        ? 'Brancher une clé RTL-SDR dédiée au DAB+ et son antenne bande III, installer welle-cli (<code>sudo BUILD_WELLE=1 bash install/build/67-dab.sh</code>), puis cocher « Activer la réception DAB+ » dans les réglages en bas de page.'
+        : "Un administrateur doit l'activer.";
+    } else if (!s.service_running) {
+      n.classList.remove('hidden');
+      $('notice-title').textContent = 'Le service de réception DAB+ ne répond pas';
+      $('notice-text').innerHTML = 'Vérifier : <code>sudo systemctl status bl-rmo-dab</code>';
+    } else n.classList.add('hidden');
+    // Récepteur
+    const up = s.receiver_up;
+    $('rx-dot').className = 'w-2.5 h-2.5 rounded-full ' + (!s.enabled ? 'bg-gray-300' : up ? 'bg-green-500' : 'bg-red-500');
+    $('rx-state').textContent = !s.enabled ? 'Désactivé' : !s.service_running ? 'Service arrêté' : up ? 'En réception' : 'Hors service';
+    $('rx-sub').textContent = up ? (rf.hardware || 'welle-cli') + (s.receiver_since ? ' · depuis ' + fmtDur(Date.now() / 1000 - s.receiver_since) : '')
+      : (s.receiver_error || ' ');
+    $('rx-sub').title = $('rx-sub').textContent;
+    // Ensemble et RF
+    $('ens-label').textContent = rf.ensemble_label || '-';
+    $('ens-sub').textContent = rf.ensemble_id ? `EId ${rf.ensemble_id} · gain ${rf.gain} dB` : ' ';
+    const th = s.thresholds || {};
+    if (up && rf.snr != null) {
+      $('snr').textContent = `${rf.snr.toFixed(1)} dB`;
+      $('snr').className = 'text-base font-semibold font-mono ' + (rf.snr >= th.snr ? 'text-gray-900' : 'text-red-600');
+      bar($('snr-bar'), rf.snr / 25 * 100, rf.snr >= th.snr);
+      $('fic').textContent = `${Math.round(rf.fic_quality)} %`;
+      $('fic').className = 'text-base font-semibold font-mono ' + (rf.fic_quality >= th.fic ? 'text-gray-900' : 'text-red-600');
+      bar($('fic-bar'), rf.fic_quality, rf.fic_quality >= th.fic);
+    } else {
+      $('snr').textContent = '-'; $('fic').textContent = '-';
+      $('snr-bar').style.width = 0; $('fic-bar').style.width = 0;
+    }
+    renderServices();
+  }
+
+  function renderServices() {
+    const svcs = (st && st.services) || [];
+    const watched = new Set(st.watched_sids || []);
+    $('svc-help').textContent = svcs.length ? `${svcs.length} services` + (watched.size ? ` · ${watched.size} surveillé(s)` : ' · tous surveillés') : '';
+    if (!svcs.length) {
+      $('svc-body').innerHTML = `<tr><td colspan="7" class="py-6 text-center text-xs text-gray-400">${st.enabled ? 'Aucun service reçu pour le moment.' : 'Aucun service : réception désactivée.'}</td></tr>`;
+      return;
+    }
+    $('svc-body').innerHTML = svcs.map(v => {
+      const fresh = v.level_age != null && v.level_age < 20;
+      const lvl = Math.max(v.audio_l ?? -100, v.audio_r ?? -100);
+      let state;
+      if (v.present === null || v.present === undefined) state = '<span class="text-gray-400">-</span>';
+      else if (!v.present) state = '<span class="text-red-600 font-medium">Absent</span>';
+      else if (v.silence) state = '<span class="text-amber-600 font-medium">Silence</span>';
+      else state = '<span class="text-green-600 font-medium">Présent</span>';
+      const u = uptime[v.sid];
+      const upt = u && u.uptime_pct != null ? `${u.uptime_pct.toFixed(u.uptime_pct >= 99.95 ? 0 : 1)} %` : '-';
+      const box = isAdmin
+        ? `<input type="checkbox" class="w-4 h-4" ${watched.has(v.sid) ? 'checked' : ''} onchange="toggleWatch('${esc(v.sid)}', this.checked)">`
+        : (v.watched ? '<span class="text-xs text-gray-600">oui</span>' : '<span class="text-xs text-gray-300">non</span>');
+      return `<tr class="border-b border-gray-50 align-top ${v.present === false ? 'bg-red-50/40' : ''}">
+        <td class="py-2 pr-3"><div class="font-medium text-gray-900">${esc(v.label)}</div>
+          <div class="text-[11px] text-gray-400 font-mono">${esc(v.sid)}${v.pty ? ' · ' + esc(v.pty) : ''}</div>
+          ${v.dls ? `<div class="text-[11px] text-gray-500 mt-0.5" style="overflow-wrap:anywhere">${esc(v.dls)}</div>` : ''}</td>
+        <td class="py-2 pr-3">${box}</td>
+        <td class="py-2 pr-3 text-xs whitespace-nowrap">${state}</td>
+        <td class="py-2 pr-3">${v.present ? lvlBar(v.audio_l ?? -100, fresh) + '<div class="h-0.5"></div>' + lvlBar(v.audio_r ?? -100, fresh)
+            + `<div class="text-[10px] font-mono mt-0.5 ${fresh ? 'text-gray-500' : 'text-gray-300'}" title="${fresh ? '' : 'Niveau non rafraîchi (carrousel)'}">${lvl > -100 ? lvl.toFixed(1) + ' dBFS' : '-'}</div>` : ''}</td>
+        <td class="py-2 pr-3 text-xs text-gray-600 whitespace-nowrap">${esc(v.mode || '')} ${v.bitrate ? v.bitrate + ' kb/s' : ''}
+          <div class="text-[11px] text-gray-400">${esc(v.protection || '')}${v.err_aac ? ' · AAC ' + v.err_aac : ''}</div></td>
+        <td class="py-2 pr-3 text-xs font-mono text-gray-600">${upt}</td>
+        <td class="py-2 text-right whitespace-nowrap">${v.present ? `<button class="text-xs font-medium text-blue-600 hover:text-blue-800" onclick="listen('${esc(v.sid)}')">${listening === v.sid ? 'En écoute' : 'Écouter'}</button>` : ''}</td>
+      </tr>`;
+    }).join('');
+    if (listening) {
+      const v = svcs.find(x => x.sid === listening);
+      if (v) {
+        $('pl-dls').textContent = v.dls || '';
+        if (v.mot_time) {
+          const url = `/api/dab/slide/${encodeURIComponent(v.sid)}?t=${v.mot_time}`;
+          if ($('pl-slide').dataset.url !== url) {
+            $('pl-slide').dataset.url = url;
+            $('pl-slide').onload = () => $('pl-slide').classList.remove('hidden');
+            $('pl-slide').onerror = () => $('pl-slide').classList.add('hidden');
+            $('pl-slide').src = url;
+          }
+        }
+      }
+    }
+  }
+
+  async function loadUptime() {
+    try {
+      const r = await fetch('/api/dab/uptime', { credentials: 'include' });
+      const d = await r.json();
+      uptime = Object.fromEntries((d.services || []).map(x => [x.sid, x]));
+    } catch (e) { }
+  }
+
+  async function loadEvents() {
+    let d;
+    try {
+      const r = await fetch('/api/dab/events?limit=15', { credentials: 'include' });
+      d = await r.json();
+    } catch (e) { return; }
+    if (!d.events || !d.events.length) { $('events').innerHTML = 'Aucun événement.'; return; }
+    $('events').innerHTML = '<div class="divide-y divide-gray-100">' + d.events.map(e => {
+      const ongoing = e.status === 'ongoing';
+      return `<div class="flex flex-wrap items-baseline gap-x-4 gap-y-0.5 py-2">
+        <div class="font-mono text-gray-500" style="min-width:110px">${fmtDate(e.start)}</div>
+        <div class="flex-1 text-sm text-gray-800" style="min-width:200px">${esc(e.label)}${e.service ? ' : <b>' + esc(e.service) + '</b>' : ''}
+          <div class="text-xs text-gray-400">${esc(e.message || '')}</div></div>
+        <div class="whitespace-nowrap ${ongoing ? 'text-red-600 font-medium' : 'text-gray-500'}">${ongoing ? 'En cours' : 'Durée ' + fmtDur(e.duration)}</div>
+      </div>`;
+    }).join('') + '</div>';
+  }
+
+  // ── Écoute ─────────────────────────────────────────────
+  function listen(sid) {
+    const v = (st.services || []).find(x => x.sid === sid);
+    stopListen(true);
+    listening = sid;
+    $('player').classList.remove('hidden');
+    $('pl-name').textContent = v ? v.label : sid;
+    $('pl-dls').textContent = v ? v.dls || '' : '';
+    $('pl-slide').classList.add('hidden'); $('pl-slide').dataset.url = '';
+    $('pl-help').textContent = "Écoute servie par la clé DAB+ : une seule à la fois, coupée automatiquement après quelques minutes. Démarrage en quelques secondes en mode carrousel.";
+    const a = $('pl-audio');
+    a.src = `/api/dab/listen/${encodeURIComponent(sid)}?t=${Date.now()}`;
+    a.play().catch(() => {});
+    a.onerror = () => { $('pl-help').textContent = "Écoute impossible : service indisponible ou une autre écoute DAB+ est déjà en cours."; };
+    renderServices();
+  }
+  function stopListen(keep) {
+    const a = $('pl-audio');
+    a.pause(); a.removeAttribute('src'); a.load();
+    listening = null;
+    if (!keep) { $('player').classList.add('hidden'); renderServices(); }
+  }
+
+  // ── Réglages ───────────────────────────────────────────
+  const FIELDS = ['ensemble_name', 'carousel_size', 'snr_threshold', 'fic_quality_threshold', 'ensemble_loss_duration',
+                  'silence_threshold', 'silence_duration', 'service_loss_duration'];
+  async function loadSettings() {
+    if (!isAdmin) return;
+    const r = await fetch('/api/dab/settings', { credentials: 'include' });
+    const d = await r.json();
+    settings = d.settings;
+    $('s-channel').innerHTML = d.channels.map(c => `<option ${c === settings.channel ? 'selected' : ''}>${c}</option>`).join('');
+    $('s-enabled').checked = !!settings.enabled;
+    FIELDS.forEach(f => { if (settings[f] != null) $('s-' + f).value = settings[f]; });
+    $('s-freq').textContent = `${Number(settings.frequency_mhz).toFixed(3).replace('.', ',')} MHz`;
+  }
+  async function post(body) {
+    const r = await fetch('/api/dab/settings', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }, body: JSON.stringify(body)
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
+    return d;
+  }
+  async function saveSettings() {
+    const body = { enabled: $('s-enabled').checked, channel: $('s-channel').value };
+    FIELDS.forEach(f => { body[f] = $('s-' + f).value; });
+    $('s-msg').className = 'text-xs text-gray-500'; $('s-msg').textContent = 'Enregistrement…';
+    try {
+      await post(body);
+      $('s-msg').className = 'text-xs text-green-600'; $('s-msg').textContent = 'Enregistré. Le service DAB+ applique les réglages sous quelques secondes.';
+      loadSettings(); setTimeout(loadStatus, 3000);
+    } catch (e) { $('s-msg').className = 'text-xs text-red-600'; $('s-msg').textContent = e.message; }
+  }
+  async function toggleWatch(sid, on) {
+    const set = new Set(st.watched_sids || []);
+    on ? set.add(sid) : set.delete(sid);
+    try {
+      await post({ watched_sids: [...set] });
+      st.watched_sids = [...set];
+      renderServices();
+    } catch (e) { alert(e.message); loadStatus(); }
+  }
+
+  // ── Menu ───────────────────────────────────────────────
+  async function updateSidebarFrequency() {
+    try {
+      const response = await fetch('/api/config/full', { credentials: 'include' });
+      const config = await response.json();
+      const freq = config.rtl_sdr?.frequency || '88.6M';
+      $('sidebar-frequency').textContent = freq.replace('M', ' MHz');
+    } catch (error) { }
+  }
+  function toggleSidebar() {
+    $('sidebar').classList.toggle('-translate-x-full');
+    $('sidebar-overlay').classList.toggle('hidden');
+  }
+  function closeSidebar() {
+    $('sidebar').classList.add('-translate-x-full');
+    $('sidebar-overlay').classList.add('hidden');
+  }
+
+  updateSidebarFrequency();
+  loadUptime().then(loadStatus);
+  loadEvents();
+  loadSettings();
+  setInterval(loadStatus, 2000);
+  setInterval(loadEvents, 15000);
+  setInterval(loadUptime, 60000);
+</script>
+</body>
+</html>

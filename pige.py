@@ -3,11 +3,11 @@
 BL-RMO - Pige audio (enregistrement glissant des dernières 24 h)
 
 Deux usages :
-  1. Processus enregistreur autonome (service systemd fm-monitor-pige) :
+  1. Processus enregistreur autonome (service systemd bl-rmo-pige) :
          python3 pige.py
      Lit le flux Icecast local, le découpe en segments MP3 de 5 min
      (copie sans réencodage) et purge ce qui dépasse la rétention.
-     Indépendant de Flask : un redémarrage de fm-monitor ne coupe la pige
+     Indépendant de Flask : un redémarrage de bl-rmo ne coupe la pige
      que le temps que Icecast retrouve sa source.
 
   2. Module importé par app.py (PigeStore) : liste des segments,
@@ -327,7 +327,7 @@ class PigeRecorder:
             _, err = self.proc.communicate()
             if not self.running:
                 break
-            # Icecast sans source (fm-monitor qui redémarre) : on réessaie vite
+            # Icecast sans source (bl-rmo qui redémarre) : on réessaie vite
             backoff = 2 if time.time() - started > 60 else min(backoff * 2, 30)
             logger.warning(f"ffmpeg pige arrêté (code {self.proc.returncode}) "
                            f"{(err or '').strip()[-200:]} - relance dans {backoff} s")

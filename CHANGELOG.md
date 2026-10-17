@@ -4,10 +4,31 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
+## [Non publié]
+
+### Réception DAB+ (reprise de BL-DMO)
+- **Nouveau service `fm-monitor-dab`** (`dab_monitor.py`) : pilote welle-cli (fork welle-monitor) sur une clé RTL-SDR dédiée, relève `/mux.json` toutes les 2 s, relance welle-cli avec un délai croissant (5 s à 5 min) et réinitialise la clé USB si besoin. En veille tant que le DAB+ n'est pas activé.
+- **Page DAB+** : récepteur, ensemble, SNR et qualité FIC, tableau des services (présence, niveaux, DLS, débit, disponibilité 24 h), écoute d'un service avec diaporama, derniers événements, réglages (administrateur).
+- **Alertes** : récepteur hors service, ensemble dégradé, service absent, silence ; mail à l'alerte et au rétablissement ; services surveillés au choix (aucun coché = tous).
+- En mode carrousel, un niveau audio n'est pris en compte que s'il vient d'être rafraîchi : plus de fausse alerte de silence sur un service qui n'est pas en cours de décodage.
+- **Journaux** : nouvel onglet **Réception DAB+** (alertes, filtres par type et par service, 7 et 30 jours), séparé de la Réception FM ; le service `fm-monitor-dab` apparaît dans l'onglet BL-RMO. La pige n'enregistrant que la FM, les alertes DAB+ n'ont pas de lien vers la pige.
+- Données dans `fm_monitor.db` (tables `dab_events`, `dab_uptime`, `dab_services`), événements 90 jours, disponibilité 31 jours.
+- `install/build/67-dab.sh` : rtl-sdr, pilote TNT écarté, règle udev, script de réinitialisation USB, service ; `BUILD_WELLE=1` compile welle-cli (xxd requis pour intégrer l'interface web de welle-cli). Appelé par `install.sh` ; `update.sh` redémarre aussi `fm-monitor-dab`.
+
+### Dépôt
+- Le dépôt GitHub devient [LyonelB/BL-RMO](https://github.com/LyonelB/BL-RMO) : liens mis à jour dans l'interface, le README et les scripts.
+
+### Noms techniques : dossier, services, adresse
+- Dossier `~/bl-rmo`, services `bl-rmo`, `bl-rmo-pige`, `bl-rmo-syslog`, `bl-rmo-dab`, site Nginx et certificats `bl-rmo`, adresse `bl-rmo.local` : `install.sh`, `update.sh` et les scripts `install/build` utilisent les nouveaux noms.
+- **`install/migrate-to-bl-rmo.sh`** fait passer une installation existante aux nouveaux noms : inventaire sans rien modifier, `--apply`, `--rollback`. Sauvegarde de tout ce qu'il modifie, vérifications à la fin. Les anciens noms restent utilisables : `~/fm-monitor` devient un lien, `fm-monitor*` restent des alias systemd, l'ancien nom `.local` est toujours annoncé (service `bl-rmo-mdns-alias`), l'annonce NetBIOS passe de BL-FMO à BL-RMO.
+- `update.sh` et l'onglet BL-RMO des Journaux fonctionnent avant comme après la migration ; le journal système affiche aussi l'historique enregistré sous l'ancien nom.
+
+---
+
 ## [0.9.0] - 2026-10-17
 
 ### Nouveau nom : BL-RMO
-- **BL-FMO devient BL-RMO**, pour « Radio MOnitoring » : le logiciel surveille la réception et toute la chaîne de diffusion, et le DAB+ est en vue.
+- **FM-Monitor devient BL-RMO**, pour « Radio Monitoring » : le logiciel surveille la réception FM et DAB+ et toute la chaîne de diffusion.
 - Le nom change dans toute l'interface (menu, titres, page À propos, connexion, assistant), dans les mails d'alerte, les exports (`blrmo-journaux_…csv`, `blrmo-chaine_…zip`), le README et les scripts d'installation.
 - Rien ne change pour une installation existante : dossier `fm-monitor`, services `fm-monitor-*`, adresse `bl-fmo.local` et dépôt GitHub seront renommés lors d'étapes ultérieures, avec un script de migration.
 
@@ -18,7 +39,7 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 - **Une seule page Journaux, trois onglets**, sans mélange :
   - **Réception FM** : alertes du tuner (signal, modulation, RDS, RadioText) avec durée, état, écoute et MP3 ; nombre d'alertes et durée cumulée sur 7 et 30 jours, calculés sur l'historique (plus de compteur remis à zéro au redémarrage) ;
   - **Chaîne de diffusion** : journaux syslog et traps des appareils (contenu de l'ancienne page Journaux) ;
-  - **BL-FMO** : journal système de l'application, de la pige ou de la réception des journaux, 100 à 2 000 lignes, filtre avertissements et erreurs.
+  - **BL-RMO** : journal système de l'application, de la pige ou de la réception des journaux, 100 à 2 000 lignes, filtre avertissements et erreurs.
 - La page **Statistiques** disparaît du menu ; `/stats` redirige vers l'onglet Réception FM.
 - L'alerte « Perte émetteur » s'appelle désormais « Signal perdu » (le tuner mesure la réception, pas l'émetteur).
 
@@ -152,8 +173,8 @@ Nouveau paramètre dans `config.json` :
 ```
 Valeurs : `"rtl_fm"` (défaut, mono) ou `"gnuradio"` (stéréo WFM)
 
-[0.7.0]: https://github.com/LyonelB/fm-monitor/compare/v0.6.0...v0.7.0
-[0.6.0]: https://github.com/LyonelB/fm-monitor/compare/v0.5.2...v0.6.0
+[0.7.0]: https://github.com/LyonelB/BL-RMO/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/LyonelB/BL-RMO/compare/v0.5.2...v0.6.0
 
 ## [0.5.2] - 2026-04-10
 ### 🎉 Support TEF668X Headless USB Tuner
@@ -536,12 +557,12 @@ La v0.3.3 prévue (monitoring RDS, stabilité) n'a pas été publiée — son co
 
 ---
 
-[0.5.0]: https://github.com/LyonelB/fm-monitor/compare/v0.4.3...v0.5.0
-[0.4.3]: https://github.com/LyonelB/fm-monitor/compare/v0.4.2...v0.4.3
-[0.4.2]: https://github.com/LyonelB/fm-monitor/compare/v0.4.1...v0.4.2
-[0.4.1]: https://github.com/LyonelB/fm-monitor/compare/v0.4.0...v0.4.1
-[0.4.0]: https://github.com/LyonelB/fm-monitor/compare/v0.3.2...v0.4.0
-[0.3.2]: https://github.com/LyonelB/fm-monitor/compare/v0.3.1...v0.3.2
-[0.3.1]: https://github.com/LyonelB/fm-monitor/compare/v0.2.0...v0.3.1
-[0.2.0]: https://github.com/LyonelB/fm-monitor/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/LyonelB/fm-monitor/releases/tag/v0.1.0
+[0.5.0]: https://github.com/LyonelB/BL-RMO/compare/v0.4.3...v0.5.0
+[0.4.3]: https://github.com/LyonelB/BL-RMO/compare/v0.4.2...v0.4.3
+[0.4.2]: https://github.com/LyonelB/BL-RMO/compare/v0.4.1...v0.4.2
+[0.4.1]: https://github.com/LyonelB/BL-RMO/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/LyonelB/BL-RMO/compare/v0.3.2...v0.4.0
+[0.3.2]: https://github.com/LyonelB/BL-RMO/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/LyonelB/BL-RMO/compare/v0.2.0...v0.3.1
+[0.2.0]: https://github.com/LyonelB/BL-RMO/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/LyonelB/BL-RMO/releases/tag/v0.1.0

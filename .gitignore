@@ -89,3 +89,7 @@ pige/
 
 # Journaux reçus des appareils (syslog)
 syslog.db*
+
+# État courant de la réception DAB+ (écrit par bl-rmo-dab)
+dab_state.json
+.dab_state.*

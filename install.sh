@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-# BL-RMO (anciennement BL-RMO / BL-RMO) - Installation automatique
+# BL-RMO (anciennement FM-Monitor) - Installation automatique
 # Configuration de référence : mini-PC sous Debian 13 + tuner Headless TEF Lite SE
 #
-# Usage: curl -sSL https://raw.githubusercontent.com/LyonelB/fm-monitor/main/install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/LyonelB/BL-RMO/main/install.sh | bash
 #
 
 set -e
@@ -27,12 +27,12 @@ print_info()    { echo -e "${BLUE}[i]${NC} $1"; }
 print_warning() { echo -e "${YELLOW}[!]${NC} $1"; }
 print_error()   { echo -e "${RED}[✗]${NC} $1"; }
 
-INSTALL_DIR="$HOME/fm-monitor"
-GITHUB_REPO="https://github.com/LyonelB/fm-monitor.git"
+INSTALL_DIR="$HOME/bl-rmo"
+GITHUB_REPO="https://github.com/LyonelB/BL-RMO.git"
 ICECAST_PASSWORD="fmmonitor2026"
 # Hostname mDNS (modifiable par l'utilisateur)
-read -p "Nom d'hôte mDNS [bl-fmo] : " MDNS_INPUT
-MDNS_HOSTNAME="${MDNS_INPUT:-bl-fmo}"
+read -p "Nom d'hôte mDNS [bl-rmo] : " MDNS_INPUT
+MDNS_HOSTNAME="${MDNS_INPUT:-bl-rmo}"
 print_info "Hostname choisi : $MDNS_HOSTNAME.local"
 
 if [ "$EUID" -eq 0 ]; then
@@ -330,7 +330,7 @@ if [ ! -f "cert.pem" ] || [ ! -f "key.pem" ]; then
     openssl req -x509 -newkey rsa:4096 -nodes \
         -out cert.pem -keyout key.pem \
         -days 3650 \
-        -subj "/C=FR/ST=France/L=Paris/O=BL-RMO/OU=Radio/CN=fm-monitor.local" \
+        -subj "/C=FR/ST=France/L=Paris/O=BL-RMO/OU=Radio/CN=bl-rmo.local" \
         2>/dev/null
     chmod 644 cert.pem
     chmod 600 key.pem
@@ -344,7 +344,7 @@ fi
 # =============================================
 print_step "Configuration du service systemd..."
 
-sudo tee /etc/systemd/system/fm-monitor.service > /dev/null << EOF
+sudo tee /etc/systemd/system/bl-rmo.service > /dev/null << EOF
 [Unit]
 Description=FM Radio Monitoring System
 After=network.target icecast2.service
@@ -364,12 +364,12 @@ WantedBy=multi-user.target
 EOF
 
 # Droits réseau : sudo nmcli sans mot de passe (WiFi + IP fixe/DHCP depuis l'UI)
-echo "$USER ALL=(root) NOPASSWD: /usr/bin/nmcli" | sudo tee /etc/sudoers.d/fm-monitor-nmcli > /dev/null
-sudo chmod 440 /etc/sudoers.d/fm-monitor-nmcli
-sudo visudo -cf /etc/sudoers.d/fm-monitor-nmcli > /dev/null || sudo rm -f /etc/sudoers.d/fm-monitor-nmcli
+echo "$USER ALL=(root) NOPASSWD: /usr/bin/nmcli" | sudo tee /etc/sudoers.d/bl-rmo-nmcli > /dev/null
+sudo chmod 440 /etc/sudoers.d/bl-rmo-nmcli
+sudo visudo -cf /etc/sudoers.d/bl-rmo-nmcli > /dev/null || sudo rm -f /etc/sudoers.d/bl-rmo-nmcli
 
 sudo systemctl daemon-reload
-sudo systemctl enable fm-monitor
+sudo systemctl enable bl-rmo
 print_info "Service systemd configuré"
 
 # Pige 24 h et réception des journaux / traps (services indépendants de l'application)
@@ -378,6 +378,11 @@ sudo BLFMO_USER="$USER" INSTALL_DIR="$INSTALL_DIR" bash "$INSTALL_DIR/install/bu
     || print_warning "Pige non installée : relancer sudo bash install/build/65-pige.sh"
 sudo BLFMO_USER="$USER" INSTALL_DIR="$INSTALL_DIR" bash "$INSTALL_DIR/install/build/66-syslog.sh" \
     || print_warning "Journaux non installés : relancer sudo bash install/build/66-syslog.sh"
+# Réception DAB+ (en veille tant qu'elle n'est pas activée dans la page DAB+).
+# welle-cli n'est compilé que si BUILD_WELLE=1 (clé RTL-SDR dédiée au DAB+).
+sudo BLFMO_USER="$USER" INSTALL_DIR="$INSTALL_DIR" BUILD_WELLE="${BUILD_WELLE:-0}" \
+    bash "$INSTALL_DIR/install/build/67-dab.sh" \
+    || print_warning "DAB+ non installé : relancer sudo BUILD_WELLE=1 bash install/build/67-dab.sh"
 
 # =============================================
 # 12b. CONFIGURATION AVAHI / mDNS
@@ -408,11 +413,11 @@ sudo mkdir -p /etc/nginx/ssl
 
 # Générer certificat mkcert
 mkcert -install 2>/dev/null || true
-mkcert -cert-file ~/fm-monitor-nginx.crt -key-file ~/fm-monitor-nginx.key "$MDNS_HOSTNAME.local" 2>/dev/null
-sudo mv ~/fm-monitor-nginx.crt /etc/nginx/ssl/fm-monitor.crt
-sudo mv ~/fm-monitor-nginx.key /etc/nginx/ssl/fm-monitor.key
+mkcert -cert-file ~/bl-rmo-nginx.crt -key-file ~/bl-rmo-nginx.key "$MDNS_HOSTNAME.local" 2>/dev/null
+sudo mv ~/bl-rmo-nginx.crt /etc/nginx/ssl/bl-rmo.crt
+sudo mv ~/bl-rmo-nginx.key /etc/nginx/ssl/bl-rmo.key
 
-sudo tee /etc/nginx/sites-available/fm-monitor > /dev/null << NGINX
+sudo tee /etc/nginx/sites-available/bl-rmo > /dev/null << NGINX
 server {
     listen 80;
     server_name $MDNS_HOSTNAME.local;
@@ -423,8 +428,8 @@ server {
     listen 443 ssl;
     server_name $MDNS_HOSTNAME.local;
 
-    ssl_certificate /etc/nginx/ssl/fm-monitor.crt;
-    ssl_certificate_key /etc/nginx/ssl/fm-monitor.key;
+    ssl_certificate /etc/nginx/ssl/bl-rmo.crt;
+    ssl_certificate_key /etc/nginx/ssl/bl-rmo.key;
 
     location / {
         proxy_pass https://127.0.0.1:5000;
@@ -438,7 +443,7 @@ server {
 }
 NGINX
 
-sudo ln -sf /etc/nginx/sites-available/fm-monitor /etc/nginx/sites-enabled/
+sudo ln -sf /etc/nginx/sites-available/bl-rmo /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl enable nginx && sudo systemctl restart nginx
 print_info "Nginx configuré ✓"
 
@@ -515,21 +520,21 @@ echo "  • Password : password"
 echo -e "  ${RED}⚠️  CHANGEZ LE MOT DE PASSE dans Configuration > Sécurité${NC}"
 echo ""
 print_info "Commandes utiles:"
-echo "  • Démarrer : sudo systemctl start fm-monitor"
-echo "  • Arrêter  : sudo systemctl stop fm-monitor"
-echo "  • Statut   : sudo systemctl status fm-monitor"
-echo "  • Logs     : sudo journalctl -u fm-monitor -f"
+echo "  • Démarrer : sudo systemctl start bl-rmo"
+echo "  • Arrêter  : sudo systemctl stop bl-rmo"
+echo "  • Statut   : sudo systemctl status bl-rmo"
+echo "  • Logs     : sudo journalctl -u bl-rmo -f"
 echo ""
 
 print_step "Démarrage de BL-RMO..."
-sudo systemctl start fm-monitor
+sudo systemctl start bl-rmo
 sleep 3
-if sudo systemctl is-active --quiet fm-monitor; then
+if sudo systemctl is-active --quiet bl-rmo; then
     print_step "BL-RMO démarré !"
     print_info "Accédez à https://$MDNS_HOSTNAME.local"
 else
     print_error "Erreur au démarrage"
-    print_info "Diagnostic: sudo journalctl -u fm-monitor -n 50"
+    print_info "Diagnostic: sudo journalctl -u bl-rmo -n 50"
 fi
 
 echo ""

@@ -42,7 +42,7 @@ J'ai créé un **système d'installation complet et professionnel** pour FM Moni
 
 **Une seule commande** :
 ```bash
-curl -sSL https://raw.githubusercontent.com/LyonelB/fm-monitor/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/LyonelB/BL-RMO/main/install.sh | bash
 ```
 
 **OU si vous avez déjà le script** :
@@ -59,7 +59,7 @@ chmod +x install.sh
 ### Pour mettre à jour FM Monitor
 
 ```bash
-cd ~/fm-monitor
+cd ~/bl-rmo
 ./update.sh
 ```
 
@@ -75,7 +75,7 @@ Pour publier FM Monitor sur GitHub, voici les fichiers à uploader :
 ### Structure du repo
 
 ```
-fm-monitor/
+bl-rmo/
 ├── README.md                    # ← Page d'accueil
 ├── LICENSE                      # MIT ou autre
 ├── install.sh                   # ← Script d'installation
@@ -109,12 +109,12 @@ fm-monitor/
 ### 1. Créer le repo
 
 ```bash
-cd ~/fm-monitor
+cd ~/bl-rmo
 git init
 git add .
 git commit -m "Initial commit - FM Monitor v0.4.0"
 git branch -M main
-git remote add origin https://github.com/LyonelB/fm-monitor.git
+git remote add origin https://github.com/LyonelB/BL-RMO.git
 git push -u origin main
 ```
 
@@ -148,7 +148,7 @@ Releases → Create a new release :
 
 ```bash
 # Sur un Raspberry Pi fraîchement installé
-curl -sSL https://install.fm-monitor.com | bash
+curl -sSL https://install.bl-rmo.com | bash
 ```
 
 **Le script fait** :
@@ -168,8 +168,8 @@ curl -sSL https://install.fm-monitor.com | bash
 ==========================================
 
 Résumé de l'installation:
-  • Répertoire: /home/graffiti/fm-monitor
-  • Service: fm-monitor.service
+  • Répertoire: /home/graffiti/bl-rmo
+  • Service: bl-rmo.service
   • URL: https://192.168.1.185:5000
 
 Identifiants par défaut:
@@ -188,19 +188,19 @@ FM Monitor démarré avec succès ! 🎉
 
 Dans `install.sh`, changez :
 ```bash
-GITHUB_REPO="https://github.com/VotreNom/fm-monitor.git"
+GITHUB_REPO="https://github.com/VotreNom/bl-rmo.git"
 ```
 
 ### Créer un domaine court
 
 Avec `bit.ly` ou votre propre domaine :
 ```bash
-https://install.fm-monitor.com  →  https://raw.githubusercontent.com/.../install.sh
+https://install.bl-rmo.com  →  https://raw.githubusercontent.com/.../install.sh
 ```
 
 **Installation devient** :
 ```bash
-curl -sSL https://install.fm-monitor.com | bash
+curl -sSL https://install.bl-rmo.com | bash
 ```
 
 ---
@@ -213,7 +213,7 @@ curl -sSL https://install.fm-monitor.com | bash
 2. Copier sur clé USB
 3. Sur le Raspberry Pi :
 ```bash
-cd /media/usb/fm-monitor
+cd /media/usb/bl-rmo
 ./install.sh --offline
 ```
 
@@ -221,7 +221,7 @@ cd /media/usb/fm-monitor
 
 ```bash
 # Changer le répertoire d'installation
-INSTALL_DIR=/opt/fm-monitor ./install.sh
+INSTALL_DIR=/opt/bl-rmo ./install.sh
 
 # Ne pas démarrer automatiquement
 ./install.sh --no-autostart
@@ -238,18 +238,18 @@ INSTALL_DIR=/opt/fm-monitor ./install.sh
 
 **Avant d'exécuter** :
 ```bash
-curl -sSL https://raw.githubusercontent.com/LyonelB/fm-monitor/main/install.sh | less
+curl -sSL https://raw.githubusercontent.com/LyonelB/BL-RMO/main/install.sh | less
 ```
 
 **Checksum** :
 ```bash
-curl -sSL https://raw.githubusercontent.com/LyonelB/fm-monitor/main/install.sh | sha256sum
+curl -sSL https://raw.githubusercontent.com/LyonelB/BL-RMO/main/install.sh | sha256sum
 ```
 
 ### Signature GPG (futur)
 
 ```bash
-curl -sSL https://install.fm-monitor.com | gpg --verify
+curl -sSL https://install.bl-rmo.com | gpg --verify
 ```
 
 ---
@@ -260,7 +260,7 @@ curl -sSL https://install.fm-monitor.com | gpg --verify
 
 **Avec GitHub API** :
 ```bash
-curl https://api.github.com/repos/LyonelB/fm-monitor
+curl https://api.github.com/repos/LyonelB/BL-RMO
 ```
 
 **Avec Google Analytics** :
@@ -322,7 +322,7 @@ Ajouter un tracking pixel dans le script (optionnel)
 
 **Après** (installation automatique) :
 ```bash
-curl -sSL https://install.fm-monitor.com | bash
+curl -sSL https://install.bl-rmo.com | bash
 → Durée : 5-10 minutes
 → Tout automatique
 → Accessible à tous

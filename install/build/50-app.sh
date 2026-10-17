@@ -22,8 +22,8 @@ err()  { echo -e "${RED}[✗]${NC} $1" >&2; }
 # ─── Utilisateur cible + chemins ──────────────────────────────────────────
 BLFMO_USER="${BLFMO_USER:-${SUDO_USER:-$(id -un 1000 2>/dev/null || echo pi)}}"
 BLFMO_HOME="$(getent passwd "$BLFMO_USER" | cut -d: -f6)"
-INSTALL_DIR="${INSTALL_DIR:-$BLFMO_HOME/fm-monitor}"
-GITHUB_REPO="${GITHUB_REPO:-https://github.com/LyonelB/fm-monitor.git}"
+INSTALL_DIR="${INSTALL_DIR:-$BLFMO_HOME/bl-rmo}"
+GITHUB_REPO="${GITHUB_REPO:-https://github.com/LyonelB/BL-RMO.git}"
 
 log "Utilisateur : $BLFMO_USER"
 log "Installation : $INSTALL_DIR"

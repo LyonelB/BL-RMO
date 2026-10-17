@@ -29,7 +29,8 @@ echo "   BL-RMO - Mise à jour"
 echo "=========================================="
 echo -e "${NC}"
 
-INSTALL_DIR="$HOME/fm-monitor"
+INSTALL_DIR="$HOME/bl-rmo"
+[ -d "$INSTALL_DIR" ] || INSTALL_DIR="$HOME/fm-monitor"     # installation pas encore migrée
 
 # Vérifier que BL-RMO est installé
 if [ ! -d "$INSTALL_DIR" ]; then
@@ -40,8 +41,9 @@ fi
 cd "$INSTALL_DIR"
 
 # Services BL-RMO présents sur cette machine
-SERVICES="fm-monitor"
-for s in fm-monitor-pige fm-monitor-syslog; do
+if [ -f /etc/systemd/system/bl-rmo.service ]; then P=bl-rmo; else P=fm-monitor; fi   # avant migration : fm-monitor
+SERVICES="$P"
+for s in $P-pige $P-syslog $P-dab; do
     [ -f "/etc/systemd/system/$s.service" ] && SERVICES="$SERVICES $s"
 done
 
@@ -87,7 +89,7 @@ if [ -f "$BACKUP_DIR/.env" ]; then
 fi
 
 # Recharger systemd si nécessaire
-if [ -f "/etc/systemd/system/fm-monitor.service" ]; then
+if [ -f "/etc/systemd/system/$P.service" ]; then
     sudo systemctl daemon-reload
 fi
 
@@ -110,6 +112,6 @@ done
 [ "$ALL_OK" = 1 ] && print_step "Mise à jour terminée avec succès ! (BL-RMO $(python3 -c 'from version import __version__; print(__version__)' 2>/dev/null))"
 
 echo ""
-print_info "Changelog: https://github.com/LyonelB/fm-monitor/releases"
+print_info "Changelog: https://github.com/LyonelB/BL-RMO/releases"
 echo ""
 

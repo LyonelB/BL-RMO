@@ -12,7 +12,7 @@
 ## ⚡ Installation en une commande
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/LyonelB/fm-monitor/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/LyonelB/BL-RMO/main/install.sh | bash
 ```
 
 **C'est tout !** Le script fait tout automatiquement. ⏱️ **Durée : 5-10 minutes**
@@ -68,43 +68,43 @@ Password: password
 
 ```bash
 # Démarrer
-sudo systemctl start fm-monitor
+sudo systemctl start bl-rmo
 
 # Arrêter
-sudo systemctl stop fm-monitor
+sudo systemctl stop bl-rmo
 
 # Redémarrer
-sudo systemctl restart fm-monitor
+sudo systemctl restart bl-rmo
 
 # Statut
-sudo systemctl status fm-monitor
+sudo systemctl status bl-rmo
 
 # Activer au démarrage
-sudo systemctl enable fm-monitor
+sudo systemctl enable bl-rmo
 
 # Désactiver au démarrage
-sudo systemctl disable fm-monitor
+sudo systemctl disable bl-rmo
 ```
 
 ### Voir les logs
 
 ```bash
 # Logs en temps réel
-sudo journalctl -u fm-monitor -f
+sudo journalctl -u bl-rmo -f
 
 # 100 dernières lignes
-sudo journalctl -u fm-monitor -n 100
+sudo journalctl -u bl-rmo -n 100
 
 # Logs depuis aujourd'hui
-sudo journalctl -u fm-monitor --since today
+sudo journalctl -u bl-rmo --since today
 ```
 
 ### Mettre à jour
 
 ```bash
-cd ~/fm-monitor
+cd ~/bl-rmo
 git pull
-sudo systemctl restart fm-monitor
+sudo systemctl restart bl-rmo
 ```
 
 ---
@@ -112,7 +112,7 @@ sudo systemctl restart fm-monitor
 ## 📍 Emplacements importants
 
 ```
-~/fm-monitor/          # Répertoire principal
+~/bl-rmo/          # Répertoire principal
 ├── app.py            # Application Flask
 ├── monitor.py        # Logique de monitoring
 ├── auth.py           # Authentification
@@ -154,13 +154,13 @@ sudo systemctl restart fm-monitor
 
 ```bash
 # Voir les erreurs
-sudo journalctl -u fm-monitor -n 50
+sudo journalctl -u bl-rmo -n 50
 
 # Vérifier les permissions
-ls -la ~/fm-monitor/
+ls -la ~/bl-rmo/
 
 # Tester manuellement
-cd ~/fm-monitor
+cd ~/bl-rmo
 source venv/bin/activate
 python3 app.py
 ```
@@ -193,10 +193,10 @@ sudo reboot
 sudo lsof -i :5000
 
 # Arrêter l'ancien processus
-sudo systemctl stop fm-monitor
+sudo systemctl stop bl-rmo
 
 # Redémarrer
-sudo systemctl start fm-monitor
+sudo systemctl start bl-rmo
 ```
 
 ---
@@ -216,15 +216,15 @@ sudo systemctl start fm-monitor
 
 ```bash
 # Arrêter le service
-sudo systemctl stop fm-monitor
-sudo systemctl disable fm-monitor
+sudo systemctl stop bl-rmo
+sudo systemctl disable bl-rmo
 
 # Supprimer le service
-sudo rm /etc/systemd/system/fm-monitor.service
+sudo rm /etc/systemd/system/bl-rmo.service
 sudo systemctl daemon-reload
 
 # Supprimer les fichiers
-rm -rf ~/fm-monitor
+rm -rf ~/bl-rmo
 
 # (Optionnel) Supprimer les paquets
 sudo apt remove rtl-sdr sox lame
@@ -234,8 +234,8 @@ sudo apt remove rtl-sdr sox lame
 
 ## 📞 Support
 
-- **Documentation** : [GitHub Wiki](https://github.com/LyonelB/fm-monitor/wiki)
-- **Issues** : [GitHub Issues](https://github.com/LyonelB/fm-monitor/issues)
+- **Documentation** : [GitHub Wiki](https://github.com/LyonelB/BL-RMO/wiki)
+- **Issues** : [GitHub Issues](https://github.com/LyonelB/BL-RMO/issues)
 
 ---
 

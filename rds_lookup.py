@@ -1,8 +1,8 @@
 """
-rds_lookup.py - RDS station lookup for fm-monitor
+rds_lookup.py - RDS station lookup for bl-rmo
 Fetches PI/PS → station name + logo from rds-station-db on GitHub.
 
-Usage in fm-monitor:
+Usage in bl-rmo:
     from rds_lookup import RDSLookup
 
     lookup = RDSLookup(country="FR")
@@ -22,9 +22,9 @@ from pathlib import Path
 # ── Configuration ──────────────────────────────────────────────────────────────
 
 DB_BASE_URL = "https://raw.githubusercontent.com/LyonelB/rds-station-db/main/data"
-CACHE_DIR = Path.home() / ".cache" / "fm-monitor" / "rds-db"
+CACHE_DIR = Path.home() / ".cache" / "bl-rmo" / "rds-db"
 CACHE_TTL_SECONDS = 24 * 3600  # Refresh cache every 24 h
-USER_AGENT = "fm-monitor/0.5 (https://github.com/LyonelB/fm-monitor)"
+USER_AGENT = "BL-RMO/0.9 (https://github.com/LyonelB/BL-RMO)"
 
 
 # ── Lookup class ───────────────────────────────────────────────────────────────

@@ -2,9 +2,9 @@
 #
 # BL-RMO build - Étape 65 : pige audio 24 h
 #
-# Installe le service systemd fm-monitor-pige (enregistreur autonome qui lit
+# Installe le service systemd bl-rmo-pige (enregistreur autonome qui lit
 # le flux Icecast local et le découpe en segments MP3 de 5 min).
-# Indépendant de fm-monitor : la pige continue pendant un redémarrage de l'appli.
+# Indépendant de bl-rmo : la pige continue pendant un redémarrage de l'appli.
 #
 # Volume : 128 kbps ≈ 58 Mo/heure ≈ 1,4 Go pour 24 h.
 #
@@ -18,14 +18,14 @@ ok()  { echo -e "${GREEN}[ok]${NC} $1"; }
 
 BLFMO_USER="${BLFMO_USER:-${SUDO_USER:-$(id -un 1000 2>/dev/null || echo pi)}}"
 BLFMO_HOME="$(getent passwd "$BLFMO_USER" | cut -d: -f6)"
-INSTALL_DIR="${INSTALL_DIR:-$BLFMO_HOME/fm-monitor}"
+INSTALL_DIR="${INSTALL_DIR:-$BLFMO_HOME/bl-rmo}"
 
 log "Dossier de pige…"
 install -d -o "$BLFMO_USER" -g "$BLFMO_USER" "$INSTALL_DIR/pige"
 ok "$INSTALL_DIR/pige"
 
-log "Service fm-monitor-pige…"
-tee /etc/systemd/system/fm-monitor-pige.service > /dev/null <<EOF
+log "Service bl-rmo-pige…"
+tee /etc/systemd/system/bl-rmo-pige.service > /dev/null <<EOF
 [Unit]
 Description=BL-RMO - Pige audio 24 h
 After=network-online.target icecast2.service
@@ -45,11 +45,11 @@ WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable fm-monitor-pige.service >/dev/null
+systemctl enable bl-rmo-pige.service >/dev/null
 # Démarrer seulement si l'appli est déjà configurée (pas pendant la construction d'image)
 if [ -f "$INSTALL_DIR/config.json" ]; then
-    systemctl restart fm-monitor-pige.service
-    ok "Service fm-monitor-pige activé et démarré"
+    systemctl restart bl-rmo-pige.service
+    ok "Service bl-rmo-pige activé et démarré"
 else
-    ok "Service fm-monitor-pige activé (démarrera au prochain boot)"
+    ok "Service bl-rmo-pige activé (démarrera au prochain boot)"
 fi

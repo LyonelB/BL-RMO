@@ -6,7 +6,7 @@ echo "Génération du certificat SSL"
 echo "=========================================="
 echo ""
 
-cd ~/fm-monitor
+cd ~/bl-rmo
 
 # Générer une clé privée et un certificat auto-signé valide 10 ans
 echo "Génération du certificat (valide 10 ans)..."
@@ -14,7 +14,7 @@ openssl req -x509 -newkey rsa:4096 -nodes \
   -out cert.pem \
   -keyout key.pem \
   -days 3650 \
-  -subj "/C=FR/ST=France/L=Paris/O=BL-RMO/OU=Radio/CN=fm-monitor.local" \
+  -subj "/C=FR/ST=France/L=Paris/O=BL-RMO/OU=Radio/CN=bl-rmo.local" \
   2>/dev/null
 
 if [ $? -eq 0 ]; then

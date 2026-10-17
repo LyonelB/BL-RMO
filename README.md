@@ -1,6 +1,6 @@
 # 📻 BL-RMO
 
-**Radio MOnitoring**, anciennement BL-RMO (FM Monitor).
+**Radio Monitoring**, anciennement FM-Monitor.
 
 ![Version](https://img.shields.io/badge/version-0.9.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
@@ -23,7 +23,7 @@ Une alerte mail part à chaque panne et à chaque rétablissement, et chaque ale
 
 ## 🧭 Direction du projet
 
-**Pourquoi BL-RMO ?** Le logiciel s'appelait BL-FMO, pour « FM MOnitoring ». Il surveille désormais toute la chaîne de diffusion, et le DAB+ est en vue : il devient BL-RMO, pour « Radio MOnitoring ». Le dépôt, les services et l'adresse `bl-fmo.local` seront renommés par étapes ; les installations existantes continuent de fonctionner sans rien changer.
+**Pourquoi BL-RMO ?** Le logiciel s'appelait FM-Monitor. Il surveille désormais la réception FM et DAB+ et toute la chaîne de diffusion : il devient BL-RMO, pour « Radio Monitoring ». Dossier `~/bl-rmo`, services `bl-rmo*`, adresse `bl-rmo.local` : une installation existante passe aux nouveaux noms avec le script de migration (voir [Passer de FM-Monitor à BL-RMO](#passer-de-fm-monitor-à-bl-rmo)).
 
 BL-RMO suit désormais **une seule direction**, et c'est la seule configuration développée et testée :
 
@@ -46,7 +46,7 @@ Si vous utilisez l'un de ces modes, la version 0.8 continue de fonctionner. Les 
 
 ### Et le RTL-SDR ?
 
-Le dongle RTL-SDR pourrait revenir dans un autre rôle : **second tuner pour surveiller le DAB+** en parallèle de la FM. C'est une piste, pas encore un développement.
+Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**, en parallèle du TEF pour la FM. C'est la reprise de BL-DMO ([dabplus-monitor](https://github.com/LyonelB/dabplus-monitor)), désormais intégré à BL-RMO (en cours de validation).
 
 ---
 
@@ -59,12 +59,19 @@ Le dongle RTL-SDR pourrait revenir dans un autre rôle : **second tuner pour sur
 - **Analyse audio** : niveaux G/D, spectre 0 à 20 kHz, qualité S/B
 - **RDS** décodé par le tuner : PS, RadioText, code PI, stéréo ; logo de la station via [rds-station-db](https://github.com/LyonelB/rds-station-db)
 
+### 📶 Réception DAB+ (option, clé RTL-SDR)
+- **Ensemble** : SNR, qualité FIC, gain, identifiant ; alerte quand l'ensemble se dégrade
+- **Services** : présence dans le multiplex, niveaux audio, DLS, débit, disponibilité sur 24 h ; alertes **service absent** et **silence**, sur tous les services ou seulement ceux cochés
+- **Écoute** d'un service depuis la page DAB+, diaporama (slideshow) affiché pendant l'écoute
+- Alertes DAB+ par mail et dans un onglet **Réception DAB+** de la page Journaux (la pige n'enregistre que la FM)
+- Service indépendant `bl-rmo-dab` : un plantage de welle-cli ou de la clé ne touche ni l'interface, ni la FM
+
 ### 🔊 Retour FM
 - **Écoute de l'antenne** dans le navigateur, flux Icecast2 MP3 128 kbps
 - **Mode public** `/public` : tableau de bord sans authentification
 
 ### 🎙️ Pige audio
-- **Enregistrement continu 24 h** de l'antenne en segments MP3 (service `fm-monitor-pige`, indépendant de l'application)
+- **Enregistrement continu 24 h** de l'antenne en segments MP3 (service `bl-rmo-pige`, indépendant de l'application)
 - **Frise, écoute et export** d'un créneau en MP3, sans réencodage
 - **Extraits des 10 dernières alertes**, de 30 s avant l'alerte à 30 s après le rétablissement, conservés après la sortie de la pige
 - Chaque alerte et chaque événement de la chaîne ouvre la pige au bon moment
@@ -77,7 +84,7 @@ Le dongle RTL-SDR pourrait revenir dans un autre rôle : **second tuner pour sur
 - **Historique en courbes**, alertes mail avec les valeurs en défaut, export ZIP
 
 ### 📜 Journaux et traps
-- **Serveur syslog** UDP 514 (service `fm-monitor-syslog`) : les appareils de la radio envoient leurs journaux à BL-RMO
+- **Serveur syslog** UDP 514 (service `bl-rmo-syslog`) : les appareils de la radio envoient leurs journaux à BL-RMO
 - **Traps SNMP** UDP 162 traduits en français, avec relevé immédiat de l'appareil
 - **Lecture nettoyée** et **messages masqués** (bruit connu), réaffichables d'une case à cocher
 
@@ -93,7 +100,7 @@ Le dongle RTL-SDR pourrait revenir dans un autre rôle : **second tuner pour sur
 ### 🌐 Interface web
 - Tableau de bord temps réel, configuration complète depuis le navigateur
 - **Responsive** : smartphone et tablette
-- **Accès local** via `https://bl-fmo.local` (Nginx + mDNS)
+- **Accès local** via `https://bl-rmo.local` (Nginx + mDNS)
 
 ---
 
@@ -105,6 +112,7 @@ Le dongle RTL-SDR pourrait revenir dans un autre rôle : **second tuner pour sur
 | Tuner | [Headless TEF Lite SE](https://github.com/FMDX-org/Headless-TEF-lite-SE) (FMDX.org) | TEF668X V205 (TEF6687 recommandé), entrées AM et FM séparées, audio numérique par USB, firmware [FM-DX-Tuner](https://github.com/kkonradpl/FM-DX-Tuner) |
 | Antenne | Antenne FM extérieure | Bien dégagée : BL-RMO écoute comme un auditeur |
 | Câble | USB de **données** | Un câble « charge seule » ne laisse pas passer le port série |
+| DAB+ (option) | Clé RTL-SDR + antenne bande III | NooElec NESDR SmartEE conseillée pour un usage 24 h/24 (le RTL-SDR Blog V4 a montré des instabilités USB) |
 
 Le tuner apparaît sous Linux comme un port série (`/dev/ttyACM0`, protocole XDR) et une carte son (`hw:Tuner`). Il est reconnu par son identifiant USB `1209:6687`.
 
@@ -116,7 +124,7 @@ Le tuner apparaît sous Linux comme un port série (`/dev/ttyACM0`, protocole XD
 
 > ⚠️ **Bonne pratique** : avant d'exécuter un script distant, inspectez-le :
 > ```bash
-> curl -sSL https://raw.githubusercontent.com/LyonelB/fm-monitor/main/install.sh -o install.sh
+> curl -sSL https://raw.githubusercontent.com/LyonelB/BL-RMO/main/install.sh -o install.sh
 > less install.sh
 > bash install.sh
 > ```
@@ -151,24 +159,41 @@ Puis, dans l'interface : **Configuration**, bouton **« Scan dongle »**, source
 `install.sh` les installe tous. Sur une installation existante, la pige et les journaux s'ajoutent ainsi :
 
 ```bash
-cd ~/fm-monitor
-sudo bash install/build/65-pige.sh     # pige 24 h (fm-monitor-pige)
-sudo bash install/build/66-syslog.sh   # journaux UDP 514 et traps UDP 162 (fm-monitor-syslog)
+cd ~/bl-rmo
+sudo bash install/build/65-pige.sh     # pige 24 h (bl-rmo-pige)
+sudo bash install/build/66-syslog.sh   # journaux UDP 514 et traps UDP 162 (bl-rmo-syslog)
+sudo BUILD_WELLE=1 bash install/build/67-dab.sh   # réception DAB+ (bl-rmo-dab) et compilation de welle-cli
 ```
+
+La réception DAB+ reste en veille jusqu'à son activation dans la page **DAB+** (menu, administrateur) : canal, seuils et services surveillés s'y règlent.
 
 | Service | Rôle | Ports |
 |---|---|---|
-| `fm-monitor` | Application web, réception FM, supervision de la chaîne | 5000 (derrière Nginx 80/443) |
-| `fm-monitor-pige` | Enregistrement de la pige | lit Icecast 8000 |
-| `fm-monitor-syslog` | Réception des journaux et des traps | UDP 514, UDP 162 |
+| `bl-rmo` | Application web, réception FM, supervision de la chaîne | 5000 (derrière Nginx 80/443) |
+| `bl-rmo-pige` | Enregistrement de la pige | lit Icecast 8000 |
+| `bl-rmo-syslog` | Réception des journaux et des traps | UDP 514, UDP 162 |
+| `bl-rmo-dab` | Réception DAB+ (pilote welle-cli) | welle-cli 7979, local |
 | `icecast2` | Flux audio de l'antenne (retour FM et pige) | 8000 |
 
 La supervision SNMP de la chaîne utilise `snmpget` : `sudo apt install snmp` s'il n'est pas déjà présent.
 
-### 🔄 Mise à jour
+### Passer de FM-Monitor à BL-RMO
+
+Une installation faite avant la version 0.10 utilise encore le dossier `~/fm-monitor` et les services `fm-monitor*`. Le script de migration passe tout aux nouveaux noms, sans toucher aux données (pige, extraits, bases, `config.json`) :
 
 ```bash
 cd ~/fm-monitor
+bash install/migrate-to-bl-rmo.sh            # inventaire, ne modifie rien
+bash install/migrate-to-bl-rmo.sh --apply    # migration (environ 5 min de coupure)
+bash ~/bl-rmo/install/migrate-to-bl-rmo.sh --rollback   # retour arrière si besoin
+```
+
+Il renomme le dossier et les services, met à jour Nginx, les certificats, sudoers, le nom de la machine (`bl-rmo.local`) et l'annonce NetBIOS. Les anciens noms restent utilisables pendant la transition : `~/fm-monitor` pointe vers `~/bl-rmo`, `bl-fmo.local` répond toujours et `systemctl restart fm-monitor` redémarre `bl-rmo`. L'adresse IP ne change pas.
+
+### 🔄 Mise à jour
+
+```bash
+cd ~/bl-rmo
 bash update.sh
 ```
 
@@ -181,7 +206,7 @@ Dans **Configuration**, renseigner l'expéditeur et les destinataires. Avec Gmai
 ## 📂 Structure du projet
 
 ```
-fm-monitor/
+bl-rmo/
 ├── app.py              # Application Flask (routes, API, contrôle d'accès)
 ├── version.py          # Numéro de version
 ├── monitor.py          # Moteur de réception (tuner, RDS, alertes)
@@ -228,19 +253,19 @@ Rien dans `lsusb` : changer de câble (câble de données) ou de port USB.
 
 ### Pas de son dans le retour FM ou la pige
 
-La carte son du tuner ne peut être ouverte que par un seul programme. Vérifier qu'aucun autre logiciel n'utilise `hw:Tuner`, puis : `sudo systemctl restart fm-monitor`.
+La carte son du tuner ne peut être ouverte que par un seul programme. Vérifier qu'aucun autre logiciel n'utilise `hw:Tuner`, puis : `sudo systemctl restart bl-rmo`.
 
 ### Les mails ne partent pas
 
 1. Vérifier la configuration dans la page Configuration
 2. Utiliser le bouton **Test Email**
-3. Consulter les logs : `sudo journalctl -u fm-monitor -n 50`
+3. Consulter les logs : `sudo journalctl -u bl-rmo -n 50`
 
 ### Les journaux des appareils n'arrivent pas
 
 ```bash
-sudo systemctl status fm-monitor-syslog
-sudo journalctl -u fm-monitor-syslog -n 20
+sudo systemctl status bl-rmo-syslog
+sudo journalctl -u bl-rmo-syslog -n 20
 ```
 
 Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-RMO (pas `bl-fmo.local`), port 514, en UDP.
@@ -255,8 +280,10 @@ Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-RMO (pas `bl
 - [ ] Journaux par domaine (réception, diffusion, système) et page Bilan
 - [ ] Page Incidents : regroupement des alertes de réception et de diffusion, cause probable, frise
 - [ ] Retrait du mode RTL-SDR, de l'analyse MPX et de Docker
+- [x] v0.9.0 : nouveau nom BL-RMO, journaux en trois onglets
+- [ ] Réception DAB+ (reprise de BL-DMO) : validation sur site avec l'antenne bande III
 - [ ] Version anglaise de l'interface
-- [ ] Pistes : sonde AES67 (sortie console Dante), second tuner RTL-SDR pour surveiller le DAB+
+- [ ] Piste : sonde AES67 (sortie console Dante)
 
 ---
 
@@ -269,6 +296,7 @@ MIT : libre d'utilisation, de modification et de distribution.
 ## 🙏 Crédits
 
 - [Headless TEF Lite SE](https://github.com/FMDX-org/Headless-TEF-lite-SE) (FMDX.org) : tuner USB TEF668X, firmware [FM-DX-Tuner](https://github.com/kkonradpl/FM-DX-Tuner)
+- [welle.io](https://github.com/AlbrechtL/welle.io) (Albrecht Lohofener, Matthias P. Braendli) et son fork [welle-monitor](https://github.com/LyonelB/welle-monitor) : décodage DAB+
 - [Icecast2](https://icecast.org) : serveur de streaming
 - [Net-SNMP](http://www.net-snmp.org) : outils SNMP
 - [Radio Browser](https://www.radio-browser.info) : base de données de stations
@@ -308,7 +336,7 @@ rtl_test -t
 
 ### Revenir en mode RTL-SDR
 
-Mettre `"enabled": false` dans la section `tef` de `config.json`, puis `sudo systemctl restart fm-monitor`.
+Mettre `"enabled": false` dans la section `tef` de `config.json`, puis `sudo systemctl restart bl-rmo`.
 
 ### Analyse MPX (mode RTL-SDR uniquement)
 

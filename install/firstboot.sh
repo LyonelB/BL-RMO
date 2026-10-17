@@ -3,7 +3,7 @@
 # BL-RMO — Provisioning au PREMIER BOOT (exécuté une seule fois)
 #
 # Génère tout ce qui est PROPRE À CET APPAREIL, puis démarre l'application :
-#   - hostname unique  bl-fmo-XXXX  (XXXX dérivé du n° de série du Pi)
+#   - hostname unique  bl-rmo-XXXX  (XXXX dérivé du n° de série du Pi)
 #   - certificat SSL auto-signé (openssl) pour ce hostname
 #   - SECRET_KEY Flask aléatoire
 #   - mot de passe Icecast aléatoire
@@ -13,7 +13,7 @@
 #   - démarrage des services
 #   - marqueur /var/lib/blfmo/.provisioned pour ne jamais rejouer
 #
-# Lancé par le service systemd fm-monitor-firstboot (conditionné à l'absence
+# Lancé par le service systemd bl-rmo-firstboot (conditionné à l'absence
 # du marqueur). Tourne en root.
 #
 set -euo pipefail
@@ -32,7 +32,7 @@ fi
 # ─── Utilisateur cible + chemins (l'app tourne sous cet utilisateur) ──────
 BLFMO_USER="$(getent passwd 1000 | cut -d: -f1 || echo pi)"
 BLFMO_HOME="$(getent passwd "$BLFMO_USER" | cut -d: -f6)"
-INSTALL_DIR="$BLFMO_HOME/fm-monitor"
+INSTALL_DIR="$BLFMO_HOME/bl-rmo"
 
 as_user() { sudo -u "$BLFMO_USER" -H bash -c "$1"; }
 
@@ -46,7 +46,7 @@ if [ -z "$SERIAL" ]; then
     SERIAL="$(cat /sys/class/net/eth0/address 2>/dev/null | tr -d ':' || echo 0000)"
 fi
 SUFFIX="$(echo "$SERIAL" | tail -c 5 | tr 'A-Z' 'a-z')"
-HOSTNAME_NEW="bl-fmo-$SUFFIX"
+HOSTNAME_NEW="bl-rmo-$SUFFIX"
 log "Hostname : $HOSTNAME_NEW.local"
 
 hostnamectl set-hostname "$HOSTNAME_NEW"
@@ -58,17 +58,17 @@ sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME_NEW/" /etc/hosts 2>/dev/null || \
 log "Génération du certificat SSL auto-signé…"
 mkdir -p /etc/nginx/ssl
 openssl req -x509 -newkey rsa:4096 -nodes \
-    -out /etc/nginx/ssl/fm-monitor.crt \
-    -keyout /etc/nginx/ssl/fm-monitor.key \
+    -out /etc/nginx/ssl/bl-rmo.crt \
+    -keyout /etc/nginx/ssl/bl-rmo.key \
     -days 3650 \
     -subj "/C=FR/O=BL-RMO/CN=$HOSTNAME_NEW.local" \
     2>/dev/null
-chmod 644 /etc/nginx/ssl/fm-monitor.crt
-chmod 600 /etc/nginx/ssl/fm-monitor.key
+chmod 644 /etc/nginx/ssl/bl-rmo.crt
+chmod 600 /etc/nginx/ssl/bl-rmo.key
 
 # ─── 3. Config Nginx : remplir le hostname ────────────────────────────────
 log "Finalisation de la config Nginx…"
-sed -i "s/__MDNS_HOSTNAME__/$HOSTNAME_NEW/g" /etc/nginx/sites-available/fm-monitor
+sed -i "s/__MDNS_HOSTNAME__/$HOSTNAME_NEW/g" /etc/nginx/sites-available/bl-rmo
 
 # ─── 4. Secrets : SECRET_KEY + mot de passe Icecast ───────────────────────
 log "Génération des secrets…"
@@ -105,7 +105,7 @@ fi
 # ─── 6. Démarrer les services ─────────────────────────────────────────────
 # IMPORTANT : démarrages NON bloquants. Ce script est lui-même un service
 # systemd (oneshot) ; un `systemctl start` bloquant sur un service ordonné
-# après nous créerait un interblocage. --no-block évite ça. fm-monitor est
+# après nous créerait un interblocage. --no-block évite ça. bl-rmo est
 # de toute façon `enabled` et démarrera seul une fois ce oneshot terminé.
 log "Démarrage des services…"
 systemctl restart avahi-daemon || true
@@ -114,7 +114,7 @@ sleep 2
 if nginx -t 2>/dev/null; then
     systemctl restart --no-block nginx || true
 fi
-systemctl start --no-block fm-monitor.service || true
+systemctl start --no-block bl-rmo.service || true
 
 # ─── 7. Marqueur : ne jamais rejouer ──────────────────────────────────────
 mkdir -p "$MARKER_DIR"

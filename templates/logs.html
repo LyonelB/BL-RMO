@@ -52,6 +52,12 @@
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
       Pige
     </a>
+    {% if dab_enabled or (current_user and current_user.role == 'admin') %}
+    <a href="/dab" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01"/></svg>
+      DAB+
+    </a>
+    {% endif %}
     <a href="/chain" class="sidebar-link">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
       Chaîne
@@ -64,7 +70,7 @@
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       À propos
     </a>
-    <a href="https://github.com/LyonelB/fm-monitor" target="_blank" class="sidebar-link">
+    <a href="https://github.com/LyonelB/BL-RMO" target="_blank" class="sidebar-link">
       <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
       GitHub
     </a>
@@ -91,6 +97,7 @@
     </div>
     <nav class="flex gap-1 mt-3 -mb-px overflow-x-auto" role="tablist">
       <button class="tab-btn" data-tab="reception" role="tab" onclick="showTab('reception')">Réception FM</button>
+      {% if dab_enabled %}<button class="tab-btn" data-tab="dab" role="tab" onclick="showTab('dab')">Réception DAB+</button>{% endif %}
       <button class="tab-btn" data-tab="chaine" role="tab" onclick="showTab('chaine')">Chaîne de diffusion</button>
       <button class="tab-btn" data-tab="blfmo" role="tab" onclick="showTab('blfmo')">BL-RMO</button>
     </nav>
@@ -150,6 +157,68 @@
         <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
           <span id="rc-count"></span>
           <button id="rc-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="rcShowAll = true; renderReception()">Tout afficher</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Onglet Réception DAB+ (DAB_PATCH) ══ -->
+    <div id="tab-dab" class="tab-pane">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Récepteur DAB+</div>
+          <div class="text-2xl font-bold text-gray-900" id="db-state">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="db-sub"></div>
+        </div>
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Alertes, 7 derniers jours</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="db-7d">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="db-7d-dur"></div>
+        </div>
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Alertes, 30 derniers jours</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="db-30d">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="db-30d-dur"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="section-title" style="margin-bottom:0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01"/></svg>
+            Alertes de la réception DAB+
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <select id="db-type" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="renderDab()">
+              <option value="">Tous les types</option>
+            </select>
+            <select id="db-svc" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="renderDab()">
+              <option value="">Tous les services</option>
+            </select>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mb-3">Mesurées par la clé DAB+ sur le multiplex reçu. Un mail part à l'alerte, un second au rétablissement. Détail en direct et écoute : page <a href="/dab" class="text-blue-600 hover:text-blue-800">DAB+</a>.</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead>
+              <tr class="text-gray-400 border-b border-gray-100">
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">Date</th>
+                <th class="font-medium py-2 pr-3">Alerte</th>
+                <th class="font-medium py-2 pr-3">Service</th>
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">Début → fin</th>
+                <th class="font-medium py-2 pr-3">Durée</th>
+                <th class="font-medium py-2 pr-3">État</th>
+                <th class="font-medium py-2 pr-3">Détail</th>
+                <th class="font-medium py-2">Mails</th>
+              </tr>
+            </thead>
+            <tbody id="db-body" class="divide-y divide-gray-50">
+              <tr><td colspan="8" class="py-8 text-center text-gray-400">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
+          <span id="db-count"></span>
+          <button id="db-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="dbShowAll = true; renderDab()">Tout afficher</button>
         </div>
       </div>
     </div>
@@ -260,9 +329,10 @@
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <select id="sl-unit" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="loadSysLogs()">
-              <option value="fm-monitor">Application (fm-monitor)</option>
-              <option value="fm-monitor-pige">Pige (fm-monitor-pige)</option>
-              <option value="fm-monitor-syslog">Réception des journaux (fm-monitor-syslog)</option>
+              <option value="bl-rmo">Application (bl-rmo)</option>
+              <option value="bl-rmo-pige">Pige (bl-rmo-pige)</option>
+              <option value="bl-rmo-syslog">Réception des journaux (bl-rmo-syslog)</option>
+              <option value="bl-rmo-dab">Réception DAB+ (bl-rmo-dab)</option>
             </select>
             <select id="sl-lines" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="loadSysLogs()">
               <option value="100">100 lignes</option>
@@ -342,7 +412,7 @@ async function loadSources() {
   $('rx-warning').classList.toggle('hidden', alive);
   if (!alive) {
     $('rx-warning').innerHTML = m.heartbeat
-      ? `Le service de réception ne répond plus depuis ${esc(ago(m.heartbeat, d.now).replace('il y a ', ''))}. Vérifier : <code>sudo systemctl status fm-monitor-syslog</code>`
+      ? `Le service de réception ne répond plus depuis ${esc(ago(m.heartbeat, d.now).replace('il y a ', ''))}. Vérifier : <code>sudo systemctl status bl-rmo-syslog</code>`
       : `Le service de réception n'est pas installé. Depuis le dossier de l'application : <code>sudo bash install/build/66-syslog.sh</code>`;
   }
   if (m.port) $('h-port').textContent = m.port;
@@ -510,7 +580,7 @@ setHelpIp(location.hostname);
 
 
 // ══ Onglets ═════════════════════════════════════════════════════════════
-const TABS = ['reception', 'chaine', 'blfmo'];
+const TABS = ['reception', 'chaine', 'blfmo'].concat(document.querySelector('.tab-btn[data-tab="dab"]') ? ['dab'] : []);
 let tabLoaded = {};
 function showTab(t, push) {
   if (!TABS.includes(t)) t = 'reception';
@@ -524,6 +594,7 @@ function showTab(t, push) {
   if (push !== false) history.replaceState(null, '', location.pathname + location.search + '#' + t);
   try { localStorage.setItem('blfmo-logs-tab', t); } catch (e) {}
   if (t === 'reception') loadReception();
+  if (t === 'dab') loadDab();
   if (t === 'blfmo' && !tabLoaded.blfmo) { tabLoaded.blfmo = true; loadSysLogs(); }
 }
 window.addEventListener('hashchange', () => showTab(location.hash.slice(1), false));
@@ -626,6 +697,80 @@ function renderReception() {
       <td class="py-2 pr-3 whitespace-nowrap">${state}</td>
       <td class="py-2 pr-3 text-gray-600">${a.emails_sent}</td>
       <td class="py-2 whitespace-nowrap">${rcPigeLinks(a.start_time, a.end_time)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══ Réception DAB+ (DAB_PATCH) ══════════════════════════════════════════
+let dbEvents = [], dbShowAll = false;
+const DB_COLORS = {
+  'Ensemble dégradé': 'bg-red-50 text-red-700',
+  'Service absent': 'bg-red-50 text-red-700',
+  'Silence audio': 'bg-orange-50 text-orange-700',
+  'Récepteur DAB+ hors service': 'bg-gray-100 text-gray-700',
+};
+async function loadDab() {
+  try {
+    const st = await api('/api/dab/status');
+    $('db-state').textContent = !st.service_running ? 'Service arrêté' : st.receiver_up ? 'En réception' : 'Hors service';
+    $('db-state').className = 'text-2xl font-bold ' + (st.service_running && st.receiver_up ? 'text-green-600' : 'text-red-600');
+    const rf = st.rf || {};
+    $('db-sub').textContent = `Canal ${st.channel}` + (rf.ensemble_label ? ` · ${rf.ensemble_label}` : '')
+      + (rf.snr != null ? ` · SNR ${rf.snr.toFixed(1)} dB` : '');
+  } catch (e) {}
+  try {
+    dbEvents = (await api('/api/dab/events?limit=500')).events || [];
+  } catch (e) {
+    $('db-body').innerHTML = `<tr><td colspan="8" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`;
+    return;
+  }
+  const now = Date.now();
+  [[7, 'db-7d'], [30, 'db-30d']].forEach(([days, id]) => {
+    const list = dbEvents.filter(a => now - new Date(a.start).getTime() <= days * 86400e3);
+    $(id).textContent = list.length;
+    const tot = list.reduce((s, a) => s + (a.duration || 0), 0);
+    $(id + '-dur').textContent = list.length ? `durée cumulée ${fmtDur(tot)}` : 'aucune';
+  });
+  const fill = (sel, vals, all) => {
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">${all}</option>` + vals.map(v => `<option>${esc(v)}</option>`).join('');
+    sel.value = vals.includes(cur) ? cur : '';
+  };
+  fill($('db-type'), [...new Set(dbEvents.map(a => a.label))], 'Tous les types');
+  fill($('db-svc'), [...new Set(dbEvents.map(a => a.service).filter(Boolean))].sort(), 'Tous les services');
+  renderDab();
+}
+function renderDab() {
+  const type = $('db-type').value, svc = $('db-svc').value;
+  const list = dbEvents.filter(a => (!type || a.label === type) && (!svc || a.service === svc));
+  const shown = dbShowAll ? list : list.slice(0, 50);
+  $('db-count').textContent = `${list.length} alerte${list.length > 1 ? 's' : ''}`;
+  $('db-more').classList.toggle('hidden', dbShowAll || list.length <= 50);
+  if (!shown.length) {
+    $('db-body').innerHTML = '<tr><td colspan="8" class="py-8 text-center text-gray-400">Aucune alerte enregistrée</td></tr>';
+    return;
+  }
+  const hms = d => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  $('db-body').innerHTML = shown.map(a => {
+    const d0 = new Date(a.start);
+    const day = `${pad(d0.getDate())}-${pad(d0.getMonth() + 1)}-${d0.getFullYear()}`;
+    let range = hms(d0), state;
+    if (a.status === 'complete') {
+      range += ' → ' + hms(new Date(a.end));
+      state = '<span class="px-2 py-0.5 rounded-full bg-green-50 text-green-700">Rétabli</span>';
+    } else {
+      range += ' → <span class="text-red-600 font-medium">en cours</span>';
+      state = '<span class="px-2 py-0.5 rounded-full bg-red-50 text-red-700">En cours</span>';
+    }
+    return `<tr class="hover:bg-slate-50">
+      <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${day}</td>
+      <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${DB_COLORS[a.label] || 'bg-gray-100 text-gray-700'}">${esc(a.label)}</span></td>
+      <td class="py-2 pr-3 font-medium text-gray-800">${esc(a.service || '-')}</td>
+      <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${range}</td>
+      <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.status === 'complete' ? fmtDur(a.duration) : '-'}</td>
+      <td class="py-2 pr-3 whitespace-nowrap">${state}</td>
+      <td class="py-2 pr-3 text-gray-500" style="overflow-wrap:anywhere">${esc(a.message || '')}</td>
+      <td class="py-2 text-gray-600">${a.emails}</td>
     </tr>`;
   }).join('');
 }
