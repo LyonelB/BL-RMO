@@ -159,19 +159,14 @@
 
     <div id="rx-warning" class="hidden mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800"></div>
 
-    <!-- ── Appareils qui envoient ─────────────────────────────── -->
-    <div class="section">
-      <div class="section-title">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
-        Appareils <span id="src-count" class="text-gray-400 normal-case font-normal tracking-normal"></span>
-      </div>
-      <div id="sources" class="flex flex-wrap gap-2"></div>
-    </div>
-
     <!-- ── Journal ────────────────────────────────────────────── -->
     <div class="section">
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-3 pb-3 border-b border-gray-50">
+        <span class="text-xs font-semibold text-gray-500">Appareils</span>
+        <div id="sources" class="flex flex-wrap items-center gap-x-4 gap-y-1.5"></div>
+        <button id="src-all" onclick="clearSources()" class="text-xs font-medium text-blue-600 hover:text-blue-800 hidden">Tous les appareils</button>
+      </div>
       <div class="flex flex-wrap items-center gap-2 mb-4">
-        <select id="f-src" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white max-w-[14rem]"><option value="">Tous les appareils</option></select>
         <select id="f-sev" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
           <option value="">Tous les niveaux</option>
           <option value="4">Avertissement et plus grave</option>
@@ -353,34 +348,37 @@ async function loadSources() {
   if (m.port) $('h-port').textContent = m.port;
   if (m.ip) setHelpIp(m.ip);
 
-  const srcs = d.sources || [];
-  $('src-count').textContent = srcs.length ? `${srcs.length}` : '';
-  $('sources').innerHTML = srcs.length ? srcs.map(s => {
-    const recent = (new Date(d.now) - new Date(s.last_seen)) / 1000 < 86400;
-    const sub = [s.src, s.host && s.host !== displayName(s.src) ? s.host : ''].filter(Boolean).join(' · ');
-    return `<button onclick="pickSource('${esc(s.src)}')" class="text-left border border-gray-100 hover:border-blue-300 rounded-lg px-3 py-2 bg-white ${$('f-src').value === s.src ? 'ring-1 ring-blue-500 border-blue-500' : ''}">
-      <div class="flex items-center gap-1.5 text-xs font-medium text-gray-800"><span class="w-1.5 h-1.5 rounded-full ${recent ? 'bg-emerald-500' : 'bg-slate-300'}"></span>${esc(displayName(s.src))}</div>
-      <div class="text-[11px] text-gray-400 font-mono mt-0.5">${esc(sub)}</div>
-      <div class="text-[11px] text-gray-400 mt-0.5">${esc(ago(s.last_seen, d.now))} · ${Number(s.count).toLocaleString('fr-FR')} msg</div>
-    </button>`;
-  }).join('') : '<p class="text-xs text-gray-400">Aucun appareil n\'a encore envoyé de journal. Voir l\'aide en bas de page.</p>';
-
-  // Liste déroulante
-  const sel = $('f-src'), cur = sel.value;
-  sel.innerHTML = '<option value="">Tous les appareils</option>' +
-    srcs.slice().sort((a, b) => displayName(a.src).localeCompare(displayName(b.src)))
-        .map(s => `<option value="${esc(s.src)}">${esc(displayName(s.src))}</option>`).join('');
-  sel.value = cur;
+  const srcs = (d.sources || []).slice().sort((x, y) => displayName(x.src).localeCompare(displayName(y.src)));
+  $('sources').innerHTML = srcs.length ? srcs.map(x => {
+    const recent = (new Date(d.now) - new Date(x.last_seen)) / 1000 < 86400;
+    const tip = [x.src, x.host && x.host !== displayName(x.src) ? x.host : '', ago(x.last_seen, d.now), Number(x.count).toLocaleString('fr-FR') + ' msg'].filter(Boolean).join(' · ');
+    return `<label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer select-none" title="${esc(tip)}">
+      <input type="checkbox" class="rounded" value="${esc(x.src)}" ${selectedSrc.has(x.src) ? 'checked' : ''} onchange="toggleSource(this.value, this.checked)">
+      <span class="w-1.5 h-1.5 rounded-full ${recent ? 'bg-emerald-500' : 'bg-slate-300'}"></span>${esc(displayName(x.src))}</label>`;
+  }).join('') : '<span class="text-xs text-gray-400">Aucun appareil n\'a encore envoyé de journal. Voir l\'aide en bas de page.</span>';
+  $('src-all').classList.toggle('hidden', !selectedSrc.size);
 }
-function pickSource(src) {
-  $('f-src').value = $('f-src').value === src ? '' : src;
-  offset = 0; loadLogs(); loadSources();
+// Appareils cochés : aucun coché = tous les appareils
+let selectedSrc = new Set();
+try { selectedSrc = new Set(JSON.parse(localStorage.getItem('blfmo-logs-src') || '[]')); } catch (e) {}
+function saveSources() { try { localStorage.setItem('blfmo-logs-src', JSON.stringify([...selectedSrc])); } catch (e) {} }
+function toggleSource(src, on) {
+  on ? selectedSrc.add(src) : selectedSrc.delete(src);
+  saveSources();
+  $('src-all').classList.toggle('hidden', !selectedSrc.size);
+  offset = 0; loadLogs();
+}
+function clearSources() {
+  selectedSrc.clear(); saveSources();
+  document.querySelectorAll('#sources input').forEach(i => i.checked = false);
+  $('src-all').classList.add('hidden');
+  offset = 0; loadLogs();
 }
 
 // ── Journal ────────────────────────────────────────────────────────────
 function query() {
   const p = new URLSearchParams();
-  if ($('f-src').value) p.set('src', $('f-src').value);
+  if (selectedSrc.size) p.set('src', [...selectedSrc].join(','));
   if ($('f-sev').value) p.set('sev', $('f-sev').value);
   if ($('f-q').value.trim()) p.set('q', $('f-q').value.trim());
   if ($('f-hidden').checked) p.set('hidden', '1');
@@ -492,7 +490,7 @@ function exportCsv() {
 }
 
 // ── Filtres ────────────────────────────────────────────────────────────
-['f-src', 'f-sev', 'f-period', 'f-hidden'].forEach(id => $(id).addEventListener('change', () => { offset = 0; loadLogs(); if (id === 'f-src') loadSources(); }));
+['f-sev', 'f-period', 'f-hidden'].forEach(id => $(id).addEventListener('change', () => { offset = 0; loadLogs(); }));
 let qTimer = null;
 $('f-q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(() => { offset = 0; loadLogs(); }, 350); });
 
@@ -500,7 +498,7 @@ $('f-q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTim
 (function initFromUrl() {
   const p = new URLSearchParams(location.search);
   if (p.get('q')) $('f-q').value = p.get('q');
-  if (p.get('src')) { const o = document.createElement('option'); o.value = p.get('src'); o.textContent = p.get('src'); $('f-src').appendChild(o); $('f-src').value = p.get('src'); }
+  if (p.get('src')) { selectedSrc = new Set(p.get('src').split(',').filter(Boolean)); saveSources(); }
 })();
 
 // Adresse à donner aux appareils : l'IP de BL-FMO (les noms en .local ne sont pas résolus par les appareils)
