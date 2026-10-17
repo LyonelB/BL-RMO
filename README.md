@@ -1,11 +1,16 @@
 # 📻 FM Monitor
 
-![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.8.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Raspberry%20Pi%20%7C%20Linux-lightgrey.svg)
 
-**Système open source de monitoring de stations de radio FM** basé sur Raspberry Pi / Linux et RTL-SDR, avec streaming Icecast2, décodage RDS temps réel, alertes email et interface web moderne.
+**Système open source de supervision de radio FM** basé sur Linux (Raspberry Pi ou mini-PC). BL-FMO surveille deux choses :
+
+- **la réception** : ce qui sort réellement de l'antenne, captée par un tuner [Headless TEF Lite SE](https://github.com/FMDX-org/Headless-TEF-lite-SE) (TEF668X), ou à défaut un dongle RTL-SDR (signal, modulation, RDS) ;
+- **la diffusion** : chaque appareil de la chaîne, du studio à l'émetteur, par SNMP, sondes réseau, journaux syslog et traps.
+
+S'y ajoutent une pige audio 24 h reliée aux alertes, l'écoute de l'antenne depuis le navigateur, des alertes mail et des comptes avec rôles.
 
 <img width="1920" height="919" alt="image" src="https://github.com/user-attachments/assets/1eca93e9-b2fb-4998-87d2-c6e5bf16cc30" />
 
@@ -45,6 +50,28 @@
 - **Alertes email** automatiques (perte signal + rétablissement)
 - **Watchdog** : relance automatique en cas de crash
 - **Historique** des alertes et niveaux audio en base SQLite
+
+### 🎙️ Pige audio
+- **Enregistrement continu 24 h** de l'antenne en segments MP3 (service `fm-monitor-pige`, indépendant de l'application)
+- **Frise, écoute et export** d'un créneau en MP3, sans réencodage
+- **Extraits des 10 dernières alertes**, de 30 s avant l'alerte à 30 s après le rétablissement, conservés après la sortie de la pige
+- Chaque alerte et chaque événement de la chaîne ouvre la pige au bon moment
+
+### 🔗 Chaîne de diffusion
+- **Synoptique** du studio à l'antenne : état de chaque appareil et de chaque lien, depuis quand, détail en un clic
+- **SNMP v1, v2c, v3** (lecture seule), ping, TCP, page web, Icecast ; seuils et valeurs attendues
+- **Préréglages** : BW Broadcast TX V3, Deva DB91-TX / DB91-RX, Sound4 PULSE / IMPACT
+- **Sondes réseau** (rafales de pings : pertes, latence, gigue) rattachées aux liens
+- **Historique en courbes**, alertes mail avec les valeurs en défaut, export ZIP
+
+### 📜 Journaux et traps
+- **Serveur syslog** UDP 514 (service `fm-monitor-syslog`) : les appareils de la radio envoient leurs journaux à BL-FMO
+- **Traps SNMP** UDP 162 traduits en français, avec relevé immédiat de l'appareil
+- **Lecture nettoyée** et **messages masqués** (bruit connu), réaffichables d'une case à cocher
+
+### 👥 Comptes et rôles
+- **Lecteur** : consulte et écoute ; **Opérateur** : exporte et enregistre ; **Administrateur** : règle tout
+- Contrôle d'accès vérifié côté serveur sur chaque route
 
 ### 🌐 Interface Web
 - Dashboard temps réel (SSE)
@@ -132,6 +159,23 @@ Le script installe automatiquement toutes les dépendances, compile redsea, conf
 **Durée : ~10-15 minutes** (compilation de redsea incluse)
 
 ---
+
+### 🎙️ Pige et journaux (services complémentaires)
+
+`install.sh` les installe automatiquement. Sur une installation existante :
+
+```bash
+cd ~/fm-monitor
+sudo bash install/build/65-pige.sh     # pige 24 h (fm-monitor-pige)
+sudo bash install/build/66-syslog.sh   # journaux UDP 514 et traps UDP 162 (fm-monitor-syslog)
+```
+
+| Service | Rôle | Ports |
+|---|---|---|
+| `fm-monitor` | Application web, réception FM, supervision de la chaîne | 5000 (derrière Nginx 80/443) |
+| `fm-monitor-pige` | Enregistrement de la pige | lit Icecast 8000 |
+| `fm-monitor-syslog` | Réception des journaux et des traps | UDP 514, UDP 162 |
+| `icecast2` | Flux audio de l'antenne | 8000 |
 
 ### 🔧 Installation manuelle
 
@@ -242,21 +286,25 @@ https://[IP-de-votre-appareil]:5000
 
 ```
 fm-monitor/
-├── app.py              # Application Flask (routes, API)
-├── monitor.py          # Moteur de monitoring RTL-SDR / RDS
+├── app.py              # Application Flask (routes, API, contrôle d'accès)
+├── version.py          # Numéro de version
+├── monitor.py          # Moteur de réception (RTL-SDR / TEF668X, RDS, alertes)
+├── tef_driver.py       # Pilote du tuner TEF668X Headless
 ├── mpx_analyzer.py     # Analyse MPX temps réel (déviation, L/R, SNR...)
+├── tef_audio_analyzer.py # Analyse audio TEF (spectre, S/B)
+├── chain_probe.py      # Supervision de la chaîne (SNMP, sondes, événements)
+├── pige.py             # Pige 24 h (enregistreur et export)
+├── pige_archive.py     # Extraits audio des dernières alertes
+├── syslog_server.py    # Service de réception syslog et traps
+├── snmp_traps.py       # Décodage et traduction des traps SNMP
+├── syslog_clean.py     # Lecture nettoyée et messages masqués
+├── auth.py             # Comptes, rôles, authentification
 ├── email_alert.py      # Alertes email
-├── auth.py             # Authentification
 ├── database.py         # Base SQLite (historique, alertes)
-├── requirements.txt    # Dépendances Python
-├── install.sh          # Script d'installation
-├── config.json.example # Exemple de configuration
-├── templates/
-│   ├── index.html      # Dashboard principal
-│   ├── config.html     # Page configuration
-│   ├── stats.html      # Statistiques
-│   ├── about.html      # Documentation FM/MPX/RDS
-│   └── login.html      # Authentification
+├── install.sh          # Installation complète
+├── install/build/      # Étapes d'installation (pige, syslog, Raspberry Pi...)
+├── update.sh           # Mise à jour
+├── templates/          # Pages : dashboard, pige, chaîne, journaux, statistiques...
 └── static/             # Assets CSS/JS
 ```
 
@@ -270,6 +318,7 @@ La page **À propos** intégrée dans l'interface explique :
 - Le système RDS (PS, RT, PI Code)
 - Radio Browser et la résolution de logo
 - Les dongles compatibles et leur installation
+- Les services de BL-FMO et leurs ports
 
 ---
 
@@ -311,14 +360,15 @@ tail -f /tmp/rds_output.json
 
 ## 🗺️ Roadmap
 
-- [x] v0.3.1 — Streaming Icecast2 professionnel, SSL, système de licences
-- [x] v0.3.2 — Open source, RTL-SDR Blog V4, logo Radio Browser, page documentation
-- [x] v0.4.0 — Script install automatique, historique niveaux audio, nettoyage interface
-- [x] v0.4.1 — Surveillance modulation + RDS, alertes multi-types, configuration étendue
-- [x] v0.4.2 — Enregistrement audio à la demande, voyant modulation, player amélioré
-- [x] v0.4.3 — Corrections durée alertes, Gunicorn, robustesse enregistrement
-- [x] v0.5.0 — Analyse MPX temps réel (déviation, L/R, pilote, stéréo, RDS RF, SNR), dashboard no-scroll
-- [ ] v0.5.x — Support TEF6686 (Headless TEF Lite) — démodulation stéréo hardware, RDS natif
+- [x] v0.3 à v0.4 : Icecast2, SSL, installation automatique, alertes modulation et RDS, enregistrement
+- [x] v0.5.0 : Analyse MPX temps réel (déviation, L/R, pilote, stéréo, RDS RF, SNR)
+- [x] v0.6.0 : Décodeur GNU Radio WFM stéréo
+- [x] v0.7.0 : Accès local bl-fmo.local, mode public, webhook, interface mobile
+- [x] v0.8.0 : Tuner TEF668X, pige 24 h, chaîne de diffusion, journaux et traps, comptes et rôles
+- [ ] Page Incidents : regroupement des alertes de réception et de diffusion, cause probable, frise
+- [ ] Courbes du relevé de l'émetteur et alerte sur l'écart entre alimentations
+- [ ] Sonde AES67 (sortie console Dante)
+- [ ] Version anglaise de l'interface
 
 ---
 
@@ -334,6 +384,8 @@ MIT — libre d'utilisation, modification et distribution.
 - [redsea](https://github.com/windytan/redsea) — décodeur RDS
 - [Radio Browser](https://www.radio-browser.info) — base de données stations
 - [Icecast2](https://icecast.org) — serveur de streaming
+- [Headless TEF Lite SE](https://github.com/FMDX-org/Headless-TEF-lite-SE) (FMDX.org) : tuner USB TEF668X, firmware [FM-DX-Tuner](https://github.com/kkonradpl/FM-DX-Tuner)
+- [Net-SNMP](http://www.net-snmp.org) : outils SNMP
 
 ## Changement de source : RTL-SDR ↔ TEF668X Headless
 

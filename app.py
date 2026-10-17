@@ -30,6 +30,13 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+from version import __version__ as APP_VERSION
+
+
+@app.context_processor
+def inject_app_version():
+    return {'app_version': APP_VERSION}
+
 from werkzeug.middleware.proxy_fix import ProxyFix
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 

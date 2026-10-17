@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FM Monitor — À propos</title>
+  <title>BL-FMO · À propos</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -78,7 +78,7 @@
 
   <header class="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10 flex items-center justify-between">
     <div>
-      <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">À propos de FM Monitor</h1></div>
+      <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">À propos de BL-FMO</h1></div>
       <p class="text-xs text-gray-400 mt-0.5">Documentation technique</p>
     </div>
     <a href="https://github.com/LyonelB/fm-monitor" target="_blank"
@@ -95,12 +95,13 @@
       <div class="flex items-start gap-4">
         <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">FM</div>
         <div class="flex-1">
-          <h2 class="text-base font-bold text-gray-900 mb-1">FM Monitor</h2>
-          <p class="text-sm text-gray-600 leading-relaxed">Outil de supervision de diffusion radio FM conçu pour les radios, régies techniques et prestataires broadcast. Surveille en continu la présence et la qualité du signal FM via un dongle RTL-SDR, envoie des alertes email en cas de coupure, décode les données RDS et offre un tableau de bord accessible depuis n'importe quel navigateur.</p>
+          <h2 class="text-base font-bold text-gray-900 mb-1 flex items-center gap-2">BL-FMO <span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs font-mono font-medium rounded">version {{ app_version }}</span></h2>
+          <p class="text-sm text-gray-600 leading-relaxed">Outil open source de supervision d'une radio FM, conçu pour les radios associatives, les régies techniques et les prestataires broadcast. BL-FMO surveille deux choses : <b>la réception</b>, c'est-à-dire ce qui sort réellement de l'antenne, captée par un tuner Headless TEF Lite SE (TEF668X), ou à défaut un dongle RTL-SDR ; et <b>la diffusion</b>, c'est-à-dire chaque appareil de la chaîne, du studio à l'émetteur, par SNMP, sondes réseau, journaux et traps. Une pige audio de 24 heures, reliée aux alertes, permet de réécouter ce qui est parti à l'antenne.</p>
           <div class="mt-3 flex flex-wrap gap-2">
             <span class="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">Open Source</span>
             <span class="px-2.5 py-0.5 bg-slate-100 text-slate-700 text-xs font-medium rounded-full">Raspberry Pi / Linux</span>
-            <span class="px-2.5 py-0.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-full">RTL-SDR</span>
+            <span class="px-2.5 py-0.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-full">TEF Lite SE / RTL-SDR</span>
+            <span class="px-2.5 py-0.5 bg-teal-50 text-teal-700 text-xs font-medium rounded-full">SNMP · syslog</span>
             <span class="px-2.5 py-0.5 bg-orange-50 text-orange-700 text-xs font-medium rounded-full">Python / Flask</span>
           </div>
         </div>
@@ -111,30 +112,60 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4m0 0h18"/></svg>
-        Comment fonctionne FM Monitor
+        Comment fonctionne BL-FMO
       </div>
-      <div class="grid grid-cols-4 gap-3">
-        <div class="info-card text-center">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <div class="info-card">
           <div class="text-2xl mb-2">📡</div>
-          <div class="font-semibold text-gray-800 text-xs mb-1">1. Capture RF</div>
-          <div class="text-xs text-gray-500">Le dongle RTL-SDR reçoit la porteuse FM. <code>rtl_fm</code> démodule le signal en audio PCM brut.</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">Réception FM</div>
+          <div class="text-xs text-gray-500">Le tuner Headless TEF Lite SE (ou, à défaut, un dongle RTL-SDR) capte l'antenne comme un auditeur : niveau du signal, modulation, MPX et RDS. C'est l'effet, tel qu'on l'entend.</div>
         </div>
-        <div class="info-card text-center">
-          <div class="text-2xl mb-2">🔊</div>
-          <div class="font-semibold text-gray-800 text-xs mb-1">2. Analyse audio</div>
-          <div class="text-xs text-gray-500">FM Monitor calcule le niveau RMS en dBFS en temps réel pour détecter silences et modulation.</div>
+        <div class="info-card">
+          <div class="text-2xl mb-2">🔗</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">Diffusion</div>
+          <div class="text-xs text-gray-500">Chaque appareil de la chaîne est interrogé en SNMP ou sondé sur le réseau : codecs, faisceau, traitement, émetteur. Ce sont les causes possibles.</div>
         </div>
-        <div class="info-card text-center">
-          <div class="text-2xl mb-2">📻</div>
-          <div class="font-semibold text-gray-800 text-xs mb-1">3. Décodage RDS</div>
-          <div class="text-xs text-gray-500"><code>redsea</code> extrait les données RDS du flux MPX : PS, RadioText, PI Code.</div>
+        <div class="info-card">
+          <div class="text-2xl mb-2">📜</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">Journaux et traps</div>
+          <div class="text-xs text-gray-500">Les appareils envoient leurs journaux (syslog) et leurs alarmes (traps SNMP) à BL-FMO, qui les range, les traduit et les relie aux appareils.</div>
         </div>
-        <div class="info-card text-center">
-          <div class="text-2xl mb-2">🌐</div>
-          <div class="font-semibold text-gray-800 text-xs mb-1">4. Dashboard</div>
-          <div class="text-xs text-gray-500">Flask expose un dashboard web avec alertes email, historique SQLite et streaming Icecast2.</div>
+        <div class="info-card">
+          <div class="text-2xl mb-2">🎙️</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">Pige</div>
+          <div class="text-xs text-gray-500">L'antenne est enregistrée en continu sur 24 heures. Chaque alerte garde son extrait audio, de 30 s avant à 30 s après.</div>
+        </div>
+        <div class="info-card">
+          <div class="text-2xl mb-2">🔔</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">Alertes</div>
+          <div class="text-xs text-gray-500">Une panne de réception ou de diffusion déclenche un mail, puis un autre au rétablissement, avec les valeurs en défaut.</div>
+        </div>
+        <div class="info-card">
+          <div class="text-2xl mb-2">👥</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">Comptes</div>
+          <div class="text-xs text-gray-500">Lecteur, Opérateur ou Administrateur : chacun voit et fait ce que son rôle permet, vérifié par le serveur.</div>
         </div>
       </div>
+    </div>
+
+    <!-- ── Services et ports ─────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+        Services et ports
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead><tr class="text-left text-gray-400 border-b border-gray-100"><th class="font-medium py-2 pr-4">Service</th><th class="font-medium py-2 pr-4">Rôle</th><th class="font-medium py-2">Ports</th></tr></thead>
+          <tbody class="text-gray-700">
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>fm-monitor</code></td><td class="py-2 pr-4">Application web, réception FM, supervision de la chaîne</td><td class="py-2 font-mono">5000 (Nginx 80/443)</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>fm-monitor-pige</code></td><td class="py-2 pr-4">Enregistrement de la pige, indépendant de l'application</td><td class="py-2 font-mono">lit Icecast 8000</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>fm-monitor-syslog</code></td><td class="py-2 pr-4">Réception des journaux et des traps des appareils</td><td class="py-2 font-mono">UDP 514, UDP 162</td></tr>
+            <tr><td class="py-2 pr-4"><code>icecast2</code></td><td class="py-2 pr-4">Flux audio de l'antenne (écoute et pige)</td><td class="py-2 font-mono">8000</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-xs text-gray-500 mt-3">État d'un service : <code>sudo systemctl status fm-monitor-syslog</code> · journal : <code>sudo journalctl -u fm-monitor -n 50</code></p>
     </div>
 
     <!-- ── La diffusion FM ────────────────────────────────────── -->
@@ -230,12 +261,75 @@
       </div>
     </div>
 
-    <!-- ── Dongles RTL-SDR ────────────────────────────────────── -->
+    <!-- ── Tuner Headless TEF Lite SE ─────────────────────────────── -->
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        Dongles RTL-SDR supportés
+        Matériel de réception : Headless TEF Lite SE
       </div>
+      <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1 text-sm text-gray-600 leading-relaxed space-y-3">
+          <p>BL-FMO écoute l'antenne de préférence avec le <b>Headless TEF Lite SE</b> de <a href="https://github.com/FMDX-org/Headless-TEF-lite-SE" target="_blank" class="text-blue-600 hover:text-blue-800">FMDX.org</a> : un tuner USB construit autour d'un récepteur NXP <b>TEF668X</b> (version V205, le TEF6687 étant recommandé) et d'un microcontrôleur STM32, avec une sortie audio numérique par USB. La version SE de ce tuner compact a des entrées antenne AM et FM séparées. Matériel libre (licence CERN-OHL-W v2.0), firmware <a href="https://github.com/kkonradpl/FM-DX-Tuner" target="_blank" class="text-blue-600 hover:text-blue-800">FM-DX-Tuner</a>.</p>
+          <p>Contrairement à un dongle SDR, le TEF fait lui-même la démodulation et le décodage RDS, comme un récepteur haut de gamme. BL-FMO reçoit donc des mesures RF natives, sans calcul sur le flux brut.</p>
+        </div>
+        <div class="md:w-80 flex-shrink-0 space-y-2">
+          <div class="info-card text-xs">
+            <div class="font-semibold text-gray-800 mb-1">Port série USB <code>/dev/ttyACM0</code></div>
+            <div class="text-gray-500">Protocole XDR : niveau du signal en dBf, rapport signal/bruit, trajets multiples, code PI et groupes RDS (PS, RadioText, stéréo).</div>
+          </div>
+          <div class="info-card text-xs">
+            <div class="font-semibold text-gray-800 mb-1">Carte son USB <code>hw:Tuner</code></div>
+            <div class="text-gray-500">Audio stéréo 48 kHz : analyse (modulation, niveaux G/D, spectre), écoute en direct par Icecast et pige.</div>
+          </div>
+          <div class="info-card text-xs">
+            <div class="font-semibold text-gray-800 mb-1">Détection automatique</div>
+            <div class="text-gray-500">Reconnu par son identifiant USB <code>1209:6687</code> dans Configuration, bouton « Scan dongle ».</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto mt-4">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="border-b border-gray-100">
+              <th class="pb-2 pr-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Mesure</th>
+              <th class="pb-2 pr-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Headless TEF Lite SE</th>
+              <th class="pb-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Dongle RTL-SDR</th>
+            </tr>
+          </thead>
+          <tbody class="text-gray-700">
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4">Niveau du signal</td><td class="py-2 pr-4">dBf, mesure RF native</td><td class="py-2">dBFS, calculé sur l'audio</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4">RDS</td><td class="py-2 pr-4">Décodé par le tuner</td><td class="py-2">Décodé par redsea sur le MPX</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4">Niveaux G/D, modulation, S/B audio</td><td class="py-2 pr-4">Oui</td><td class="py-2">Oui</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4">Stéréo / mono</td><td class="py-2 pr-4">Par le bit MS du RDS</td><td class="py-2">Par le pilote 19 kHz</td></tr>
+            <tr><td class="py-2 pr-4">Déviation, pilote, sous-porteuses (analyse MPX)</td><td class="py-2 pr-4">Non</td><td class="py-2">Oui</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="relative bg-gray-900 rounded-lg mt-4 overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-2 border-b border-gray-700">
+          <span class="text-gray-300 text-xs font-medium">Mise en service (Debian / Raspberry Pi OS)</span>
+        </div>
+        <pre class="text-green-400 text-xs font-mono p-4 overflow-x-auto leading-relaxed"># Brancher le tuner avec un câble USB de données, puis vérifier :
+ls /dev/ttyACM0
+aplay -l | grep Tuner
+
+# Accès au port série pour l'utilisateur du service
+sudo usermod -a -G dialout $USER
+
+# Puis : Configuration, bouton « Scan dongle », source TEF668X</pre>
+      </div>
+      <p class="text-xs text-gray-400 mt-3">Headless TEF Lite SE : Konrad Kosmatka (architecture et firmware), Sjef Verhoeven PE5PVB (matériel), Marek Kraus, Marek Farkaš, Przemysław Korpas, Sebastian Białkowski.</p>
+    </div>
+
+    <!-- ── Dongles RTL-SDR ────────────────────────────────────── -->
+    <details class="section">
+      <summary class="section-title cursor-pointer select-none" style="margin-bottom:0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        Alternative : dongles RTL-SDR
+      </summary>
+      <p class="text-xs text-gray-500 mt-3 mb-4">Un dongle RTL-SDR reste possible, moins cher mais moins précis : BL-FMO démodule alors lui-même le signal (rtl_fm ou GNU Radio) et décode le RDS avec redsea. Il permet en plus l'analyse du signal MPX.</p>
       <div class="overflow-x-auto mb-4">
         <table class="w-full text-xs">
           <thead>
@@ -307,7 +401,7 @@ rtl_test -t</pre>
       <div class="info-card bg-amber-50 border-amber-200 text-xs text-amber-800">
         <strong>⚠️ Bias-T (V4) :</strong> Le RTL-SDR Blog V4 dispose d'une alimentation antenne (Bias-T) de 4,5 V désactivée par défaut. Ne l'activez que si votre antenne ou amplificateur le nécessite : <code>rtl_biast -b 1</code>
       </div>
-    </div>
+    </details>
 
     <!-- ── Analyse MPX ────────────────────────────────────────── -->
     <div class="section">
@@ -401,9 +495,10 @@ rtl_test -t</pre>
         <a href="https://gitlab.xiph.org/xiph/icecast-server" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-orange-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12M8.464 8.464a5 5 0 000 7.072"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Icecast2</div><div class="text-xs text-gray-400">Streaming audio</div></div></a>
         <a href="https://tef.noobish.eu/logos/logo_preview.html" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Logos FM — Noobish</div><div class="text-xs text-gray-400">Communauté FM-DX</div></div></a>
         <a href="https://www.docker.com" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.186.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.186.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.186.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.186.186 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.09-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Docker</div><div class="text-xs text-gray-400">Conteneurisation</div></div></a>
+        <a href="http://www.net-snmp.org" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-teal-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Net-SNMP</div><div class="text-xs text-gray-400">Interrogation SNMP des appareils</div></div></a>
+        <a href="https://github.com/FMDX-org/Headless-TEF-lite-SE" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-rose-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Headless TEF Lite SE</div><div class="text-xs text-gray-400">Tuner USB FMDX.org, firmware FM-DX-Tuner</div></div></a>
+        <a href="https://www.sqlite.org" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-sky-700 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 3.6 4 8 4s8-2 8-4V7M4 7c0 2 3.6 4 8 4s8-2 8-4M4 7c0-2 3.6-4 8-4s8 2 8 4"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">SQLite</div><div class="text-xs text-gray-400">Historique, alertes, journaux</div></div></a>
       </div>
-    </div>
-        </a>
     </div>
 
   </div>

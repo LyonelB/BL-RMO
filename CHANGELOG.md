@@ -4,6 +4,67 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
+## [0.8.0] - 2026-10-17
+
+BL-FMO ne surveille plus seulement la réception FM : il supervise aussi toute la chaîne de diffusion, du studio à l'antenne, et garde la trace audio de ce qui est parti à l'antenne.
+
+### Pige audio
+- **Pige 24 h** : enregistrement continu de l'antenne en segments MP3 de 5 min, par un service indépendant (`fm-monitor-pige`) qui continue pendant un redémarrage de l'application.
+- **Page Pige** : frise des dernières 24 h, écoute de contrôle, export MP3 d'un créneau au choix (sans réencodage).
+- **Extraits des 10 dernières alertes** : à chaque incident, l'extrait de 30 s avant l'alerte à 30 s après le rétablissement est archivé et reste disponible après la sortie de la pige.
+- **Lien alertes et pige** : depuis Statistiques et la Chaîne, « Écouter » et « MP3 » ouvrent l'antenne au moment de l'alerte, ou son extrait archivé.
+
+### Chaîne de diffusion
+- **Supervision des appareils** : SNMP v1, v2c et v3 (lecture seule), ping, TCP, page web, Icecast, avec seuils et valeurs attendues.
+- **Préréglages SNMP** : BW Broadcast TX V3, Deva DB91-TX et DB91-RX, Sound4 PULSE/IMPACT.
+- **Sondes réseau** façon netwatch : rafales de pings, pertes, latence et gigue, rattachées au lien qu'elles surveillent.
+- **Synoptique cliquable** : sites, appareils et liens dans l'ordre de la chaîne, état et « depuis » sur chaque tuile, panneau de détail élargissable (état, journaux, historique en courbes, réglages, lien vers l'interface web de l'appareil).
+- **Gérer la chaîne** : ajout, ordre et réglage des appareils et des sondes, test immédiat.
+- **Alertes mail** de la chaîne, avec les valeurs en défaut ; événements reliés à la pige.
+- **Export ZIP** de l'historique (relevés, événements, journaux) pour analyse.
+
+### Journaux et traps
+- **Réception syslog** (UDP 514) des appareils de la radio par un service dédié (`fm-monitor-syslog`), conservation 90 jours.
+- **Page Journaux** : appareils émetteurs, filtres, recherche, export CSV, aide à la configuration des appareils.
+- **Traps SNMP** (UDP 162, v1 et v2c, réponse aux informs) traduits en français (Deva, Sound4, génériques), avec relevé immédiat de l'appareil concerné.
+- **Lecture nettoyée** : préfixe du BW retiré, messages sur plusieurs lignes, relevé horaire de l'émetteur résumé en une ligne.
+- **Messages masqués** : règles intégrées pour le bruit connu, règles ajoutées depuis la page (« masquer les semblables »), case « Afficher les messages masqués ».
+
+### Comptes et rôles
+- **Plusieurs comptes** avec trois rôles : Lecteur (consulte et écoute), Opérateur (exporte, enregistre), Administrateur (règle tout).
+- **Contrôle d'accès côté serveur** sur chaque route ; une route non listée est réservée à l'administrateur.
+- **Page Utilisateurs / Mon compte** : création, rôle, activation, mot de passe.
+- Le compte existant de `config.json` devient automatiquement le premier administrateur.
+
+### Réception TEF668X
+- Détection du Headless TEF Lite SE (FMDX.org) par son identifiant USB, lecture des trames de signal du firmware FM-DX-Tuner.
+- Présence du signal mesurée par la cadence des trames, alertes indépendantes et rétablissement fiabilisé.
+- Panneau d'analyse audio : spectre 0 à 20 kHz, qualité S/B.
+
+### Divers
+- Configuration réseau (IP fixe ou DHCP) appliquée par NetworkManager avec retour automatique en cas d'échec.
+- Rechargement à chaud de la configuration mail et station.
+- Jauge Signal RF étendue à 90 dBf.
+- Appliance Raspberry Pi : scripts de construction, premier démarrage et assistant de configuration (en cours).
+- Numéro de version affiché dans la page À propos.
+
+### Sécurité
+- `/api/config/full` ne renvoie plus aucun secret (hash du mot de passe, mots de passe mail et Wi-Fi) et seulement l'affichage aux non-administrateurs.
+
+### Installation
+- `install.sh` installe aussi les services de pige et de journaux (`install/build/65-pige.sh`, `66-syslog.sh`).
+- `update.sh` redémarre tous les services BL-FMO.
+- Scripts `patch_*.py` retirés du dépôt : leurs modifications sont intégrées au code (ils restent dans l'historique git).
+
+---
+
+## [0.7.1] - 2026-08-06
+
+### Ajouts
+- Interrupteur des alertes mail dans la page Configuration, pris en compte sans redémarrage.
+
+---
+
 ## [0.7.0] - 2026-05-03
 ### Accessibilite et Distribution
 

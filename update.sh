@@ -39,9 +39,15 @@ fi
 
 cd "$INSTALL_DIR"
 
-# Arrêter le service
-print_step "Arrêt du service..."
-sudo systemctl stop fm-monitor
+# Services BL-FMO présents sur cette machine
+SERVICES="fm-monitor"
+for s in fm-monitor-pige fm-monitor-syslog; do
+    [ -f "/etc/systemd/system/$s.service" ] && SERVICES="$SERVICES $s"
+done
+
+# Arrêter les services
+print_step "Arrêt des services ($SERVICES)..."
+sudo systemctl stop $SERVICES
 
 # Sauvegarder la configuration
 print_step "Sauvegarde de la configuration..."
@@ -85,20 +91,23 @@ if [ -f "/etc/systemd/system/fm-monitor.service" ]; then
     sudo systemctl daemon-reload
 fi
 
-# Redémarrer le service
-print_step "Redémarrage du service..."
-sudo systemctl start fm-monitor
+# Redémarrer les services
+print_step "Redémarrage des services..."
+sudo systemctl start $SERVICES
 
 sleep 2
 
 # Vérifier le statut
-if sudo systemctl is-active --quiet fm-monitor; then
-    print_step "Mise à jour terminée avec succès !"
-    print_info "FM Monitor est en cours d'exécution"
-else
-    print_warning "Le service ne s'est pas démarré correctement"
-    print_info "Vérifiez les logs: sudo journalctl -u fm-monitor -n 50"
-fi
+ALL_OK=1
+for s in $SERVICES; do
+    if sudo systemctl is-active --quiet "$s"; then
+        print_info "$s : actif"
+    else
+        ALL_OK=0
+        print_warning "$s ne s'est pas démarré. Logs : sudo journalctl -u $s -n 50"
+    fi
+done
+[ "$ALL_OK" = 1 ] && print_step "Mise à jour terminée avec succès ! (BL-FMO $(python3 -c 'from version import __version__; print(__version__)' 2>/dev/null))"
 
 echo ""
 print_info "Changelog: https://github.com/LyonelB/fm-monitor/releases"

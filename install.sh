@@ -419,6 +419,13 @@ sudo systemctl daemon-reload
 sudo systemctl enable fm-monitor
 print_info "Service systemd configuré"
 
+# Pige 24 h et réception des journaux / traps (services indépendants de l'application)
+print_step "Services de pige et de journaux..."
+sudo BLFMO_USER="$USER" INSTALL_DIR="$INSTALL_DIR" bash "$INSTALL_DIR/install/build/65-pige.sh" \
+    || print_warning "Pige non installée : relancer sudo bash install/build/65-pige.sh"
+sudo BLFMO_USER="$USER" INSTALL_DIR="$INSTALL_DIR" bash "$INSTALL_DIR/install/build/66-syslog.sh" \
+    || print_warning "Journaux non installés : relancer sudo bash install/build/66-syslog.sh"
+
 # =============================================
 # 12b. CONFIGURATION AVAHI / mDNS
 # =============================================
