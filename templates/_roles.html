@@ -1,0 +1,45 @@
+{# USERS_ROLES_PATCH : rôle de l'utilisateur connecté, inclus dans le <head> de chaque page.
+   Masque les commandes que le rôle ne peut pas utiliser (le serveur les refuse de toute façon)
+   et ajoute « Utilisateurs » ou « Mon compte » dans le menu. #}
+<script>document.documentElement.dataset.role = {{ (current_user.role if current_user else ('public' if public_mode else ''))|tojson }};</script>
+<style>
+  /* Lecteur : ni export, ni enregistrement, ni relevé manuel */
+  html[data-role="lecteur"] #rec-btn,
+  html[data-role="lecteur"] a[href^="/api/pige/export"],
+  html[data-role="lecteur"] a[href*="dl=1"],
+  html[data-role="lecteur"] .section:has(#btn-export),
+  html[data-role="lecteur"] button[onclick^="markFromPlayer"],
+  html[data-role="lecteur"] button[onclick^="exportCsv"],
+  html[data-role="lecteur"] button[onclick^="probeNow"],
+  html[data-role="lecteur"] .need-operateur { display: none !important; }
+  /* Lecteur et opérateur : pas de réglages */
+  html[data-role="lecteur"] a[href="/config"], html[data-role="operateur"] a[href="/config"],
+  html[data-role="lecteur"] a[href="/chain/manage"], html[data-role="operateur"] a[href="/chain/manage"],
+  html[data-role="lecteur"] .need-admin, html[data-role="operateur"] .need-admin { display: none !important; }
+  .role-user { margin: 4px 12px 8px; padding: 8px 10px; border-radius: 10px; background: #f8fafc; font-size: 12px; color: #64748b; line-height: 1.35; }
+  .role-user b { display: block; color: #0f172a; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
+{% if current_user %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const out = document.querySelector('#sidebar a[href="/logout"]') || document.querySelector('a[href="/logout"]');
+  if (!out || document.getElementById('role-account-link')) return;
+  const admin = {{ (current_user.role == 'admin')|tojson }};
+  const a = document.createElement('a');
+  a.id = 'role-account-link';
+  a.href = '/account';
+  a.className = 'sidebar-link' + (location.pathname === '/account' ? ' active' : '');
+  a.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="'
+    + (admin ? 'M17 20h5v-2a4 4 0 00-5-3.87M9 20H4v-2a4 4 0 015-3.87m8-4.13a4 4 0 11-8 0 4 4 0 018 0zm6 2a3 3 0 11-6 0 3 3 0 016 0zM7 10a3 3 0 11-6 0 3 3 0 016 0z'
+             : 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z')
+    + '"/></svg>' + (admin ? 'Utilisateurs' : 'Mon compte');
+  const who = document.createElement('div');
+  who.className = 'role-user';
+  who.innerHTML = '<b></b><span></span>';
+  who.querySelector('b').textContent = {{ (current_user.full_name or current_user.username)|tojson }};
+  who.querySelector('span').textContent = {{ current_user.role_label|tojson }};
+  out.parentNode.insertBefore(a, out);
+  out.parentNode.insertBefore(who, out);
+});
+</script>
+{% endif %}
