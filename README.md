@@ -1,55 +1,63 @@
-# 📻 FM Monitor
+# 📻 BL-FMO (FM Monitor)
 
 ![Version](https://img.shields.io/badge/version-0.8.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Platform](https://img.shields.io/badge/platform-Raspberry%20Pi%20%7C%20Linux-lightgrey.svg)
+![Platform](https://img.shields.io/badge/plateforme-mini--PC%20Linux-lightgrey.svg)
+![Tuner](https://img.shields.io/badge/tuner-Headless%20TEF%20Lite%20SE-purple.svg)
 
-**Système open source de supervision de radio FM** basé sur Linux (Raspberry Pi ou mini-PC). BL-FMO surveille deux choses :
+**Système open source de supervision d'une radio FM.** Un mini-PC, un tuner [Headless TEF Lite SE](https://github.com/FMDX-org/Headless-TEF-lite-SE) et une antenne suffisent pour :
 
-- **la réception** : ce qui sort réellement de l'antenne, captée par un tuner [Headless TEF Lite SE](https://github.com/FMDX-org/Headless-TEF-lite-SE) (TEF668X), ou à défaut un dongle RTL-SDR (signal, modulation, RDS) ;
-- **la diffusion** : chaque appareil de la chaîne, du studio à l'émetteur, par SNMP, sondes réseau, journaux syslog et traps.
+- **surveiller la réception FM** : ce qui sort réellement de l'antenne (signal, modulation, RDS) ;
+- **surveiller la chaîne de diffusion** : chaque appareil, du studio à l'émetteur, par SNMP, sondes réseau, journaux syslog et traps ;
+- **écouter l'antenne** depuis n'importe quel navigateur (retour FM) ;
+- **garder une pige** de 24 heures, reliée aux alertes.
 
-S'y ajoutent une pige audio 24 h reliée aux alertes, l'écoute de l'antenne depuis le navigateur, des alertes mail et des comptes avec rôles.
+Une alerte mail part à chaque panne et à chaque rétablissement, et chaque alerte garde son extrait audio.
 
 <img width="1920" height="919" alt="image" src="https://github.com/user-attachments/assets/1eca93e9-b2fb-4998-87d2-c6e5bf16cc30" />
 
 ---
 
+## 🧭 Direction du projet
+
+BL-FMO suit désormais **une seule direction**, et c'est la seule configuration développée et testée :
+
+> **un mini-PC Linux + un tuner Headless TEF Lite SE + une antenne FM**
+> pour surveiller la réception FM, la chaîne de diffusion, offrir un retour FM et une pige.
+
+Le Headless TEF Lite SE donne une réception de qualité professionnelle : le tuner démodule lui-même le signal et décode le RDS, et BL-FMO reçoit des mesures RF natives (dBf, rapport signal/bruit, trajets multiples).
+
+### Fonctions en fin de vie
+
+Les fonctions suivantes **ne sont plus développées**. Elles restent présentes dans la version 0.8 pour les installations existantes, mais seront retirées dans une prochaine version :
+
+| Fonction | Pourquoi |
+|---|---|
+| Réception FM par dongle **RTL-SDR** (rtl_fm, GNU Radio) | Qualité de réception inférieure au TEF ; double chaîne de traitement à maintenir |
+| **Analyse MPX** (déviation, pilote, sous-porteuses, SNR MPX) | Intérêt réel mais limité avec un dongle RTL-SDR ; ce n'est pas la direction retenue |
+| Installation **Docker** | Jamais validée en production ; l'accès au tuner USB et aux ports syslog/traps s'y prête mal |
+
+Si vous utilisez l'un de ces modes, la version 0.8 continue de fonctionner. Les instructions restent en [annexe](#annexe--mode-rtl-sdr-et-analyse-mpx-fin-de-vie).
+
+### Et le RTL-SDR ?
+
+Le dongle RTL-SDR pourrait revenir dans un autre rôle : **second tuner pour surveiller le DAB+** en parallèle de la FM. C'est une piste, pas encore un développement.
+
+---
+
 ## ✨ Fonctionnalités
 
-### 📡 Réception & Analyse
-- **Réception FM** via dongle RTL-SDR (V3, V4, compatibles RTL2832U)
-- **VU-mètre temps réel** avec historique audio 30 secondes
-- **Détection de silence / perte de signal** configurable
-- **Détection d'absence de modulation** (porteuse sans programme)
+### 📡 Réception FM (Headless TEF Lite SE)
+- **Mesures RF natives** : niveau en dBf, rapport signal/bruit, trajets multiples, décalage de fréquence
+- **Présence du signal** mesurée par la cadence des trames du tuner, indépendante du son
+- **Absence de modulation** (porteuse présente, programme muet), alertes **RDS** et **RadioText**
+- **Analyse audio** : niveaux G/D, spectre 0 à 20 kHz, qualité S/B
+- **RDS** décodé par le tuner : PS, RadioText, code PI, stéréo ; logo de la station via [rds-station-db](https://github.com/LyonelB/rds-station-db)
 
-### 📊 Analyse MPX temps réel
-- **Déviation FM peak + RMS** (kHz) — jauge colorée avec seuils configurables
-- **Niveaux L/R séparés** — décodage stéréo DSB-SC depuis le signal MPX
-- **Ton pilote 19 kHz** — détection et niveau
-- **Signal stéréo 38 kHz** — niveau de la sous-porteuse L−R
-- **Sous-porteuse RDS 57 kHz** — niveau RF indépendant du décodage
-- **Puissance MPX totale** (dBFS)
-- **SNR** — rapport signal/bruit (plancher mesuré en 60–75 kHz)
-- **Alerte sur-déviation** — email automatique si déviation > seuil
-
-### 📻 Décodage RDS
-- **PS** (Programme Service) — nom de la station (8 car.)
-- **RT** (RadioText) — titre/artiste en cours (64 car.) — RT complet uniquement
-- **PI Code** — identifiant unique hexadécimal de la station
-- **Logo station** — récupération automatique via [rds-station-db](https://github.com/LyonelB/rds-station-db) (codes PI RDS) et logos [tef.noobish.eu](https://tef.noobish.eu/logos/logo_preview.html)
-
-### 🔊 Streaming Audio
-- **Serveur Icecast2** : streaming stable 24/7
-- **Qualité broadcast** : MP3 128 kbps
-- **Multi-auditeurs** : jusqu'à 100 connexions simultanées
-- **Proxy Flask HTTPS** : écoute directement depuis le dashboard
-
-### 🔔 Alertes & Surveillance
-- **Alertes email** automatiques (perte signal + rétablissement)
-- **Watchdog** : relance automatique en cas de crash
-- **Historique** des alertes et niveaux audio en base SQLite
+### 🔊 Retour FM
+- **Écoute de l'antenne** dans le navigateur, flux Icecast2 MP3 128 kbps
+- **Mode public** `/public` : tableau de bord sans authentification
 
 ### 🎙️ Pige audio
 - **Enregistrement continu 24 h** de l'antenne en segments MP3 (service `fm-monitor-pige`, indépendant de l'application)
@@ -69,78 +77,38 @@ S'y ajoutent une pige audio 24 h reliée aux alertes, l'écoute de l'antenne dep
 - **Traps SNMP** UDP 162 traduits en français, avec relevé immédiat de l'appareil
 - **Lecture nettoyée** et **messages masqués** (bruit connu), réaffichables d'une case à cocher
 
+### 🔔 Alertes
+- **Mail** à la panne et au rétablissement, pour la réception comme pour la chaîne
+- **Historique** des alertes en base SQLite, chacune reliée à la pige
+- **Push webhook** : données temps réel en JSON vers une URL externe
+
 ### 👥 Comptes et rôles
 - **Lecteur** : consulte et écoute ; **Opérateur** : exporte et enregistre ; **Administrateur** : règle tout
 - Contrôle d'accès vérifié côté serveur sur chaque route
 
-### 🌐 Interface Web
-- Dashboard temps réel (SSE)
-- Configuration complète via interface web
-- Statistiques et historique
-- Page documentation (FM, MPX, RDS, dongles)
-- **Responsive** — accessible depuis smartphone et tablette
-- **Mode public** `/public` — dashboard sans authentification
+### 🌐 Interface web
+- Tableau de bord temps réel, configuration complète depuis le navigateur
+- **Responsive** : smartphone et tablette
 - **Accès local** via `https://bl-fmo.local` (Nginx + mDNS)
 
-### 📡 Push Webhook
-- Envoi temps réel des données vers une URL externe (PHP, Node, etc.)
-- Payload JSON : signal, RDS, alertes, horodatage
-- Configurable depuis l'interface web
-
 ---
 
-## 🐳 Installation Docker *(beta — non testé)*
+## 🔧 Matériel
 
-> ⚠️ Le support Docker est en version **beta** et n'a pas encore été testé en production. Retours bienvenus via les [issues GitHub](https://github.com/LyonelB/fm-monitor/issues).
+| Élément | Référence | Notes |
+|---|---|---|
+| Ordinateur | Mini-PC Linux | Référence : Debian 13 (Trixie) sur mini-PC x86 |
+| Tuner | [Headless TEF Lite SE](https://github.com/FMDX-org/Headless-TEF-lite-SE) (FMDX.org) | TEF668X V205 (TEF6687 recommandé), entrées AM et FM séparées, audio numérique par USB, firmware [FM-DX-Tuner](https://github.com/kkonradpl/FM-DX-Tuner) |
+| Antenne | Antenne FM extérieure | Bien dégagée : BL-FMO écoute comme un auditeur |
+| Câble | USB de **données** | Un câble « charge seule » ne laisse pas passer le port série |
 
-```bash
-git clone https://github.com/LyonelB/fm-monitor.git
-cd fm-monitor
-docker compose up -d
-```
-
-Accès : `https://localhost:5000`
-
-> Le dongle RTL-SDR doit être branché avant le démarrage du conteneur.
-
----
-
-## 🔧 Matériel compatible
-
-| Dongle | Puce | Notes |
-|--------|------|-------|
-| RTL-SDR Blog V3 | RTL2832U + R820T2 | Drivers standard |
-| **RTL-SDR Blog V4** | RTL2832U + R828D | **Recommandé** — TCXO 1ppm, meilleure sensibilité. Nécessite le [fork officiel](https://github.com/rtlsdrblog/rtl-sdr-blog) |
-| Nooelec NESDR SMArt | RTL2832U + R820T2 | Compatible standard |
-| Autres RTL2832U | RTL2832U | Généralement compatibles |
-
-### Installation drivers RTL-SDR Blog V4
-
-```bash
-# Bloquer le driver noyau générique
-echo 'blacklist dvb_usb_rtl28xxu' | sudo tee /etc/modprobe.d/blacklist-rtl.conf
-sudo modprobe -r dvb_usb_rtl28xxu 2>/dev/null
-
-# Compiler le fork officiel
-sudo apt install -y git cmake libusb-1.0-0-dev build-essential pkg-config
-git clone https://github.com/rtlsdrblog/rtl-sdr-blog
-cd rtl-sdr-blog && mkdir build && cd build
-cmake .. -DINSTALL_UDEV_RULES=ON
-make -j$(nproc) && sudo make install && sudo ldconfig
-
-# Règles udev
-sudo cp ~/rtl-sdr-blog/rtl-sdr.rules /etc/udev/rules.d/
-sudo udevadm control --reload-rules && sudo udevadm trigger
-
-# Test
-rtl_test -t
-```
+Le tuner apparaît sous Linux comme un port série (`/dev/ttyACM0`, protocole XDR) et une carte son (`hw:Tuner`). Il est reconnu par son identifiant USB `1209:6687`.
 
 ---
 
 ## 🚀 Installation
 
-### ⚡ Installation automatique (recommandée)
+### ⚡ Installation automatique
 
 > ⚠️ **Bonne pratique** : avant d'exécuter un script distant, inspectez-le :
 > ```bash
@@ -149,20 +117,34 @@ rtl_test -t
 > bash install.sh
 > ```
 
-Ou directement si vous faites confiance à la source :
+Le script installe les dépendances, configure Icecast2, Nginx et les certificats, puis les services de BL-FMO (application, pige, journaux).
+
+### 📡 Mise en service du tuner
+
 ```bash
-curl -sSL https://raw.githubusercontent.com/LyonelB/fm-monitor/main/install.sh | bash
+# Brancher le tuner (câble USB de données), puis vérifier :
+ls /dev/ttyACM0
+aplay -l | grep Tuner
+
+# Accès au port série pour l'utilisateur du service
+sudo usermod -a -G dialout $USER
 ```
 
-Le script installe automatiquement toutes les dépendances, compile redsea, configure Icecast2, génère les certificats SSL et démarre le service.
+Puis, dans l'interface : **Configuration**, bouton **« Scan dongle »**, source **TEF668X**. La section correspondante de `config.json` :
 
-**Durée : ~10-15 minutes** (compilation de redsea incluse)
+```json
+"tef": {
+    "enabled": true,
+    "serial_port": "/dev/ttyACM0",
+    "alsa_device": "hw:Tuner",
+    "signal_threshold_dbf": 20.0,
+    "modulation_threshold_dbfs": -40.0
+}
+```
 
----
+### 🎙️ Services
 
-### 🎙️ Pige et journaux (services complémentaires)
-
-`install.sh` les installe automatiquement. Sur une installation existante :
+`install.sh` les installe tous. Sur une installation existante, la pige et les journaux s'ajoutent ainsi :
 
 ```bash
 cd ~/fm-monitor
@@ -175,110 +157,20 @@ sudo bash install/build/66-syslog.sh   # journaux UDP 514 et traps UDP 162 (fm-m
 | `fm-monitor` | Application web, réception FM, supervision de la chaîne | 5000 (derrière Nginx 80/443) |
 | `fm-monitor-pige` | Enregistrement de la pige | lit Icecast 8000 |
 | `fm-monitor-syslog` | Réception des journaux et des traps | UDP 514, UDP 162 |
-| `icecast2` | Flux audio de l'antenne | 8000 |
+| `icecast2` | Flux audio de l'antenne (retour FM et pige) | 8000 |
 
-### 🔧 Installation manuelle
+La supervision SNMP de la chaîne utilise `snmpget` : `sudo apt install snmp` s'il n'est pas déjà présent.
 
-### Prérequis système
-
-- Raspberry Pi 4/5 ou mini-PC Linux (**Raspberry Pi OS Lite 64-bit** / Debian 13 Trixie / Ubuntu 24.04+)
-- Python 3.11+
-- `rtl_fm`, `redsea`, `ffmpeg`, `icecast2`
-
-### 1. Cloner le dépôt
+### 🔄 Mise à jour
 
 ```bash
-git clone https://github.com/LyonelB/fm-monitor.git
-cd fm-monitor
+cd ~/fm-monitor
+bash update.sh
 ```
 
-### 2. Installer les dépendances
+### ✉️ Alertes mail
 
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 3. Configurer
-
-Copier et éditer le fichier de configuration :
-
-```bash
-cp config.json.example config.json
-nano config.json
-```
-
-Paramètres clés :
-
-```json
-{
-  "station": {
-    "name": "Ma Radio FM",
-    "frequency": "98.5M"
-  },
-  "rtl_sdr": {
-    "frequency": "98.5M",
-    "gain": "40"
-  },
-  "email": {
-    "enabled": true,
-    "sender_email": "votre@gmail.com",
-    "sender_password": "mot_de_passe_application",
-    "recipient_emails": ["alerte@exemple.com"]
-  }
-}
-```
-
-> **Gmail** : utilisez un [mot de passe d'application](https://myaccount.google.com/apppasswords), pas votre mot de passe habituel.
-
-### 4. Générer les certificats SSL
-
-```bash
-bash generate_ssl.sh
-```
-
-### 5. Configurer Icecast2
-
-```bash
-sudo apt install -y icecast2
-```
-
-Éditer `/etc/icecast2/icecast.xml` et définir le mot de passe source : `fmmonitor2026`
-
-### 6. Créer le service systemd
-
-```bash
-sudo nano /etc/systemd/system/fm-monitor.service
-```
-
-```ini
-[Unit]
-Description=FM Monitor
-After=network.target icecast2.service
-
-[Service]
-Type=simple
-User=votre_user
-WorkingDirectory=/home/votre_user/fm-monitor
-ExecStart=/home/votre_user/fm-monitor/venv/bin/python3 app.py
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-sudo systemctl enable fm-monitor
-sudo systemctl start fm-monitor
-```
-
-### 7. Accéder au dashboard
-
-```
-https://[IP-de-votre-appareil]:5000
-```
+Dans **Configuration**, renseigner l'expéditeur et les destinataires. Avec Gmail, utiliser un [mot de passe d'application](https://myaccount.google.com/apppasswords), puis le bouton **Test Email**.
 
 ---
 
@@ -288,10 +180,9 @@ https://[IP-de-votre-appareil]:5000
 fm-monitor/
 ├── app.py              # Application Flask (routes, API, contrôle d'accès)
 ├── version.py          # Numéro de version
-├── monitor.py          # Moteur de réception (RTL-SDR / TEF668X, RDS, alertes)
-├── tef_driver.py       # Pilote du tuner TEF668X Headless
-├── mpx_analyzer.py     # Analyse MPX temps réel (déviation, L/R, SNR...)
-├── tef_audio_analyzer.py # Analyse audio TEF (spectre, S/B)
+├── monitor.py          # Moteur de réception (tuner, RDS, alertes)
+├── tef_driver.py       # Pilote du tuner TEF668X (protocole XDR)
+├── tef_audio_analyzer.py # Analyse audio (niveaux, spectre, S/B)
 ├── chain_probe.py      # Supervision de la chaîne (SNMP, sondes, événements)
 ├── pige.py             # Pige 24 h (enregistreur et export)
 ├── pige_archive.py     # Extraits audio des dernières alertes
@@ -299,132 +190,141 @@ fm-monitor/
 ├── snmp_traps.py       # Décodage et traduction des traps SNMP
 ├── syslog_clean.py     # Lecture nettoyée et messages masqués
 ├── auth.py             # Comptes, rôles, authentification
-├── email_alert.py      # Alertes email
+├── email_alert.py      # Alertes mail
 ├── database.py         # Base SQLite (historique, alertes)
 ├── install.sh          # Installation complète
-├── install/build/      # Étapes d'installation (pige, syslog, Raspberry Pi...)
+├── install/build/      # Étapes d'installation (pige, journaux...)
 ├── update.sh           # Mise à jour
-├── templates/          # Pages : dashboard, pige, chaîne, journaux, statistiques...
-└── static/             # Assets CSS/JS
+├── templates/          # Pages : tableau de bord, pige, chaîne, journaux...
+└── static/             # CSS et JS
 ```
+
+En fin de vie (voir [Direction du projet](#-direction-du-projet)) : `mpx_analyzer.py`, `wfm_stereo.py`, la partie RTL-SDR de `monitor.py`, `Dockerfile`, `docker-compose.yml`, `docker/`.
 
 ---
 
 ## 📖 Documentation
 
-La page **À propos** intégrée dans l'interface explique :
-- Le fonctionnement de la diffusion FM et du signal MPX
-- Le spectre MPX : déviation, pilote 19 kHz, stéréo 38 kHz, RDS 57 kHz, puissance, SNR
-- Le système RDS (PS, RT, PI Code)
-- Radio Browser et la résolution de logo
-- Les dongles compatibles et leur installation
-- Les services de BL-FMO et leurs ports
+La page **À propos** intégrée à l'interface explique le fonctionnement de BL-FMO, le tuner Headless TEF Lite SE, la diffusion FM et le RDS, ainsi que les services et leurs ports.
 
 ---
 
 ## 🛠️ Dépannage
 
-### Le dongle n'est pas détecté
+### Le tuner n'est pas détecté
 
 ```bash
-lsusb | grep -i realtek
-rtl_test -t
+lsusb | grep 1209:6687        # le tuner est-il vu en USB ?
+ls -l /dev/ttyACM0            # port série présent ?
+groups | grep dialout         # l'utilisateur a-t-il accès au port série ?
+aplay -l | grep Tuner         # carte son présente ?
 ```
 
-Si `usb_claim_interface error -6` : le driver noyau a pris le contrôle. Appliquer le blacklist (voir section V4 ci-dessus).
+Rien dans `lsusb` : changer de câble (câble de données) ou de port USB.
 
-### Pas de signal audio
+### Pas de son dans le retour FM ou la pige
 
-Vérifier la fréquence et le gain dans `config.json`. Tester manuellement :
+La carte son du tuner ne peut être ouverte que par un seul programme. Vérifier qu'aucun autre logiciel n'utilise `hw:Tuner`, puis : `sudo systemctl restart fm-monitor`.
+
+### Les mails ne partent pas
+
+1. Vérifier la configuration dans la page Configuration
+2. Utiliser le bouton **Test Email**
+3. Consulter les logs : `sudo journalctl -u fm-monitor -n 50`
+
+### Les journaux des appareils n'arrivent pas
 
 ```bash
-rtl_fm -f 98.5M -M wbfm -s 171k -r 44100 - | aplay -r 44100 -f S16_LE
+sudo systemctl status fm-monitor-syslog
+sudo journalctl -u fm-monitor-syslog -n 20
 ```
 
-### Les emails ne partent pas
-
-1. Vérifier la config SMTP dans l'interface Configuration
-2. Utiliser le bouton **Test Email** dans le dashboard
-3. Consulter les logs : `journalctl -u fm-monitor -f`
-
-### Le RDS n'apparaît pas
-
-Le RT complet prend ~20-60 secondes à se stabiliser. Vérifier que `redsea` est installé :
-
-```bash
-which redsea
-tail -f /tmp/rds_output.json
-```
+Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-FMO (pas `bl-fmo.local`), port 514, en UDP.
 
 ---
 
 ## 🗺️ Roadmap
 
-- [x] v0.3 à v0.4 : Icecast2, SSL, installation automatique, alertes modulation et RDS, enregistrement
-- [x] v0.5.0 : Analyse MPX temps réel (déviation, L/R, pilote, stéréo, RDS RF, SNR)
-- [x] v0.6.0 : Décodeur GNU Radio WFM stéréo
-- [x] v0.7.0 : Accès local bl-fmo.local, mode public, webhook, interface mobile
-- [x] v0.8.0 : Tuner TEF668X, pige 24 h, chaîne de diffusion, journaux et traps, comptes et rôles
-- [ ] Page Incidents : regroupement des alertes de réception et de diffusion, cause probable, frise
+- [x] v0.3 à v0.7 : Icecast2, SSL, installation automatique, alertes, accès local, mode public, webhook, interface mobile
+- [x] v0.8.0 : tuner TEF668X, pige 24 h, chaîne de diffusion, journaux et traps, comptes et rôles
 - [ ] Courbes du relevé de l'émetteur et alerte sur l'écart entre alimentations
-- [ ] Sonde AES67 (sortie console Dante)
+- [ ] Journaux par domaine (réception, diffusion, système) et page Bilan
+- [ ] Page Incidents : regroupement des alertes de réception et de diffusion, cause probable, frise
+- [ ] Retrait du mode RTL-SDR, de l'analyse MPX et de Docker
 - [ ] Version anglaise de l'interface
+- [ ] Pistes : sonde AES67 (sortie console Dante), second tuner RTL-SDR pour surveiller le DAB+
 
 ---
 
 ## 📄 Licence
 
-MIT — libre d'utilisation, modification et distribution.
+MIT : libre d'utilisation, de modification et de distribution.
 
 ---
 
 ## 🙏 Crédits
 
-- [RTL-SDR Blog](https://www.rtl-sdr.com) — drivers et matériel
-- [redsea](https://github.com/windytan/redsea) — décodeur RDS
-- [Radio Browser](https://www.radio-browser.info) — base de données stations
-- [Icecast2](https://icecast.org) — serveur de streaming
 - [Headless TEF Lite SE](https://github.com/FMDX-org/Headless-TEF-lite-SE) (FMDX.org) : tuner USB TEF668X, firmware [FM-DX-Tuner](https://github.com/kkonradpl/FM-DX-Tuner)
+- [Icecast2](https://icecast.org) : serveur de streaming
 - [Net-SNMP](http://www.net-snmp.org) : outils SNMP
+- [Radio Browser](https://www.radio-browser.info) : base de données de stations
+- [redsea](https://github.com/windytan/redsea) et [RTL-SDR Blog](https://www.rtl-sdr.com) : décodage RDS et pilotes du mode RTL-SDR (fin de vie)
 
-## Changement de source : RTL-SDR ↔ TEF668X Headless
+---
 
-FM Monitor supporte deux sources matérielles, configurables dans `config.json` sans modifier le code.
+## Annexe : mode RTL-SDR et analyse MPX (fin de vie)
 
-### Passer en mode TEF668X Headless
+<details>
+<summary>Instructions conservées pour les installations existantes</summary>
 
-1. Brancher le TEF668X Headless en USB-C (câble **données**, pas charge seule)
-2. Vérifier la détection : `ls /dev/ttyACM0` et `aplay -l | grep Tuner`
-3. Ajouter la section `tef` dans `config.json` :
+Ces fonctions ne sont plus développées et seront retirées dans une prochaine version.
 
-```json
-"tef": {
-    "enabled": true,
-    "serial_port": "/dev/ttyACM0",
-    "alsa_device": "hw:Tuner",
-    "signal_threshold_dbf": 20.0,
-    "modulation_threshold_dbfs": -40.0
-}
+### Dongles RTL-SDR
+
+| Dongle | Puce | Notes |
+|--------|------|-------|
+| RTL-SDR Blog V3 | RTL2832U + R820T2 | Pilotes standard |
+| RTL-SDR Blog V4 | RTL2832U + R828D | Nécessite le [fork officiel](https://github.com/rtlsdrblog/rtl-sdr-blog) |
+| Nooelec NESDR SMArt | RTL2832U + R820T2 | Pilotes standard |
+
+### Pilotes RTL-SDR Blog V4
+
+```bash
+echo 'blacklist dvb_usb_rtl28xxu' | sudo tee /etc/modprobe.d/blacklist-rtl.conf
+sudo modprobe -r dvb_usb_rtl28xxu 2>/dev/null
+sudo apt install -y git cmake libusb-1.0-0-dev build-essential pkg-config
+git clone https://github.com/rtlsdrblog/rtl-sdr-blog
+cd rtl-sdr-blog && mkdir build && cd build
+cmake .. -DINSTALL_UDEV_RULES=ON
+make -j$(nproc) && sudo make install && sudo ldconfig
+sudo cp ~/rtl-sdr-blog/rtl-sdr.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules && sudo udevadm trigger
+rtl_test -t
 ```
-
-4. Installer la dépendance : `pip install pyserial --break-system-packages`
-5. Ajouter l'utilisateur au groupe dialout : `sudo usermod -a -G dialout $USER`
-6. Redémarrer : `sudo systemctl restart fm-monitor`
 
 ### Revenir en mode RTL-SDR
 
-Mettre `"enabled": false` dans la section `tef` de `config.json` et redémarrer.
+Mettre `"enabled": false` dans la section `tef` de `config.json`, puis `sudo systemctl restart fm-monitor`.
+
+### Analyse MPX (mode RTL-SDR uniquement)
+
+Déviation crête et RMS, niveaux G/D, pilote 19 kHz, sous-porteuse stéréo 38 kHz, sous-porteuse RDS 57 kHz, puissance MPX, SNR, alerte de sur-déviation.
 
 ### Différences entre les deux modes
 
-| Fonctionnalité | RTL-SDR | TEF668X Headless |
+| Fonctionnalité | RTL-SDR | Headless TEF Lite SE |
 |---|---|---|
-| Signal | dBFS (RMS PCM) | dBf (RF natif) |
-| Déviation FM | ✅ (MPXAnalyzer) | ❌ |
-| Pilote 19 kHz | ✅ | ❌ |
-| Stéréo 38 kHz | ✅ | ❌ |
-| RDS 57 kHz | ✅ | ❌ |
-| Stéréo/Mono | Via MPX | Via bit MS RDS |
-| Niveaux L/R | ✅ | ✅ |
-| SNR audio | ✅ | ✅ |
-| Qualité réception | Bonne | Excellente |
+| Niveau du signal | dBFS, calculé sur l'audio | dBf, mesure RF native |
+| RDS | redsea sur le MPX | Décodé par le tuner |
+| Analyse MPX | Oui | Non |
+| Stéréo / mono | Par le pilote | Par le bit MS du RDS |
+| Niveaux G/D, S/B audio | Oui | Oui |
+| Qualité de réception | Correcte | Excellente |
+
+### Docker (jamais validé)
+
+```bash
+docker compose up -d
+```
+
+</details>
