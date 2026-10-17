@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# BL-FMO build — Étape 40 : accès aux dongles (RTL-SDR + TEF)
+# BL-RMO build — Étape 40 : accès aux dongles (RTL-SDR + TEF)
 #
 # Sur Pi OS Trixie (validé sur matériel réel) :
 #   - le paquet rtl-sdr 2.0.2 reconnaît nativement le RTL-SDR Blog V4
@@ -30,7 +30,7 @@ BLFMO_USER="${BLFMO_USER:-${SUDO_USER:-$(id -un 1000 2>/dev/null || echo pi)}}"
 DVB_BLACKLIST="/etc/modprobe.d/blacklist-rtl-dvb.conf"
 log "Blacklist du driver noyau DVB (dvb_usb_rtl28xxu)…"
 cat > "$DVB_BLACKLIST" <<'EOF'
-# BL-FMO : empêche le driver TV/DVB de s'accaparer le RTL-SDR.
+# BL-RMO : empêche le driver TV/DVB de s'accaparer le RTL-SDR.
 # Nécessaire pour l'usage SDR en service permanent.
 blacklist dvb_usb_rtl28xxu
 blacklist rtl2832
@@ -50,7 +50,7 @@ fi
 UDEV_RULES="/etc/udev/rules.d/99-blfmo-dongles.rules"
 log "Écriture des règles udev (RTL-SDR + TEF)…"
 cat > "$UDEV_RULES" <<'EOF'
-# BL-FMO : accès aux dongles de monitoring FM, pour tout utilisateur.
+# BL-RMO : accès aux dongles de monitoring FM, pour tout utilisateur.
 
 # — RTL-SDR (Realtek RTL2832U, tous modèles dont Blog V4/V4L) —
 SUBSYSTEM=="usb", ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="2838", MODE="0666", GROUP="plugdev", TAG+="uaccess"

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>FM Monitor · Gérer la chaîne</title>
+  <title>BL-RMO · Gérer la chaîne</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -66,9 +66,9 @@
 <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col flex-shrink-0 h-screen transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 ease-in-out">
   <div class="p-5 border-b border-gray-100">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">FM</div>
+      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">RMO</div>
       <div>
-        <div class="text-sm font-semibold text-gray-900">FM Monitor</div>
+        <div class="text-sm font-semibold text-gray-900">BL-RMO</div>
         <div class="text-xs text-gray-400 font-mono" id="sidebar-frequency">— MHz</div>
       </div>
     </div>
@@ -142,7 +142,7 @@
       <p class="text-xs text-gray-500 mt-1 max-w-md mx-auto">Ajoutez les appareils dans l'ordre du signal : codec studio, faisceau, codec côté émetteur, processeur, émetteur... Chacun est sondé par ping, port TCP, page web, SNMP ou Icecast.</p>
       <div class="mt-4 flex justify-center gap-2 flex-wrap">
         <button onclick="openEditor(null, 'device')" class="text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5">Ajouter un appareil</button>
-        <button onclick="addFmLocal()" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">Ajouter la réception FM de ce BL-FMO</button>
+        <button onclick="addFmLocal()" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">Ajouter la réception FM de ce BL-RMO</button>
       </div>
     </div>
 
@@ -210,7 +210,7 @@
         Événements externes (netwatch MikroTik, scripts...)
       </summary>
       <div class="mt-4 space-y-3 text-xs text-gray-600">
-        <p>Un équipement tiers peut signaler ses propres sondes à BL-FMO par une requête HTTP. L'événement apparaît dans le journal et sur la carte de l'appareil qui a la même adresse IP.</p>
+        <p>Un équipement tiers peut signaler ses propres sondes à BL-RMO par une requête HTTP. L'événement apparaît dans le journal et sur la carte de l'appareil qui a la même adresse IP.</p>
         <div class="grid grid-cols-1 sm:grid-cols-[7rem_1fr_auto] gap-2 items-center">
           <span class="font-medium text-gray-700">URL</span>
           <code id="hook-url" class="!text-xs break-all"></code><span></span>
@@ -363,7 +363,7 @@ const PROBES = {
   http:     { label: 'Page web',    desc: 'Interface web, code, mot-clé' },
   snmp:     { label: 'SNMP',        desc: 'Valeurs internes (OID)' },
   icecast:  { label: 'Icecast',     desc: 'Flux en ligne, auditeurs' },
-  fm_local: { label: 'Réception FM', desc: 'Ce BL-FMO, en bout de chaîne' },
+  fm_local: { label: 'Réception FM', desc: 'Ce BL-RMO, en bout de chaîne' },
 };
 
 const STATES = {
@@ -912,7 +912,7 @@ function renderProbeFields(cfg = {}) {
         <label class="field snmp3-priv"><span>Chiffrement</span><select id="c-priv_proto">
           ${['AES', 'AES256', 'AES192', 'DES'].map(a => `<option ${(cfg.priv_proto || 'AES') === a ? 'selected' : ''}>${a}</option>`).join('')}</select></label>
         <label class="field snmp3-priv sm:col-span-2"><span>Mot de passe de chiffrement</span><input id="c-priv_pass" type="password" autocomplete="new-password" value="${esc(cfg.priv_pass || '')}" placeholder="8 caractères minimum"></label>
-        <p class="hint col-span-2 sm:col-span-3">Mêmes réglages que dans l'interface de l'appareil (utilisateur SNMPv3 en lecture seule). Les mots de passe restent sur BL-FMO et ne sont plus affichés ensuite.</p>
+        <p class="hint col-span-2 sm:col-span-3">Mêmes réglages que dans l'interface de l'appareil (utilisateur SNMPv3 en lecture seule). Les mots de passe restent sur BL-RMO et ne sont plus affichés ensuite.</p>
       </div>
       <div>
         <div class="flex items-center justify-between mb-1.5 gap-2 flex-wrap">
@@ -927,7 +927,7 @@ function renderProbeFields(cfg = {}) {
         </div>
         <div id="snmp-metrics" class="space-y-1.5"></div>
         <p class="hint mt-2">Les modèles sont des points de départ : les OID varient selon le firmware, vérifiez-les avec <b>Tester</b>. Échelle : 0.1 pour une valeur en dixièmes. Une valeur hors min/max passe l'appareil en alerte.</p>
-        ${tools.snmpget === false ? '<p class="hint !text-amber-700">snmpget est absent de ce BL-FMO : <code>sudo apt install snmp</code></p>' : ''}
+        ${tools.snmpget === false ? '<p class="hint !text-amber-700">snmpget est absent de ce BL-RMO : <code>sudo apt install snmp</code></p>' : ''}
       </div>`;
     snmpMetrics = (cfg.metrics && cfg.metrics.length) ? cfg.metrics.map(m => ({ ...m })) : SNMP_PRESETS.system.metrics.map(m => ({ ...m }));
     renderMetrics();
@@ -942,7 +942,7 @@ function renderProbeFields(cfg = {}) {
       <label class="flex items-center gap-2 text-xs text-gray-700"><input id="c-verify_tls" type="checkbox" class="rounded" ${cfg.verify_tls ? 'checked' : ''}> Vérifier le certificat HTTPS</label>
       <p class="hint">Lit <code>status-json.xsl</code>. Le point de montage absent signifie que la source (encodeur, processeur) n'alimente plus le serveur.</p>`;
   } else if (currentProbe === 'fm_local') {
-    f.innerHTML = `<p class="hint">Reprend l'état de réception de ce BL-FMO (signal, modulation, RDS, stéréo). À placer en dernier : c'est ce qui sort réellement de l'antenne.</p>`;
+    f.innerHTML = `<p class="hint">Reprend l'état de réception de ce BL-RMO (signal, modulation, RDS, stéréo). À placer en dernier : c'est ce qui sort réellement de l'antenne.</p>`;
   }
 }
 

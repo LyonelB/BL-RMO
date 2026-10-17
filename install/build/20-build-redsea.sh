@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# BL-FMO build — Étape 20 : compilation de redsea (décodeur RDS)
+# BL-RMO build — Étape 20 : compilation de redsea (décodeur RDS)
 #
 # redsea est compilé depuis la branche main de windytan/redsea. liquid-dsp est
 # fourni par le paquet libliquid-dev (validé présent sur Pi OS Trixie à l'étape 10).

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# BL-FMO build — Étape 50 : déploiement de l'application
+# BL-RMO build — Étape 50 : déploiement de l'application
 #
 # Clone le dépôt dans le HOME de l'utilisateur principal, crée le venv Python
 # et installe les dépendances. Ne génère AUCUN secret ni config (→ firstboot.sh).
@@ -40,7 +40,7 @@ else
         err "$INSTALL_DIR existe mais n'est pas un dépôt git. Déplace-le ou supprime-le."
         exit 1
     fi
-    log "Clonage de BL-FMO…"
+    log "Clonage de BL-RMO…"
     as_user "git clone --quiet '$GITHUB_REPO' '$INSTALL_DIR'"
 fi
 ok "Code déployé dans $INSTALL_DIR"

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# BL-FMO build — Étape 60 : services (systemd + Nginx + firstboot)
+# BL-RMO build — Étape 60 : services (systemd + Nginx + firstboot)
 #
 # Installe la structure des services SANS démarrer l'application (pas encore de
 # config ni de secrets — ceux-ci sont générés au premier boot par firstboot.sh).
@@ -38,7 +38,7 @@ visudo -cf /etc/sudoers.d/fm-monitor-nmcli >/dev/null && ok "sudoers nmcli" || {
 log "Installation du service fm-monitor…"
 tee /etc/systemd/system/fm-monitor.service > /dev/null <<EOF
 [Unit]
-Description=BL-FMO — Surveillance de diffusion FM
+Description=BL-RMO · Surveillance radio
 After=network-online.target icecast2.service
 Wants=network-online.target
 Requires=icecast2.service
@@ -109,7 +109,7 @@ fi
 log "Installation du service firstboot (oneshot)…"
 tee /etc/systemd/system/fm-monitor-firstboot.service > /dev/null <<'EOF'
 [Unit]
-Description=BL-FMO — Provisioning au premier démarrage
+Description=BL-RMO — Provisioning au premier démarrage
 After=network-online.target
 Wants=network-online.target
 ConditionPathExists=!/var/lib/blfmo/.provisioned

@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# BL-FMO build - Étape 66 : réception des journaux des appareils (syslog)
+# BL-RMO build - Étape 66 : réception des journaux des appareils (syslog)
 #
 # Installe le service systemd fm-monitor-syslog : il écoute en UDP 514 et range
 # les journaux envoyés par les switchs, faisceaux, codecs, émetteur... dans
 # syslog.db (page « Journaux »). Indépendant de fm-monitor : la réception
 # continue pendant un redémarrage de l'application.
 #
-# Le port 514 est réservé à root : le service tourne sous l'utilisateur BL-FMO
+# Le port 514 est réservé à root : le service tourne sous l'utilisateur BL-RMO
 # avec la seule capacité CAP_NET_BIND_SERVICE (ouvrir un port < 1024).
 #
 # Idempotent. À lancer avec sudo.
@@ -41,7 +41,7 @@ fi
 log "Service fm-monitor-syslog…"
 tee /etc/systemd/system/fm-monitor-syslog.service > /dev/null <<EOF
 [Unit]
-Description=BL-FMO - Réception des journaux des appareils (syslog)
+Description=BL-RMO - Réception des journaux des appareils (syslog)
 After=network-online.target
 Wants=network-online.target
 

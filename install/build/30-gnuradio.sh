@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# BL-FMO build — Étape 30 : GNU Radio + gr-osmosdr (chemin RTL-SDR)
+# BL-RMO build — Étape 30 : GNU Radio + gr-osmosdr (chemin RTL-SDR)
 #
 # Installe GNU Radio et gr-osmosdr via apt (méthode validée sur le serveur de
 # prod : paquets Debian, aucune compilation source). C'est le socle du décodage

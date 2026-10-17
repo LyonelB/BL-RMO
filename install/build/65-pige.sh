@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# BL-FMO build - Étape 65 : pige audio 24 h
+# BL-RMO build - Étape 65 : pige audio 24 h
 #
 # Installe le service systemd fm-monitor-pige (enregistreur autonome qui lit
 # le flux Icecast local et le découpe en segments MP3 de 5 min).
@@ -27,7 +27,7 @@ ok "$INSTALL_DIR/pige"
 log "Service fm-monitor-pige…"
 tee /etc/systemd/system/fm-monitor-pige.service > /dev/null <<EOF
 [Unit]
-Description=BL-FMO - Pige audio 24 h
+Description=BL-RMO - Pige audio 24 h
 After=network-online.target icecast2.service
 Wants=icecast2.service
 

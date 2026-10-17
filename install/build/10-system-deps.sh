@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# BL-FMO build — Étape 10 : dépendances système (apt)
+# BL-RMO build — Étape 10 : dépendances système (apt)
 #
 # Installe UNIQUEMENT les paquets disponibles via apt. Les compilations
 # (redsea) et les composants spécifiques (GNU Radio, drivers) sont dans les

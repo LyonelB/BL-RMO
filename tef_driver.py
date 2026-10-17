@@ -1,5 +1,5 @@
 """
-tef_driver.py — Driver TEF668X Headless USB Tuner pour FM Monitor
+tef_driver.py — Driver TEF668X Headless USB Tuner pour BL-RMO
 Protocole XDR-GTK via port série USB CDC (/dev/ttyACM0)
 
 Format des lignes reçues :

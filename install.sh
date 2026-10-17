@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# BL-FMO (FM Monitor) - Installation automatique
+# BL-RMO (anciennement BL-RMO / BL-RMO) - Installation automatique
 # Configuration de référence : mini-PC sous Debian 13 + tuner Headless TEF Lite SE
 #
 # Usage: curl -sSL https://raw.githubusercontent.com/LyonelB/fm-monitor/main/install.sh | bash
@@ -17,7 +17,7 @@ NC='\033[0m'
 print_header() {
     echo -e "${BLUE}"
     echo "=========================================="
-    echo "   FM Monitor - Installation"
+    echo "   BL-RMO - Installation"
     echo "=========================================="
     echo -e "${NC}"
 }
@@ -165,7 +165,7 @@ fi
 # =============================================
 # 7. TÉLÉCHARGEMENT DE FM MONITOR
 # =============================================
-print_step "Installation de FM Monitor..."
+print_step "Installation de BL-RMO..."
 
 if [ -d "$INSTALL_DIR" ]; then
     print_warning "Le répertoire $INSTALL_DIR existe déjà"
@@ -330,7 +330,7 @@ if [ ! -f "cert.pem" ] || [ ! -f "key.pem" ]; then
     openssl req -x509 -newkey rsa:4096 -nodes \
         -out cert.pem -keyout key.pem \
         -days 3650 \
-        -subj "/C=FR/ST=France/L=Paris/O=FM Monitor/OU=Radio/CN=fm-monitor.local" \
+        -subj "/C=FR/ST=France/L=Paris/O=BL-RMO/OU=Radio/CN=fm-monitor.local" \
         2>/dev/null
     chmod 644 cert.pem
     chmod 600 key.pem
@@ -521,11 +521,11 @@ echo "  • Statut   : sudo systemctl status fm-monitor"
 echo "  • Logs     : sudo journalctl -u fm-monitor -f"
 echo ""
 
-print_step "Démarrage de FM Monitor..."
+print_step "Démarrage de BL-RMO..."
 sudo systemctl start fm-monitor
 sleep 3
 if sudo systemctl is-active --quiet fm-monitor; then
-    print_step "FM Monitor démarré !"
+    print_step "BL-RMO démarré !"
     print_info "Accédez à https://$MDNS_HOSTNAME.local"
 else
     print_error "Erreur au démarrage"

@@ -1,6 +1,8 @@
-# 📻 BL-FMO (FM Monitor)
+# 📻 BL-RMO
 
-![Version](https://img.shields.io/badge/version-0.8.0-blue.svg)
+**Radio MOnitoring**, anciennement BL-RMO (FM Monitor).
+
+![Version](https://img.shields.io/badge/version-0.9.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/plateforme-mini--PC%20Linux-lightgrey.svg)
@@ -21,12 +23,14 @@ Une alerte mail part à chaque panne et à chaque rétablissement, et chaque ale
 
 ## 🧭 Direction du projet
 
-BL-FMO suit désormais **une seule direction**, et c'est la seule configuration développée et testée :
+**Pourquoi BL-RMO ?** Le logiciel s'appelait BL-FMO, pour « FM MOnitoring ». Il surveille désormais toute la chaîne de diffusion, et le DAB+ est en vue : il devient BL-RMO, pour « Radio MOnitoring ». Le dépôt, les services et l'adresse `bl-fmo.local` seront renommés par étapes ; les installations existantes continuent de fonctionner sans rien changer.
+
+BL-RMO suit désormais **une seule direction**, et c'est la seule configuration développée et testée :
 
 > **un mini-PC Linux + un tuner Headless TEF Lite SE + une antenne FM**
 > pour surveiller la réception FM, la chaîne de diffusion, offrir un retour FM et une pige.
 
-Le Headless TEF Lite SE donne une réception de qualité professionnelle : le tuner démodule lui-même le signal et décode le RDS, et BL-FMO reçoit des mesures RF natives (dBf, rapport signal/bruit, trajets multiples).
+Le Headless TEF Lite SE donne une réception de qualité professionnelle : le tuner démodule lui-même le signal et décode le RDS, et BL-RMO reçoit des mesures RF natives (dBf, rapport signal/bruit, trajets multiples).
 
 ### Fonctions en fin de vie
 
@@ -73,7 +77,7 @@ Le dongle RTL-SDR pourrait revenir dans un autre rôle : **second tuner pour sur
 - **Historique en courbes**, alertes mail avec les valeurs en défaut, export ZIP
 
 ### 📜 Journaux et traps
-- **Serveur syslog** UDP 514 (service `fm-monitor-syslog`) : les appareils de la radio envoient leurs journaux à BL-FMO
+- **Serveur syslog** UDP 514 (service `fm-monitor-syslog`) : les appareils de la radio envoient leurs journaux à BL-RMO
 - **Traps SNMP** UDP 162 traduits en français, avec relevé immédiat de l'appareil
 - **Lecture nettoyée** et **messages masqués** (bruit connu), réaffichables d'une case à cocher
 
@@ -99,7 +103,7 @@ Le dongle RTL-SDR pourrait revenir dans un autre rôle : **second tuner pour sur
 |---|---|---|
 | Ordinateur | Mini-PC Linux | Référence : Debian 13 (Trixie) sur mini-PC x86 |
 | Tuner | [Headless TEF Lite SE](https://github.com/FMDX-org/Headless-TEF-lite-SE) (FMDX.org) | TEF668X V205 (TEF6687 recommandé), entrées AM et FM séparées, audio numérique par USB, firmware [FM-DX-Tuner](https://github.com/kkonradpl/FM-DX-Tuner) |
-| Antenne | Antenne FM extérieure | Bien dégagée : BL-FMO écoute comme un auditeur |
+| Antenne | Antenne FM extérieure | Bien dégagée : BL-RMO écoute comme un auditeur |
 | Câble | USB de **données** | Un câble « charge seule » ne laisse pas passer le port série |
 
 Le tuner apparaît sous Linux comme un port série (`/dev/ttyACM0`, protocole XDR) et une carte son (`hw:Tuner`). Il est reconnu par son identifiant USB `1209:6687`.
@@ -117,7 +121,7 @@ Le tuner apparaît sous Linux comme un port série (`/dev/ttyACM0`, protocole XD
 > bash install.sh
 > ```
 
-Le script installe les dépendances, configure Icecast2, Nginx et les certificats, puis les services de BL-FMO (application, pige, journaux).
+Le script installe les dépendances, configure Icecast2, Nginx et les certificats, puis les services de BL-RMO (application, pige, journaux).
 
 ### 📡 Mise en service du tuner
 
@@ -205,7 +209,7 @@ En fin de vie (voir [Direction du projet](#-direction-du-projet)) : `mpx_analyze
 
 ## 📖 Documentation
 
-La page **À propos** intégrée à l'interface explique le fonctionnement de BL-FMO, le tuner Headless TEF Lite SE, la diffusion FM et le RDS, ainsi que les services et leurs ports.
+La page **À propos** intégrée à l'interface explique le fonctionnement de BL-RMO, le tuner Headless TEF Lite SE, la diffusion FM et le RDS, ainsi que les services et leurs ports.
 
 ---
 
@@ -239,7 +243,7 @@ sudo systemctl status fm-monitor-syslog
 sudo journalctl -u fm-monitor-syslog -n 20
 ```
 
-Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-FMO (pas `bl-fmo.local`), port 514, en UDP.
+Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-RMO (pas `bl-fmo.local`), port 514, en UDP.
 
 ---
 

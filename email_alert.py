@@ -104,7 +104,7 @@ Détails:
 {details}
 
 ---
-BL-FMO Système de surveillance FM
+BL-RMO · Surveillance radio
             """
 
             html_content = f"""
@@ -134,7 +134,7 @@ BL-FMO Système de surveillance FM
                     <div class="info"><span class="label">Date et heure:</span> {timestamp}</div>
                     <hr>
                     <div class="info"><span class="label">Détails:</span><br>{details}</div>
-                    <div class="footer">BL-FMO Système de surveillance FM</div>
+                    <div class="footer">BL-RMO · Surveillance radio</div>
                 </div>
             </body>
             </html>
@@ -189,7 +189,7 @@ Date et heure: {timestamp}
 Le signal FM a été rétabli avec succès.
 
 ---
-BL-FMO Système de surveillance FM
+BL-RMO · Surveillance radio
             """
 
             html_content = f"""
@@ -218,7 +218,7 @@ BL-FMO Système de surveillance FM
                     <div class="info"><span class="label">Date et heure:</span> {timestamp}</div>
                     <hr>
                     <p>Le signal FM a été rétabli avec succès.</p>
-                    <div class="footer">BL-FMO Système de surveillance FM</div>
+                    <div class="footer">BL-RMO · Surveillance radio</div>
                 </div>
             </body>
             </html>

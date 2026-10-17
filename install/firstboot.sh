@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# BL-FMO — Provisioning au PREMIER BOOT (exécuté une seule fois)
+# BL-RMO — Provisioning au PREMIER BOOT (exécuté une seule fois)
 #
 # Génère tout ce qui est PROPRE À CET APPAREIL, puis démarre l'application :
 #   - hostname unique  bl-fmo-XXXX  (XXXX dérivé du n° de série du Pi)
@@ -61,7 +61,7 @@ openssl req -x509 -newkey rsa:4096 -nodes \
     -out /etc/nginx/ssl/fm-monitor.crt \
     -keyout /etc/nginx/ssl/fm-monitor.key \
     -days 3650 \
-    -subj "/C=FR/O=BL-FMO/CN=$HOSTNAME_NEW.local" \
+    -subj "/C=FR/O=BL-RMO/CN=$HOSTNAME_NEW.local" \
     2>/dev/null
 chmod 644 /etc/nginx/ssl/fm-monitor.crt
 chmod 600 /etc/nginx/ssl/fm-monitor.key

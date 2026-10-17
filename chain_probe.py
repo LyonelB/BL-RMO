@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Supervision de la chaîne de diffusion (BL-FMO)
+Supervision de la chaîne de diffusion (BL-RMO)
 
 Sonde périodiquement chaque appareil de la chaîne (codecs, faisceau,
 processeur, émetteur, switchs, serveur de streaming...) et garde un état
@@ -12,7 +12,7 @@ Types de sondes :
   http      requête GET, code attendu, mot-clé optionnel, auth Basic optionnelle
   snmp      lecture d'OIDs via `snmpget` (paquet Debian `snmp`), seuils min/max
   icecast   lecture de status-json.xsl, présence d'un point de montage, auditeurs
-  fm_local  état de la réception FM de ce BL-FMO (signal, modulation, RDS)
+  fm_local  état de la réception FM de ce BL-RMO (signal, modulation, RDS)
 
 Les appareils sont stockés dans la base SQLite de l'application
 (tables chain_devices et chain_events). Aucune dépendance Python nouvelle :
@@ -392,7 +392,7 @@ def probe_http(cfg, timeout):
     t0 = time.perf_counter()
     try:
         r = requests.get(cfg['url'], timeout=timeout, auth=auth, verify=cfg.get('verify_tls', False),
-                         allow_redirects=True, headers={'User-Agent': 'BL-FMO chain probe'})
+                         allow_redirects=True, headers={'User-Agent': 'BL-RMO chain probe'})
     except requests.exceptions.SSLError:
         return _result(False, 'Erreur certificat TLS (décocher la vérification ?)')
     except requests.exceptions.Timeout:
@@ -1171,7 +1171,7 @@ class ChainMonitor:
                         msg, probe = info.get('text', ''), info.get('probe', '')
                     except (TypeError, ValueError):
                         pass
-                ev.append([r['timestamp'], r['device_name'], r['source'] or 'BL-FMO', probe,
+                ev.append([r['timestamp'], r['device_name'], r['source'] or 'BL-RMO', probe,
                            r['from_state'], r['to_state'], msg])
             files['evenements.csv'] = to_csv(['horodatage', 'appareil', 'source', 'sonde_externe',
                                               'etat_avant', 'etat_apres', 'detail'], ev)
@@ -1197,7 +1197,7 @@ class ChainMonitor:
             files['mesures.csv'] = to_csv(['horodatage', 'nom', 'categorie', 'type_sonde', 'etat',
                                            'latence_ms', 'message', 'valeurs'], sm)
 
-            # 3. alertes FM et niveaux audio de BL-FMO (tables existantes, si présentes)
+            # 3. alertes FM et niveaux audio de BL-RMO (tables existantes, si présentes)
             try:
                 rows = c.execute("SELECT timestamp, alert_type, level_db, duration_seconds, message FROM alerts "
                                  "WHERE timestamp >= ? AND timestamp < ? ORDER BY timestamp",
@@ -1250,7 +1250,7 @@ class ChainMonitor:
         files['appareils.json'] = json.dumps(conf, ensure_ascii=False, indent=2).encode('utf-8')
 
         files['LISEZMOI.txt'] = (
-            f"Export BL-FMO, chaîne de diffusion\n"
+            f"Export BL-RMO, chaîne de diffusion\n"
             f"Période : {start:%d/%m/%Y %H:%M:%S} au {end:%d/%m/%Y %H:%M:%S} (heure locale)\n"
             f"Généré le {datetime.now():%d/%m/%Y %H:%M:%S}\n\n"
             "evenements.csv  changements d'état (appareils, sondes, événements externes)\n"

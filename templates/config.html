@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>FM Monitor — Configuration</title>
+  <title>BL-RMO · Configuration</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -44,9 +44,9 @@
 
   <div class="p-5 border-b border-gray-100">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">FM</div>
+      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">RMO</div>
       <div>
-        <div class="text-sm font-semibold text-gray-900">FM Monitor</div>
+        <div class="text-sm font-semibold text-gray-900">BL-RMO</div>
         <div class="text-xs text-gray-400 font-mono" id="sidebar-frequency">— MHz</div>
       </div>
     </div>
@@ -999,7 +999,7 @@
         showToast('Source ' + label + ' activée — redémarrage en cours…', 'success');
         document.getElementById('scan-found').innerHTML += `
           <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
-            ✓ Source ${label} activée. FM Monitor redémarre…
+            ✓ Source ${label} activée. BL-RMO redémarre…
           </div>`;
       } else {
         showToast('Erreur : ' + data.message, 'error');

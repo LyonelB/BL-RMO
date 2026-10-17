@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>FM Monitor · Chaîne de diffusion</title>
+  <title>BL-RMO · Chaîne de diffusion</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -38,9 +38,9 @@
 <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col flex-shrink-0 h-screen transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 ease-in-out">
   <div class="p-5 border-b border-gray-100">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">FM</div>
+      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">RMO</div>
       <div>
-        <div class="text-sm font-semibold text-gray-900">FM Monitor</div>
+        <div class="text-sm font-semibold text-gray-900">BL-RMO</div>
         <div class="text-xs text-gray-400 font-mono" id="sidebar-frequency">— MHz</div>
       </div>
     </div>
@@ -221,7 +221,7 @@ function linkProbe(a, b) {
   return list.reduce((w, p) => (SEVERITY[p.state] || 0) > (SEVERITY[w.state] || 0) ? p : w, list[0]);
 }
 const linkChoice = {};   // lien → sonde affichée dans le panneau
-// Lien vers la réception FM : c'est BL-FMO lui-même qui le mesure (champ, modulation, RDS)
+// Lien vers la réception FM : c'est BL-RMO lui-même qui le mesure (champ, modulation, RDS)
 const airLink = b => b && b.probe === 'fm_local';
 function airFigures(b) {
   const champ = metric(b, 'Champ'), rds = metric(b, 'RDS'), mod = metric(b, 'Modulation');
@@ -288,7 +288,7 @@ function bandHtml(a, b) {
     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="${p ? (LINE[p.state] || '#94a3b8') : '#94a3b8'}" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16m0 0l-5-5m5 5l5-5"/></svg>
     <span class="min-w-0">
       <span class="block text-[13px] font-semibold text-gray-900">${esc(title)}</span>
-      <span class="block text-[11px] text-gray-500">${esc(a.name)} vers ${esc(b.name)}${air ? ' · mesuré par la réception FM de BL-FMO' : p ? ' · sonde ' + esc(p.name) : ' · sans sonde'}</span>
+      <span class="block text-[11px] text-gray-500">${esc(a.name)} vers ${esc(b.name)}${air ? ' · mesuré par la réception FM de BL-RMO' : p ? ' · sonde ' + esc(p.name) : ' · sans sonde'}</span>
     </span>
     ${p ? `<span class="ml-auto flex flex-wrap items-center gap-2 text-[11px] font-mono">
       <span class="rounded-md px-2 py-0.5" style="background:${s.bg};color:${s.fg}">${esc(s.label)} depuis <span data-since="${esc(p.last_change || '')}">${dur(p.last_change)}</span></span>
@@ -369,7 +369,7 @@ function resolveSel() {
   return null;
 }
 function tabsFor(r) {
-  // La réception FM est BL-FMO lui-même : pas de journaux syslog à recevoir
+  // La réception FM est BL-RMO lui-même : pas de journaux syslog à recevoir
   if (r.kind === 'device' && r.ent.probe === 'fm_local') return [['etat', 'État'], ['historique', 'Historique'], ['reglages', 'Réglages']];
   if (r.kind === 'device') return [['etat', 'État'], ['journaux', 'Journaux'], ['historique', 'Historique'], ['reglages', 'Réglages']];
   if (!r.ent) return [['etat', 'État'], ['reglages', 'Réglages']];
@@ -582,7 +582,7 @@ async function loadLogs(e) {
   }
   if (!d.rows.length) {
     body.innerHTML = `<div class="text-center py-8 text-xs text-gray-500"><div class="font-semibold text-gray-700">Aucun journal reçu</div>
-      <div class="mt-1">Cet appareil n'envoie pas encore ses journaux à BL-FMO. Réglez son syslog vers ${esc(d.server_ip || location.hostname)}, port 514, en UDP.</div></div>`;
+      <div class="mt-1">Cet appareil n'envoie pas encore ses journaux à BL-RMO. Réglez son syslog vers ${esc(d.server_ip || location.hostname)}, port 514, en UDP.</div></div>`;
     return;
   }
   body.innerHTML = d.rows.map(l => {

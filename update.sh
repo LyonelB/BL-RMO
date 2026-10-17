@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# FM Monitor - Script de mise à jour
+# BL-RMO - Script de mise à jour
 #
 
 set -e
@@ -25,21 +25,21 @@ print_warning() {
 
 echo -e "${BLUE}"
 echo "=========================================="
-echo "   FM Monitor - Mise à jour"
+echo "   BL-RMO - Mise à jour"
 echo "=========================================="
 echo -e "${NC}"
 
 INSTALL_DIR="$HOME/fm-monitor"
 
-# Vérifier que FM Monitor est installé
+# Vérifier que BL-RMO est installé
 if [ ! -d "$INSTALL_DIR" ]; then
-    echo "FM Monitor n'est pas installé dans $INSTALL_DIR"
+    echo "BL-RMO n'est pas installé dans $INSTALL_DIR"
     exit 1
 fi
 
 cd "$INSTALL_DIR"
 
-# Services BL-FMO présents sur cette machine
+# Services BL-RMO présents sur cette machine
 SERVICES="fm-monitor"
 for s in fm-monitor-pige fm-monitor-syslog; do
     [ -f "/etc/systemd/system/$s.service" ] && SERVICES="$SERVICES $s"
@@ -107,7 +107,7 @@ for s in $SERVICES; do
         print_warning "$s ne s'est pas démarré. Logs : sudo journalctl -u $s -n 50"
     fi
 done
-[ "$ALL_OK" = 1 ] && print_step "Mise à jour terminée avec succès ! (BL-FMO $(python3 -c 'from version import __version__; print(__version__)' 2>/dev/null))"
+[ "$ALL_OK" = 1 ] && print_step "Mise à jour terminée avec succès ! (BL-RMO $(python3 -c 'from version import __version__; print(__version__)' 2>/dev/null))"
 
 echo ""
 print_info "Changelog: https://github.com/LyonelB/fm-monitor/releases"

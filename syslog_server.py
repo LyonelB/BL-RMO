@@ -3,7 +3,7 @@
 syslog_server.py : réception des journaux (syslog) des appareils de la radio.
 
 Remplace le Centre des journaux du NAS : les switchs, faisceaux, codecs,
-émetteur... envoient leurs journaux à BL-FMO, qui les range dans syslog.db
+émetteur... envoient leurs journaux à BL-RMO, qui les range dans syslog.db
 et les affiche sur la page /logs.
 
 Deux usages :
@@ -15,7 +15,7 @@ Deux usages :
 
 Formats acceptés : RFC 3164 (BSD, MikroTik, Ubiquiti, la plupart des
 appareils) et RFC 5424. L'horodatage retenu est celui de la réception par
-BL-FMO : les horloges des appareils ne sont pas toutes à l'heure.
+BL-RMO : les horloges des appareils ne sont pas toutes à l'heure.
 
 Réglages (config.json, section « syslog », tous facultatifs) :
     "syslog": {"port": 514, "bind": "0.0.0.0", "retention_days": 90}
@@ -139,7 +139,7 @@ def parse(data, src_ip):
 
 
 def local_ip(bind='0.0.0.0'):
-    """Adresse IP de BL-FMO sur le réseau local (à indiquer aux appareils).
+    """Adresse IP de BL-RMO sur le réseau local (à indiquer aux appareils).
     Les appareils embarqués ne résolvent pas les noms en .local : il leur faut l'IP."""
     if bind and bind not in ('0.0.0.0', '::'):
         return bind

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BL-FMO - Pige audio (enregistrement glissant des dernières 24 h)
+BL-RMO - Pige audio (enregistrement glissant des dernières 24 h)
 
 Deux usages :
   1. Processus enregistreur autonome (service systemd fm-monitor-pige) :

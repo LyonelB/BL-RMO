@@ -512,7 +512,7 @@ def test_email():
         if monitor and monitor.email_alert:
             success = monitor.email_alert.send_alert(
                 alert_type="Test",
-                details="Ceci est un email de test depuis FM Monitor.",
+                details="Ceci est un email de test depuis BL-RMO.",
                 skip_cooldown=True
             )
             if success:
@@ -1320,7 +1320,7 @@ def chain_export():
     except ValueError as e:
         return jsonify({'status': 'error', 'message': str(e)}), 400
     logger.info(f"Export chaîne {start:%d/%m %H:%M} au {end:%d/%m %H:%M} : {counts}")
-    name = f"blfmo-chaine_{start:%Y%m%d-%H%M}_{end:%Y%m%d-%H%M}.zip"
+    name = f"blrmo-chaine_{start:%Y%m%d-%H%M}_{end:%Y%m%d-%H%M}.zip"
     return send_file(BytesIO(data), mimetype='application/zip', as_attachment=True, download_name=name)
 
 
@@ -1466,7 +1466,7 @@ def logs_export():
             if n >= 500000:
                 break
 
-    fname = f"blfmo-journaux_{datetime.now():%Y%m%d-%H%M}.csv"
+    fname = f"blrmo-journaux_{datetime.now():%Y%m%d-%H%M}.csv"
     return Response(generate(), mimetype='text/csv; charset=utf-8',
                     headers={'Content-Disposition': f'attachment; filename="{fname}"'})
 

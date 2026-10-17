@@ -1,2 +1,2 @@
-"""Version de BL-FMO (affichée dans la page À propos)."""
-__version__ = "0.8.0"
+"""Version de BL-RMO (affichée dans la page À propos)."""
+__version__ = "0.9.0"

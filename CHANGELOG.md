@@ -4,7 +4,15 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
-## [Non publié]
+## [0.9.0] - 2026-10-17
+
+### Nouveau nom : BL-RMO
+- **BL-FMO devient BL-RMO**, pour « Radio MOnitoring » : le logiciel surveille la réception et toute la chaîne de diffusion, et le DAB+ est en vue.
+- Le nom change dans toute l'interface (menu, titres, page À propos, connexion, assistant), dans les mails d'alerte, les exports (`blrmo-journaux_…csv`, `blrmo-chaine_…zip`), le README et les scripts d'installation.
+- Rien ne change pour une installation existante : dossier `fm-monitor`, services `fm-monitor-*`, adresse `bl-fmo.local` et dépôt GitHub seront renommés lors d'étapes ultérieures, avec un script de migration.
+
+### Journaux : choix des appareils
+- Les appareils se choisissent par cases à cocher, plusieurs à la fois ; aucun coché = tous. La sélection est retenue. Le bloc de cartes et la liste déroulante, qui faisaient doublon, disparaissent.
 
 ### Journaux
 - **Une seule page Journaux, trois onglets**, sans mélange :

@@ -2,13 +2,13 @@
 """
 pige_archive.py : extraits audio des 10 dernières alertes.
 
-À chaque incident terminé, BL-FMO découpe dans la pige l'extrait qui va de
+À chaque incident terminé, BL-RMO découpe dans la pige l'extrait qui va de
 30 s avant le début à 30 s après le rétablissement, et le range dans
 pige/archives/. Seuls les extraits des 10 derniers incidents sont gardés :
 au onzième, le plus ancien est supprimé. La pige complète garde sa durée.
 
 Un incident regroupe :
-  - les alertes FM de BL-FMO (signal, modulation, RDS...), rétablies ;
+  - les alertes FM de BL-RMO (signal, modulation, RDS...), rétablies ;
   - les alertes des appareils de la chaîne (perte audio d'un codec, entrée AES
     du processeur...), revenues en service. Les sondes réseau sont ignorées
     (trop fréquentes, et sans effet audible le plus souvent).

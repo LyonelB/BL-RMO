@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script de génération de certificat SSL auto-signé pour FM Monitor
+# Script de génération de certificat SSL auto-signé pour BL-RMO
 
 echo "=========================================="
 echo "Génération du certificat SSL"
@@ -14,7 +14,7 @@ openssl req -x509 -newkey rsa:4096 -nodes \
   -out cert.pem \
   -keyout key.pem \
   -days 3650 \
-  -subj "/C=FR/ST=France/L=Paris/O=FM Monitor/OU=Radio/CN=fm-monitor.local" \
+  -subj "/C=FR/ST=France/L=Paris/O=BL-RMO/OU=Radio/CN=fm-monitor.local" \
   2>/dev/null
 
 if [ $? -eq 0 ]; then

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>BL-FMO · Journaux</title>
+  <title>BL-RMO · Journaux</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -32,9 +32,9 @@
 <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col flex-shrink-0 h-screen transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 ease-in-out">
   <div class="p-5 border-b border-gray-100">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">FM</div>
+      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">RMO</div>
       <div>
-        <div class="text-sm font-semibold text-gray-900">FM Monitor</div>
+        <div class="text-sm font-semibold text-gray-900">BL-RMO</div>
         <div class="text-xs text-gray-400 font-mono" id="sidebar-frequency">— MHz</div>
       </div>
     </div>
@@ -85,14 +85,14 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">Journaux</h1></div>
-        <p class="text-xs text-gray-400 mt-0.5" id="tab-subtitle">Ce qui s'est passé, côté réception, côté chaîne de diffusion et côté BL-FMO</p>
+        <p class="text-xs text-gray-400 mt-0.5" id="tab-subtitle">Ce qui s'est passé, côté réception, côté chaîne de diffusion et côté BL-RMO</p>
       </div>
       <div id="rx-status" class="flex items-center gap-1.5 text-xs"></div>
     </div>
     <nav class="flex gap-1 mt-3 -mb-px overflow-x-auto" role="tablist">
       <button class="tab-btn" data-tab="reception" role="tab" onclick="showTab('reception')">Réception FM</button>
       <button class="tab-btn" data-tab="chaine" role="tab" onclick="showTab('chaine')">Chaîne de diffusion</button>
-      <button class="tab-btn" data-tab="blfmo" role="tab" onclick="showTab('blfmo')">BL-FMO</button>
+      <button class="tab-btn" data-tab="blfmo" role="tab" onclick="showTab('blfmo')">BL-RMO</button>
     </nav>
   </header>
 
@@ -102,7 +102,7 @@
     <div id="tab-reception" class="tab-pane">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div class="section" style="margin-bottom:0">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">BL-FMO en service depuis</div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">BL-RMO en service depuis</div>
           <div class="text-2xl font-bold font-mono text-gray-900" id="rc-uptime">-</div>
           <div class="text-xs text-gray-400 mt-1" id="rc-start"></div>
         </div>
@@ -233,30 +233,30 @@
     <details id="help" class="section">
       <summary class="section-title cursor-pointer select-none" style="margin-bottom:0">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        Envoyer les journaux d'un appareil vers BL-FMO
+        Envoyer les journaux d'un appareil vers BL-RMO
       </summary>
       <div class="mt-4 space-y-3 text-xs text-gray-600 leading-relaxed">
         <p>Dans les réglages de l'appareil, cherchez « Syslog », « Remote log » ou « Journal distant » et indiquez :
           serveur <code id="h-ip"></code>, port <code id="h-port">514</code>, protocole <code>UDP</code>.</p>
         <p class="font-medium text-gray-700">MikroTik RouterOS</p>
-        <p>Repérer l'action d'envoi existante, puis la diriger vers BL-FMO :</p>
+        <p>Repérer l'action d'envoi existante, puis la diriger vers BL-RMO :</p>
         <pre class="bg-slate-50 border border-slate-100 rounded-lg p-3 overflow-x-auto"><code style="background:none;padding:0">/system logging action print where target=remote
 /system logging action set [find target=remote] remote=<span class="h-ip-txt"></span> remote-port=514</code></pre>
         <p class="font-medium text-gray-700">Ubiquiti airOS</p>
         <p>Onglet <b>Services</b>, section <b>System Log</b> : cocher <i>Remote Log</i>, adresse <code class="h-ip-txt"></code>, port 514.</p>
-        <p class="text-gray-500">Le nom affiché vient de la chaîne de diffusion : un appareil dont l'adresse IP figure dans la page Chaîne prend son nom. Sinon, BL-FMO affiche le nom d'hôte envoyé par l'appareil ou son adresse.</p>
+        <p class="text-gray-500">Le nom affiché vient de la chaîne de diffusion : un appareil dont l'adresse IP figure dans la page Chaîne prend son nom. Sinon, BL-RMO affiche le nom d'hôte envoyé par l'appareil ou son adresse.</p>
       </div>
     </details>
 
     </div>
 
-    <!-- ══ Onglet BL-FMO ══ -->
+    <!-- ══ Onglet BL-RMO ══ -->
     <div id="tab-blfmo" class="tab-pane">
       <div class="section">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div class="section-title" style="margin-bottom:0">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            Journal de BL-FMO
+            Journal de BL-RMO
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <select id="sl-unit" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="loadSysLogs()">
@@ -273,7 +273,7 @@
             <button onclick="loadSysLogs()" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">Actualiser</button>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-3">Démarrages, tuner, alertes envoyées, erreurs : le fonctionnement de BL-FMO lui-même.</p>
+        <p class="text-xs text-gray-500 mb-3">Démarrages, tuner, alertes envoyées, erreurs : le fonctionnement de BL-RMO lui-même.</p>
         <div id="sl-box" class="bg-gray-950 text-gray-300 p-4 rounded-lg font-mono overflow-y-auto border border-gray-800" style="height:32rem">Chargement...</div>
       </div>
     </div>
@@ -501,7 +501,7 @@ $('f-q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTim
   if (p.get('src')) { selectedSrc = new Set(p.get('src').split(',').filter(Boolean)); saveSources(); }
 })();
 
-// Adresse à donner aux appareils : l'IP de BL-FMO (les noms en .local ne sont pas résolus par les appareils)
+// Adresse à donner aux appareils : l'IP de BL-RMO (les noms en .local ne sont pas résolus par les appareils)
 function setHelpIp(ip) {
   document.querySelectorAll('.h-ip-txt').forEach(e => e.textContent = ip);
   $('h-ip').textContent = ip;
@@ -630,7 +630,7 @@ function renderReception() {
   }).join('');
 }
 
-// ══ BL-FMO (journal système) ════════════════════════════════════════════
+// ══ BL-RMO (journal système) ════════════════════════════════════════════
 let slLines = [];
 async function loadSysLogs() {
   $('sl-box').textContent = 'Chargement...';
