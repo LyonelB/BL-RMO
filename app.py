@@ -1320,6 +1320,48 @@ def _syslog():
     return syslog_store
 
 
+syslog_cleaner = None
+
+
+def _syslog_cleaner():
+    """Nettoyage et règles de masquage des journaux (SYSLOG_CLEAN_PATCH)."""
+    global syslog_cleaner
+    if syslog_cleaner is None:
+        from syslog_clean import Cleaner
+        syslog_cleaner = Cleaner(_syslog().db_path)
+    return syslog_cleaner
+
+
+@app.route('/api/syslog/rules', methods=['GET', 'POST'])
+@auth.login_required
+@limiter.exempt
+def logs_rules():
+    cl = _syslog_cleaner()
+    if request.method == 'GET':
+        return jsonify({'rules': cl.rules()})
+    d = request.get_json(silent=True) or {}
+    if not d.get('message') and not d.get('program'):
+        return jsonify({'status': 'error', 'message': 'Message manquant'}), 400
+    rid = cl.add_rule(d.get('src'), d.get('program'), d.get('message', ''), d.get('label', ''),
+                      session.get('username', ''))
+    logger.info(f"Journaux : règle de masquage ajoutée par {session.get('username')} : {d.get('label', '')[:80]}")
+    return jsonify({'status': 'success', 'id': rid})
+
+
+@app.route('/api/syslog/rules/<rule_id>', methods=['PUT', 'DELETE'])
+@auth.login_required
+def logs_rule(rule_id):
+    cl = _syslog_cleaner()
+    if request.method == 'DELETE':
+        if not cl.delete_rule(rule_id):
+            return jsonify({'status': 'error', 'message': 'Règle introuvable ou intégrée (désactivez-la plutôt)'}), 400
+        return jsonify({'status': 'success'})
+    d = request.get_json(silent=True) or {}
+    if not cl.set_enabled(rule_id, bool(d.get('enabled'))):
+        return jsonify({'status': 'error', 'message': 'Règle introuvable'}), 404
+    return jsonify({'status': 'success'})
+
+
 def _syslog_names():
     """Adresse IP → nom de l'appareil dans la chaîne (les appareils avant les sondes)."""
     names = {}
@@ -1357,12 +1399,13 @@ def logs_page():
 @auth.login_required
 @limiter.exempt
 def logs_search():
-    try:
-        rows, total = _syslog().search(limit=request.args.get('limit', 200),
-                                       offset=request.args.get('offset', 0), **_syslog_filters())
+    try:   # SYSLOG_CLEAN_PATCH : messages nettoyés, messages connus masqués
+        rows, total, hidden, capped = _syslog_cleaner().search(
+            _syslog(), hide=request.args.get('hidden') != '1', limit=request.args.get('limit', 200),
+            offset=request.args.get('offset', 0), **_syslog_filters())
     except ValueError:
         return jsonify({'status': 'error', 'message': 'Paramètres invalides'}), 400
-    return jsonify({'rows': rows, 'total': total})
+    return jsonify({'rows': rows, 'total': total, 'hidden': hidden, 'capped': capped})
 
 
 @app.route('/api/syslog/sources')
@@ -1382,6 +1425,7 @@ def logs_export():
     import csv
     import io
     f = _syslog_filters()
+    hide = request.args.get('hidden') != '1'
     names = _syslog_names()
     st = _syslog()
 
@@ -1391,7 +1435,7 @@ def logs_export():
         w.writerow(['date', 'heure', 'niveau', 'appareil', 'adresse', 'nom_hote', 'categorie', 'programme', 'message'])
         yield '﻿' + buf.getvalue()
         n = 0
-        for r in st.iter_rows(**f):
+        for r in _syslog_cleaner().iter_rows(st, hide=hide, **f):
             buf.seek(0)
             buf.truncate()
             w.writerow([r['ts'][:10], r['ts'][11:19], SEVERITIES[r['severity']] if 0 <= (r['severity'] or 0) < 8 else r['severity'],
@@ -1457,7 +1501,7 @@ ROLE_LECTEUR = {
     'chain_status', 'chain_events', 'chain_device_history', 'chain_device_logs',
     'logs_search', 'logs_sources', 'account_password',
 }
-ROLE_LECTEUR_GET = {'chain_devices', 'chain_device'}      # lecture seule pour ces routes
+ROLE_LECTEUR_GET = {'chain_devices', 'chain_device', 'logs_rules'}      # lecture seule pour ces routes
 # Opérateur : exporter, enregistrer, intervenir sans rien régler
 ROLE_OPERATEUR = {
     'pige_export', 'chain_export', 'logs_export', 'record_start', 'record_stop', 'record_download',

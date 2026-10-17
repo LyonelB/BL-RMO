@@ -593,7 +593,7 @@ async function loadLogs(e) {
     const t = new Date(l.ts), warn = l.severity <= 4;
     return `<div class="grid gap-2 py-1.5 border-b border-slate-50 text-xs" style="grid-template-columns:auto 1fr">
       <span class="font-mono text-gray-400 whitespace-nowrap">${pad(t.getDate())}/${pad(t.getMonth() + 1)} ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}</span>
-      <span class="break-words"><span class="font-mono text-[11px] rounded px-1.5" style="${warn ? 'background:#fffbeb;color:#b45309' : 'background:#f1f5f9;color:#475569'}" title="${esc(SEV[l.severity] || '')}">${esc(l.program || '-')}</span> <span class="text-gray-700">${esc(l.message)}</span></span>
+      <span class="break-words"><span class="font-mono text-[11px] rounded px-1.5" style="${warn ? 'background:#fffbeb;color:#b45309' : 'background:#f1f5f9;color:#475569'}" title="${esc(SEV[l.severity] || '')}">${esc(l.program || '-')}</span> <span class="text-gray-700" style="white-space:pre-wrap">${esc(l.summary || l.message)}</span></span>
     </div>`;
   }).join('') + `<a href="/logs?src=${encodeURIComponent(d.host)}" class="inline-block mt-3 text-xs font-medium text-blue-600 hover:text-blue-800">Tous les journaux de cet appareil</a>`;
 }

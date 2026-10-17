@@ -119,6 +119,7 @@
           <svg class="w-3.5 h-3.5 absolute left-2.5 top-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/></svg>
           <input id="f-q" type="search" placeholder="Rechercher (ex. link down, ether8, perdu)" class="w-full text-xs border border-gray-200 rounded-lg pr-2 py-1.5" style="padding-left:2rem">
         </div>
+        <label class="flex items-center gap-1.5 text-xs text-gray-600 select-none" title="Messages connus sans importance (voir « Messages masqués » plus bas)"><input id="f-hidden" type="checkbox" class="rounded"> Afficher les messages masqués <span id="hidden-count" class="text-gray-400"></span></label>
         <label class="flex items-center gap-1.5 text-xs text-gray-600 select-none"><input id="f-live" type="checkbox" checked class="rounded"> En direct</label>
         <button onclick="exportCsv()" class="flex items-center gap-1.5 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
@@ -152,6 +153,17 @@
         </div>
       </div>
     </div>
+
+    <!-- ── Messages masqués (SYSLOG_CLEAN_PATCH) ─────────────────── -->
+    <details id="rules-box" class="section">
+      <summary class="section-title cursor-pointer select-none" style="margin-bottom:0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+        Messages masqués <span id="rules-count" class="text-gray-400 normal-case font-normal tracking-normal"></span>
+      </summary>
+      <p class="mt-3 text-xs text-gray-500">Ces messages restent enregistrés : ils sont seulement cachés de la liste, de l'export et du synoptique. Cochez « Afficher les messages masqués » pour les revoir.
+        <span class="need-admin">Pour en masquer d'autres, utilisez l'icône <b>œil barré</b> au bout d'une ligne.</span></p>
+      <div id="rules-list" class="mt-3 divide-y divide-gray-50 text-xs"></div>
+    </details>
 
     <!-- ── Aide à la configuration ────────────────────────────── -->
     <details id="help" class="section">
@@ -273,6 +285,7 @@ function query() {
   if ($('f-src').value) p.set('src', $('f-src').value);
   if ($('f-sev').value) p.set('sev', $('f-sev').value);
   if ($('f-q').value.trim()) p.set('q', $('f-q').value.trim());
+  if ($('f-hidden').checked) p.set('hidden', '1');
   const h = $('f-period').value;
   if (h) p.set('start', localIso(new Date(Date.now() - h * 3600e3)));
   return p;
@@ -285,6 +298,8 @@ async function loadLogs() {
   try {
     const d = await api('/api/syslog?' + p);
     total = d.total;
+    capped = d.capped;
+    $('hidden-count').textContent = d.hidden ? `(${d.hidden >= 20000 ? '20 000+' : d.hidden.toLocaleString('fr-FR')})` : '';
     render(d.rows);
   } catch (e) {
     $('log-body').innerHTML = '';
@@ -292,29 +307,83 @@ async function loadLogs() {
     $('log-empty').classList.remove('hidden');
   } finally { loading = false; }
 }
-function render(rows) {
+function render(rows) {   // SYSLOG_CLEAN_PATCH
   $('log-empty').classList.toggle('hidden', rows.length > 0);
   if (!rows.length) $('log-empty').textContent = 'Aucun message pour ces critères.';
-  $('log-body').innerHTML = rows.map(r => {
+  lastRows = rows;
+  $('log-body').innerHTML = rows.map((r, i) => {
     const sv = SEV[r.severity] || SEV[6];
     const t = new Date(r.ts);
     const epoch = Math.floor(t.getTime() / 1000);
-    return `<tr class="border-b border-gray-50 hover:bg-slate-50 align-top">
-      <td class="py-1.5 pr-3 font-mono text-gray-400 whitespace-nowrap">${pad(t.getDate())}/${pad(t.getMonth() + 1)} ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}</td>
+    const msg = r.summary
+      ? `<details><summary class="cursor-pointer">${esc(r.summary)}</summary><div class="mt-1 text-gray-500" style="white-space:pre-wrap">${esc(r.message)}</div></details>`
+      : `<div style="white-space:pre-wrap">${esc(r.message)}</div>`;
+    const masked = r.hidden_by ? `<span class="inline-block mt-0.5 rounded px-1.5 text-[10px] bg-slate-100 text-slate-500">masqué · ${esc(r.hidden_label || '')}</span>` : '';
+    return `<tr class="border-b border-gray-50 hover:bg-slate-50" style="vertical-align:top;${r.hidden_by ? 'opacity:.55' : ''}">
+      <td class="py-1.5 pr-3 font-mono text-gray-400 whitespace-nowrap" title="${r.device_ts ? 'Heure de l\'appareil : ' + esc(r.device_ts.replace('T', ' ')) : ''}">${pad(t.getDate())}/${pad(t.getMonth() + 1)} ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}</td>
       <td class="py-1.5 pr-3"><span class="inline-block rounded px-1.5 py-0.5 text-[11px] whitespace-nowrap ${sv.cls}">${sv.label}</span></td>
       <td class="py-1.5 pr-3 whitespace-nowrap text-gray-800" title="${esc(r.src)}${r.host ? ' · ' + esc(r.host) : ''}">${esc(displayName(r.src))}</td>
       <td class="py-1.5 pr-3 whitespace-nowrap text-gray-500 font-mono">${esc(r.program)}</td>
-      <td class="py-1.5 pr-3 text-gray-700 break-all">${esc(r.message)}</td>
+      <td class="py-1.5 pr-3 text-gray-700" style="overflow-wrap:anywhere;min-width:16rem">${msg}${masked}</td>
       <td class="py-1.5 whitespace-nowrap"><a href="/pige?t=${epoch}" title="Écouter l'antenne à ce moment" class="text-blue-600 hover:text-blue-800 opacity-60 hover:opacity-100">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></a></td>
+        <svg class="w-3.5 h-3.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></a>
+        ${r.hidden_by ? '' : `<button class="need-admin ml-1 text-gray-400 hover:text-gray-700 opacity-60 hover:opacity-100" title="Masquer les messages semblables" onclick="hideSimilar(${i})">
+        <svg class="w-3.5 h-3.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg></button>`}</td>
     </tr>`;
   }).join('');
   const first = total ? offset + 1 : 0, last = Math.min(offset + PAGE_SIZE, total);
-  $('log-count').textContent = `${total.toLocaleString('fr-FR')} message${total > 1 ? 's' : ''}`;
+  const fmtTotal = capped ? `${total.toLocaleString('fr-FR')}+` : total.toLocaleString('fr-FR');
+  $('log-count').textContent = `${fmtTotal} message${total > 1 ? 's' : ''}`;
   $('pg-info').textContent = total ? `${first.toLocaleString('fr-FR')}-${last.toLocaleString('fr-FR')}` : '';
   $('pg-prev').disabled = offset === 0;
-  $('pg-next').disabled = offset + PAGE_SIZE >= total;
+  $('pg-next').disabled = !capped && offset + PAGE_SIZE >= total;
 }
+
+// ── Messages masqués : règles ──────────────────────────────────────────
+let lastRows = [], capped = false;
+async function apiSend(url, method, body) {
+  const r = await fetch(url, { method, credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }, body: JSON.stringify(body || {}) });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.message || `Erreur ${r.status}`);
+  return d;
+}
+async function hideSimilar(i) {
+  const r = lastRows[i];
+  if (!r) return;
+  const text = (r.message || '').split('\n')[0];
+  const label = `${displayName(r.src)} : ${text.slice(0, 80)}`;
+  if (!confirm(`Masquer les messages semblables à celui-ci ?\n\n${label}\n\nLes chiffres variables sont pris en compte. Les messages restent enregistrés, et la règle peut être retirée dans « Messages masqués ».`)) return;
+  try { await apiSend('/api/syslog/rules', 'POST', { src: r.src, program: r.program, message: r.raw, label }); }
+  catch (e) { alert(e.message); return; }
+  loadRules(); loadLogs();
+}
+async function loadRules() {
+  let d;
+  try { d = await api('/api/syslog/rules'); } catch (e) { return; }
+  const admin = document.documentElement.dataset.role === 'admin';
+  const on = d.rules.filter(r => r.enabled).length;
+  $('rules-count').textContent = `${on} règle${on > 1 ? 's' : ''} active${on > 1 ? 's' : ''}`;
+  $('rules-list').innerHTML = d.rules.map(r => {
+    const scope = [r.src ? displayName(r.src) : 'tous les appareils', r.program ? `programme ${r.program}` : ''].filter(Boolean).join(' · ');
+    return `<div class="flex items-center gap-3 py-2">
+      <input type="checkbox" ${r.enabled ? 'checked' : ''} ${admin ? '' : 'disabled'} onchange="toggleRule('${esc(r.id)}', this.checked)" title="Activer ou désactiver">
+      <div class="flex-1 ${r.enabled ? 'text-gray-700' : 'text-gray-400'}">${esc(r.label)}
+        <div class="text-[11px] text-gray-400">${esc(scope)}${r.builtin ? ' · intégrée' : (r.created_by ? ' · ajoutée par ' + esc(r.created_by) : '')}</div></div>
+      ${r.builtin ? '' : `<button class="need-admin text-red-500 hover:text-red-700 font-medium" onclick="deleteRule('${esc(r.id)}')">Supprimer</button>`}
+    </div>`;
+  }).join('');
+}
+async function toggleRule(id, enabled) {
+  try { await apiSend(`/api/syslog/rules/${encodeURIComponent(id)}`, 'PUT', { enabled }); } catch (e) { alert(e.message); }
+  loadRules(); loadLogs();
+}
+async function deleteRule(id) {
+  if (!confirm('Supprimer cette règle ? Les messages concernés réapparaîtront.')) return;
+  try { await apiSend(`/api/syslog/rules/${encodeURIComponent(id)}`, 'DELETE'); } catch (e) { alert(e.message); }
+  loadRules(); loadLogs();
+}
+
 function page(dir) {
   offset = Math.max(0, offset + dir * PAGE_SIZE);
   loadLogs();
@@ -325,7 +394,7 @@ function exportCsv() {
 }
 
 // ── Filtres ────────────────────────────────────────────────────────────
-['f-src', 'f-sev', 'f-period'].forEach(id => $(id).addEventListener('change', () => { offset = 0; loadLogs(); if (id === 'f-src') loadSources(); }));
+['f-src', 'f-sev', 'f-period', 'f-hidden'].forEach(id => $(id).addEventListener('change', () => { offset = 0; loadLogs(); if (id === 'f-src') loadSources(); }));
 let qTimer = null;
 $('f-q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(() => { offset = 0; loadLogs(); }, 350); });
 
@@ -344,7 +413,7 @@ function setHelpIp(ip) {
 setHelpIp(location.hostname);
 
 // ── Démarrage ──────────────────────────────────────────────────────────
-loadSources().then(loadLogs);
+loadSources().then(() => { loadLogs(); loadRules(); });
 setInterval(() => {
   if (document.hidden || !$('f-live').checked || offset !== 0) return;
   loadLogs();

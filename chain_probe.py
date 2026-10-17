@@ -1434,7 +1434,8 @@ class ChainMonitor:
         host = self._device_host(d)
         if not host:
             return {'installed': True, 'host': '', 'rows': [], 'server_ip': server_ip}
-        rows, _total = store.search(limit=limit, src=host)
+        from syslog_clean import Cleaner          # SYSLOG_CLEAN_PATCH
+        rows = Cleaner(sys_db).search(store, hide=True, limit=limit, src=host)[0]
         return {'installed': True, 'host': host, 'rows': rows, 'server_ip': server_ip}
 
     def get_events(self, limit=100, device_id=None):
