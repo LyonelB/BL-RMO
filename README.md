@@ -282,6 +282,8 @@ Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-RMO (pas `bl
 - [ ] Retrait du mode RTL-SDR, de l'analyse MPX et de Docker
 - [x] v0.9.0 : nouveau nom BL-RMO, journaux en trois onglets
 - [ ] Réception DAB+ (reprise de BL-DMO) : validation sur site avec l'antenne bande III
+- [ ] Fermeture de BL-DMO ([dabplus-monitor](https://github.com/LyonelB/dabplus-monitor)) : annonce, archivage, puis suppression du dépôt
+- [ ] welle-monitor : reporter les changements de la prochaine version de welle.io
 - [ ] Version anglaise de l'interface
 - [ ] Piste : sonde AES67 (sortie console Dante)
 
