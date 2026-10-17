@@ -681,6 +681,41 @@ class DabMonitor:
 # Lecture (utilisée par Flask)
 # ════════════════════════════════════════════════════════════════════
 
+RTL_USB_IDS = {('0bda', '2838'), ('0bda', '2832')}
+
+
+def prerequisites(cfg):
+    """Ce qui manque pour recevoir le DAB+ : welle-cli, clé RTL-SDR, pilote TNT écarté."""
+    import shutil
+    exe = cfg.get('welle_cli') or 'welle-cli'
+    welle = shutil.which(exe) or (exe if os.path.isabs(exe) and os.access(exe, os.X_OK) else None)
+    dongle = None
+    base = '/sys/bus/usb/devices'
+    try:
+        for d in os.listdir(base):
+            try:
+                with open(os.path.join(base, d, 'idVendor')) as f:
+                    v = f.read().strip()
+                with open(os.path.join(base, d, 'idProduct')) as f:
+                    pr = f.read().strip()
+            except OSError:
+                continue
+            if (v, pr) in RTL_USB_IDS:
+                try:
+                    with open(os.path.join(base, d, 'product')) as f:
+                        dongle = f.read().strip() or f'{v}:{pr}'
+                except OSError:
+                    dongle = f'{v}:{pr}'
+                break
+    except OSError:
+        pass
+    return {
+        'welle_cli': welle,
+        'dongle': dongle,
+        'dvb_driver_loaded': os.path.isdir('/sys/module/dvb_usb_rtl28xxu'),
+    }
+
+
 class DabReader:
     def __init__(self, config_file=CONFIG_FILE, db_path=DB_FILE, state_file=STATE_FILE):
         self.config_file, self.db_path, self.state_file = config_file, db_path, state_file
@@ -701,6 +736,7 @@ class DabReader:
             st = {}
         age = time.time() - st.get('updated', 0) if st else None
         st['enabled'] = bool(cfg.get('enabled'))
+        st['prereq'] = prerequisites(cfg)
         st['service_running'] = age is not None and age < STATE_STALE_S
         st.setdefault('channel', cfg['channel'])
         st.setdefault('frequency_mhz', cfg['frequency_mhz'])

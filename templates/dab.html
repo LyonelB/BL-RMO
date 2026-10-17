@@ -254,6 +254,19 @@
     render();
   }
 
+  // Étapes de mise en service : seules celles qui restent à faire sont en attente
+  function prereqList(p) {
+    const ok = '<span class="text-green-600 font-bold">✓</span>', todo = '<span class="text-amber-600 font-bold">○</span>';
+    const rows = [
+      [!!p.welle_cli, p.welle_cli ? `welle-cli installé (<code>${esc(p.welle_cli)}</code>)`
+                                  : 'Installer welle-cli : <code>sudo BUILD_WELLE=1 bash install/build/67-dab.sh</code>'],
+      [!!p.dongle, p.dongle ? `Clé RTL-SDR branchée (${esc(p.dongle)})` : "Brancher une clé RTL-SDR dédiée au DAB+ et son antenne bande III"],
+    ];
+    if (p.dvb_driver_loaded) rows.push([false, "Pilote TNT du noyau chargé : redémarrer la machine (il est écarté par <code>67-dab.sh</code>)"]);
+    rows.push([false, 'Cocher « Activer la réception DAB+ » dans les réglages en bas de page']);
+    return '<ul class="space-y-1 mt-1">' + rows.map(([d, t]) => `<li class="flex gap-2"><span>${d ? ok : todo}</span><span>${t}</span></li>`).join('') + '</ul>';
+  }
+
   function render() {
     const s = st, rf = s.rf || {};
     const freq = Number(s.frequency_mhz).toFixed(3).replace('.', ',');
@@ -264,9 +277,7 @@
     if (!s.enabled) {
       n.classList.remove('hidden');
       $('notice-title').textContent = 'Réception DAB+ désactivée';
-      $('notice-text').innerHTML = isAdmin
-        ? 'Brancher une clé RTL-SDR dédiée au DAB+ et son antenne bande III, installer welle-cli (<code>sudo BUILD_WELLE=1 bash install/build/67-dab.sh</code>), puis cocher « Activer la réception DAB+ » dans les réglages en bas de page.'
-        : "Un administrateur doit l'activer.";
+      $('notice-text').innerHTML = isAdmin ? prereqList(s.prereq || {}) : "Un administrateur doit l'activer.";
     } else if (!s.service_running) {
       n.classList.remove('hidden');
       $('notice-title').textContent = 'Le service de réception DAB+ ne répond pas';

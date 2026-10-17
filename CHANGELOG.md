@@ -9,6 +9,7 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ### Réception DAB+ (reprise de BL-DMO)
 - **Nouveau service `fm-monitor-dab`** (`dab_monitor.py`) : pilote welle-cli (fork welle-monitor) sur une clé RTL-SDR dédiée, relève `/mux.json` toutes les 2 s, relance welle-cli avec un délai croissant (5 s à 5 min) et réinitialise la clé USB si besoin. En veille tant que le DAB+ n'est pas activé.
 - **Page DAB+** : récepteur, ensemble, SNR et qualité FIC, tableau des services (présence, niveaux, DLS, débit, disponibilité 24 h), écoute d'un service avec diaporama, derniers événements, réglages (administrateur).
+- **Mise en service guidée** : tant que le DAB+ est désactivé, la page DAB+ indique ce qui est déjà prêt (welle-cli installé, clé RTL-SDR branchée) et ce qui reste à faire.
 - **Alertes** : récepteur hors service, ensemble dégradé, service absent, silence ; mail à l'alerte et au rétablissement ; services surveillés au choix (aucun coché = tous).
 - En mode carrousel, un niveau audio n'est pris en compte que s'il vient d'être rafraîchi : plus de fausse alerte de silence sur un service qui n'est pas en cours de décodage.
 - **Journaux** : nouvel onglet **Réception DAB+** (alertes, filtres par type et par service, 7 et 30 jours), séparé de la Réception FM ; le service `fm-monitor-dab` apparaît dans l'onglet BL-RMO. La pige n'enregistrant que la FM, les alertes DAB+ n'ont pas de lien vers la pige.
