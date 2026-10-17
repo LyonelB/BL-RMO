@@ -219,8 +219,8 @@ def config():
 @app.route('/stats')
 @auth.login_required
 def stats():
-    """Page des statistiques"""
-    return render_template('stats.html')
+    """Ancienne page Statistiques : son contenu est dans Journaux, onglet Réception FM"""
+    return redirect('/logs#reception')
 
 @app.route('/api/stats')
 @limiter.exempt
@@ -487,10 +487,18 @@ def get_logs():
     """Récupère les derniers logs système"""
     try:
         import subprocess
+        unit = request.args.get('unit', 'fm-monitor')
+        if unit not in ('fm-monitor', 'fm-monitor-pige', 'fm-monitor-syslog'):
+            return jsonify({'status': 'error', 'message': 'Service inconnu'}), 400
+        try:
+            lines = max(10, min(int(request.args.get('lines', 100)), 2000))
+        except ValueError:
+            lines = 100
         result = subprocess.run(
-            ['journalctl', '-u', 'fm-monitor', '-n', '100', '--no-pager'],
+            ['journalctl', '-u', unit, '-n', str(lines), '--no-pager', '-o', 'short-iso'],
             capture_output=True,
-            text=True
+            text=True,
+            timeout=15
         )
         return jsonify({'logs': result.stdout})
     except Exception as e:
@@ -555,7 +563,11 @@ def get_alerts_history_grouped():
     """Récupère l'historique des alertes groupées par paires"""
     try:
         if monitor and hasattr(monitor, 'db'):
-            alerts = monitor.db.get_alerts_history_grouped(limit=50)
+            try:
+                limit = max(1, min(int(request.args.get('limit', 50)), 500))
+            except ValueError:
+                limit = 50
+            alerts = monitor.db.get_alerts_history_grouped(limit=limit)
             return jsonify({'status': 'success', 'data': alerts})
         return jsonify({'status': 'error', 'message': 'Database not available'}), 503
     except Exception as e:

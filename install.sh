@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# FM Monitor - Installation automatique
-# Compatible: Raspberry Pi OS (Debian/Ubuntu)
+# BL-FMO (FM Monitor) - Installation automatique
+# Configuration de référence : mini-PC sous Debian 13 + tuner Headless TEF Lite SE
 #
 # Usage: curl -sSL https://raw.githubusercontent.com/LyonelB/fm-monitor/main/install.sh | bash
 #
@@ -48,11 +48,11 @@ print_header
 # =============================================
 echo ""
 print_warning "╔══════════════════════════════════════════════╗"
-print_warning "║  BRANCHEZ MAINTENANT la clé RTL-SDR          ║"
-print_warning "║  dans un port USB de votre Raspberry Pi      ║"
+print_warning "║  BRANCHEZ MAINTENANT le tuner TEF Lite SE    ║"
+print_warning "║  avec un câble USB de DONNÉES                ║"
 print_warning "╚══════════════════════════════════════════════╝"
 echo ""
-read -p "Appuyez sur Entrée une fois la clé RTL-SDR branchée..."
+read -p "Appuyez sur Entrée une fois le tuner branché..."
 
 # =============================================
 # 1. VÉRIFICATION DU SYSTÈME
@@ -106,7 +106,6 @@ print_step "Installation des dépendances système..."
 PACKAGES=(
     "python3-pip"
     "python3-venv"
-    "rtl-sdr"
     "ffmpeg"
     "icecast2"
     "git"
@@ -119,10 +118,9 @@ PACKAGES=(
     "libnss3-tools"
     "libopenblas-dev"
     "libportaudio2"
-    "meson"
-    "ninja-build"
-    "libsndfile1-dev"
-    "libliquid-dev"
+    "alsa-utils"
+    "usbutils"
+    "snmp"
 )
 
 for package in "${PACKAGES[@]}"; do
@@ -133,58 +131,6 @@ for package in "${PACKAGES[@]}"; do
         sudo DEBIAN_FRONTEND=noninteractive apt install -y -qq "$package"
     fi
 done
-
-# =============================================
-# 5. INSTALLATION DE REDSEA (décodeur RDS)
-# =============================================
-print_step "Installation de redsea (décodeur RDS)..."
-
-if command -v redsea &> /dev/null; then
-    print_info "redsea déjà installé: $(redsea --version 2>&1 | head -1)"
-else
-    print_info "Compilation de redsea depuis les sources (quelques minutes)..."
-    REDSEA_TMP=$(mktemp -d)
-    git clone --quiet https://github.com/windytan/redsea.git "$REDSEA_TMP"
-    cd "$REDSEA_TMP"
-    meson setup build
-    ninja -C build -j$(nproc) 2>/dev/null
-    sudo ninja -C build install 2>/dev/null
-    cd -
-    rm -rf "$REDSEA_TMP"
-
-    if command -v redsea &> /dev/null; then
-        print_info "redsea installé: $(redsea --version 2>&1 | head -1)"
-    else
-        print_error "Échec de l'installation de redsea"
-        exit 1
-    fi
-fi
-
-
-# =============================================
-# 5b. INSTALLATION DE GNU RADIO (décodeur stéréo)
-# =============================================
-print_step "Installation de GNU Radio (démodulation WFM stéréo)..."
-
-GNR_PACKAGES=("gnuradio" "gr-osmosdr" "libfftw3-dev" "libsamplerate0-dev" "cmake")
-for package in "${GNR_PACKAGES[@]}"; do
-    if dpkg -l 2>/dev/null | grep -q "^ii  $package "; then
-        print_info "$package déjà installé"
-    else
-        print_info "Installation de $package..."
-        sudo DEBIAN_FRONTEND=noninteractive apt install -y -qq "$package"
-    fi
-done
-
-# Compiler csdr HA7ILM (optionnel, pour usage futur)
-# Non requis pour le mode GNU Radio actuel
-
-if python3 -c "import gnuradio" 2>/dev/null && python3 -c "import osmosdr" 2>/dev/null; then
-    GNR_VER=$(python3 -c "import gnuradio; print(gnuradio.__version__)" 2>/dev/null || echo "inconnu")
-    print_info "GNU Radio $GNR_VER + gr-osmosdr installés ✓"
-else
-    print_warning "GNU Radio installé mais import Python échoue — mode rtl_fm utilisé par défaut"
-fi
 
 # =============================================
 # 6. CONFIGURATION ICECAST2
@@ -309,6 +255,13 @@ if [ ! -f "config.json" ]; then
     "gain": "40",
     "device_index": "0",
     "ppm_error": 0
+  },
+  "tef": {
+    "enabled": true,
+    "serial_port": "/dev/ttyACM0",
+    "alsa_device": "hw:Tuner",
+    "signal_threshold_dbf": 20.0,
+    "modulation_threshold_dbfs": -40.0
   },
   "audio": {
     "output_rate": "44100",
@@ -497,33 +450,27 @@ print_info "  Depuis le réseau : http://$MDNS_HOSTNAME.local:8080/rootCA.pem"
 print_info "  (lancez : cd $CAROOT && python3 -m http.server 8080)"
 
 # =============================================
-# 13. PERMISSIONS RTL-SDR
+# 13. ACCÈS AU TUNER
 # =============================================
-print_step "Configuration des permissions RTL-SDR..."
+print_step "Accès au tuner (port série et carte son)..."
 
-if [ ! -f /etc/udev/rules.d/20-rtlsdr.rules ]; then
-    sudo tee /etc/udev/rules.d/20-rtlsdr.rules > /dev/null << 'EOF'
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="2838", GROUP="plugdev", MODE="0666"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="2832", GROUP="plugdev", MODE="0666"
-EOF
-    print_info "Règles udev RTL-SDR ajoutées"
-else
-    print_info "Règles udev RTL-SDR déjà configurées"
-fi
-
-sudo udevadm control --reload-rules
-sudo udevadm trigger
-sudo usermod -a -G plugdev "$USER"
+# Port série /dev/ttyACM0 (groupe dialout) et carte son hw:Tuner (groupe audio)
+sudo usermod -a -G dialout,audio "$USER"
+print_info "Utilisateur $USER ajouté aux groupes dialout et audio"
 
 # =============================================
 # 14. VÉRIFICATION
 # =============================================
 print_step "Vérification de l'installation..."
 
-if rtl_test -t 2>&1 | grep -q "Found"; then
-    print_info "RTL-SDR détecté ✓"
+if lsusb 2>/dev/null | grep -qi "1209:6687"; then
+    print_info "Tuner TEF détecté en USB ✓"
+    [ -e /dev/ttyACM0 ] && print_info "Port série /dev/ttyACM0 présent ✓" \
+        || print_warning "Port série absent - vérifiez le câble (données, pas charge seule)"
+    aplay -l 2>/dev/null | grep -q "Tuner" && print_info "Carte son du tuner présente ✓" \
+        || print_warning "Carte son du tuner absente (aplay -l)"
 else
-    print_warning "RTL-SDR non détecté - vérifiez le branchement USB"
+    print_warning "Tuner TEF non détecté - branchez-le avec un câble USB de données"
 fi
 
 if sudo systemctl is-active --quiet icecast2; then
@@ -532,8 +479,10 @@ else
     print_warning "Icecast2 inactif - vérifiez: sudo systemctl status icecast2"
 fi
 
-if command -v redsea &> /dev/null; then
-    print_info "redsea installé ✓"
+if command -v snmpget &> /dev/null; then
+    print_info "Outils SNMP installés ✓"
+else
+    print_warning "snmpget absent : sudo apt install snmp (supervision de la chaîne)"
 fi
 
 CRITICAL_FILES=("app.py" "monitor.py" "auth.py" "config.json" ".env" "cert.pem" "key.pem")

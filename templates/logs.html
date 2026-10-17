@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>FM Monitor · Journaux</title>
+  <title>BL-FMO · Journaux</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -12,6 +12,13 @@
     .sidebar-link:hover, .sidebar-link.active { background:#eff6ff; color:#2563eb; }
     .sidebar-link svg { width:18px; height:18px; flex-shrink:0; }
     .section { background:white; border:1px solid #f1f5f9; border-radius:12px; padding:20px; margin-bottom:16px; }
+    .tab-btn { padding:10px 14px; font-size:0.8125rem; font-weight:600; color:#64748b; border-bottom:2px solid transparent; white-space:nowrap; }
+    .tab-btn:hover { color:#0f172a; }
+    .tab-btn.active { color:#2563eb; border-bottom-color:#2563eb; }
+    .tab-pane { display:none; }
+    .tab-pane.active { display:block; }
+    .log-line { white-space:pre-wrap; word-break:break-word; font-size:12px; line-height:1.55; }
+    .log-error { color:#fca5a5; } .log-warning { color:#fcd34d; } .log-info { color:#cbd5e1; }
     .section-title { font-size:0.75rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
     code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-size:0.8em; }
     details > summary { list-style:none; }
@@ -40,10 +47,6 @@
     <a href="/config" class="sidebar-link">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
       Configuration
-    </a>
-    <a href="/stats" class="sidebar-link">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-      Statistiques
     </a>
     <a href="/pige" class="sidebar-link">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
@@ -78,15 +81,81 @@
 <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
 <main class="flex-1 overflow-y-auto">
 
-  <header class="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3">
-    <div>
-      <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">Journaux des appareils</h1></div>
-      <p class="text-xs text-gray-400 mt-0.5">Messages envoyés par les appareils de la radio (syslog)</p>
+  <header class="bg-white border-b border-gray-100 px-6 pt-4 sticky top-0 z-10">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">Journaux</h1></div>
+        <p class="text-xs text-gray-400 mt-0.5" id="tab-subtitle">Ce qui s'est passé, côté réception, côté chaîne de diffusion et côté BL-FMO</p>
+      </div>
+      <div id="rx-status" class="flex items-center gap-1.5 text-xs"></div>
     </div>
-    <div id="rx-status" class="flex items-center gap-1.5 text-xs"></div>
+    <nav class="flex gap-1 mt-3 -mb-px overflow-x-auto" role="tablist">
+      <button class="tab-btn" data-tab="reception" role="tab" onclick="showTab('reception')">Réception FM</button>
+      <button class="tab-btn" data-tab="chaine" role="tab" onclick="showTab('chaine')">Chaîne de diffusion</button>
+      <button class="tab-btn" data-tab="blfmo" role="tab" onclick="showTab('blfmo')">BL-FMO</button>
+    </nav>
   </header>
 
   <div class="p-6 max-w-7xl">
+
+    <!-- ══ Onglet Réception FM ══ -->
+    <div id="tab-reception" class="tab-pane">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">BL-FMO en service depuis</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="rc-uptime">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="rc-start"></div>
+        </div>
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Alertes, 7 derniers jours</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="rc-7d">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="rc-7d-dur"></div>
+        </div>
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Alertes, 30 derniers jours</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="rc-30d">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="rc-30d-dur"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="section-title" style="margin-bottom:0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            Alertes de la réception FM
+          </div>
+          <select id="rc-type" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="renderReception()">
+            <option value="">Tous les types</option>
+          </select>
+        </div>
+        <p class="text-xs text-gray-500 mb-3">Mesurées par le tuner, comme un auditeur. Un premier mail part quand l'alerte est confirmée, un second au rétablissement. « Écouter » ouvre la pige au moment de l'alerte, ou son extrait archivé.</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead>
+              <tr class="text-gray-400 border-b border-gray-100">
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">Date</th>
+                <th class="font-medium py-2 pr-3">Alerte</th>
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">Début → fin</th>
+                <th class="font-medium py-2 pr-3">Durée</th>
+                <th class="font-medium py-2 pr-3">État</th>
+                <th class="font-medium py-2 pr-3">Mails</th>
+                <th class="font-medium py-2">Pige</th>
+              </tr>
+            </thead>
+            <tbody id="rc-body" class="divide-y divide-gray-50">
+              <tr><td colspan="7" class="py-8 text-center text-gray-400">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
+          <span id="rc-count"></span>
+          <button id="rc-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="rcShowAll = true; renderReception()">Tout afficher</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Onglet Chaîne de diffusion ══ -->
+    <div id="tab-chaine" class="tab-pane">
 
     <div id="rx-warning" class="hidden mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800"></div>
 
@@ -184,6 +253,35 @@
       </div>
     </details>
 
+    </div>
+
+    <!-- ══ Onglet BL-FMO ══ -->
+    <div id="tab-blfmo" class="tab-pane">
+      <div class="section">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="section-title" style="margin-bottom:0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Journal de BL-FMO
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="sl-unit" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="loadSysLogs()">
+              <option value="fm-monitor">Application (fm-monitor)</option>
+              <option value="fm-monitor-pige">Pige (fm-monitor-pige)</option>
+              <option value="fm-monitor-syslog">Réception des journaux (fm-monitor-syslog)</option>
+            </select>
+            <select id="sl-lines" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="loadSysLogs()">
+              <option value="100">100 lignes</option>
+              <option value="500">500 lignes</option>
+              <option value="2000">2 000 lignes</option>
+            </select>
+            <label class="flex items-center gap-1.5 text-xs text-gray-600 select-none"><input id="sl-errors" type="checkbox" class="rounded" onchange="renderSysLogs()"> Avertissements et erreurs</label>
+            <button onclick="loadSysLogs()" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">Actualiser</button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mb-3">Démarrages, tuner, alertes envoyées, erreurs : le fonctionnement de BL-FMO lui-même.</p>
+        <div id="sl-box" class="bg-gray-950 text-gray-300 p-4 rounded-lg font-mono overflow-y-auto border border-gray-800" style="height:32rem">Chargement...</div>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -411,6 +509,165 @@ function setHelpIp(ip) {
   $('h-ip').textContent = ip;
 }
 setHelpIp(location.hostname);
+
+
+// ══ Onglets ═════════════════════════════════════════════════════════════
+const TABS = ['reception', 'chaine', 'blfmo'];
+let tabLoaded = {};
+function showTab(t, push) {
+  if (!TABS.includes(t)) t = 'reception';
+  document.querySelectorAll('.tab-pane').forEach(e => e.classList.toggle('active', e.id === 'tab-' + t));
+  document.querySelectorAll('.tab-btn').forEach(e => {
+    const on = e.dataset.tab === t;
+    e.classList.toggle('active', on);
+    e.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  $('rx-status').style.display = t === 'chaine' ? '' : 'none';
+  if (push !== false) history.replaceState(null, '', location.pathname + location.search + '#' + t);
+  try { localStorage.setItem('blfmo-logs-tab', t); } catch (e) {}
+  if (t === 'reception') loadReception();
+  if (t === 'blfmo' && !tabLoaded.blfmo) { tabLoaded.blfmo = true; loadSysLogs(); }
+}
+window.addEventListener('hashchange', () => showTab(location.hash.slice(1), false));
+
+// ══ Réception FM ════════════════════════════════════════════════════════
+let rcAlerts = [], rcShowAll = false, rcPigeFrom = null, rcArchives = [];
+const RC_COLORS = {
+  'Signal perdu':       'bg-red-50 text-red-700',
+  'Perte émetteur':     'bg-red-50 text-red-700',
+  'Absence modulation': 'bg-orange-50 text-orange-700',
+  'RDS absent':         'bg-purple-50 text-purple-700',
+  'RadioText absent':   'bg-purple-50 text-purple-700',
+};
+function fmtDur(s) {
+  s = Math.max(0, Math.round(s || 0));
+  if (s < 60) return s + ' s';
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = s % 60;
+  return h ? `${h} h ${pad(m)} min` : `${m} min ${pad(r)} s`;
+}
+function rcPigeLinks(startIso, endIso) {
+  const t0 = Math.floor(new Date(startIso).getTime() / 1000);
+  if (!rcPigeFrom || t0 < rcPigeFrom) {
+    const arc = rcArchives.find(a => t0 >= a.clip_start - 60 && t0 <= a.end + 60);
+    return arc
+      ? `<a href="/api/pige/archives/${arc.id}/audio" target="_blank" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Extrait archivé, de 30 s avant à 30 s après">Écouter</a>`
+        + `<a href="/api/pige/archives/${arc.id}/audio?dl=1" class="font-medium text-blue-600 hover:text-blue-800" title="Extrait archivé (MP3)">MP3</a>`
+      : '<span class="text-gray-300">hors pige</span>';
+  }
+  const t1 = endIso ? Math.floor(new Date(endIso).getTime() / 1000) : t0 + 90;
+  const a = t0 - 30, b = Math.min(t1 + 30, Math.floor(Date.now() / 1000));
+  return `<a href="/pige?t=${t0}" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Ouvrir la pige 30 s avant l'alerte">Écouter</a>`
+       + `<a href="/api/pige/export?start=${a}&end=${b}" class="font-medium text-blue-600 hover:text-blue-800" title="Extrait MP3 de 30 s avant à 30 s après">MP3</a>`;
+}
+async function loadReception() {
+  try {
+    const st = await api('/api/stats');
+    const up = st.uptime || 0;
+    $('rc-uptime').textContent = up >= 86400 ? `${Math.floor(up / 86400)} j ${Math.floor(up % 86400 / 3600)} h` : `${Math.floor(up / 3600)} h ${Math.floor(up % 3600 / 60)} min`;
+    if (st.start_time) {
+      const d = new Date(st.start_time);
+      $('rc-start').textContent = isNaN(d) ? st.start_time : `depuis le ${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+  } catch (e) {}
+  try {
+    const ps = await api('/api/pige/status');
+    rcPigeFrom = ps.segments && ps.segments.length ? ps.segments[0].start : null;
+  } catch (e) { rcPigeFrom = null; }
+  try { rcArchives = (await api('/api/pige/archives')).archives || []; } catch (e) { rcArchives = []; }
+  try {
+    const d = await api('/api/alerts/history/grouped?limit=500');
+    rcAlerts = d.data || [];
+  } catch (e) {
+    $('rc-body').innerHTML = `<tr><td colspan="7" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`;
+    return;
+  }
+  const now = Date.now();
+  [[7, 'rc-7d'], [30, 'rc-30d']].forEach(([days, id]) => {
+    const list = rcAlerts.filter(a => now - new Date(a.start_time).getTime() <= days * 86400e3);
+    $(id).textContent = list.length;
+    const tot = list.reduce((s, a) => s + (a.duration || 0), 0);
+    $(id + '-dur').textContent = list.length ? `durée cumulée ${fmtDur(tot)}` : 'aucune';
+  });
+  const sel = $('rc-type'), cur = sel.value;
+  const types = [...new Set(rcAlerts.map(a => a.alert_label).filter(Boolean))];
+  sel.innerHTML = '<option value="">Tous les types</option>' + types.map(t => `<option>${esc(t)}</option>`).join('');
+  sel.value = types.includes(cur) ? cur : '';
+  renderReception();
+}
+function renderReception() {
+  const type = $('rc-type').value;
+  const list = rcAlerts.filter(a => !type || a.alert_label === type);
+  const shown = rcShowAll ? list : list.slice(0, 50);
+  $('rc-count').textContent = `${list.length} alerte${list.length > 1 ? 's' : ''}`;
+  $('rc-more').classList.toggle('hidden', rcShowAll || list.length <= 50);
+  if (!shown.length) {
+    $('rc-body').innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-400">Aucune alerte enregistrée</td></tr>';
+    return;
+  }
+  $('rc-body').innerHTML = shown.map(a => {
+    const d0 = new Date(a.start_time);
+    const day = `${pad(d0.getDate())}-${pad(d0.getMonth() + 1)}-${d0.getFullYear()}`;
+    const t0 = `${pad(d0.getHours())}:${pad(d0.getMinutes())}:${pad(d0.getSeconds())}`;
+    let range = t0, state;
+    if (a.status === 'complete') {
+      const d1 = new Date(a.end_time);
+      range = `${t0} → ${pad(d1.getHours())}:${pad(d1.getMinutes())}:${pad(d1.getSeconds())}`;
+      state = '<span class="px-2 py-0.5 rounded-full bg-green-50 text-green-700">Rétabli</span>';
+    } else if (a.status === 'ongoing') {
+      range = `${t0} → <span class="text-red-600 font-medium">en cours</span>`;
+      state = '<span class="px-2 py-0.5 rounded-full bg-red-50 text-red-700">En cours</span>';
+    } else {
+      state = '<span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">Retour seul</span>';
+    }
+    const col = RC_COLORS[a.alert_label] || 'bg-gray-100 text-gray-700';
+    return `<tr class="hover:bg-slate-50">
+      <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${day}</td>
+      <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${col}">${esc(a.alert_label || '-')}</span></td>
+      <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${range}</td>
+      <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.status === 'ongoing' ? '-' : fmtDur(a.duration)}</td>
+      <td class="py-2 pr-3 whitespace-nowrap">${state}</td>
+      <td class="py-2 pr-3 text-gray-600">${a.emails_sent}</td>
+      <td class="py-2 whitespace-nowrap">${rcPigeLinks(a.start_time, a.end_time)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══ BL-FMO (journal système) ════════════════════════════════════════════
+let slLines = [];
+async function loadSysLogs() {
+  $('sl-box').textContent = 'Chargement...';
+  try {
+    const d = await api(`/api/logs?unit=${encodeURIComponent($('sl-unit').value)}&lines=${$('sl-lines').value}`);
+    slLines = (d.logs || '').split('\n').filter(l => l.trim());
+  } catch (e) { $('sl-box').textContent = e.message; return; }
+  renderSysLogs();
+}
+function renderSysLogs() {
+  const only = $('sl-errors').checked;
+  const lines = slLines.filter(l => !only || /ERROR|WARNING|CRITICAL|Traceback|Erreur/i.test(l));
+  const box = $('sl-box');
+  box.innerHTML = lines.length ? lines.map(l => {
+    const cls = /ERROR|CRITICAL|Traceback/.test(l) ? 'log-error' : /WARNING/.test(l) ? 'log-warning' : 'log-info';
+    return `<div class="log-line ${cls}">${esc(l)}</div>`;
+  }).join('') : '<div class="log-line log-info">Aucune ligne</div>';
+  box.scrollTop = box.scrollHeight;
+}
+setInterval(() => {
+  if (document.hidden) return;
+  const t = document.querySelector('.tab-btn.active')?.dataset.tab;
+  if (t === 'reception') loadReception();
+}, 60000);
+
+// Onglet de départ : #onglet dans l'adresse, sinon un filtre d'appareil (lien depuis la Chaîne), sinon le dernier ouvert
+(function () {
+  let t = location.hash.slice(1);
+  if (!TABS.includes(t)) {
+    const q = new URLSearchParams(location.search);
+    if (q.get('src') || q.get('q')) t = 'chaine';
+    else { try { t = localStorage.getItem('blfmo-logs-tab') || 'reception'; } catch (e) { t = 'reception'; } }
+  }
+  showTab(t);
+})();
 
 // ── Démarrage ──────────────────────────────────────────────────────────
 loadSources().then(() => { loadLogs(); loadRules(); });

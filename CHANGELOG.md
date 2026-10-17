@@ -4,6 +4,21 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
+## [Non publié]
+
+### Journaux
+- **Une seule page Journaux, trois onglets**, sans mélange :
+  - **Réception FM** : alertes du tuner (signal, modulation, RDS, RadioText) avec durée, état, écoute et MP3 ; nombre d'alertes et durée cumulée sur 7 et 30 jours, calculés sur l'historique (plus de compteur remis à zéro au redémarrage) ;
+  - **Chaîne de diffusion** : journaux syslog et traps des appareils (contenu de l'ancienne page Journaux) ;
+  - **BL-FMO** : journal système de l'application, de la pige ou de la réception des journaux, 100 à 2 000 lignes, filtre avertissements et erreurs.
+- La page **Statistiques** disparaît du menu ; `/stats` redirige vers l'onglet Réception FM.
+- L'alerte « Perte émetteur » s'appelle désormais « Signal perdu » (le tuner mesure la réception, pas l'émetteur).
+
+### Installation
+- `install.sh` suit la configuration de référence (mini-PC + Headless TEF Lite SE) : installe `snmp` (supervision de la chaîne), ajoute l'utilisateur aux groupes `dialout` et `audio`, crée une configuration avec le tuner TEF activé, vérifie le tuner en fin d'installation ; n'installe plus rtl-sdr, redsea ni GNU Radio.
+
+---
+
 ## [0.8.0] - 2026-10-17
 
 BL-FMO ne surveille plus seulement la réception FM : il supervise aussi toute la chaîne de diffusion, du studio à l'antenne, et garde la trace audio de ce qui est parti à l'antenne.

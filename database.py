@@ -162,7 +162,7 @@ class FMDatabase:
 
         # Correspondance type_perte → type_retour + libellé affiché
         ALERT_PAIRS = {
-            'signal_lost':   ('signal_restored',      'Perte émetteur'),
+            'signal_lost':   ('signal_restored',      'Signal perdu'),
             'no_modulation': ('modulation_restored',  'Absence modulation'),
             'rds_lost':      ('rds_restored',         'RDS absent'),
             'rt_lost':       ('rt_restored',          'RadioText absent'),
