@@ -154,6 +154,11 @@ class FMMonitor:
         self.rt_ab_flag = None
         self._rt_stable_count = 0
         self._rt_last_candidate = ''
+        # Historique des RadioText (RT_HISTORY_PATCH)
+        self._rth_candidate = ''      # texte en cours de validation
+        self._rth_since = 0.0         # depuis quand il est reçu sans changement
+        self._rth_recent = {}         # texte -> heure du dernier enregistrement
+        self._rth_last = None         # dernier texte enregistré
         self._logo_searched = False
         self._logo_last_attempt = 0
         self._logo_fail_count = 0
@@ -655,8 +660,42 @@ class FMMonitor:
         """Reçoit le RadioText RDS du TEF."""
         with self.stats_lock:
             if rt:
-                self.stats['rt'] = rt
-                self.rt_buffer   = rt
+                self.stats['rt']  = rt
+                self.rt_buffer    = rt
+                self.rt_last_seen = time.time()   # alimente l'alerte « RadioText absent »
+            ps = self.stats.get('ps', '-')
+        if rt:
+            self._rt_history_note(rt, ps)
+
+    # Un RadioText n'entre dans l'historique qu'après RT_HISTORY_STABLE s de réception
+    # identique (écarte les textes partiels ou corrompus), et pas s'il a déjà été
+    # enregistré dans les RT_HISTORY_REPEAT dernières secondes (messages en rotation).
+    RT_HISTORY_STABLE = 8
+    RT_HISTORY_REPEAT = 600
+
+    def _rt_history_note(self, rt, ps=None):
+        """Valide un RadioText reçu et l'enregistre s'il est nouveau (RT_HISTORY_PATCH)."""
+        text = ' '.join(rt.split())
+        if not text:
+            return
+        now = time.time()
+        if text != self._rth_candidate:
+            self._rth_candidate, self._rth_since = text, now
+            return
+        if now - self._rth_since < self.RT_HISTORY_STABLE or text == self._rth_last:
+            return
+        if self._rth_last is None:                # premier texte depuis le démarrage
+            last = self.db.get_rt_history(limit=1)
+            if last and last[0]['rt'] == text:
+                self._rth_last = text
+                return
+        self._rth_last = text
+        if now - self._rth_recent.get(text, 0) < self.RT_HISTORY_REPEAT:
+            return
+        self._rth_recent = {t: ts for t, ts in self._rth_recent.items()
+                            if now - ts < self.RT_HISTORY_REPEAT}
+        self._rth_recent[text] = now
+        self.db.save_rt_title(None if ps in (None, '-') else ps, text)
 
     def _on_tef_ms(self, is_stereo):
         """Reçoit le flag MS (Music/Stereo) depuis le groupe RDS 0A."""

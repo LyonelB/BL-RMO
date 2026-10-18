@@ -43,7 +43,7 @@ import wave
 from datetime import datetime, timedelta
 
 import numpy as np
-from scipy.signal import lfilter
+from scipy.signal import butter, lfilter, sosfilt
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,12 @@ DEFAULTS = {
     'crackle_count': 4,       # craquements : plus de 3 clics...
     'crackle_window_ms': 1000,  # ... en moins d'une seconde
     'group_ms': 500,          # clics distants de moins de 500 ms : même événement
+    # Sauts du flux audio du tuner (capture locale, pas l'antenne) : énergie
+    # au-dessus de 20 kHz. Après l'émetteur et le tuner, l'audio FM s'arrête
+    # vers 15 kHz ; un saut du flux numérique, lui, couvre toute la bande.
+    'hf_hz': 20000,
+    'hf_db': 12.0,            # au-dessus du plancher habituel de cette bande
+    'warmup_s': 5.0,          # rien n'est signalé au démarrage de la capture
     # Contexte de réception
     'rf_margin_db': 10.0,     # suspect si dBf < seuil de perte + marge
     'rf_max_multipath': 25.0, # suspect si multitrajet au-dessus (valeur brute du tuner)
@@ -145,8 +151,15 @@ class AudioDefectDetector:
         self._peaks = []                     # crêtes des derniers morceaux
         self._group = None                   # groupe de clics en cours
 
+        # Sauts du flux du tuner
+        self._hf_sos = butter(8, min(0.99, self.p['hf_hz'] / (self.sr / 2)), 'high', output='sos')
+        self._hf_zi = np.zeros((self._hf_sos.shape[0], 2, 2))
+        self._hf_medians = []                # plancher : médianes des derniers morceaux
+        self._hf_run = None                  # saut en cours
+        self._glitches = []                  # (début, fin) des derniers sauts
+
         self._waiting = []                   # événements en attente de leur extrait
-        self.counters = {'coupure': 0, 'clic': 0, 'craquements': 0}
+        self.counters = {'coupure': 0, 'clic': 0, 'craquements': 0, 'capture': 0}
 
     # ── Entrée ──────────────────────────────────────────────────────
 
@@ -161,6 +174,7 @@ class AudioDefectDetector:
         self.wall_end = self.clock()
         x = pcm.astype(np.float32) / 32768.0
         try:
+            self._hf(x, start)
             self._gaps(x, start)
             self._clicks(x, start)
         except Exception as e:                # ne jamais casser la capture
@@ -235,9 +249,71 @@ class AudioDefectDetector:
             if len(hist) > 10:
                 del hist[0]
 
+    # ── Sauts du flux du tuner ──────────────────────────────────────
+
+    def _hf(self, x, start):
+        y, self._hf_zi = sosfilt(self._hf_sos, x, axis=0, zi=self._hf_zi)
+        b = 48                                            # blocs de 1 ms
+        nb = len(y) // b
+        if nb == 0:
+            return
+        rms = np.sqrt((y[:nb * b].reshape(nb, b, 2) ** 2).mean(axis=(1, 2))) + 1e-9
+        self._hf_medians.append(float(np.median(rms)))
+        if len(self._hf_medians) > 40:                    # 2 s de plancher
+            del self._hf_medians[0]
+        if len(self._hf_medians) < 10:
+            return
+        floor = float(np.median(self._hf_medians))
+        db = 20 * np.log10(rms / floor)
+        for j in np.flatnonzero(db > self.p['hf_db']):
+            pos = start + int(j) * b
+            r = self._hf_run
+            if r and pos - r['end'] <= 5 * b:
+                r['end'] = pos + b
+                r['peak'] = max(r['peak'], float(db[j]))
+            else:
+                if r:
+                    self._emit_glitch(r)
+                self._hf_run = {'start': pos, 'end': pos + b, 'peak': float(db[j])}
+        r = self._hf_run
+        if r and start + nb * b - r['end'] > 5 * b:
+            self._emit_glitch(r)
+
+    def _emit_glitch(self, r):
+        self._hf_run = None
+        self._glitches.append((r['start'], r['end']))
+        self._glitches = self._glitches[-50:]
+        self._queue({
+            'type': 'capture',
+            'start': r['start'], 'end': r['end'],
+            'duration_ms': round((r['end'] - r['start']) * 1000.0 / self.sr, 1),
+            'count': 1,
+            'level_before_dbfs': None,
+            'depth_db': round(r['peak'], 1),
+            'detail': f"saut du flux audio du tuner : +{r['peak']:.0f} dB au-dessus de "
+                      f"{self.p['hf_hz'] / 1000:g} kHz, hors de la bande FM",
+        })
+
+    def _near_glitch(self, a, b=None, margin_ms=3):
+        m = int(self.sr * margin_ms / 1000)
+        b = a if b is None else b
+        r = self._hf_run
+        spans = self._glitches + ([(r['start'], r['end'])] if r else [])
+        return any(g0 - m <= b and a <= g1 + m for g0, g1 in spans)
+
     def _emit_gap(self, g, end, dur_ms, rise_db):
         self._recent_gaps.append((g['start'], end))
         self._recent_gaps = self._recent_gaps[-20:]
+        if g['floor'] <= -100.0:
+            # Zéros exacts : impossible après une réception FM (il reste le
+            # souffle du récepteur). Le trou vient de la capture.
+            self._queue({
+                'type': 'capture', 'start': g['start'], 'end': end,
+                'duration_ms': round(dur_ms, 1), 'count': 1,
+                'level_before_dbfs': round(float(g['before']), 1), 'depth_db': None,
+                'detail': f"silence numérique de {dur_ms:.0f} ms (zéros exacts) : trou dans la capture",
+            })
+            return
         ev = {
             'type': 'coupure',
             'start': g['start'], 'end': end,
@@ -324,6 +400,8 @@ class AudioDefectDetector:
             self._add_click(start + pk - ctx, float(np.abs(ee[pk]) / sig_n[min(pk // sb, nb - 1)]))
 
     def _add_click(self, pos, ratio):
+        if self._near_glitch(pos):
+            return                                 # c'est le saut du tuner, déjà signalé
         g = self._group
         gap = int(self.sr * self.p['group_ms'] / 1000)
         if g and pos - g['end'] <= gap:
@@ -344,6 +422,12 @@ class AudioDefectDetector:
         for a, b in self._recent_gaps:           # bords d'une coupure : déjà signalée
             if a - margin <= g['start'] and g['end'] <= b + margin:
                 return
+        # Clics qui tombent sur un saut du tuner : déjà signalés comme tels
+        pos = [q for q in g['pos'] if not self._near_glitch(q)]
+        if not pos:
+            return
+        if len(pos) != len(g['pos']):
+            g.update(pos=pos, count=len(pos), start=pos[0], end=pos[-1])
         n = g['count']
         # Plus grand nombre de clics tenant dans une fenêtre d'une seconde
         win = int(self.sr * self.p['crackle_window_ms'] / 1000)
@@ -370,6 +454,8 @@ class AudioDefectDetector:
     # ── Sortie ──────────────────────────────────────────────────────
 
     def _queue(self, ev):
+        if ev['start'] < self.p['warmup_s'] * self.sr:
+            return                                 # démarrage de la capture
         ev['time'] = self._wall(ev['start'])
         rf = None
         if self.rf_context:
@@ -397,7 +483,8 @@ class AudioDefectDetector:
         # Un groupe de clics se ferme quand plus rien n'arrive depuis group_ms,
         # et jamais pendant une coupure en cours (ses bords font des clics).
         g = self._group
-        if g and self._gap is None and self.total - g['end'] > int(self.sr * self.p['group_ms'] / 1000):
+        if g and self._gap is None and self._hf_run is None \
+                and self.total - g['end'] > int(self.sr * self.p['group_ms'] / 1000):
             self._close_group()
         if not self._waiting:
             return
@@ -407,7 +494,7 @@ class AudioDefectDetector:
                 keep.append(ev)
                 continue
             a = ev['start'] - int(self.p['clip_pre_s'] * self.sr)
-            clip = self._ring_read(a, ev['ready_at'])
+            clip = self._ring_read(a, ev['ready_at']) if ev['type'] != 'capture' else None
             ev['clip_offset_s'] = round((ev['start'] - max(a, 0)) / self.sr, 3)
             self.counters[ev['type']] += 1
             for k in ('start', 'end', 'ready_at'):
@@ -428,13 +515,14 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILE = os.path.join(BASE_DIR, 'fm_monitor.db')
 CLIP_DIR = os.path.join(BASE_DIR, 'audio_defects')
 
-TYPE_LABELS = {'coupure': 'Micro-coupure', 'clic': 'Clic', 'craquements': 'Craquements'}
+TYPE_LABELS = {'coupure': 'Micro-coupure', 'clic': 'Clic', 'craquements': 'Craquements',
+               'capture': 'Saut du tuner'}
 
 SCHEMA = '''
 CREATE TABLE IF NOT EXISTS audio_defects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp TEXT NOT NULL,          -- heure locale ISO, à la milliseconde
-    type TEXT NOT NULL,               -- coupure | clic | craquements
+    type TEXT NOT NULL,               -- coupure | clic | craquements | capture (saut local du tuner)
     duration_ms REAL,
     count INTEGER,
     depth_db REAL,                    -- coupure : profondeur ; clic : pic du résidu (dB)
@@ -548,11 +636,13 @@ class AudioDefectStore:
                         pass
 
     # ── lecture (application web) ───────────────────────────────────
-    def events(self, hours=24, limit=500, include_suspect=True):
+    def events(self, hours=24, limit=500, include_suspect=True, include_local=True):
         since = (datetime.now() - timedelta(hours=hours)).isoformat()
         q = 'SELECT * FROM audio_defects WHERE timestamp >= ?'
         if not include_suspect:
             q += ' AND rf_suspect = 0'
+        if not include_local:
+            q += " AND type != 'capture'"
         q += ' ORDER BY timestamp DESC LIMIT ?'
         with self._conn() as c:
             rows = [dict(r) for r in c.execute(q, (since, int(limit)))]
@@ -571,7 +661,7 @@ class AudioDefectStore:
                 d['rf_suspect'] = 0
                 for r in c.execute('SELECT type, rf_suspect, COUNT(*) n FROM audio_defects '
                                    'WHERE timestamp >= ? GROUP BY type, rf_suspect', (since,)):
-                    if r['rf_suspect']:
+                    if r['rf_suspect'] and r['type'] != 'capture':
                         d['rf_suspect'] += r['n']
                     else:
                         d[r['type']] = d.get(r['type'], 0) + r['n']

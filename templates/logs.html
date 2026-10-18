@@ -125,6 +125,32 @@
         </div>
       </div>
 
+      <!-- Titres diffusés via le RadioText (RT_HISTORY_PATCH) -->
+      <div class="section">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="section-title" style="margin-bottom:0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+            Titres diffusés (RadioText)
+          </div>
+          <span class="text-xs text-gray-400">10 derniers</span>
+        </div>
+        <p class="text-xs text-gray-500 mb-3">Chaque nouveau RadioText reçu par le tuner, avec l'heure de son premier affichage. Un texte qui revient en boucle (nom de la station, slogan) n'est repris qu'après 10 minutes.</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead>
+              <tr class="text-gray-400 border-b border-gray-100">
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">Heure</th>
+                <th class="font-medium py-2 pr-3">RadioText</th>
+                <th class="font-medium py-2"></th>
+              </tr>
+            </thead>
+            <tbody id="rt-body" class="divide-y divide-gray-50">
+              <tr><td colspan="3" class="py-8 text-center text-gray-400">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="section">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div class="section-title" style="margin-bottom:0">
@@ -170,6 +196,7 @@
           </div>
           <div class="flex items-center gap-3">
             <label class="flex items-center gap-1.5 text-xs text-gray-500"><input type="checkbox" id="df-rf" checked onchange="loadDefects()"> réception douteuse</label>
+            <label class="flex items-center gap-1.5 text-xs text-gray-500" title="Sauts du flux audio du tuner lui-même, sans rapport avec l'antenne"><input type="checkbox" id="df-local" onchange="loadDefects()"> sauts du tuner</label>
             <select id="df-hours" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="loadDefects()">
               <option value="24">24 heures</option><option value="168">7 jours</option><option value="720">30 jours</option>
             </select>
@@ -180,8 +207,8 @@
             </button>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-3">Micro-coupures, clics et craquements repérés sur le signal brut du tuner, avant tout encodage MP3. Un saut d'audio (morceau sauté ou répété par un codec) apparaît comme un clic. Plus de 3 clics en moins d'une seconde forment des craquements, surlignés en orange. « Réception douteuse » : le signal était faible ou perturbé au même moment, le défaut vient peut-être de l'antenne plutôt que de la chaîne. Chaque extrait WAV dure environ 3 s, le défaut tombe à 1,5 s.</p>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 text-xs" id="df-sum"></div>
+        <p class="text-xs text-gray-500 mb-3">Micro-coupures, clics et craquements repérés sur le signal brut du tuner, avant tout encodage MP3. Un saut d'audio (morceau sauté ou répété par un codec) apparaît comme un clic. Plus de 3 clics en moins d'une seconde forment des craquements, surlignés en orange. « Réception douteuse » : le signal était faible ou perturbé au même moment, le défaut vient peut-être de l'antenne plutôt que de la chaîne. Chaque extrait WAV dure environ 3 s, le défaut tombe à 1,5 s. « Saut du tuner » : un saut dans le flux audio du tuner lui-même (énergie au-dessus de 20 kHz, hors de la bande FM), sans rapport avec la chaîne ; compté à part et masqué de la liste par défaut.</p>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3 text-xs" id="df-sum"></div>
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left table-fixed" style="min-width:680px">
             <colgroup><col style="width:120px"><col style="width:110px"><col style="width:70px"><col><col style="width:130px"><col style="width:70px"></colgroup>
@@ -639,7 +666,7 @@ function showTab(t, push) {
   $('rx-status').style.display = t === 'chaine' ? '' : 'none';
   if (push !== false) history.replaceState(null, '', location.pathname + location.search + '#' + t);
   try { localStorage.setItem('blfmo-logs-tab', t); } catch (e) {}
-  if (t === 'reception') loadReception();
+  if (t === 'reception') { loadReception(); loadRtHistory(); }
   if (t === 'dab') loadDab();
   if (t === 'blfmo' && !tabLoaded.blfmo) { tabLoaded.blfmo = true; loadSysLogs(); }
 }
@@ -676,11 +703,11 @@ function rcPigeLinks(startIso, endIso) {
 }
 // ── Défauts audio ─────────────────────────────────────────
 let dfRows = [], dfShowAll = false, dfAudio = null, dfPlaying = null;
-const DF_COLORS = { coupure: 'text-red-600', clic: 'text-amber-600', craquements: 'text-orange-600' };
+const DF_COLORS = { coupure: 'text-red-600', clic: 'text-amber-600', craquements: 'text-orange-600', capture: 'text-gray-400' };
 async function loadDefects() {
   let d;
   try {
-    d = await api(`/api/audio-defects?hours=${$('df-hours').value}&rf=${$('df-rf').checked ? 1 : 0}`);
+    d = await api(`/api/audio-defects?hours=${$('df-hours').value}&rf=${$('df-rf').checked ? 1 : 0}&local=${$('df-local').checked ? 1 : 0}`);
   } catch (e) {
     $('df-body').innerHTML = `<tr><td colspan="6" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`;
     return;
@@ -694,9 +721,10 @@ async function loadDefects() {
   $('df-sum').innerHTML = box('Micro-coupures', a.coupure, b.coupure, 'text-red-600')
     + box('Clics', a.clic, b.clic, 'text-amber-600')
     + box('Craquements <span class="text-[10px]">(plus de 3 clics en 1 s)</span>', a.craquements, b.craquements, 'text-orange-600')
-    + box('Réception douteuse', a.rf_suspect, b.rf_suspect, 'text-gray-600');
+    + box('Réception douteuse', a.rf_suspect, b.rf_suspect, 'text-gray-600')
+    + box('Sauts du tuner <span class="text-[10px]">(local)</span>', a.capture || 0, b.capture || 0, 'text-gray-600');
   if (!d.active) $('df-sum').insertAdjacentHTML('beforeend',
-    '<div class="col-span-2 sm:col-span-4 text-gray-400">Détection inactive : elle demande le tuner TEF (et <code>audio_defects.enabled</code> à vrai dans la configuration).</div>');
+    '<div class="col-span-2 sm:col-span-5 text-gray-400">Détection inactive : elle demande le tuner TEF (et <code>audio_defects.enabled</code> à vrai dans la configuration).</div>');
   renderDefects();
 }
 function renderDefects() {
@@ -707,7 +735,7 @@ function renderDefects() {
     $('df-body').innerHTML = rows.map(r => {
       const t = new Date(r.timestamp);
       const date = isNaN(t) ? esc(r.timestamp) : `${pad(t.getDate())}-${pad(t.getMonth() + 1)} ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}<span class="text-gray-400">,${String(t.getMilliseconds()).padStart(3, '0').slice(0, 1)}</span>`;
-      const dur = r.type === 'coupure' ? `${Math.round(r.duration_ms)} ms`
+      const dur = r.type === 'coupure' || r.type === 'capture' ? `${Math.round(r.duration_ms)} ms`
         : r.count > 1 ? `${r.count} clics` + (r.max_per_s > 1 ? `<div class="text-[10px] text-gray-400">${r.max_per_s} en &lt; 1 s</div>` : '') : '1 clic';
       const rx = (r.dbf != null ? `${Number(r.dbf).toFixed(0)} dBf` : '') + (r.multipath != null ? ` · MP ${Number(r.multipath).toFixed(0)}` : '');
       const play = r.has_clip
@@ -775,6 +803,33 @@ async function loadReception() {
   sel.value = types.includes(cur) ? cur : '';
   renderReception();
   loadDefects();
+}
+async function loadRtHistory() {
+  let d;
+  try { d = await api('/api/rds/rt_history?limit=10'); }
+  catch (e) {
+    $('rt-body').innerHTML = `<tr><td colspan="3" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`;
+    return;
+  }
+  const rows = d.data || [];
+  if (!rows.length) {
+    $('rt-body').innerHTML = '<tr><td colspan="3" class="py-8 text-center text-gray-400">Aucun RadioText enregistré pour le moment</td></tr>';
+    return;
+  }
+  const cur = String(d.current || '').split(/\s+/).join(' ').trim();
+  const today = new Date(), yest = new Date(Date.now() - 86400e3);
+  const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  $('rt-body').innerHTML = rows.map((r, i) => {
+    const t = new Date(String(r.timestamp).replace(' ', 'T'));
+    const hm = isNaN(t) ? esc(r.timestamp) : `${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}`;
+    const day = isNaN(t) || sameDay(t, today) ? '' : sameDay(t, yest) ? 'hier' : `${pad(t.getDate())}-${pad(t.getMonth() + 1)}`;
+    const live = i === 0 && r.rt === cur;
+    return `<tr class="hover:bg-slate-50">
+      <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${hm}${day ? ` <span class="text-gray-400">${day}</span>` : ''}</td>
+      <td class="py-2 pr-3 ${live ? 'font-semibold text-gray-900' : 'text-gray-700'}">${esc(r.rt)}</td>
+      <td class="py-2 whitespace-nowrap text-right">${live ? '<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">À l\'antenne</span>' : ''}</td>
+    </tr>`;
+  }).join('');
 }
 function renderReception() {
   const type = $('rc-type').value;
@@ -913,6 +968,10 @@ setInterval(() => {
   const t = document.querySelector('.tab-btn.active')?.dataset.tab;
   if (t === 'reception') loadReception();
 }, 60000);
+setInterval(() => {   // RadioText : rafraîchi plus souvent que les alertes
+  if (document.hidden) return;
+  if (document.querySelector('.tab-btn.active')?.dataset.tab === 'reception') loadRtHistory();
+}, 15000);
 
 // Onglet de départ : #onglet dans l'adresse, sinon un filtre d'appareil (lien depuis la Chaîne), sinon le dernier ouvert
 (function () {

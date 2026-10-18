@@ -60,7 +60,9 @@ DEFAULTS = {
     'receiver_loss_duration': 300,    # s avant alerte récepteur hors service
     'startup_grace': 180,             # s sans alerte service après (re)démarrage de welle-cli
     'watched_sids': [],               # vide = tous les services
-    'usb_reset_cmd': '',              # ex. "sudo /usr/local/bin/rtlsdr-usb-reset.sh"
+    'usb_reset_cmd': '',              # vide : script installé par 67-dab.sh s'il existe
+    'sync_timeout': 300,              # s sans ensemble décodé (FIC) avant de relancer welle-cli
+                                      # (au démarrage, la synchro prend déjà 2 à 3 min sur la clé V4)
     'listen_max_minutes': 15,         # écoute depuis l'interface (protection de la clé)
 }
 
@@ -263,6 +265,9 @@ class DabMonitor:
         self.slot = None
         self.slot_stats = {}
         self.lock = threading.Lock()
+        self._force_reset = False
+        self._nosync_since = None
+        self._nosync_restarts = 0
         self.email = None
         if email:
             try:
@@ -323,10 +328,17 @@ class DabMonitor:
                 os.replace(WELLE_LOG, WELLE_LOG + '.1')
         except OSError:
             pass
-        if self.cfg.get('usb_reset_cmd') and self.backoff > 5:
-            subprocess.run(self.cfg['usb_reset_cmd'], shell=True, timeout=30,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        reset = self.cfg.get('usb_reset_cmd') or (
+            'sudo -n /usr/local/bin/rtlsdr-usb-reset.sh' if os.path.exists('/usr/local/bin/rtlsdr-usb-reset.sh') else '')
+        if reset and (self.backoff > 5 or self._force_reset):
+            logger.info("Réinitialisation USB de la clé RTL-SDR")
+            try:
+                subprocess.run(reset, shell=True, timeout=30,
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except subprocess.TimeoutExpired:
+                logger.warning("Réinitialisation USB : délai dépassé")
             time.sleep(5)
+        self._force_reset = False
         cmd = self._cmd()
         logger.info("Lancement : " + ' '.join(cmd))
         log = open(WELLE_LOG, 'a')
@@ -352,6 +364,34 @@ class DabMonitor:
                 except Exception:
                     pass
         self._set_welle_up(False)
+
+    def _check_sync(self, now=None):
+        """welle-cli tourne et la clé reçoit (SNR), mais aucun ensemble n'est
+        décodé : cas vu après un redémarrage (FIC 0 %, EId 0x0000, aucun
+        service). welle-cli ne s'en sort pas seul : on le relance, avec
+        réinitialisation USB de la clé, puis à intervalles croissants."""
+        now = now or time.time()
+        if not (self.welle_up and self.proc):
+            self._nosync_since = None
+            return
+        with self.lock:
+            any_present = any(s.present for s in self.services.values())
+        eid = str(self.rf.get('ensemble_id') or '').lower()
+        synced = any_present or (eid not in ('', '0', '0x0', '0x0000') and self.rf.get('fic_quality', 0) > 0)
+        if synced:
+            self._nosync_since = None
+            self._nosync_restarts = 0
+            return
+        self._nosync_since = self._nosync_since or now
+        wait = min(float(self.cfg.get('sync_timeout', 300)) * (2 ** self._nosync_restarts), 1800)
+        if now - self._nosync_since >= wait and now - self.proc_started >= wait:
+            self._nosync_restarts += 1
+            self.last_error = f"aucun ensemble décodé depuis {int(now - self._nosync_since)} s"
+            logger.warning(f"DAB+ : {self.last_error}, relance de welle-cli avec réinitialisation USB "
+                           f"(tentative {self._nosync_restarts})")
+            self._force_reset = True
+            self._nosync_since = None
+            self._kill_welle()
 
     def _supervise(self):
         """Relance welle-cli s'il s'est arrêté, avec un délai croissant (5 s à 5 min)."""
@@ -667,6 +707,7 @@ class DabMonitor:
                 self._supervise()
                 if self.proc:
                     self.poll_once()
+                    self._check_sync()
                 else:
                     self._set_welle_up(False)
                 self.check_alerts()
