@@ -31,6 +31,12 @@ try:
 except ImportError:
     _TEF_AUDIO_AVAILABLE = False
 
+try:
+    from audio_defects import AudioDefectDetector, AudioDefectStore
+    _DEFECTS_AVAILABLE = True
+except ImportError:
+    _DEFECTS_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 class FMMonitor:
@@ -53,6 +59,24 @@ class FMMonitor:
             self.mpx_analyzer = TEFAudioAnalyzer(alsa_device=alsa_dev)
         else:
             self.mpx_analyzer = MPXAnalyzer(sample_rate=171000, process_every=4)
+
+        # Défauts audio de la chaîne (micro-coupures, clics, craquements),
+        # sur le PCM brut du tuner TEF. Relevé seul pour l'instant : pas de mail.
+        self.defect_detector = None
+        self.defect_store = None
+        dcfg = self.config.get('audio_defects', {}) or {}
+        if self.use_tef and _DEFECTS_AVAILABLE and dcfg.get('enabled', True):
+            try:
+                self.defect_store = AudioDefectStore(
+                    keep_days=dcfg.get('keep_days', 30), clip_days=dcfg.get('clip_days', 7),
+                    max_clips_per_hour=dcfg.get('max_clips_per_hour', 30))
+                self.defect_detector = AudioDefectDetector(
+                    params=dcfg, on_event=self.defect_store.submit,
+                    rf_context=self._defect_rf_context,
+                    signal_threshold_dbf=self.tef_config.get('signal_threshold_dbf', 20.0))
+            except Exception as e:
+                logger.error(f"Détection des défauts audio indisponible : {e}")
+                self.defect_detector = self.defect_store = None
 
         # Queue pour le streaming MP3
         self.stream_queue = queue.Queue(maxsize=500)
@@ -130,11 +154,6 @@ class FMMonitor:
         self.rt_ab_flag = None
         self._rt_stable_count = 0
         self._rt_last_candidate = ''
-        # Historique des RadioText (RT_HISTORY_PATCH)
-        self._rth_candidate = ''      # texte en cours de validation
-        self._rth_since = 0.0         # depuis quand il est reçu sans changement
-        self._rth_recent = {}         # texte -> heure du dernier enregistrement
-        self._rth_last = None         # dernier texte enregistré
         self._logo_searched = False
         self._logo_last_attempt = 0
         self._logo_fail_count = 0
@@ -239,6 +258,9 @@ class FMMonitor:
         if self.running:
             logger.warning("Le moniteur est déjà en cours d'exécution")
             return
+
+        if self.defect_store:
+            self.defect_store.start()
 
         # Clôturer les alertes ouvertes d'une session précédente
         self.db.close_open_alerts()
@@ -546,6 +568,8 @@ class FMMonitor:
                     if count >= process_every:
                         if hasattr(self.mpx_analyzer, '_process'):
                             self.mpx_analyzer._process(accum)
+                        if self.defect_detector:
+                            self.defect_detector.feed(accum)
                         accum = b''
                         count = 0
 
@@ -557,6 +581,12 @@ class FMMonitor:
                     self.master_process.kill()
                 except Exception:
                     pass
+
+    def _defect_rf_context(self):
+        """Réception au moment d'un défaut audio (dernières valeurs du tuner)."""
+        with self.stats_lock:
+            return {'dbf': self.stats.get('signal_dbf'), 'multipath': self.stats.get('multipath'),
+                    'snr': self.stats.get('snr')}
 
     # ── Callbacks TEF → stats ────────────────────────────────────────
 
@@ -625,42 +655,8 @@ class FMMonitor:
         """Reçoit le RadioText RDS du TEF."""
         with self.stats_lock:
             if rt:
-                self.stats['rt']  = rt
-                self.rt_buffer    = rt
-                self.rt_last_seen = time.time()   # alimente l'alerte « RadioText absent »
-            ps = self.stats.get('ps', '-')
-        if rt:
-            self._rt_history_note(rt, ps)
-
-    # Un RadioText n'entre dans l'historique qu'après RT_HISTORY_STABLE s de réception
-    # identique (écarte les textes partiels ou corrompus), et pas s'il a déjà été
-    # enregistré dans les RT_HISTORY_REPEAT dernières secondes (messages en rotation).
-    RT_HISTORY_STABLE = 8
-    RT_HISTORY_REPEAT = 600
-
-    def _rt_history_note(self, rt, ps=None):
-        """Valide un RadioText reçu et l'enregistre s'il est nouveau (RT_HISTORY_PATCH)."""
-        text = ' '.join(rt.split())
-        if not text:
-            return
-        now = time.time()
-        if text != self._rth_candidate:
-            self._rth_candidate, self._rth_since = text, now
-            return
-        if now - self._rth_since < self.RT_HISTORY_STABLE or text == self._rth_last:
-            return
-        if self._rth_last is None:                # premier texte depuis le démarrage
-            last = self.db.get_rt_history(limit=1)
-            if last and last[0]['rt'] == text:
-                self._rth_last = text
-                return
-        self._rth_last = text
-        if now - self._rth_recent.get(text, 0) < self.RT_HISTORY_REPEAT:
-            return
-        self._rth_recent = {t: ts for t, ts in self._rth_recent.items()
-                            if now - ts < self.RT_HISTORY_REPEAT}
-        self._rth_recent[text] = now
-        self.db.save_rt_title(None if ps in (None, '-') else ps, text)
+                self.stats['rt'] = rt
+                self.rt_buffer   = rt
 
     def _on_tef_ms(self, is_stereo):
         """Reçoit le flag MS (Music/Stereo) depuis le groupe RDS 0A."""

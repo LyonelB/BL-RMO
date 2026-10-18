@@ -338,7 +338,8 @@
               const on = s.enabled && s.recording;
               const dot = on ? 'bg-red-500 animate-pulse' : (s.enabled ? 'bg-amber-500' : 'bg-gray-300');
               const state = !s.enabled ? 'Désactivée' : on ? 'Enregistrement' : 'Arrêtée';
-              const since = s.segments.length ? fmtSince(s.segments[0].start) : 'Aucun enregistrement';
+              const oldest = s.oldest ?? (s.segments.length ? s.segments[0].start : null);
+              const since = oldest ? fmtSince(oldest) : 'Aucun enregistrement';
               show(dot, state, since, fmtBytes(s.used_bytes) + ' / ' + fmtBytes(s.free_bytes));
             } catch (e) {
               show('bg-gray-300', 'Indisponible', '-', '-');

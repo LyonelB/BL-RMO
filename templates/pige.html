@@ -108,11 +108,19 @@
       </div>
     </div>
 
-    <!-- ── Frise 24 h ───────────────────────────────────────── -->
+    <!-- ── Frise : dernières 24 h, ou une journée ──────────────── -->
     <div class="section mt-4">
-      <div class="section-title">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span id="timeline-title">Dernières 24 heures</span>
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div class="section-title" style="margin-bottom:0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="timeline-title">Dernières 24 heures</span>
+        </div>
+        <div id="day-nav" class="flex flex-wrap items-center gap-1 hidden">
+          <button id="day-prev" class="px-2.5 py-1 text-xs font-medium rounded-md border border-gray-200 hover:bg-gray-50 disabled:opacity-40" onclick="dayStep(-1)">← Jour précédent</button>
+          <input id="day-pick" type="date" class="px-2 py-1 text-xs rounded-md border border-gray-200 font-mono" onchange="dayPick(this.value)">
+          <button id="day-next" class="px-2.5 py-1 text-xs font-medium rounded-md border border-gray-200 hover:bg-gray-50 disabled:opacity-40" onclick="dayStep(1)">Jour suivant →</button>
+          <button id="day-live" class="px-2.5 py-1 text-xs font-semibold rounded-md border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 disabled:opacity-40" onclick="setView(null)">Dernières 24 h</button>
+        </div>
       </div>
       <div id="timeline" class="relative h-12 rounded-lg bg-gray-100 overflow-hidden cursor-pointer select-none">
         <div id="tl-cover"></div>
@@ -214,6 +222,7 @@
   let status = null;          // dernière réponse /api/pige/status
   let curSeg = null;          // segment chargé dans le lecteur
   let pendingOffset = 0;
+  let viewDay = null;         // null : dernières 24 h ; sinon minuit local (s) du jour affiché
   const audio = document.getElementById('audio');
   const $ = id => document.getElementById(id);
 
@@ -230,9 +239,20 @@
   // ═══════════════════════════════════════════════
   // STATUT + FRISE
   // ═══════════════════════════════════════════════
-  async function loadStatus() {
+  // Minuit local d'un horodatage, et les minuits voisins (gère le changement d'heure)
+  const dayStart = ts => { const d = new Date(ts * 1000); d.setHours(0, 0, 0, 0); return d.getTime() / 1000; };
+  const nextDay = ts => { const d = new Date(ts * 1000); d.setDate(d.getDate() + 1); d.setHours(0, 0, 0, 0); return d.getTime() / 1000; };
+  const prevDay = ts => { const d = new Date(ts * 1000); d.setDate(d.getDate() - 1); d.setHours(0, 0, 0, 0); return d.getTime() / 1000; };
+  const isoDay = ts => { const d = new Date(ts * 1000); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+
+  async function loadStatus(extra) {
+    // Segments demandés : la journée affichée, plus une marge autour de la tête de lecture
+    const now = Date.now() / 1000;
+    let a = viewDay == null ? now - 86400 : viewDay, b = viewDay == null ? now : nextDay(viewDay);
+    const head = extra ?? playerTs();
+    if (head != null) { a = Math.min(a, head - 900); b = Math.max(b, head + 3600); }
     try {
-      const r = await fetch('/api/pige/status', { credentials: 'include' });
+      const r = await fetch(`/api/pige/status?from=${Math.floor(a - 600)}&to=${Math.ceil(b + 600)}`, { credentials: 'include' });
       if (r.status === 401 || r.redirected) { location.href = '/login?timeout=1'; return; }
       status = await r.json();
     } catch (e) { console.error('Statut pige', e); return; }
@@ -240,16 +260,52 @@
     const on = status.enabled && status.recording;
     $('rec-dot').className = 'w-2.5 h-2.5 rounded-full ' + (on ? 'bg-red-500 animate-pulse' : 'bg-gray-300');
     $('rec-state').textContent = !status.enabled ? 'Désactivée' : on ? 'Enregistrement' : 'Arrêtée';
-    const segs = status.segments;
-    $('oldest').textContent = segs.length ? `${fmtDate(segs[0].start)} ${fmtTime(segs[0].start).slice(0, 5)}` : 'Aucun enregistrement';
+    const oldest = status.oldest ?? (status.segments.length ? status.segments[0].start : null);
+    $('oldest').textContent = oldest ? `${fmtDate(oldest)} ${fmtTime(oldest).slice(0, 5)}` : 'Aucun enregistrement';
     $('disk').textContent = `${fmtBytes(status.used_bytes)} / ${fmtBytes(status.free_bytes)}`;
-    $('timeline-title').textContent = `Dernières ${status.retention_hours} heures`;
+    renderNav();
     renderTimeline();
   }
 
+  function renderNav() {
+    const days = Math.round(status.retention_hours / 24);
+    const oldest = status.oldest;
+    const today = dayStart(status.now);
+    $('timeline-title').textContent = viewDay == null
+      ? 'Dernières 24 heures' + (days > 1 ? ` · pige de ${days} jours` : '')
+      : fmtDate(viewDay).replace(/^./, c => c.toUpperCase());
+    // Navigation par journée, seulement si la pige dépasse 24 h
+    $('day-nav').classList.toggle('hidden', status.retention_hours <= 24);
+    const cur = viewDay ?? today;
+    $('day-prev').disabled = !oldest || prevDay(cur) < dayStart(oldest);
+    $('day-next').disabled = viewDay == null;
+    $('day-live').disabled = viewDay == null;
+    $('day-pick').min = oldest ? isoDay(oldest) : '';
+    $('day-pick').max = isoDay(status.now);
+    $('day-pick').value = isoDay(cur);
+  }
+  function setView(day) {
+    viewDay = day;
+    if (status) { renderNav(); renderTimeline(); }
+    loadStatus();
+  }
+  function dayStep(n) {
+    if (!status) return;
+    const cur = viewDay ?? dayStart(status.now);
+    const d = n < 0 ? prevDay(cur) : nextDay(cur);
+    setView(d >= dayStart(status.now) && n > 0 ? null : d);
+  }
+  function dayPick(v) {
+    if (!v) return;
+    const [y, m, d] = v.split('-').map(Number);
+    const ts = new Date(y, m - 1, d).getTime() / 1000;
+    setView(status && ts >= dayStart(status.now) ? null : ts);
+  }
+
   function tlRange() {
+    if (viewDay != null) return [viewDay, nextDay(viewDay)];
     const end = status.now;
-    return [end - status.retention_hours * 3600, end];
+    return [end - 86400, end];
   }
   function tsToPct(ts) { const [a, b] = tlRange(); return Math.min(100, Math.max(0, (ts - a) / (b - a) * 100)); }
   function pctToTs(p)  { const [a, b] = tlRange(); return a + (b - a) * p; }
@@ -265,7 +321,7 @@
     const [a, b] = tlRange();
     const step = (window.innerWidth < 640 ? 3 : 2) * 3600;
     const first = new Date(a * 1000); first.setMinutes(0, 0, 0);
-    let t = first.getTime() / 1000 + 3600;
+    let t = first.getTime() / 1000 + (viewDay != null ? 0 : 3600);
     let html = '';
     for (; t < b; t += 3600) {
       if (new Date(t * 1000).getHours() % (step / 3600)) continue;
@@ -467,8 +523,11 @@
   // INIT
   // ═══════════════════════════════════════════════
   // CHAIN_HOOK_PATCH : /pige?t=<horodatage> ouvre la pige 30 s avant l'événement
-  loadStatus().then(() => {
-    const t = parseInt(new URLSearchParams(location.search).get('t'), 10);
+  // Au-delà des dernières 24 h, le lien ouvre la journée de l'événement
+  const tParam = parseInt(new URLSearchParams(location.search).get('t'), 10);
+  if (tParam && Date.now() / 1000 - tParam > 86400 - 300) viewDay = dayStart(tParam - 30);
+  loadStatus(tParam ? tParam - 30 : undefined).then(() => {
+    const t = tParam;
     if (!t || !status) { quick(15); return; }
     $('in-start').value = toInput(t - 30);
     $('in-end').value = toInput(t + 90);

@@ -49,7 +49,7 @@ DEFAULTS = {
     'welle_cli': 'welle-cli',     # chemin du binaire (fork welle-monitor conseillé)
     'port': 7979,
     'gain': -1,                   # -1 = AGC
-    'carousel_size': 1,           # 0 = décoder tous les services (-D), N = carrousel (-C N)
+    'carousel_size': 2,           # 0 = décoder tous les services (-D), N = carrousel (-C N, N >= 2)
     'poll_interval': 2,
     'snr_threshold': 5.0,         # dB
     'fic_quality_threshold': 80,  # %
@@ -308,6 +308,10 @@ class DabMonitor:
         c = self.cfg
         cmd = [c['welle_cli'], '-c', str(c['channel']), '-g', str(int(c.get('gain', -1)))]
         n = int(c.get('carousel_size', 0) or 0)
+        # Avec -C 1, welle-cli perd la liste des services (tous indiqués
+        # absents) ; le carrousel commence donc à 2 services.
+        if n == 1:
+            n = 2
         cmd += ['-C', str(n)] if n > 0 else ['-D']
         cmd += ['-w', str(int(c['port']))]
         return cmd

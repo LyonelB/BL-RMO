@@ -6,6 +6,30 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Défauts audio de la réception FM (observation)
+- **Nouveau module `audio_defects.py`** : repère sur le signal brut du tuner TEF (48 kHz, avant tout encodage MP3) les défauts « numériques » de la chaîne de diffusion :
+  - **micro-coupures** de 4 ms à 2 s : chute brutale du niveau (plus de 30 dB en 2 ms), ce qui les distingue d'une pause naturelle ;
+  - **clics** : cassure isolée de la forme d'onde, repérée par prédiction linéaire ; un saut d'audio (morceau sauté ou répété par un codec) se présente ainsi ;
+  - **craquements** : plus de 3 clics en moins d'une seconde, surlignés dans le journal avec le nombre de clics et le maximum relevé sur une seconde.
+- Les angles de l'écrêteur du processeur de diffusion, qui ressemblent à des clics, sont écartés quand le programme touche sa crête.
+- Chaque défaut est enregistré avec le niveau de réception (dBf, multitrajet) : s'il était faible ou perturbé, le défaut est marqué « réception douteuse ».
+- **Extrait WAV** d'environ 3 s autour de chaque défaut (30 par heure au plus), gardé 7 jours ; événements gardés 30 jours (table `audio_defects` de `fm_monitor.db`, dossier `audio_defects/`).
+- **Journaux, onglet Réception FM** : nouveau bloc « Défauts audio » avec décompte sur 24 h et 7 jours, période, filtre réception douteuse, écoute et téléchargement des extraits.
+- **Export pour analyse** (opérateur et administrateur) : ZIP avec `defauts_audio.csv`, `reglages.json` (réglages du détecteur, fréquence, compteurs) et, au choix, les extraits WAV (300 au plus, les plus récents), sur 24 h, 7 ou 30 jours.
+- Relevé seul pour l'instant, sans mail, le temps de régler les seuils sur la réception réelle. Réglages dans la section `audio_defects` de `config.json`.
+- Calcul dans le fil de capture existant, sans nouvelle capture ALSA : environ 3 % d'un cœur.
+
+### Pige sur 30 jours
+- **Rétention par défaut : 30 jours** (`"pige": {"retention_hours": 720}`), environ 1,4 Go par jour à 128 kbit/s, soit 41 Go ; sous 500 Mo libres, les plus anciens segments sont supprimés.
+- **Frise par journée** : « Jour précédent », « Jour suivant », choix d'une date et retour aux « Dernières 24 h ». Un lien « Écouter » venu des Journaux ouvre la journée de l'événement.
+- `/api/pige/status` ne renvoie plus que les segments d'une fenêtre (`from`, `to`, 48 h par défaut) et donne `oldest` : plus de 8 000 segments sur 30 jours ne transitent plus à chaque rafraîchissement.
+
+### Page DAB+
+- **Lecteur au style du tableau de bord** : bouton lecture rond, volume avec pourcentage ; un direct se relance depuis le début du flux.
+- Le tableau des services garde une largeur de colonnes fixe : il ne bouge plus quand le DLS ou les niveaux changent ; le DLS tient sur une ligne.
+- Les petits VU-mètres du tableau sont remplacés par le niveau en dBFS ; un seul VU-mètre, dans le lecteur, mesuré dans le navigateur sur l'audio écouté (crête en temps réel, maintien 1,5 s, vert jusqu'à 0 dBFS).
+- Le décodage « Carrousel, 1 service à la fois » est retiré : avec lui, welle-cli indiquait tous les services absents. Un réglage existant à 1 passe à 2.
+
 ### Réception DAB+ (reprise de BL-DMO)
 - **Nouveau service `fm-monitor-dab`** (`dab_monitor.py`) : pilote welle-cli (fork welle-monitor) sur une clé RTL-SDR dédiée, relève `/mux.json` toutes les 2 s, relance welle-cli avec un délai croissant (5 s à 5 min) et réinitialise la clé USB si besoin. En veille tant que le DAB+ n'est pas activé.
 - **Page DAB+** : récepteur, ensemble, SNR et qualité FIC, tableau des services (présence, niveaux, DLS, débit, disponibilité 24 h), écoute d'un service avec diaporama, derniers événements, réglages (administrateur).
@@ -15,12 +39,6 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 - **Journaux** : nouvel onglet **Réception DAB+** (alertes, filtres par type et par service, 7 et 30 jours), séparé de la Réception FM ; le service `fm-monitor-dab` apparaît dans l'onglet BL-RMO. La pige n'enregistrant que la FM, les alertes DAB+ n'ont pas de lien vers la pige.
 - Données dans `fm_monitor.db` (tables `dab_events`, `dab_uptime`, `dab_services`), événements 90 jours, disponibilité 31 jours.
 - `install/build/67-dab.sh` : rtl-sdr, pilote TNT écarté, règle udev, script de réinitialisation USB, service ; `BUILD_WELLE=1` compile welle-cli (xxd requis pour intégrer l'interface web de welle-cli). Appelé par `install.sh` ; `update.sh` redémarre aussi `fm-monitor-dab`.
-
-### Journaux : titres diffusés via le RadioText
-- Onglet **Réception FM** : nouvelle fenêtre **Titres diffusés (RadioText)** avec les 10 derniers RadioText reçus et l'heure de leur premier affichage ; le texte en cours est marqué « À l'antenne ». Rafraîchie toutes les 15 s.
-- Un RadioText n'est enregistré qu'après 8 s de réception identique (textes partiels ou corrompus écartés) ; un texte en rotation (nom de la station, slogan) n'est repris qu'après 10 minutes.
-- **Correction** : en mode TEF, la réception du RadioText n'était jamais horodatée, donc l'alerte « RadioText absent » ne pouvait pas se déclencher. Elle fonctionne désormais (délai réglable, 5 min par défaut) et une alerte RadioText ouverte est clôturée au redémarrage du service, comme les autres.
-- Données dans la table `rds_history` de `fm_monitor.db` (1 000 dernières lignes conservées), route `/api/rds/rt_history` accessible au rôle Lecteur.
 
 ### Dépôt
 - Le dépôt GitHub devient [LyonelB/BL-RMO](https://github.com/LyonelB/BL-RMO) : liens mis à jour dans l'interface, le README et les scripts.

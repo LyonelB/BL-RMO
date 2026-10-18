@@ -130,13 +130,17 @@
         <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400" id="svc-help"></span>
       </div>
       <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+        <table class="w-full text-sm table-fixed" style="min-width:640px">
+          <colgroup>
+            <col><col style="width:84px"><col style="width:84px"><col style="width:96px">
+            <col style="width:140px"><col style="width:64px"><col style="width:84px">
+          </colgroup>
           <thead>
             <tr class="text-left text-[11px] uppercase tracking-wide text-gray-400 border-b border-gray-100">
               <th class="py-2 pr-3 font-semibold">Service</th>
               <th class="py-2 pr-3 font-semibold" title="Alertes silence et absence">Surveillé</th>
               <th class="py-2 pr-3 font-semibold">État</th>
-              <th class="py-2 pr-3 font-semibold" style="min-width:130px">Niveau</th>
+              <th class="py-2 pr-3 font-semibold">Niveau</th>
               <th class="py-2 pr-3 font-semibold">Diffusion</th>
               <th class="py-2 pr-3 font-semibold">24 h</th>
               <th class="py-2 font-semibold"></th>
@@ -145,15 +149,31 @@
           <tbody id="svc-body"><tr><td colspan="7" class="py-6 text-center text-xs text-gray-400">Chargement…</td></tr></tbody>
         </table>
       </div>
-      <div id="player" class="hidden mt-4 p-3 rounded-lg bg-blue-50 border border-blue-100">
+      <div id="player" class="hidden mt-4 p-3 rounded-lg bg-white border border-gray-200">
         <div class="flex flex-wrap items-center gap-3">
-          <img id="pl-slide" class="w-16 h-12 object-cover rounded bg-white hidden" alt="">
+          <button id="pl-play" onclick="togglePlay()" title="Lecture / pause"
+            class="w-9 h-9 rounded-full border-2 border-gray-200 bg-white hover:border-blue-500 hover:text-blue-600 transition flex items-center justify-center flex-shrink-0"></button>
+          <img id="pl-slide" class="w-16 h-12 object-cover rounded bg-gray-50 hidden" alt="">
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-semibold text-gray-900" id="pl-name"></div>
+            <div class="text-sm font-semibold text-gray-900 truncate" id="pl-name"></div>
             <div class="text-xs text-gray-500 truncate" id="pl-dls"></div>
           </div>
-          <audio id="pl-audio" controls preload="none" class="h-8"></audio>
+          <div class="flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+            <input type="range" id="pl-volume" min="0" max="100" value="50" class="w-16 h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-blue-500" oninput="setVolume(this.value)">
+            <span id="pl-volume-value" class="text-xs text-gray-500 w-8">50%</span>
+          </div>
           <button class="text-xs font-medium text-gray-500 hover:text-gray-800" onclick="stopListen()">Fermer</button>
+          <audio id="pl-audio" preload="none"></audio>
+        </div>
+        <div class="mt-2 space-y-1" aria-label="Niveau audio écouté">
+          <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3" title="Crête en dBFS, maintien 1,5 s">G</span>
+            <div class="relative flex-1 h-2 rounded bg-gray-100 overflow-hidden"><div id="vu-l" class="h-full bg-green-500" style="width:0"></div><div id="vu-lp" class="absolute top-0 h-full w-0.5 bg-green-700" style="left:0"></div></div>
+            <span id="vu-ld" class="w-16 text-right" style="font-variant-numeric:tabular-nums">-</span></div>
+          <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3">D</span>
+            <div class="relative flex-1 h-2 rounded bg-gray-100 overflow-hidden"><div id="vu-r" class="h-full bg-green-500" style="width:0"></div><div id="vu-rp" class="absolute top-0 h-full w-0.5 bg-green-700" style="left:0"></div></div>
+            <span id="vu-rd" class="w-16 text-right" style="font-variant-numeric:tabular-nums">-</span></div>
+          <div class="flex justify-between text-[9px] text-gray-400 font-mono pl-5 pr-[4.5rem]"><span>-60</span><span>-40</span><span>-20</span><span>0</span></div>
         </div>
         <div class="text-[11px] text-gray-400 mt-2" id="pl-help"></div>
       </div>
@@ -189,7 +209,6 @@
         <label class="block"><span class="text-xs text-gray-500">Décodage</span>
           <select id="s-carousel_size" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
             <option value="0">Tous les services en continu</option>
-            <option value="1">Carrousel, 1 service à la fois</option>
             <option value="2">Carrousel, 2 services à la fois</option>
             <option value="4">Carrousel, 4 services à la fois</option>
           </select></label>
@@ -239,11 +258,6 @@
   function bar(el, pct, ok) {
     el.style.width = Math.max(0, Math.min(100, pct)) + '%';
     el.className = 'h-full ' + (ok ? 'bg-green-500' : 'bg-red-500');
-  }
-  function lvlBar(db, fresh) {
-    const pct = Math.max(0, Math.min(100, (db + 60) / 60 * 100));
-    const col = !fresh ? 'bg-gray-300' : db > -3 ? 'bg-red-500' : db > -12 ? 'bg-amber-400' : 'bg-green-500';
-    return `<div class="h-1.5 rounded bg-gray-100 overflow-hidden"><div class="h-full ${col}" style="width:${pct}%"></div></div>`;
   }
 
   async function loadStatus() {
@@ -330,15 +344,15 @@
         ? `<input type="checkbox" class="w-4 h-4" ${watched.has(v.sid) ? 'checked' : ''} onchange="toggleWatch('${esc(v.sid)}', this.checked)">`
         : (v.watched ? '<span class="text-xs text-gray-600">oui</span>' : '<span class="text-xs text-gray-300">non</span>');
       return `<tr class="border-b border-gray-50 align-top ${v.present === false ? 'bg-red-50/40' : ''}">
-        <td class="py-2 pr-3"><div class="font-medium text-gray-900">${esc(v.label)}</div>
-          <div class="text-[11px] text-gray-400 font-mono">${esc(v.sid)}${v.pty ? ' · ' + esc(v.pty) : ''}</div>
-          ${v.dls ? `<div class="text-[11px] text-gray-500 mt-0.5" style="overflow-wrap:anywhere">${esc(v.dls)}</div>` : ''}</td>
+        <td class="py-2 pr-3"><div class="font-medium text-gray-900 truncate">${esc(v.label)}</div>
+          <div class="text-[11px] text-gray-400 font-mono truncate">${esc(v.sid)}${v.pty ? ' · ' + esc(v.pty) : ''}</div>
+          <div class="text-[11px] text-gray-500 mt-0.5 truncate" title="${esc(v.dls || '')}">${v.dls ? esc(v.dls) : '&nbsp;'}</div></td>
         <td class="py-2 pr-3">${box}</td>
         <td class="py-2 pr-3 text-xs whitespace-nowrap">${state}</td>
-        <td class="py-2 pr-3">${v.present ? lvlBar(v.audio_l ?? -100, fresh) + '<div class="h-0.5"></div>' + lvlBar(v.audio_r ?? -100, fresh)
-            + `<div class="text-[10px] font-mono mt-0.5 ${fresh ? 'text-gray-500' : 'text-gray-300'}" title="${fresh ? '' : 'Niveau non rafraîchi (carrousel)'}">${lvl > -100 ? lvl.toFixed(1) + ' dBFS' : '-'}</div>` : ''}</td>
+        <td class="py-2 pr-3 text-xs font-mono whitespace-nowrap ${fresh ? 'text-gray-700' : 'text-gray-300'}" style="font-variant-numeric:tabular-nums"
+            title="${fresh ? 'Niveau relevé toutes les 2 s' : 'Niveau non rafraîchi (carrousel)'}">${v.present && lvl > -100 ? lvl.toFixed(1) + ' dBFS' : '-'}</td>
         <td class="py-2 pr-3 text-xs text-gray-600 whitespace-nowrap">${esc(v.mode || '')} ${v.bitrate ? v.bitrate + ' kb/s' : ''}
-          <div class="text-[11px] text-gray-400">${esc(v.protection || '')}${v.err_aac ? ' · AAC ' + v.err_aac : ''}</div></td>
+          <div class="text-[11px] text-gray-400 truncate">${esc(v.protection || '')}${v.err_aac ? ' · AAC ' + v.err_aac : ''}</div></td>
         <td class="py-2 pr-3 text-xs font-mono text-gray-600">${upt}</td>
         <td class="py-2 text-right whitespace-nowrap">${v.present ? `<button class="text-xs font-medium text-blue-600 hover:text-blue-800" onclick="listen('${esc(v.sid)}')">${listening === v.sid ? 'En écoute' : 'Écouter'}</button>` : ''}</td>
       </tr>`;
@@ -397,12 +411,78 @@
     $('pl-slide').classList.add('hidden'); $('pl-slide').dataset.url = '';
     $('pl-help').textContent = "Écoute servie par la clé DAB+ : une seule à la fois, coupée automatiquement après quelques minutes. Démarrage en quelques secondes en mode carrousel.";
     const a = $('pl-audio');
-    a.src = `/api/dab/listen/${encodeURIComponent(sid)}?t=${Date.now()}`;
-    a.play().catch(() => {});
-    a.onerror = () => { $('pl-help').textContent = "Écoute impossible : service indisponible ou une autre écoute DAB+ est déjà en cours."; };
+    vuStart(a);
+    playStream();
+    a.onerror = () => { if (!a.getAttribute('src')) return; playButton(false);
+      $('pl-help').textContent = "Écoute impossible : service indisponible ou une autre écoute DAB+ est déjà en cours."; };
+    a.onended = () => playButton(false);   // écoute coupée par le serveur (durée maximale)
     renderServices();
   }
+  // VU-mètre crête, calculé dans le navigateur sur l'audio reçu (60 images/s).
+  // Le niveau du tableau, lui, vient de welle-cli toutes les 2 s.
+  let vuCtx = null, vuSplit = null, vuAn = [], vuRaf = null, vuGain = null;
+  const vuHold = [{v: -100, t: 0}, {v: -100, t: 0}], vuDisp = [-100, -100];
+  function vuStart(a) {
+    try {
+      if (!vuCtx) {
+        vuCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const src = vuCtx.createMediaElementSource(a);
+        vuSplit = vuCtx.createChannelSplitter(2);
+        vuGain = vuCtx.createGain();
+        vuGain.gain.value = $('pl-volume').value / 100;
+        src.connect(vuGain); vuGain.connect(vuCtx.destination);
+        src.connect(vuSplit);
+        vuAn = [0, 1].map(i => { const n = vuCtx.createAnalyser(); n.fftSize = 1024; vuSplit.connect(n, i); return n; });
+      }
+      if (vuCtx.state === 'suspended') vuCtx.resume();
+    } catch (e) { return; }
+    if (!vuRaf) vuRaf = requestAnimationFrame(vuDraw);
+  }
+  function vuDraw(now) {
+    if (vuAn.length < 2) { vuRaf = null; return; }
+    const buf = new Float32Array(1024);
+    ['l', 'r'].forEach((ch, i) => {
+      vuAn[i].getFloatTimeDomainData(buf);
+      let pk = 0; for (let k = 0; k < buf.length; k++) { const x = Math.abs(buf[k]); if (x > pk) pk = x; }
+      const db = pk > 1e-5 ? 20 * Math.log10(pk) : -100;
+      // montée immédiate, descente de 20 dB/s ; maintien de la crête 1,5 s
+      vuDisp[i] = db >= vuDisp[i] ? db : Math.max(db, vuDisp[i] - 20 / 60);
+      if (db >= vuHold[i].v || now - vuHold[i].t > 1500) vuHold[i] = {v: db, t: now};
+      const pct = d => Math.max(0, Math.min(100, (d + 60) / 60 * 100)) + '%';
+      $('vu-' + ch).style.width = pct(vuDisp[i]);
+      $('vu-' + ch + 'p').style.left = pct(vuHold[i].v);
+      $('vu-' + ch + 'd').textContent = vuHold[i].v > -60 ? vuHold[i].v.toFixed(1) : '-';
+    });
+    vuRaf = listening ? requestAnimationFrame(vuDraw) : null;
+  }
+  // Bouton du lecteur, comme celui du tableau de bord : un direct se relance
+  // depuis le début du flux plutôt que de reprendre un tampon périmé.
+  const IC_PLAY = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+  const IC_PAUSE = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>';
+  function playButton(on) {
+    const b = $('pl-play');
+    b.innerHTML = on ? IC_PAUSE : IC_PLAY;
+    b.classList.toggle('border-blue-500', on); b.classList.toggle('text-blue-600', on); b.classList.toggle('bg-blue-50', on);
+  }
+  function playStream() {
+    if (!listening) return;
+    const a = $('pl-audio');
+    a.src = `/api/dab/listen/${encodeURIComponent(listening)}?t=${Date.now()}`;
+    a.play().catch(() => {});
+    if (vuCtx && vuCtx.state === 'suspended') vuCtx.resume();
+    playButton(true);
+  }
+  function togglePlay() {
+    const a = $('pl-audio');
+    if (a.paused || !a.src) { playStream(); vuStart(a); }
+    else { a.pause(); a.removeAttribute('src'); a.load(); playButton(false); }
+  }
+  function setVolume(v) {
+    $('pl-volume-value').textContent = v + '%';
+    if (vuGain) vuGain.gain.value = v / 100; else $('pl-audio').volume = v / 100;
+  }
   function stopListen(keep) {
+    playButton(false);
     const a = $('pl-audio');
     a.pause(); a.removeAttribute('src'); a.load();
     listening = null;
@@ -420,6 +500,7 @@
     $('s-channel').innerHTML = d.channels.map(c => `<option ${c === settings.channel ? 'selected' : ''}>${c}</option>`).join('');
     $('s-enabled').checked = !!settings.enabled;
     FIELDS.forEach(f => { if (settings[f] != null) $('s-' + f).value = settings[f]; });
+    if (!$('s-carousel_size').value) $('s-carousel_size').value = '2';   // ancien réglage « 1 à la fois »
     $('s-freq').textContent = `${Number(settings.frequency_mhz).toFixed(3).replace('.', ',')} MHz`;
   }
   async function post(body) {

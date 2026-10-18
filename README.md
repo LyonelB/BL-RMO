@@ -13,7 +13,7 @@
 - **surveiller la réception FM** : ce qui sort réellement de l'antenne (signal, modulation, RDS) ;
 - **surveiller la chaîne de diffusion** : chaque appareil, du studio à l'émetteur, par SNMP, sondes réseau, journaux syslog et traps ;
 - **écouter l'antenne** depuis n'importe quel navigateur (retour FM) ;
-- **garder une pige** de 24 heures, reliée aux alertes.
+- **garder une pige** de 30 jours, reliée aux alertes.
 
 Une alerte mail part à chaque panne et à chaque rétablissement, et chaque alerte garde son extrait audio.
 
@@ -71,7 +71,7 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 - **Mode public** `/public` : tableau de bord sans authentification
 
 ### 🎙️ Pige audio
-- **Enregistrement continu 24 h** de l'antenne en segments MP3 (service `bl-rmo-pige`, indépendant de l'application)
+- **Enregistrement continu sur 30 jours** de l'antenne en segments MP3 (service `bl-rmo-pige`, indépendant de l'application), environ 1,4 Go par jour ; durée réglable par `"pige": {"retention_hours": 720}` dans `config.json`
 - **Frise, écoute et export** d'un créneau en MP3, sans réencodage
 - **Extraits des 10 dernières alertes**, de 30 s avant l'alerte à 30 s après le rétablissement, conservés après la sortie de la pige
 - Chaque alerte et chaque événement de la chaîne ouvre la pige au bon moment
@@ -160,7 +160,7 @@ Puis, dans l'interface : **Configuration**, bouton **« Scan dongle »**, source
 
 ```bash
 cd ~/bl-rmo
-sudo bash install/build/65-pige.sh     # pige 24 h (bl-rmo-pige)
+sudo bash install/build/65-pige.sh     # pige 30 jours (bl-rmo-pige)
 sudo bash install/build/66-syslog.sh   # journaux UDP 514 et traps UDP 162 (bl-rmo-syslog)
 sudo BUILD_WELLE=1 bash install/build/67-dab.sh   # réception DAB+ (bl-rmo-dab) et compilation de welle-cli
 ```
@@ -213,7 +213,8 @@ bl-rmo/
 ├── tef_driver.py       # Pilote du tuner TEF668X (protocole XDR)
 ├── tef_audio_analyzer.py # Analyse audio (niveaux, spectre, S/B)
 ├── chain_probe.py      # Supervision de la chaîne (SNMP, sondes, événements)
-├── pige.py             # Pige 24 h (enregistreur et export)
+├── audio_defects.py    # Défauts audio : micro-coupures, clics, craquements
+├── pige.py             # Pige 30 jours (enregistreur et export)
 ├── pige_archive.py     # Extraits audio des dernières alertes
 ├── syslog_server.py    # Service de réception syslog et traps
 ├── snmp_traps.py       # Décodage et traduction des traps SNMP
@@ -282,6 +283,7 @@ Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-RMO (pas `bl
 - [ ] Retrait du mode RTL-SDR, de l'analyse MPX et de Docker
 - [x] v0.9.0 : nouveau nom BL-RMO, journaux en trois onglets
 - [ ] Réception DAB+ (reprise de BL-DMO) : validation sur site avec l'antenne bande III
+- [ ] Défauts audio (micro-coupures, clics, craquements) : régler les seuils sur la réception réelle, puis alertes par mail
 - [ ] Fermeture de BL-DMO ([dabplus-monitor](https://github.com/LyonelB/dabplus-monitor)) : annonce, archivage, puis suppression du dépôt
 - [ ] welle-monitor : reporter les changements de la prochaine version de welle.io
 - [ ] Version anglaise de l'interface

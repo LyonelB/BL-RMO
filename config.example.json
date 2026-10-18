@@ -42,5 +42,19 @@
   "auth": {
     "username": "admin",
     "password_hash": ""
+  },
+  "pige": {
+    "retention_hours": 720
+  },
+  "audio_defects": {
+    "enabled": true,
+    "drop_db": 30.0,
+    "gap_max_dbfs": -45.0,
+    "click_k": 20.0,
+    "rf_margin_db": 10.0,
+    "rf_max_multipath": 25.0,
+    "keep_days": 30,
+    "clip_days": 7,
+    "max_clips_per_hour": 30
   }
 }

@@ -638,20 +638,6 @@ def read_rds_rt():
 # VOLUME DAC+
 # =============================================
 
-@app.route('/api/rds/rt_history')
-@limiter.exempt
-@auth.login_required
-def rt_history():
-    """Derniers RadioText diffusés (RT_HISTORY_PATCH)"""
-    try:
-        limit = max(1, min(int(request.args.get('limit', 10)), 100))
-    except ValueError:
-        limit = 10
-    if monitor and hasattr(monitor, 'db'):
-        return jsonify({'status': 'success', 'data': monitor.db.get_rt_history(limit=limit),
-                        'current': monitor.stats.get('rt', '-')})
-    return jsonify({'status': 'error', 'message': 'Database not available'}), 503
-
 @app.route('/api/volume')
 @auth.login_required
 def get_volume():
@@ -1054,7 +1040,12 @@ def pige_page():
 @limiter.exempt
 def pige_status():
     pige_store.reload()
-    return jsonify(pige_store.status())
+    try:
+        seg_from = float(request.args['from']) if request.args.get('from') else None
+        seg_to = float(request.args['to']) if request.args.get('to') else None
+    except ValueError:
+        seg_from = seg_to = None
+    return jsonify(pige_store.status(seg_from, seg_to))
 
 
 @app.route('/api/pige/segment/<name>')
@@ -1067,6 +1058,81 @@ def pige_segment(name):
     if not path:
         abort(404)
     return send_file(path, mimetype='audio/mpeg', conditional=True, max_age=0)
+
+
+# ── Défauts audio (micro-coupures, clics, craquements) ───────────────
+
+def _defect_store():
+    if monitor is not None and getattr(monitor, 'defect_store', None):
+        return monitor.defect_store
+    from audio_defects import AudioDefectStore
+    return AudioDefectStore()
+
+
+@app.route('/api/audio-defects')
+@auth.login_required
+@limiter.exempt
+def audio_defects_list():
+    """Défauts audio relevés sur la réception FM, et décompte 24 h / 7 jours."""
+    try:
+        hours = max(1, min(int(request.args.get('hours', 24)), 24 * 30))
+    except ValueError:
+        hours = 24
+    rf = request.args.get('rf', '1') != '0'
+    store = _defect_store()
+    return jsonify({'status': 'success',
+                    'active': bool(monitor is not None and getattr(monitor, 'defect_detector', None)),
+                    'summary': store.summary(),
+                    'data': store.events(hours=hours, include_suspect=rf)})
+
+
+@app.route('/api/audio-defects/export')
+@auth.login_required
+def audio_defects_export():
+    """ZIP pour analyse : CSV des défauts, réglages du détecteur, extraits WAV."""
+    import tempfile
+    from flask import send_file
+    try:
+        hours = max(1, min(int(request.args.get('hours', 24)), 24 * 30))
+    except ValueError:
+        hours = 24
+    with_clips = request.args.get('clips', '1') != '0'
+    params = (monitor.config.get('audio_defects', {}) if monitor is not None else {}) or {}
+    ctx = {}
+    if monitor is not None:
+        ctx = {'frequence': monitor.rtl_config.get('frequency'),
+               'seuil_perte_signal_dbf': monitor.tef_config.get('signal_threshold_dbf'),
+               'detection_active': bool(getattr(monitor, 'defect_detector', None))}
+        det = getattr(monitor, 'defect_detector', None)
+        if det:
+            ctx['compteurs_depuis_demarrage'] = dict(det.counters)
+    fd, path = tempfile.mkstemp(prefix='blrmo-defauts-', suffix='.zip')
+    os.close(fd)
+    try:
+        n, nc = _defect_store().export_zip(path, hours=hours, with_clips=with_clips, params=params, context=ctx)
+    except Exception as e:
+        os.unlink(path)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    logger.info(f"Export défauts audio : {hours} h, {n} défauts, {nc} extraits")
+    end = datetime.now()
+    name = f"blrmo-defauts-audio_{end - timedelta(hours=hours):%Y%m%d-%H%M}_{end:%Y%m%d-%H%M}.zip"
+    # Fichier ouvert puis effacé : Linux le garde lisible jusqu'à la fin de l'envoi
+    f = open(path, 'rb')
+    os.unlink(path)
+    return send_file(f, mimetype='application/zip', as_attachment=True, download_name=name, max_age=0)
+
+
+@app.route('/api/audio-defects/<int:event_id>/clip')
+@auth.login_required
+@limiter.exempt
+def audio_defect_clip(event_id):
+    """Extrait WAV du signal brut du tuner autour du défaut."""
+    from flask import send_file, abort
+    path = _defect_store().clip_path(event_id)
+    if not path:
+        abort(404)
+    return send_file(path, mimetype='audio/wav', conditional=True, max_age=0,
+                     download_name=f'blrmo-defaut-{event_id}.wav')
 
 
 @app.route('/api/pige/export')
@@ -1687,17 +1753,19 @@ ROLE_LECTEUR = {
     'index', 'stats', 'about_page', 'pige_page', 'chain_page', 'logs_page', 'account_page',
     'get_stats', 'stream_stats', 'get_config_full', 'get_logs', 'get_signal_history', 'get_audio_history',
     'get_alerts_history', 'get_alerts_history_grouped', 'get_volume', 'proxy_stream', 'record_status',
-    'wifi_status', 'email_alerts_status', 'mpx_spectrum', 'rt_history',
+    'wifi_status', 'email_alerts_status', 'mpx_spectrum',
     'pige_status', 'pige_segment', 'pige_archives', 'pige_archive_audio',
     'chain_status', 'chain_events', 'chain_device_history', 'chain_device_logs',
     'logs_search', 'logs_sources', 'account_password',
     'dab_page', 'dab_status', 'dab_events', 'dab_uptime', 'dab_slide', 'dab_listen',
+    'audio_defects_list', 'audio_defect_clip',
 }
 ROLE_LECTEUR_GET = {'chain_devices', 'chain_device', 'logs_rules', 'dab_settings'}      # lecture seule pour ces routes
 # Opérateur : exporter, enregistrer, intervenir sans rien régler
 ROLE_OPERATEUR = {
     'pige_export', 'chain_export', 'logs_export', 'record_start', 'record_stop', 'record_download',
     'email_alerts_toggle', 'chain_probe_now', 'set_volume', 'read_rds_ps', 'read_rds_rt',
+    'audio_defects_export',
 }
 # Tout le reste (Configuration, Gérer la chaîne, comptes...) : administrateur
 

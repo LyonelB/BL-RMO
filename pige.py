@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BL-RMO - Pige audio (enregistrement glissant des dernières 24 h)
+BL-RMO - Pige audio (enregistrement glissant, 30 jours par défaut)
 
 Deux usages :
   1. Processus enregistreur autonome (service systemd bl-rmo-pige) :
@@ -37,7 +37,7 @@ CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')
 
 DEFAULTS = {
     'enabled': True,
-    'retention_hours': 24,
+    'retention_hours': 720,       # 30 jours, environ 1,4 Go par jour à 128 kbit/s
     'segment_minutes': 5,
     'directory': os.path.join(BASE_DIR, 'pige'),
     'source_url': 'http://localhost:8000/fmmonitor',
@@ -124,7 +124,10 @@ class PigeStore:
         path = os.path.join(self.dir, name)
         return path if os.path.isfile(path) else None
 
-    def status(self):
+    def status(self, seg_from=None, seg_to=None):
+        """État de la pige. La liste des segments est limitée à la fenêtre
+        [seg_from, seg_to] (par défaut les dernières 48 h) : sur 30 jours,
+        elle compterait plus de 8 000 segments à chaque rafraîchissement."""
         segs = self.segments()
         newest_mtime = max((os.path.getmtime(s['path']) for s in segs[-1:]), default=0)
         try:
@@ -138,7 +141,11 @@ class PigeStore:
             'retention_hours': self.cfg['retention_hours'],
             'export_max_minutes': self.cfg['export_max_minutes'],
             'now': time.time(),
-            'segments': [{'name': s['name'], 'start': s['start'], 'end': s['end']} for s in segs],
+            'oldest': segs[0]['start'] if segs else None,
+            'newest': segs[-1]['end'] if segs else None,
+            'segments': [{'name': s['name'], 'start': s['start'], 'end': s['end']} for s in segs
+                         if s['end'] >= (seg_from if seg_from is not None else time.time() - 48 * 3600)
+                         and (seg_to is None or s['start'] <= seg_to)],
             'coverage': self.coverage(segs),
             'used_bytes': sum(s['size'] for s in segs),
             'free_bytes': free,

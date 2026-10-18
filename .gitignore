@@ -86,6 +86,7 @@ backups/
 
 # Pige audio (enregistrements 24 h)
 pige/
+audio_defects/
 
 # Journaux reçus des appareils (syslog)
 syslog.db*
