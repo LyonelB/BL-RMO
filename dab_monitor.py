@@ -48,7 +48,8 @@ DEFAULTS = {
     'ensemble_name': '',          # libellé attendu (affichage seulement)
     'welle_cli': 'welle-cli',     # chemin du binaire (fork welle-monitor conseillé)
     'port': 7979,
-    'gain': -1,                   # -1 = AGC
+    'gain': -1,                   # -1 = AGC de welle-cli ; sinon indice dans la table de gains de la clé
+                                  # (15 = 28 dB) : un gain fixe synchronise bien plus vite
     'carousel_size': 2,           # 0 = décoder tous les services (-D), N = carrousel (-C N, N >= 2)
     'poll_interval': 2,
     'snr_threshold': 5.0,         # dB
@@ -384,7 +385,8 @@ class DabMonitor:
             self._nosync_restarts = 0
             if not self._synced_once:
                 self._synced_once = True
-                logger.info(f"DAB+ : ensemble décodé {int(now - (self.welle_since or now))} s après le lancement")
+                logger.info(f"DAB+ : ensemble décodé {int(now - (self.proc_started or now))} s après le lancement "
+                            f"(gain {'automatique' if int(self.cfg.get('gain', -1)) < 0 else 'fixe, indice ' + str(self.cfg.get('gain'))})")
             return
         self._nosync_since = self._nosync_since or now
         wait = min(float(self.cfg.get('sync_timeout', 300)) * (2 ** self._nosync_restarts), 1800)
