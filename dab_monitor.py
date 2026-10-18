@@ -268,6 +268,7 @@ class DabMonitor:
         self._force_reset = False
         self._nosync_since = None
         self._nosync_restarts = 0
+        self._synced_once = False
         self.email = None
         if email:
             try:
@@ -381,6 +382,9 @@ class DabMonitor:
         if synced:
             self._nosync_since = None
             self._nosync_restarts = 0
+            if not self._synced_once:
+                self._synced_once = True
+                logger.info(f"DAB+ : ensemble décodé {int(now - (self.welle_since or now))} s après le lancement")
             return
         self._nosync_since = self._nosync_since or now
         wait = min(float(self.cfg.get('sync_timeout', 300)) * (2 ** self._nosync_restarts), 1800)
@@ -417,6 +421,7 @@ class DabMonitor:
         now = time.time()
         if up and not self.welle_up:
             self.welle_up, self.welle_since = True, now
+            self._synced_once = False
             self.backoff = 5
             self.last_error = ''
             self.fic_prev = None
@@ -472,8 +477,12 @@ class DabMonitor:
                 self.receiver_alerted = True
             return
         up_for = now - (self.welle_since or now)
-        # Ensemble
-        if up_for >= 30:
+        # Ensemble. Au démarrage, welle-cli met 2 à 3 min à se synchroniser :
+        # pas d'alerte avant la première synchro, sauf si elle n'arrive jamais
+        # (sync_timeout), et le défaut compte alors depuis le lancement.
+        if self._synced_once or up_for >= float(c.get('sync_timeout', 300)):
+            if not self._synced_once and self.ens_bad_since is None:
+                self.ens_bad_since = self.welle_since or now
             ok = (self.rf.get('snr', 0) >= float(c['snr_threshold'])
                   and self.rf.get('fic_quality', 0) >= float(c['fic_quality_threshold']))
             if not ok:
