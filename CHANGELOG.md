@@ -6,6 +6,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Chaîne de diffusion
+- **Modèle SNMP egnite Querx TH** (sonde de température et d'humidité, par exemple au shelter) : température, humidité, point de rosée, état du capteur et uptime, avec des seuils de départ (0 à 40 °C, 85 %RH) à ajuster.
+
 ### Piges multiples et nouvelle page Pige
 - **Plusieurs piges** : la pige FM, plus une pige par service DAB+ voulu. Elles se créent, se modifient, se suspendent et se suppriment dans la nouvelle partie **Configuration des piges** de la page Pige (administrateur) : nom, service, durée de conservation (1 à 90 jours), estimation de l'espace disque.
 - Le service `bl-rmo-pige` enregistre toutes les piges actives, une par fil, et relit la configuration toutes les 20 s : une pige créée démarre sans redémarrage. La pige FM ne change pas (même dossier, mêmes fichiers).
