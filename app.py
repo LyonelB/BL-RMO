@@ -337,6 +337,13 @@ def save_config():
                 if monitor:
                     monitor.rt_timeout = int(data['audio']['rt_timeout'])
 
+        # Tuner TEF : seuil d'absence de modulation (niveau audio, dBFS)
+        if isinstance(data.get('tef'), dict) and 'modulation_threshold_dbfs' in data['tef']:
+            thr = max(-90.0, min(-10.0, float(data['tef']['modulation_threshold_dbfs'])))
+            config.setdefault('tef', {})['modulation_threshold_dbfs'] = thr
+            if monitor:
+                monitor.tef_modulation_threshold = thr
+
         # Configuration email
         if 'email' in data:
             if 'sender_email' in data['email']:
@@ -1971,7 +1978,12 @@ def _dash_chain(now):
 
     def brief(d):
         val = ''
-        for m in d.get('metrics') or []:
+        if d['kind'] == 'sensor':
+            # Capteur de site : ses mesures chiffrées (ex. « 19,9 °C · 43 %RH »)
+            nums = [f"{m['display']} {m['unit']}".strip() for m in d.get('metrics') or []
+                    if m.get('unit') and isinstance(m.get('value'), (int, float)) and not isinstance(m.get('value'), bool)]
+            val = ' · '.join(nums[:2])
+        for m in [] if val else d.get('metrics') or []:
             if m.get('display') not in (None, ''):
                 val = f"{m.get('label', '')} {m['display']}{(' ' + m['unit']) if m.get('unit') else ''}".strip()
                 break
@@ -1980,17 +1992,24 @@ def _dash_chain(now):
         return {'id': d['id'], 'kind': d['kind'], 'name': d['name'], 'site': d.get('site', ''),
                 'role': d.get('role', ''), 'probe': d.get('probe', ''), 'state': d['state'], 'value': val}
 
-    chain = [d for d in devs if d['kind'] != 'probe']
+    chain = [d for d in devs if d['kind'] not in ('probe', 'sensor')]
     probes = [d for d in devs if d['kind'] == 'probe']
+    sensors = [d for d in devs if d['kind'] == 'sensor']
     used, items = set(), []
     for i, d in enumerate(chain):
         items.append(brief(d))
+        if i + 1 >= len(chain) or chain[i + 1].get('site', '') != d.get('site', ''):
+            for c in sensors:   # capteurs de site après le dernier appareil de leur site
+                if c['id'] not in used and c.get('site', '') == d.get('site', ''):
+                    items.append(brief(c))
+                    used.add(c['id'])
         if i + 1 < len(chain):
             nxt = chain[i + 1]
             for p in probes:   # sondes posées sur la liaison entre deux appareils voisins
                 if p['id'] not in used and {p.get('link_from'), p.get('link_to')} == {d['id'], nxt['id']}:
                     items.append(brief(p))
                     used.add(p['id'])
+    items += [brief(c) for c in sensors if c['id'] not in used]
     items += [brief(p) for p in probes if p['id'] not in used]
     active = [x for x in items if x['state'] != 'disabled']
     last = None

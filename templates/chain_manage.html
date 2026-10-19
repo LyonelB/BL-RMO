@@ -31,7 +31,8 @@
       .chain-card + .chain-card::before { left:24px; top:-18px; width:2px; height:14px; }
       .chain-card + .chain-card::after { left:20px; top:-8px; border:5px solid transparent; border-top:6px solid #cbd5e1; }
     }
-    .kind-switch { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .kind-switch { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+    @media (max-width:640px) { .kind-switch { grid-template-columns:1fr; } }
     .kind-switch button { text-align:left; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px; font-size:0.75rem; font-weight:600; color:#334155; }
     .kind-switch button span { display:block; font-weight:400; font-size:0.6875rem; opacity:.7; margin-top:1px; }
     .kind-switch button.active { border-color:#2563eb; background:#eff6ff; color:#1d4ed8; box-shadow:0 0 0 1px #2563eb inset; }
@@ -186,6 +187,33 @@
       </div>
     </div>
 
+    <!-- ── Capteurs de site ─────────────────────────────────────── -->
+    <div id="sensors-section" class="section mt-6">
+      <div class="flex items-center justify-between gap-3 flex-wrap mb-3">
+        <div class="section-title !mb-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V5a3 3 0 116 0v12a4 4 0 11-6 0zm3 1V9"/></svg>
+          Capteurs de site
+          <span id="sensors-summary" style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8"></span>
+        </div>
+        <button onclick="openEditor(null, 'sensor')" class="flex items-center gap-1.5 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Ajouter un capteur
+        </button>
+      </div>
+      <p id="sensors-empty" class="hidden text-xs text-gray-500">Aucun capteur. Un capteur de site surveille l'environnement d'un site sans faire partie du signal : température et humidité d'un shelter, ouverture de porte, tension secteur... Il s'affiche dans l'en-tête du site sur le synoptique et le tableau de bord.</p>
+      <div id="sensors-wrap" class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="text-left text-gray-400 border-b border-gray-100">
+              <th class="py-2 pr-3 font-medium">Capteur</th><th class="py-2 pr-3 font-medium">Site</th><th class="py-2 pr-3 font-medium">Cible</th>
+              <th class="py-2 pr-3 font-medium">État</th><th class="py-2 pr-3 font-medium">Mesures</th><th class="py-2 font-medium text-right"></th>
+            </tr>
+          </thead>
+          <tbody id="sensor-rows"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- ── Journal ──────────────────────────────────────────────── -->
     <div class="section mt-6">
       <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
@@ -295,6 +323,7 @@
       <div class="kind-switch" role="radiogroup" aria-label="Catégorie">
         <button type="button" data-kind="device" onclick="setKind('device')">Appareil de la chaîne<span>Un maillon du signal : codec, faisceau, émetteur...</span></button>
         <button type="button" data-kind="probe" onclick="setKind('probe')">Sonde réseau<span>Une mesure de lien : pertes, latence, gigue</span></button>
+        <button type="button" data-kind="sensor" onclick="setKind('sensor')">Capteur de site<span>Hors du signal : température, porte, secteur...</span></button>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <label class="field sm:col-span-1"><span>Nom</span><input id="f-name" type="text" maxlength="60" placeholder="DB91-RX"></label>
@@ -302,7 +331,7 @@
         <label class="field"><span>Rôle</span><input id="f-role" type="text" maxlength="40" list="roles-list" placeholder="Codec audio"></label>
       </div>
       <div id="synopt-dev" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <label class="field"><span>Liaison vers l'appareil suivant</span><input id="f-out-label" type="text" maxlength="40" list="links-list" placeholder="AES, MPX, Faisceau 5 GHz · 3 km"></label>
+        <label class="field" id="out-label-field"><span>Liaison vers l'appareil suivant</span><input id="f-out-label" type="text" maxlength="40" list="links-list" placeholder="AES, MPX, Faisceau 5 GHz · 3 km"></label>
         <label class="field"><span>Interface web <button type="button" onclick="fillWeb()" class="text-blue-600 hover:text-blue-800 font-normal ml-1">remplir</button></span><input id="f-web" type="text" maxlength="200" placeholder="http://192.168.1.62/ (vide : pas de lien)"></label>
       </div>
       <datalist id="links-list"><option value="LAN"><option value="AES"><option value="Analogique"><option value="MPX"><option value="RTP"><option value="Faisceau"></datalist>
@@ -468,8 +497,9 @@ let deviceDefs = {};       // définitions complètes (API /devices) indexées p
 let tools = {};
 let editing = null;        // id en cours d'édition, ou null
 let editingKind = 'device';
-const chainDevs = () => devices.filter(d => d.kind !== 'probe');
+const chainDevs = () => devices.filter(d => d.kind !== 'probe' && d.kind !== 'sensor');
 const probeDevs = () => devices.filter(d => d.kind === 'probe');
+const sensorDevs = () => devices.filter(d => d.kind === 'sensor');
 let currentProbe = 'ping';
 let snmpMetrics = [];
 
@@ -545,6 +575,7 @@ async function refresh() {
     renderSummary();
     renderFlow();
     renderProbes();
+    renderSensors();
     renderTable();
     renderToolsWarning();
     renderFilterOptions();
@@ -598,6 +629,10 @@ function renderFlow() {
           <span class="w-2 h-2 rounded-full ${STATES[worst].dot}"></span>
           <span class="text-xs font-bold uppercase tracking-wide text-gray-700">${esc(s.name)}</span>
           <span class="text-xs text-gray-400">${s.items.length} appareil${s.items.length > 1 ? 's' : ''}</span>
+          ${sensorDevs().filter(c => (c.site || 'Sans site') === s.name && sites.find(x => x.name === s.name) === s).map(c => {
+            const cs = STATES[c.state] || STATES.unknown;
+            return `<button onclick="openEditor(${c.id})" class="inline-flex items-center gap-1 text-[11px] border border-gray-200 rounded-full px-2 py-0.5 bg-white hover:border-gray-400" title="Capteur de site : ${esc(stateLabel(c))}"><span class="w-1.5 h-1.5 rounded-full ${cs.dot}"></span>${esc(c.name)}</button>`;
+          }).join('')}
         </div>
         <div class="chain-row">
           ${s.items.map(card).join('')}
@@ -651,6 +686,35 @@ function renderProbes() {
     </tr>`;
   }).join('');
   list.forEach(d => drawSpark(d));
+}
+
+function renderSensors() {
+  const list = sensorDevs();
+  document.getElementById('sensors-empty').classList.toggle('hidden', list.length > 0);
+  document.getElementById('sensors-wrap').classList.toggle('hidden', !list.length);
+  const bad = list.filter(d => ['down', 'warn', 'unstable'].includes(d.state)).length;
+  document.getElementById('sensors-summary').textContent = list.length
+    ? `${list.length} capteur${list.length > 1 ? 's' : ''}${bad ? ' · ' + bad + ' en alerte' : ''}` : '';
+  document.getElementById('sensor-rows').innerHTML = list.map(d => {
+    const st = STATES[d.state] || STATES.unknown;
+    const vals = (d.metrics || []).filter(m => m.format !== 'text' && m.display !== '?').slice(0, 4).map(m =>
+      `<span class="whitespace-nowrap"><span class="text-gray-400">${esc(m.label)}</span> <span class="font-mono ${m.state === 'warn' ? 'text-amber-700 font-semibold' : 'text-gray-800'}">${esc(m.display)}</span>${m.unit ? ' <span class="text-gray-400">' + esc(m.unit) + '</span>' : ''}</span>`).join('<span class="text-gray-300 mx-1.5">·</span>');
+    return `
+    <tr class="border-b border-gray-50 hover:bg-slate-50 ${d.enabled ? '' : 'opacity-50'}">
+      <td class="py-1.5 pr-3 whitespace-nowrap"><span class="font-medium text-gray-800">${esc(d.name)}</span>
+        <div class="text-[10px] text-gray-400">${esc(d.role || PROBES[d.probe]?.label || d.probe)} · ${d.interval} s</div></td>
+      <td class="py-1.5 pr-3 text-gray-600 whitespace-nowrap">${esc(d.site)}</td>
+      <td class="py-1.5 pr-3 font-mono text-gray-500 whitespace-nowrap">${esc(d.target)}</td>
+      <td class="py-1.5 pr-3 whitespace-nowrap" title="${esc(d.message)}">
+        <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${st.dot} ${d.state === 'down' ? 'animate-pulse' : ''}"></span>
+        <span class="font-semibold ${st.text}">${esc(stateLabel(d))}</span></span></td>
+      <td class="py-1.5 pr-3">${vals || '<span class="text-gray-300">·</span>'}</td>
+      <td class="py-1.5 text-right whitespace-nowrap">
+        <button class="icon-btn" title="Sonder maintenant" onclick="probeNow(${d.id})"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></button>
+        <button class="icon-btn" title="Modifier" onclick="openEditor(${d.id})"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
+      </td>
+    </tr>`;
+  }).join('');
 }
 
 function siteWorst(items) {
@@ -793,7 +857,7 @@ function renderFilterOptions() {
   const cur = sel.value;
   const grp = (label, list) => list.length ? `<optgroup label="${label}">` +
     list.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('') + '</optgroup>' : '';
-  const opts = '<option value="">Tout</option>' + grp('Appareils', chainDevs()) + grp('Sondes', probeDevs());
+  const opts = '<option value="">Tout</option>' + grp('Appareils', chainDevs()) + grp('Sondes', probeDevs()) + grp('Capteurs de site', sensorDevs());
   if (sel.dataset.sig !== opts) { sel.innerHTML = opts; sel.value = cur; sel.dataset.sig = opts; }
 }
 
@@ -1003,11 +1067,12 @@ function setKind(kind) {
   document.querySelectorAll('.kind-switch button').forEach(b => b.classList.toggle('active', b.dataset.kind === kind));
   document.getElementById('site-field').style.display = kind === 'probe' ? 'none' : '';
   document.getElementById('synopt-dev').style.display = kind === 'probe' ? 'none' : '';
+  document.getElementById('out-label-field').style.display = kind === 'device' ? '' : 'none';
   document.getElementById('link-field').style.display = kind === 'probe' ? '' : 'none';
   if (editing == null) {
-    document.getElementById('editor-title').textContent = kind === 'probe' ? 'Ajouter une sonde' : 'Ajouter un appareil';
-    document.getElementById('f-name').placeholder = kind === 'probe' ? 'faisceau-60' : 'DB91-RX';
-    document.getElementById('f-role').placeholder = kind === 'probe' ? 'Faisceau vers le pylône' : 'Codec audio';
+    document.getElementById('editor-title').textContent = { probe: 'Ajouter une sonde', sensor: 'Ajouter un capteur de site' }[kind] || 'Ajouter un appareil';
+    document.getElementById('f-name').placeholder = { probe: 'faisceau-60', sensor: 'Shelter' }[kind] || 'DB91-RX';
+    document.getElementById('f-role').placeholder = { probe: 'Faisceau vers le pylône', sensor: 'Température et humidité' }[kind] || 'Codec audio';
   }
 }
 
@@ -1017,11 +1082,13 @@ async function openEditor(id = null, kind = 'device') {
   let dev = kind === 'probe'
     ? { kind, probe: 'burst', interval: 10, timeout: 1, fail_threshold: 1, alert_email: false, enabled: true,
         config: { count: 20, spacing_ms: 50, loss_pct: 5, max_ms: 150 } }
+    : kind === 'sensor'
+    ? { kind, probe: 'snmp', interval: 60, timeout: 3, fail_threshold: 3, alert_email: false, enabled: true, config: {} }
     : { kind, probe: 'ping', interval: 30, timeout: 3, fail_threshold: 3, alert_email: false, enabled: true, config: {} };
   if (id != null) {
     try { dev = await api(`/api/chain/devices/${id}`); }
     catch (e) { alert(e.message); return; }
-  } else if (kind === 'device') {
+  } else if (kind === 'device' || kind === 'sensor') {
     const list = chainDevs();
     const last = list[list.length - 1];
     if (last) dev.site = last.site;
@@ -1042,7 +1109,7 @@ async function openEditor(id = null, kind = 'device') {
   document.getElementById('f-out-label').value = dev.out_label || '';
   document.getElementById('f-web').value = dev.web || '';
   fillLinkSelects(dev.link_from, dev.link_to);
-  const sites = [...new Set(['Studio', 'Pylône', ...chainDevs().map(d => d.site).filter(Boolean)])];
+  const sites = [...new Set(['Studio', 'Pylône', ...chainDevs().concat(sensorDevs()).map(d => d.site).filter(Boolean)])];
   document.getElementById('sites-list').innerHTML = sites.map(s => `<option value="${esc(s)}">`).join('');
   currentProbe = dev.probe;
   renderProbePicker();
@@ -1119,7 +1186,7 @@ function collect() {
     alert_on_warn: get('f-alert').checked && get('f-alert-warn').checked,
     enabled: get('f-enabled').checked,
     notes: get('f-notes').value.trim(),
-    out_label: editingKind === 'probe' ? '' : get('f-out-label').value.trim(),
+    out_label: editingKind === 'device' ? get('f-out-label').value.trim() : '',
     web: editingKind === 'probe' ? '' : get('f-web').value.trim(),
     link_from: editingKind === 'probe' ? (get('f-link-from').value || null) : null,
     link_to: editingKind === 'probe' ? (get('f-link-to').value || null) : null,

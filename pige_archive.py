@@ -128,8 +128,8 @@ class PigeArchiver:
         open_ = {}
         for r in rows:
             d = devs.get(r['device_id']) or {}
-            # Appareils seulement : ni sondes réseau, ni réception FM (déjà couverte par les alertes FM)
-            if d.get('kind') == 'probe' or d.get('probe') in ('burst', 'fm_local') or d.get('site') == 'Sondes réseau':
+            # Appareils seulement : ni sondes réseau, ni capteurs de site, ni réception FM (déjà couverte par les alertes FM)
+            if d.get('kind') in ('probe', 'sensor') or d.get('probe') in ('burst', 'fm_local') or d.get('site') == 'Sondes réseau':
                 continue
             t = self._epoch(r['timestamp'])
             if t is None:

@@ -129,9 +129,9 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        1. RTL-SDR &amp; Station
+        1. Réception FM &amp; Station
       </div>
-      <div class="grid grid-cols-3 gap-4">
+      <div class="grid grid-cols-3 gap-4" id="station-grid">
         <div>
           <div class="field-label">Fréquence FM</div>
           <input type="text" id="frequency" class="field-input" placeholder="88.6M">
@@ -142,7 +142,7 @@
           <input type="text" id="station-name" class="field-input" placeholder="Graffiti Radio">
           <div class="field-hint">Affiché dans l'interface</div>
         </div>
-        <div>
+        <div class="rtl-only">
           <div class="field-label">Gain</div>
           <input type="text" id="gain" class="field-input" placeholder="40" maxlength="5" title="-1 ou auto pour gain automatique">
           <div class="field-hint">0 à 50 dB</div>
@@ -158,12 +158,22 @@
         2. Surveillance &amp; Seuils
       </div>
       <div class="grid grid-cols-2 gap-4">
-        <div>
+        <div class="tef-only">
+          <div class="field-label">Seuil absence de modulation (dBFS)</div>
+          <input type="number" id="tef-mod-threshold" class="field-input" placeholder="-40" step="1" min="-90" max="-10">
+          <div class="field-hint">Niveau audio reçu sous lequel la modulation est considérée absente. Par défaut : -40</div>
+        </div>
+        <div class="tef-only">
+          <div class="field-label">Perte du signal FM</div>
+          <div class="text-xs text-gray-600 py-2">Automatique : le tuner ne transmet plus de mesure de signal.</div>
+          <div class="field-hint">Pas de seuil à régler avec le tuner TEF</div>
+        </div>
+        <div class="rtl-only">
           <div class="field-label">Seuil modulation (dB std)</div>
           <input type="number" id="modulation-std-threshold" class="field-input" placeholder="0.5" step="0.1" min="0.1" max="5">
-          <div class="field-hint">Signal normal ≈ 2.0 dB — recommandé : 0.5 à 1.5</div>
+          <div class="field-hint">Signal normal : 2 dB environ. Recommandé : 0,5 à 1,5</div>
         </div>
-        <div>
+        <div class="rtl-only">
           <div class="field-label">Seuil perte émetteur (dBFS)</div>
           <input type="number" id="signal-lost-threshold" class="field-input" placeholder="-50">
           <div class="field-hint">Niveau en dessous duquel l'émetteur est hors ligne</div>
@@ -176,12 +186,17 @@
         <div>
           <div class="field-label">Délai alerte émetteur (s)</div>
           <input type="number" id="silence-duration" class="field-input" placeholder="10">
-          <div class="field-hint">Durée sans porteuse avant alerte</div>
+          <div class="field-hint">Durée sans signal FM capté avant alerte</div>
         </div>
         <div>
           <div class="field-label">Délai alerte RDS absent (s)</div>
           <input type="number" id="rds-timeout" class="field-input" placeholder="120">
           <div class="field-hint">Durée sans signal RDS avant alerte</div>
+        </div>
+        <div>
+          <div class="field-label">Délai alerte RadioText absent (s)</div>
+          <input type="number" id="rt-timeout" class="field-input" placeholder="300">
+          <div class="field-hint">Durée sans RadioText (titres, messages) avant alerte</div>
         </div>
       </div>
     </div>
@@ -481,6 +496,7 @@
   // ═══════════════════════════════════════════════
   // LOAD CONFIG
   // ═══════════════════════════════════════════════
+  let useTef = false;
   async function loadConfig() {
     try {
       const response = await fetch('/api/config/full', {credentials: 'include'});
@@ -502,6 +518,13 @@
       document.getElementById('modulation-std-threshold').value = config.audio?.modulation_std_threshold || 0.5;
       document.getElementById('signal-lost-threshold').value    = config.audio?.signal_lost_threshold || -50;
       document.getElementById('rds-timeout').value              = config.audio?.rds_timeout || 120;
+      document.getElementById('rt-timeout').value               = config.audio?.rt_timeout || 300;
+      document.getElementById('tef-mod-threshold').value        = config.tef?.modulation_threshold_dbfs ?? -40;
+      // Tuner TEF : réglages propres au TEF ; RTL-SDR : anciens réglages (gain, écart-type, dBFS)
+      useTef = !!config.tef?.enabled;
+      document.querySelectorAll('.tef-only').forEach(e => e.style.display = useTef ? '' : 'none');
+      document.querySelectorAll('.rtl-only').forEach(e => e.style.display = useTef ? 'none' : '');
+      document.getElementById('station-grid').className = 'grid gap-4 ' + (useTef ? 'grid-cols-2' : 'grid-cols-3');
       document.getElementById('sender-email').value             = config.email?.sender_email || '';
       document.getElementById('sender-password').value          = '';
       document.getElementById('recipient-emails').value         = recipientsStr;
@@ -613,7 +636,8 @@
         modulation_alert_delay:   parseInt(document.getElementById('modulation-alert-delay').value) || 30,
         modulation_std_threshold: parseFloat(document.getElementById('modulation-std-threshold').value) || 0.5,
         signal_lost_threshold:    parseFloat(document.getElementById('signal-lost-threshold').value) || -50,
-        rds_timeout:              parseInt(document.getElementById('rds-timeout').value) || 120
+        rds_timeout:              parseInt(document.getElementById('rds-timeout').value) || 120,
+        rt_timeout:               parseInt(document.getElementById('rt-timeout').value) || 300
       },
       email: {
         sender_email:     document.getElementById('sender-email').value,
@@ -631,6 +655,11 @@
         wifi_password:document.getElementById('wifi-password').value
       }
     };
+
+    if (useTef) {
+      const thr = parseFloat(document.getElementById('tef-mod-threshold').value);
+      config.tef = { modulation_threshold_dbfs: isNaN(thr) ? -40 : thr };
+    }
 
     if (newUsername || newPassword) {
       config.auth = {};

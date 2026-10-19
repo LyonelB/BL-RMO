@@ -531,12 +531,15 @@
     let n = 0;
     $('chain-grid').innerHTML = c.items.map(it => {
       const st = STATES[it.state] || STATES.unknown;
-      const probe = it.kind === 'probe';
-      const head = probe ? `sonde · ${PROBE_LABELS[it.probe] || it.probe}` : `${++n}${it.site ? ' · ' + esc(it.site) : ''}`;
-      return `<a href="/chain" class="chain-item" style="background:${probe ? '#fff' : st.bg};border-color:${st.bd}${probe ? ';border-style:dashed' : ''}" title="${esc(it.name)} : ${st.label}${it.value ? ' · ' + esc(it.value) : ''}">
+      const probe = it.kind === 'probe', sensor = it.kind === 'sensor';
+      const head = probe ? `sonde · ${PROBE_LABELS[it.probe] || it.probe}`
+        : sensor ? `capteur${it.site ? ' · ' + esc(it.site) : ''}` : `${++n}${it.site ? ' · ' + esc(it.site) : ''}`;
+      // Un capteur affiche toujours ses mesures (une température trop haute se lit d'un coup d'œil)
+      const line = sensor && it.value ? esc(it.value) : `${st.label}${it.value && it.state === 'up' ? ' · ' + esc(it.value) : ''}`;
+      return `<a href="/chain" class="chain-item" style="background:${probe || sensor ? '#fff' : st.bg};border-color:${st.bd}${probe ? ';border-style:dashed' : ''}" title="${esc(it.name)} : ${st.label}${it.value ? ' · ' + esc(it.value) : ''}">
         <div class="mono truncate" style="font-size:10px;color:#64748b">${head}</div>
         <div class="font-semibold truncate">${esc(it.name)}</div>
-        <div class="truncate" style="color:${st.fg}">${st.label}${it.value && it.state === 'up' ? ' · ' + esc(it.value) : ''}</div></a>`;
+        <div class="truncate" style="color:${st.fg}">${line}</div></a>`;
     }).join('') || '<div class="text-sm text-gray-400">Aucun appareil configuré.</div>';
     $('chain-ok').innerHTML = `${c.ok}/${c.total} <span class="font-normal text-gray-500">OK</span>`;
     $('chain-bad').textContent = c.bad ? `${c.bad}` : 'Aucun';

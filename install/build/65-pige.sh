@@ -27,7 +27,7 @@ ok "$INSTALL_DIR/pige"
 log "Service bl-rmo-pige…"
 tee /etc/systemd/system/bl-rmo-pige.service > /dev/null <<EOF
 [Unit]
-Description=BL-RMO - Pige audio 24 h
+Description=BL-RMO - Pige audio (FM et DAB+)
 After=network-online.target icecast2.service
 Wants=icecast2.service
 

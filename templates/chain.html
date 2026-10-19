@@ -211,8 +211,24 @@ function st(x) { return x ? (STATES[x.state] || STATES.unknown) : NO_PROBE; }
 function metric(d, label) { return (d.metrics || []).find(m => m.label === label); }
 
 // ── Données ────────────────────────────────────────────────────────────
-const chainDevs = () => all.filter(d => d.kind !== 'probe');
+const chainDevs = () => all.filter(d => d.kind !== 'probe' && d.kind !== 'sensor');
 const probes = () => all.filter(d => d.kind === 'probe');
+const sensors = () => all.filter(d => d.kind === 'sensor');
+// Capteur de site : ses mesures chiffrées (ex. « 19,9 °C · 43 %RH »), sinon son état
+function sensorFigures(d) {
+  const nums = (d.metrics || []).filter(m => m.unit && typeof m.value === 'number');
+  return nums.slice(0, 2).map(m => `<span style="${m.state === 'warn' ? 'color:#b45309;font-weight:600' : ''}">${esc(fr(m.display))} ${esc(m.unit)}</span>`).join(' · ')
+    || esc(st(d).label);
+}
+function sensorChip(d) {
+  const s = st(d), on = sel === `d:${d.id}`;
+  return `<button onclick="openSel('d:${d.id}')" title="${esc(d.name)} : ${esc(s.label)}"
+    class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] bg-white"
+    style="border:1px solid ${on ? '#2563eb' : (s.dot === STATES.up.dot ? '#e2e8f0' : s.dot)}">
+    <span class="rounded-full flex-shrink-0" style="width:7px;height:7px;background:${s.dot}"></span>
+    <span class="font-semibold text-gray-700">${esc(d.name)}</span>
+    <span class="font-mono text-gray-600">${sensorFigures(d)}</span></button>`;
+}
 // Plusieurs sondes peuvent surveiller le même lien (ex. rafale toutes les 10 s + ping chaque seconde)
 const SEVERITY = { down: 4, warn: 3, unstable: 3, up: 1, unknown: 0, disabled: 0 };
 function linkProbes(a, b) {
@@ -315,14 +331,18 @@ function renderSynoptic() {
     if (last && last.site === (d.site || '')) last.devs.push(d);
     else sections.push({ site: d.site || '', devs: [d] });
   });
+  // Capteurs de site : affichés dans l'en-tête du premier bloc de leur site
+  const placed = new Set();
   let html = '';
   sections.forEach((sec, i) => {
     if (i > 0) {
       const prev = sections[i - 1].devs;
       html += bandHtml(prev[prev.length - 1], sec.devs[0]);
     }
+    const secSensors = sensors().filter(c => !placed.has(c.id) && (c.site || '') === sec.site);
+    secSensors.forEach(c => placed.add(c.id));
     html += `<section class="section" style="margin-bottom:0;padding:14px 16px">
-      <div class="text-[11px] font-bold tracking-wider text-blue-600 mb-2.5 uppercase">${esc(sec.site || 'Sans site')}</div>
+      <div class="flex flex-wrap items-center gap-2 mb-2.5"><span class="text-[11px] font-bold tracking-wider text-blue-600 uppercase mr-1">${esc(sec.site || 'Sans site')}</span>${secSensors.map(sensorChip).join('')}</div>
       <div class="flex flex-wrap items-center gap-y-3">`;
     sec.devs.forEach((d, j) => {
       html += tileHtml(d);
@@ -336,15 +356,18 @@ function renderSynoptic() {
   const shown = new Set();
   devs.forEach((d, i) => { if (devs[i + 1]) linkProbes(d, devs[i + 1]).forEach(p => shown.add(p.id)); });
   const others = probes().filter(p => !shown.has(p.id));
-  $('other-probes').classList.toggle('hidden', !others.length);
-  $('other-probes').innerHTML = others.length ? `<div class="text-[11px] font-bold tracking-wider text-blue-600 mb-2">AUTRES SONDES</div>
+  const lone = sensors().filter(c => !placed.has(c.id));   // site sans appareil de la chaîne
+  $('other-probes').classList.toggle('hidden', !others.length && !lone.length);
+  $('other-probes').innerHTML = (lone.length ? `<div class="text-[11px] font-bold tracking-wider text-blue-600 mb-2">CAPTEURS DE SITE</div>
+    <div class="flex flex-wrap gap-2 ${others.length ? 'mb-4' : ''}">${lone.map(c => sensorChip(c) + (c.site ? `<span class="text-[11px] text-gray-400 self-center">${esc(c.site)}</span>` : '')).join('')}</div>` : '')
+    + (others.length ? `<div class="text-[11px] font-bold tracking-wider text-blue-600 mb-2">AUTRES SONDES</div>
     <div class="flex flex-wrap gap-2">${others.map(p => {
       const s = st(p), [l1, l2] = linkFigures(p);
       return `<button onclick="openSel('p:${p.id}')" class="flex items-center gap-2 bg-white border rounded-lg px-3 py-2 text-left" style="border-color:${sel === 'p:' + p.id ? '#2563eb' : '#e2e8f0'}">
         <span class="rounded-full" style="width:8px;height:8px;background:${s.dot}"></span>
         <span><span class="block text-xs font-medium text-gray-800">${esc(p.name)}</span><span class="block text-[11px] text-gray-500 font-mono">${esc([l1, l2].filter(Boolean).join(' · ') || s.label)}</span></span>
       </button>`;
-    }).join('')}</div><p class="text-[11px] text-gray-400 mt-1.5">Rattachez une sonde à un lien dans « Gérer la chaîne » pour l'afficher sur la flèche correspondante.</p>` : '';
+    }).join('')}</div><p class="text-[11px] text-gray-400 mt-1.5">Rattachez une sonde à un lien dans « Gérer la chaîne » pour l'afficher sur la flèche correspondante.</p>` : '');
 
   // Résumé
   const count = k => devs.filter(d => d.state === k).length;
@@ -355,6 +378,8 @@ function renderSynoptic() {
   if (alertes) pills.push(['warn', `${alertes} en alerte`]);
   if (count('down')) pills.push(['down', `${count('down')} hors service`]);
   if (bad) pills.push(['warn', `${bad} sonde${bad > 1 ? 's' : ''} en alerte`]);
+  const badSensors = sensors().filter(c => ['warn', 'unstable', 'down'].includes(c.state)).length;
+  if (badSensors) pills.push(['warn', `${badSensors} capteur${badSensors > 1 ? 's' : ''} en alerte`]);
   $('summary').innerHTML = pills.map(([k, t]) => `<span class="rounded-full px-2.5 py-1 font-medium" style="background:${STATES[k].bg};color:${STATES[k].fg}">${esc(t)}</span>`).join('');
 }
 
@@ -417,7 +442,7 @@ function renderHeader() {
   const e = r.ent, s = st(e);
   let kind, name, sub, probe, web = '';
   if (r.kind === 'device') {
-    kind = 'APPAREIL'; name = e.name;
+    kind = e.kind === 'sensor' ? 'CAPTEUR DE SITE' : 'APPAREIL'; name = e.name;
     sub = [e.role, e.site, e.host].filter(Boolean).join(' · ');
     probe = probeLine(e); web = e.web || '';
   } else if (e) {

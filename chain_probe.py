@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 
 PROBE_TYPES = ('ping', 'burst', 'tcp', 'http', 'snmp', 'icecast', 'fm_local')
 STABLE_STATES = ('unknown', 'up', 'warn', 'down')
-KINDS = ('device', 'probe')   # appareil de la chaîne / sonde réseau
+KINDS = ('device', 'probe', 'sensor')   # appareil de la chaîne / sonde réseau / capteur de site
 
 
 def infer_kind(dev):
@@ -142,6 +142,10 @@ def validate_device(data, existing=None):
         # Adresse de l'interface web de l'appareil (vide : pas de lien)
         'web': _url(data['web']) if str(data.get('web') or '').strip() else '',
     }
+    # Seul un appareil de la chaîne a une liaison vers le suivant ; un capteur de site
+    # (température, porte...) est rattaché à un site, hors du flux du signal
+    if dev['kind'] != 'device':
+        dev['out_label'] = ''
     # Une sonde réseau surveille le lien entre deux appareils de la chaîne
     if dev['kind'] == 'probe':
         lf = _num(data.get('link_from'), 'Lien (départ)', allow_none=True, integer=True)
@@ -1190,7 +1194,7 @@ class ChainMonitor:
                     except (TypeError, ValueError, IndexError):
                         vals = r['metrics']
                 state = 'ok' if r['ok'] and not r['warn'] else ('alerte' if r['ok'] else 'echec')
-                sm.append([r['ts'], name(r['device_id']), 'sonde' if d.get('kind') == 'probe' else 'appareil',
+                sm.append([r['ts'], name(r['device_id']), {'probe': 'sonde', 'sensor': 'capteur'}.get(d.get('kind'), 'appareil'),
                            d.get('probe', ''), state,
                            '' if r['latency'] is None else str(r['latency']).replace('.', ','),
                            r['message'] or '', vals])

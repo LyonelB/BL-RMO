@@ -8,8 +8,12 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Configuration
 - **Email de test** : le bouton est grisé, avec un message, tant que l'expéditeur, le mot de passe ou les destinataires modifiés ne sont pas enregistrés (le test part toujours avec la configuration enregistrée).
+- **Vrais réglages du tuner TEF** : avec le TEF, la section Surveillance montre le **seuil d'absence de modulation** (niveau audio reçu, en dBFS, -40 par défaut), utilisé depuis toujours mais absent de la page. Les deux anciens seuils RTL-SDR (écart-type de modulation, perte émetteur en dBFS), sans effet avec le TEF, ne s'affichent plus qu'en mode RTL-SDR, comme le gain. La perte du signal FM reste automatique (le tuner ne transmet plus de mesure).
+- **Délai d'alerte « RadioText absent »** réglable (5 min par défaut), à côté de celui du RDS.
+- La section 1 devient « Réception FM & Station ».
 
 ### Chaîne de diffusion
+- **Capteurs de site** : troisième catégorie, à côté des appareils de la chaîne et des sondes réseau, pour ce qui surveille l'environnement d'un site sans faire partie du signal (température et humidité d'un shelter, porte, secteur...). Un capteur se rattache à un site ; il s'affiche dans l'en-tête de ce site sur le synoptique, avec ses mesures (par exemple « Shelter 19,9 °C · 43 %RH », en orange si un seuil est dépassé), et après les appareils de son site sur le tableau de bord. Il garde l'historique, les graphiques, les journaux syslog, le journal et les alertes mail. Nouvelle section « Capteurs de site » dans Gérer la chaîne. Ses alertes ne créent pas d'extrait de pige.
 - **Modèle SNMP egnite Querx TH** (sonde de température et d'humidité, par exemple au shelter) : température, humidité, point de rosée, état du capteur et uptime, avec des seuils de départ (0 à 40 °C, 85 %RH) à ajuster.
 
 ### Piges multiples et nouvelle page Pige
@@ -20,6 +24,7 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 - La grande frise disparaît : un **repère de 30 min** autour de la position montre les trous et l'extrait ; une **grille jour par jour** montre la disponibilité sur toute la durée de conservation (un clic : ce jour, à la même heure).
 - **Journaux** : un lien « Écouter » de la chaîne ou de la réception FM ouvre toujours la pige FM ; les alertes DAB+ ont désormais, comme la FM, une colonne **Pige** en bout de ligne (« Écouter » et « MP3 », 30 s avant à 30 s après) : pige du service concerné, ou pour une alerte sur tout le multiplex (ensemble dégradé, récepteur hors service), la première pige DAB+ configurée ; « pas de pige » ou « hors pige » sinon.
 - API : `?p=<pige>` sur `/api/pige/status`, `/api/pige/segment`, `/api/pige/export` (la FM par défaut) ; nouvelles routes `/api/pige/list` et `/api/pige/config`.
+- Le service `bl-rmo-pige` s'appelle « BL-RMO - Pige audio (FM et DAB+) » dans le script d'installation (il disait encore « 24 h »).
 
 ### Nouveau tableau de bord
 - **Une seule page pour tout surveiller** : un bandeau d'état (FM, DAB+, chaîne, pige, alertes des dernières 24 h), puis la réception FM et la réception DAB+ côte à côte, la chaîne de diffusion et la pige.
