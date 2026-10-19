@@ -223,7 +223,7 @@
             </select>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-3">Mesurées par la clé DAB+ sur le multiplex reçu. Un mail part à l'alerte, un second au rétablissement. Détail en direct et écoute : page <a href="/dab" class="text-blue-600 hover:text-blue-800">DAB+</a>.</p>
+        <p class="text-xs text-gray-500 mb-3">Mesurées par la clé DAB+ sur le multiplex reçu. Un mail part à l'alerte, un second au rétablissement. « Écouter » ouvre la pige DAB+ au moment de l'alerte : celle du service concerné, ou pour une alerte sur tout le multiplex, la première pige DAB+ configurée. Détail en direct : page <a href="/dab" class="text-blue-600 hover:text-blue-800">DAB+</a>.</p>
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left">
             <thead>
@@ -235,11 +235,12 @@
                 <th class="font-medium py-2 pr-3">Durée</th>
                 <th class="font-medium py-2 pr-3">État</th>
                 <th class="font-medium py-2 pr-3">Détail</th>
-                <th class="font-medium py-2">Mails</th>
+                <th class="font-medium py-2 pr-3">Mails</th>
+                <th class="font-medium py-2">Pige</th>
               </tr>
             </thead>
             <tbody id="db-body" class="divide-y divide-gray-50">
-              <tr><td colspan="8" class="py-8 text-center text-gray-400">Chargement...</td></tr>
+              <tr><td colspan="9" class="py-8 text-center text-gray-400">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
@@ -763,7 +764,20 @@ const DB_COLORS = {
   'Silence audio': 'bg-orange-50 text-orange-700',
   'Récepteur DAB+ hors service': 'bg-gray-100 text-gray-700',
 };
-let dbPiges = {};
+let dbPiges = [];
+function dbPigeLinks(a) {
+  // Pige du service de l'alerte ; alerte sur tout le multiplex : première pige DAB+
+  if (!dbPiges.length) return '<span class="text-gray-300" title="Aucune pige DAB+ configurée (page Pige)">pas de pige</span>';
+  const pg = a.sid ? dbPiges.find(p => p.sid === a.sid) : dbPiges[0];
+  if (!pg) return '<span class="text-gray-300" title="Ce service n\'est pas enregistré">pas de pige</span>';
+  const t0 = Math.floor(new Date(a.start).getTime() / 1000);
+  if (!pg.oldest || t0 - 30 < pg.oldest) return '<span class="text-gray-300">hors pige</span>';
+  const t1 = a.end ? Math.floor(new Date(a.end).getTime() / 1000) : t0 + 90;
+  const s = t0 - 30, e = Math.min(t1 + 30, Math.floor(Date.now() / 1000));
+  const q = encodeURIComponent(pg.id);
+  return `<a href="/pige?p=${q}&t=${t0}" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Ouvrir la pige ${esc(pg.name)} 30 s avant l'alerte">Écouter</a>`
+       + `<a href="/api/pige/export?p=${q}&start=${s}&end=${e}" class="font-medium text-blue-600 hover:text-blue-800" title="Extrait MP3 (${esc(pg.name)}) de 30 s avant à 30 s après">MP3</a>`;
+}
 async function loadDab() {
   try {
     const st = await api('/api/dab/status');
@@ -774,13 +788,12 @@ async function loadDab() {
       + (rf.snr != null ? ` · SNR ${rf.snr.toFixed(1)} dB` : '');
   } catch (e) {}
   try {   // piges DAB+ : lien « Écouter » sur les alertes de leur service
-    dbPiges = {};
-    ((await api('/api/pige/list')).piges || []).forEach(p => { if (p.kind === 'dab' && p.sid) dbPiges[p.sid] = p; });
-  } catch (e) { dbPiges = {}; }
+    dbPiges = ((await api('/api/pige/list')).piges || []).filter(p => p.kind === 'dab' && p.sid);
+  } catch (e) { dbPiges = []; }
   try {
     dbEvents = (await api('/api/dab/events?limit=500')).events || [];
   } catch (e) {
-    $('db-body').innerHTML = `<tr><td colspan="8" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`;
+    $('db-body').innerHTML = `<tr><td colspan="9" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`;
     return;
   }
   const now = Date.now();
@@ -806,7 +819,7 @@ function renderDab() {
   $('db-count').textContent = `${list.length} alerte${list.length > 1 ? 's' : ''}`;
   $('db-more').classList.toggle('hidden', dbShowAll || list.length <= 50);
   if (!shown.length) {
-    $('db-body').innerHTML = '<tr><td colspan="8" class="py-8 text-center text-gray-400">Aucune alerte enregistrée</td></tr>';
+    $('db-body').innerHTML = '<tr><td colspan="9" class="py-8 text-center text-gray-400">Aucune alerte enregistrée</td></tr>';
     return;
   }
   const hms = d => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
@@ -824,13 +837,13 @@ function renderDab() {
     return `<tr class="hover:bg-slate-50">
       <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${day}</td>
       <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${DB_COLORS[a.label] || 'bg-gray-100 text-gray-700'}">${esc(a.label)}</span></td>
-      <td class="py-2 pr-3 font-medium text-gray-800">${esc(a.service || '-')}${dbPiges[a.sid] && dbPiges[a.sid].oldest && d0.getTime() / 1000 - 30 >= dbPiges[a.sid].oldest
-        ? ` <a href="/pige?p=${encodeURIComponent(dbPiges[a.sid].id)}&t=${Math.floor(d0.getTime() / 1000)}" class="ml-2 text-xs font-medium text-blue-600 hover:text-blue-800" title="Ouvrir la pige de ce service 30 s avant l'alerte">Écouter</a>` : ''}</td>
+      <td class="py-2 pr-3 font-medium text-gray-800">${esc(a.service || '-')}</td>
       <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${range}</td>
       <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.status === 'complete' ? fmtDur(a.duration) : '-'}</td>
       <td class="py-2 pr-3 whitespace-nowrap">${state}</td>
       <td class="py-2 pr-3 text-gray-500" style="overflow-wrap:anywhere">${esc(a.message || '')}</td>
-      <td class="py-2 text-gray-600">${a.emails}</td>
+      <td class="py-2 pr-3 text-gray-600">${a.emails}</td>
+      <td class="py-2 whitespace-nowrap">${dbPigeLinks(a)}</td>
     </tr>`;
   }).join('');
 }
