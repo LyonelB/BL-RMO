@@ -56,8 +56,8 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 - **Mesures RF natives** : niveau en dBf, rapport signal/bruit, trajets multiples, décalage de fréquence
 - **Présence du signal** mesurée par la cadence des trames du tuner, indépendante du son
 - **Absence de modulation** (porteuse présente, programme muet), alertes **RDS** et **RadioText**
-- **Analyse audio** : niveaux G/D, spectre 0 à 20 kHz, qualité S/B
-- **RDS** décodé par le tuner : PS, RadioText, code PI, stéréo ; logo de la station via [rds-station-db](https://github.com/LyonelB/rds-station-db)
+- **Niveaux audio G/D** mesurés en continu, **stéréo ou mono** d'après l'indicateur de pilote du tuner
+- **RDS** décodé par le tuner : PS, RadioText, code PI ; logo de la station via [rds-station-db](https://github.com/LyonelB/rds-station-db)
 
 ### 📶 Réception DAB+ (option, clé RTL-SDR)
 - **Ensemble** : SNR, qualité FIC, gain, identifiant ; alerte quand l'ensemble se dégrade
@@ -98,7 +98,8 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 - Contrôle d'accès vérifié côté serveur sur chaque route
 
 ### 🌐 Interface web
-- Tableau de bord temps réel, configuration complète depuis le navigateur
+- **Tableau de bord** d'un seul coup d'œil : réception FM et DAB+ (lecteur, VU-mètre, indicateurs, dernière alerte), chaîne de diffusion complète avec ses sondes, état de la pige
+- Configuration complète depuis le navigateur
 - **Responsive** : smartphone et tablette
 - **Accès local** via `https://bl-rmo.local` (Nginx + mDNS)
 
@@ -282,8 +283,10 @@ Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-RMO (pas `bl
 - [ ] Page Incidents : regroupement des alertes de réception et de diffusion, cause probable, frise
 - [ ] Retrait du mode RTL-SDR, de l'analyse MPX et de Docker
 - [x] v0.9.0 : nouveau nom BL-RMO, journaux en trois onglets
-- [ ] Réception DAB+ (reprise de BL-DMO) : validation sur site avec l'antenne bande III
-- [ ] Défauts audio (micro-coupures, clics, craquements) : régler les seuils sur la réception réelle, puis alertes par mail
+- [x] Réception DAB+ (reprise de BL-DMO), validée sur site
+- [x] Tableau de bord FM, DAB+, chaîne et pige
+- [ ] Piges multiples : plusieurs enregistrements (FM, services DAB+), créés depuis la page Pige
+- [ ] Alerte de passage en mono
 - [ ] Fermeture de BL-DMO ([dabplus-monitor](https://github.com/LyonelB/dabplus-monitor)) : annonce, archivage, puis suppression du dépôt
 - [ ] welle-monitor : reporter les changements de la prochaine version de welle.io
 - [ ] Version anglaise de l'interface

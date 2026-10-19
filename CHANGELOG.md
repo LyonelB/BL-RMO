@@ -6,6 +6,23 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Nouveau tableau de bord
+- **Une seule page pour tout surveiller** : un bandeau d'état (FM, DAB+, chaîne, pige, alertes des dernières 24 h), puis la réception FM et la réception DAB+ côte à côte, la chaîne de diffusion et la pige.
+- **Réception FM** : logo, PS, PI, RadioText ; lecteur avec VU-mètre (niveaux du tuner, 20 mesures par seconde, crête maintenue 1,5 s) ; signal, modulation, **stéréo ou mono**, RDS, uptime ; dernière alerte, avec lien vers le journal.
+- **Réception DAB+** : un service, choisi dans **DAB+ › Réglages › Service du tableau de bord** (par défaut le premier service surveillé) ; diaporama, titre en cours, lecteur avec VU-mètre ; présence, audio, stéréo ou mono, SNR et FIC de l'ensemble, disponibilité sur 24 h ; dernière alerte.
+- **Un seul lecteur à la fois** : lancer le DAB+ coupe la FM, et l'inverse.
+- **Chaîne de diffusion** : tous les appareils dans l'ordre, chaque sonde placée sur la liaison qu'elle mesure (comme la page Chaîne), sur plusieurs lignes si besoin, sans barre de défilement ; nombre d'appareils OK, en défaut, dernier événement.
+- **Pige** : état, disponible depuis, espace utilisé et libre, remplissage de la durée de conservation.
+- Disparaissent : le spectre audio, le compteur et l'adresse des alertes mail, le bouton d'enregistrement, la courbe du signal RF et le panneau MPX du mode RTL-SDR.
+- **Mode public** (`/public`) : même tableau de bord ; l'écoute du DAB+ y demande une connexion.
+- Nouvelle route `/api/dashboard`, publique comme `/public` : aucune adresse, aucun réglage, aucun identifiant.
+
+### Stéréo FM
+- **L'indicateur stéréo vient désormais du tuner** (trames `Ss` / `Sm` : pilote 19 kHz détecté ou non). Il était tiré du bit MS du RDS, qui distingue en réalité musique et parole.
+
+### Page DAB+
+- **Lien « Externe »** dans le lecteur : ouvre le flux MP3 du service dans un autre onglet ou un lecteur externe.
+
 ### Page DAB+ : changement de radio
 - **Plus de « Écoute impossible » en changeant de radio** : une seule écoute DAB+ reste possible à la fois, mais la nouvelle remplace désormais la précédente au lieu d'être refusée. Le serveur mettait quelques secondes à voir que le navigateur avait coupé l'ancien flux, et refusait la nouvelle écoute entre-temps.
 - Le serveur attend jusqu'à 3 s qu'un service tout juste épinglé démarre, et le lecteur réessaie une fois avant d'afficher un message d'erreur.

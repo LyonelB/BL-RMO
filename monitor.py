@@ -698,10 +698,10 @@ class FMMonitor:
         self._rth_recent[text] = now
         self.db.save_rt_title(None if ps in (None, '-') else ps, text)
 
-    def _on_tef_ms(self, is_stereo):
-        """Reçoit le flag MS (Music/Stereo) depuis le groupe RDS 0A."""
+    def _on_tef_ms(self, is_music):
+        """Bit MS du groupe RDS 0A : musique ou parole (pas la stéréo)."""
         with self.stats_lock:
-            self.stats['stereo_present'] = is_stereo
+            self.stats['rds_music'] = is_music
 
     # ══════════════════════════════════════════════════════════════════
 
@@ -1558,9 +1558,12 @@ class FMMonitor:
         if self.mpx_enabled:
             mpx = self.mpx_analyzer.get_results()
             if self.use_tef:
-                # En mode TEF, stereo_present vient du bit MS RDS — ne pas écraser
+                # En mode TEF, la stéréo vient du tuner (trames Ss / Sm) : ne pas écraser
                 mpx.pop('stereo_present', None)
             stats.update(mpx)
+        if self.use_tef and self.tef_driver is not None:
+            stats['stereo_present'] = bool(getattr(self.tef_driver, 'stereo', False))
+            stats['stereo_known'] = bool(getattr(self.tef_driver, 'stereo_seen', False))
 
         if stats['start_time']:
             stats['start_time'] = stats['start_time'].strftime('%d/%m/%Y %H:%M:%S')

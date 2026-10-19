@@ -1375,6 +1375,7 @@ DAB_EDITABLE = {
     'snr_threshold': float, 'fic_quality_threshold': float, 'silence_threshold': float,
     'silence_duration': int, 'service_loss_duration': int, 'ensemble_loss_duration': int,
     'receiver_loss_duration': int, 'listen_max_minutes': int,
+    'dashboard_sid': lambda v: str(v or '').strip().lower(),
 }
 
 
@@ -1787,7 +1788,138 @@ def chain_device_logs(device_id):
 from flask import g
 
 # Routes ouvertes à tous (avec ou sans session) : la route gère elle-même l'accès
-ROLE_ALWAYS = {'login', 'logout', 'get_csrf_token', 'public_dashboard', 'static', 'chain_hook'}
+# ══════════════════════════════════════════════════════════════════════════
+#  Tableau de bord : résumé FM, DAB+, chaîne et pige (DASHBOARD_PATCH)
+#  Public comme /public : ni adresse, ni réglage, ni identifiant.
+# ══════════════════════════════════════════════════════════════════════════
+def _dash_fm(now):
+    out = {'last_alert': None, 'alerts_24h': 0}
+    if monitor is None or not hasattr(monitor, 'db'):
+        return out
+    try:
+        grouped = monitor.db.get_alerts_history_grouped(limit=100)
+    except Exception:
+        grouped = []
+    if grouped:
+        a = grouped[0]
+        out['last_alert'] = {'label': a.get('alert_label'), 'start': a.get('start_time'),
+                             'end': a.get('end_time'), 'duration': a.get('duration'), 'status': a.get('status')}
+    since = (now - timedelta(hours=24)).strftime('%Y-%m-%d %H:%M:%S')
+    out['alerts_24h'] = sum(1 for a in grouped if str(a.get('start_time') or '') >= since)
+    return out
+
+
+def _dash_dab(now):
+    cfg = dab_reader.config()
+    out = {'enabled': bool(cfg.get('enabled')), 'service': None, 'last_alert': None, 'alerts_24h': 0}
+    if not out['enabled']:
+        return out
+    st = dab_reader.status()
+    rf = st.get('rf') or {}
+    out.update({'receiver_up': bool(st.get('receiver_up')), 'ensemble_ok': bool(st.get('ensemble_ok')),
+                'channel': st.get('channel'), 'ensemble': rf.get('ensemble_label') or cfg.get('ensemble_name', ''),
+                'snr': rf.get('snr'), 'fic': rf.get('fic_quality')})
+    services = st.get('services') or []
+    sid = (cfg.get('dashboard_sid') or '').lower()
+    if not sid:
+        watched = cfg.get('watched_sids') or []
+        sid = watched[0] if watched else ''
+    svc = next((x for x in services if x.get('sid') == sid), None)
+    out['selected_sid'] = sid
+    if svc:
+        keep = ('sid', 'label', 'dls', 'pty', 'mode', 'bitrate', 'channels', 'samplerate', 'present',
+                'silence', 'audio_l', 'audio_r', 'level_age', 'mot_time')
+        out['service'] = {k: svc.get(k) for k in keep}
+        try:
+            up = next((u for u in dab_reader.uptime(24) if u['sid'] == sid), None)
+            out['service']['uptime_pct'] = up['uptime_pct'] if up else None
+        except Exception:
+            out['service']['uptime_pct'] = None
+    try:
+        evs = [e for e in dab_reader.events(limit=100) if not e.get('sid') or e.get('sid') == sid]
+    except Exception:
+        evs = []
+    if evs:
+        e = evs[0]
+        out['last_alert'] = {'label': e['label'] + (f" : {e['service']}" if e.get('service') else ''),
+                             'start': e['start'], 'end': e['end'], 'duration': e['duration'], 'status': e['status']}
+    since = (now - timedelta(hours=24)).isoformat()
+    out['alerts_24h'] = sum(1 for e in evs if str(e.get('start') or '') >= since)
+    return out
+
+
+def _dash_chain(now):
+    if chain_monitor is None:
+        return {'available': False}
+    devs = chain_monitor.get_status()
+
+    def brief(d):
+        val = ''
+        for m in d.get('metrics') or []:
+            if m.get('display') not in (None, ''):
+                val = f"{m.get('label', '')} {m['display']}{(' ' + m['unit']) if m.get('unit') else ''}".strip()
+                break
+        if not val and d.get('latency_ms') is not None:
+            val = f"{d['latency_ms']:.0f} ms"
+        return {'id': d['id'], 'kind': d['kind'], 'name': d['name'], 'site': d.get('site', ''),
+                'role': d.get('role', ''), 'probe': d.get('probe', ''), 'state': d['state'], 'value': val}
+
+    chain = [d for d in devs if d['kind'] != 'probe']
+    probes = [d for d in devs if d['kind'] == 'probe']
+    used, items = set(), []
+    for i, d in enumerate(chain):
+        items.append(brief(d))
+        if i + 1 < len(chain):
+            nxt = chain[i + 1]
+            for p in probes:   # sondes posées sur la liaison entre deux appareils voisins
+                if p['id'] not in used and {p.get('link_from'), p.get('link_to')} == {d['id'], nxt['id']}:
+                    items.append(brief(p))
+                    used.add(p['id'])
+    items += [brief(p) for p in probes if p['id'] not in used]
+    active = [x for x in items if x['state'] != 'disabled']
+    last = None
+    since = (now - timedelta(hours=24)).isoformat(sep=' ')
+    alerts = 0
+    try:
+        evs = chain_monitor.get_events(200)
+        evs = [e for e in evs if not (e.get('from_state') == 'unknown' and e.get('to_state') == 'up')]
+        if evs:
+            e = evs[0]
+            last = {'timestamp': e.get('timestamp'), 'device': e.get('device_name') or '',
+                    'to_state': e.get('to_state'), 'message': e.get('message') or ''}
+        alerts = sum(1 for e in evs if e.get('to_state') in ('down', 'warn')
+                     and str(e.get('timestamp') or '').replace('T', ' ') >= since)
+    except Exception:
+        pass
+    return {'available': True, 'items': items, 'total': len(active),
+            'ok': sum(1 for x in active if x['state'] == 'up'),
+            'bad': sum(1 for x in active if x['state'] in ('down', 'warn', 'unstable')),
+            'last_event': last, 'alerts_24h': alerts}
+
+
+def _dash_pige():
+    try:
+        pige_store.reload()
+        ps = pige_store.status(seg_from=time.time())
+    except Exception:
+        return {'available': False}
+    return {'available': True, 'enabled': ps['enabled'], 'recording': ps['recording'],
+            'retention_hours': ps['retention_hours'], 'oldest': ps.get('oldest'),
+            'used_bytes': ps['used_bytes'], 'free_bytes': ps['free_bytes'], 'now': ps['now']}
+
+
+@app.route('/api/dashboard')
+@limiter.exempt
+def dashboard_data():
+    """Résumé pour le tableau de bord (rafraîchi toutes les 5 s)."""
+    now = datetime.now()
+    data = {'fm': _dash_fm(now), 'dab': _dash_dab(now), 'chain': _dash_chain(now), 'pige': _dash_pige()}
+    data['alerts_24h'] = data['fm']['alerts_24h'] + data['dab'].get('alerts_24h', 0) \
+        + data['chain'].get('alerts_24h', 0)
+    return jsonify(data)
+
+
+ROLE_ALWAYS = {'login', 'logout', 'get_csrf_token', 'public_dashboard', 'static', 'chain_hook', 'dashboard_data'}
 # Lecteur : consulter et écouter
 ROLE_LECTEUR = {
     'index', 'stats', 'about_page', 'pige_page', 'chain_page', 'logs_page', 'account_page',

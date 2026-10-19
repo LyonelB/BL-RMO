@@ -5,42 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>BL-RMO · Dashboard</title>
-  <script src="https://cdn.tailwindcss.com">
-    // =============================================
-    // SPECTRE MPX
-    // =============================================
-</script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: 'Inter', system-ui, sans-serif; background: #f8fafc; }
+    body { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background: #f1f5f9; }
     .sidebar-link { display:flex; align-items:center; gap:10px; padding:10px 16px; border-radius:8px; color:#64748b; font-size:0.875rem; font-weight:500; transition:all 0.15s; text-decoration:none; }
     .sidebar-link:hover, .sidebar-link.active { background:#eff6ff; color:#2563eb; }
     .sidebar-link svg { width:18px; height:18px; flex-shrink:0; }
-    .dot { width:9px; height:9px; border-radius:50%; display:inline-block; flex-shrink:0; }
-    .dot-green  { background:#22c55e; box-shadow:0 0 6px #22c55e88; }
-    .dot-orange { background:#f97316; box-shadow:0 0 6px #f9731688; }
-    .dot-red    { background:#ef4444; box-shadow:0 0 6px #ef444488; }
-    .dot-gray   { background:#9ca3af; }
-    .vu-bar { height:5px; border-radius:3px; transition:width 0.2s ease-out; }
-    .card { background:white; border:1px solid #f1f5f9; border-radius:12px; padding:14px; }
-    .section-label { font-size:0.7rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; }
+    .card { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:18px; }
+    .card-title { font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#2563eb; }
+    .tile { background:#f8fafc; border-radius:10px; padding:10px; min-width:0; }
+    .tile-k { font-size:11px; color:#64748b; }
+    .tile-v { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .tile-s { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size:12px; color:#475569; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mono { font-family: ui-monospace, 'SF Mono', Menlo, monospace; }
+    .pill { display:flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; background:#fff; border:1px solid #e2e8f0; font-size:13px; white-space:nowrap; }
+    .pdot { width:8px; height:8px; border-radius:50%; background:#cbd5e1; flex-shrink:0; }
+    .vu { position:relative; flex:1; height:8px; border-radius:4px; background:#f1f5f9; overflow:hidden; }
+    .vu > .bar { height:100%; width:0; background:#22c55e; }
+    .vu > .peak { position:absolute; top:0; width:2px; height:100%; background:#15803d; left:0; }
+    .tiles { display:grid; grid-template-columns:repeat(auto-fit, minmax(96px, 1fr)); gap:10px; }
+    .chain-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(128px, 1fr)); gap:8px; }
+    .chain-item { display:block; padding:8px 10px; border-radius:9px; border:1px solid #e2e8f0; font-size:12px; text-decoration:none; color:#0f172a; min-width:0; }
+    .chain-item:hover { filter:brightness(0.97); }
+    .last-alert { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0; color:#0f172a; text-decoration:none; font-size:13px; }
+    .last-alert:hover { border-color:#93c5fd; }
+    .playbtn { width:40px; height:40px; border-radius:50%; border:2px solid #e2e8f0; background:#fff; display:flex; align-items:center; justify-content:center; color:#0f172a; flex-shrink:0; }
+    .playbtn:hover { border-color:#3b82f6; color:#2563eb; }
+    .playbtn.on { border-color:#3b82f6; color:#2563eb; background:#eff6ff; }
+    .playbtn:disabled { opacity:.45; cursor:not-allowed; }
     @keyframes pulse-ring { 0%,100%{opacity:1} 50%{opacity:0.4} }
     .pulse { animation:pulse-ring 1.5s ease-in-out infinite; }
-    .top-row { grid-template-columns: 1fr; }
-    @media (min-width: 768px) { .top-row { grid-template-columns: 3fr 2fr 2fr; } }
-    @media (max-width: 767px) {
-      #station-logo-container { width:100px !important; min-height:80px !important; }
-      #station-logo { width:100px !important; height:100px !important; }
-      #station-logo-placeholder { width:100px !important; height:100px !important; }
-    }
-    .top-row { grid-template-columns: 1fr; }
-    @media (min-width: 768px) { .top-row { grid-template-columns: 3fr 2fr 2fr; } }
-    @media (max-width: 767px) {
-      #station-logo-container { width:100px !important; min-height:80px !important; }
-      #station-logo { width:100px !important; height:100px !important; }
-      #station-logo-placeholder { width:100px !important; height:100px !important; }
-    }
   </style>
 {% include '_roles.html' %}
 </head>
@@ -140,1184 +134,470 @@
     </div>
   </header>
 
+
   <!-- Contenu scrollable -->
-  <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+  <div class="flex-1 overflow-y-auto p-4 md:p-6">
+  <div class="max-w-7xl mx-auto flex flex-col gap-5">
 
-    <!-- ── Bande du haut ──────────────────────────────────────── -->
-    <div class="flex-shrink-0 grid gap-3 top-row">
-
-      <!-- Bloc 1 : Logo station + RDS -->
-      <div class="card flex gap-0 p-0 overflow-hidden">
-        <!-- Logo 150×150 — toujours visible, placeholder par défaut -->
-        <div id="station-logo-container" class="flex-shrink-0 flex items-center justify-center bg-gray-50 border-r border-gray-100" style="width:150px; min-height:120px">
-          <img id="station-logo" src="" alt="Logo"
-            class="hidden object-contain p-3" style="width:150px; height:150px">
-          <div id="station-logo-placeholder"
-            class="flex flex-col items-center justify-center gap-1.5" style="width:150px; height:150px">
-            <svg class="w-14 h-14 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
-            </svg>
-            <span class="text-xs font-mono text-gray-300 tracking-widest">FM</span>
-          </div>
-        </div>
-        <!-- Champs RDS -->
-        <div class="flex-1 min-w-0 p-3 flex flex-col justify-center gap-2">
-          <div class="flex items-center gap-2">
-            <span class="section-label">RDS</span>
-            <span id="rds-status-dot" class="dot dot-gray"></span>
-          </div>
-          <!-- Ligne 1 : PS + PI côte à côte -->
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <div class="text-xs text-gray-400 mb-1">PS</div>
-              <div class="font-mono text-sm font-semibold text-gray-900 bg-gray-50 px-2 py-1 rounded border border-gray-100 text-center" id="rds-ps-display">—</div>
-            </div>
-            <div>
-              <div class="text-xs text-gray-400 mb-1">PI</div>
-              <div class="font-mono text-sm font-semibold text-gray-900 bg-gray-50 px-2 py-1 rounded border border-gray-100 text-center" id="rds-pi-display">—</div>
-            </div>
-          </div>
-          <!-- Ligne 2 : RT pleine largeur -->
-          <div>
-            <div class="text-xs text-gray-400 mb-1">RT</div>
-            <div class="font-mono text-xs font-medium text-gray-700 bg-gray-50 px-2 py-1.5 rounded border border-gray-100 w-full overflow-hidden" id="rds-rt-display" style="white-space:normal;word-break:break-word;line-height:1.4">—</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bloc 2 : Alertes / Email alertes -->
-      <div class="card flex gap-3 items-center justify-around">
-        <div class="text-center flex-shrink-0">
-          <div class="section-label mb-1">Alertes</div>
-          <div class="text-sm font-bold font-mono text-gray-900" id="alerts-display">0</div>
-        </div>
-        <div class="w-px h-8 bg-gray-100 flex-shrink-0"></div>
-        <div class="min-w-0 flex-1">
-          <div class="section-label mb-1">Email alertes</div>
-          <div class="text-sm font-bold font-mono text-gray-900 truncate" id="email-display">—</div>
-        </div>
-      </div>
-
-      <!-- Bloc 3 : Signal / Modulation / Uptime -->
-      <div class="card flex gap-3 items-center justify-around">
-        <div class="text-center flex-1">
-          <div class="section-label mb-1">Signal</div>
-          <div class="text-sm font-bold font-mono text-green-600" id="status-display">OK</div>
-        </div>
-        <div class="w-px h-8 bg-gray-100"></div>
-        <div class="text-center flex-1">
-          <div class="section-label mb-1">Modulation</div>
-          <div class="text-sm font-bold font-mono text-green-600" id="modulation-display">Active</div>
-        </div>
-        <div class="w-px h-8 bg-gray-100"></div>
-        <div class="text-center flex-1">
-          <div class="section-label mb-1">Uptime</div>
-          <div class="text-sm font-bold font-mono text-gray-900" id="uptime-display">0h 0m</div>
-        </div>
-      </div>
-
-    </div><!-- /top row -->
-
-    <!-- ── Grille 2 colonnes ──────────────────────────────────── -->
-    <div class="flex-shrink-0 grid grid-cols-1 md:grid-cols-2 gap-3">
-
-      <!-- ══ Col gauche ══ -->
-      <div class="flex flex-col gap-3">
-
-        <!-- Signal RF + Player -->
-        <div class="card">
-          <div class="flex justify-between items-center mb-2">
-            <span class="section-label">Signal RF</span>
-            <span class="text-sm font-bold font-mono text-gray-900" id="vu-meter-value-main">— dBf</span>
-          </div>
-          <div class="h-1.5 rounded-full bg-gray-100 overflow-hidden mb-0.5">
-            <div id="vu-meter-bar-main" class="vu-bar w-0" style="background:#10b981; height:100%"></div>
-          </div>
-          <div class="flex justify-between text-xs text-gray-400 font-mono mb-1">
-            <span>0</span><span>22</span><span>45</span><span>67</span><span>90 dBf</span>
-          </div>
-          <!-- SNR + Multipath en ligne sous la barre -->
-          <!-- Spectre MPX (masqué en mode TEF) -->
-          <div id="mpx-spectrum-block" class="mb-3">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Spectre MPX</span>
-              <span class="text-xs text-gray-400 font-mono">0 — 85 kHz</span>
-            </div>
-            <canvas id="mpx-spectrum-canvas" style="width:100%;height:150px;display:block;border-radius:4px;" width="600" height="150"></canvas>
-            <div class="flex justify-between text-xs text-gray-400 font-mono mt-0.5">
-              <span>0 kHz</span><span></span><span></span><span></span><span>85 kHz</span>
-            </div>
-          </div>
-          <div class="border-t border-gray-100 mb-3"></div>
-
-          <!-- Player -->
-          <!-- Player -->
-          <div class="flex items-center gap-3">
-            {% if not public_mode %}<button id="rec-btn" onclick="toggleRecord()"
-              class="w-9 h-9 rounded-full border-2 border-gray-200 bg-white hover:border-red-400 hover:text-red-500 transition flex items-center justify-center text-gray-400 flex-shrink-0">
-              <span id="rec-dot" class="inline-block w-2.5 h-2.5 rounded-full bg-gray-300"></span>
-            </button>{% endif %}
-            <button id="play-button"
-              class="w-9 h-9 rounded-full border-2 border-gray-200 bg-white hover:border-blue-500 hover:text-blue-600 transition flex items-center justify-center flex-shrink-0">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            </button>
-            <div class="flex items-center gap-1.5 flex-1 min-w-0">
-              <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
-              <input type="range" id="volume-slider" min="0" max="100" value="50" class="w-16 h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-blue-500">
-              <span id="volume-value" class="text-xs text-gray-500 w-7">50%</span>
-              <a href="/stream.mp3" target="_blank" class="text-xs text-blue-500 hover:underline shrink-0">Externe</a>
-            </div>
-          </div>
-
-          <div id="rec-progress-bar" class="hidden mt-2">
-            <div class="flex justify-between text-xs text-gray-500 mb-1">
-              <span id="rec-timer">00:00</span>
-              <span id="rec-size">0 Mo / 50 Mo</span>
-            </div>
-            <div class="w-full bg-gray-100 rounded-full h-1">
-              <div id="rec-progress" class="bg-red-500 h-1 rounded-full" style="width:0%"></div>
-            </div>
-          </div>
-          <audio id="audio-player" preload="none"></audio>
-        </div>
-
-
-        <!-- ── Pige audio (résumé, clic = page Pige) ──────────────── -->
-        <a id="pige-widget" href="/pige" class="card block hover:border-blue-300 hover:shadow-sm transition" style="text-decoration:none" title="Ouvrir la pige audio">
-          <div class="flex items-center justify-between mb-2">
-            <span class="section-label flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
-              Pige audio
-            </span>
-            <span class="text-xs font-medium text-blue-600">Ouvrir la pige &rarr;</span>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-1 xl:grid-cols-3 gap-3">
-            <div class="rounded-lg bg-slate-50 px-3 py-2">
-              <div class="section-label mb-1">État</div>
-              <div class="flex items-center gap-2">
-                <span id="pige-w-dot" class="w-2 h-2 rounded-full bg-gray-300"></span>
-                <span class="text-sm font-semibold text-gray-900" id="pige-w-state">...</span>
-              </div>
-            </div>
-            <div class="rounded-lg bg-slate-50 px-3 py-2">
-              <div class="section-label mb-1">Disponible depuis</div>
-              <div class="text-sm font-semibold text-gray-900" id="pige-w-since">-</div>
-            </div>
-            <div class="rounded-lg bg-slate-50 px-3 py-2">
-              <div class="section-label mb-1">Espace pige / libre</div>
-              <div class="text-sm font-semibold text-gray-900 font-mono" id="pige-w-disk">-</div>
-            </div>
-          </div>
-        </a>
-        <script>
-        (function () {
-          const $ = id => document.getElementById(id);
-          const pad = n => String(n).padStart(2, '0');
-          const fmtBytes = b => b == null ? '?' : b >= 1e9 ? (b / 1e9).toFixed(1) + ' Go' : (b / 1e6).toFixed(0) + ' Mo';
-          function fmtSince(ts) {
-            const d = new Date(ts * 1000), now = new Date();
-            const day0 = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-            const diff = Math.round((day0(now) - day0(d)) / 86400000);
-            const hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
-            if (diff === 0) return "Aujourd'hui " + hm;
-            if (diff === 1) return 'Hier ' + hm;
-            return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) + ' ' + hm;
-          }
-          function show(dotClass, state, since, disk) {
-            $('pige-w-dot').className = 'w-2 h-2 rounded-full ' + dotClass;
-            $('pige-w-state').textContent = state;
-            $('pige-w-since').textContent = since;
-            $('pige-w-disk').textContent = disk;
-          }
-          async function refresh() {
-            try {
-              const r = await fetch('/api/pige/status', { credentials: 'include' });
-              if (!r.ok || r.redirected) throw new Error('indisponible');
-              const s = await r.json();
-              const on = s.enabled && s.recording;
-              const dot = on ? 'bg-red-500 animate-pulse' : (s.enabled ? 'bg-amber-500' : 'bg-gray-300');
-              const state = !s.enabled ? 'Désactivée' : on ? 'Enregistrement' : 'Arrêtée';
-              const oldest = s.oldest ?? (s.segments.length ? s.segments[0].start : null);
-              const since = oldest ? fmtSince(oldest) : 'Aucun enregistrement';
-              show(dot, state, since, fmtBytes(s.used_bytes) + ' / ' + fmtBytes(s.free_bytes));
-            } catch (e) {
-              show('bg-gray-300', 'Indisponible', '-', '-');
-            }
-          }
-          refresh();
-          setInterval(refresh, 30000);
-        })();
-        </script>
-      </div><!-- /col gauche -->
-
-      <!-- ══ Col droite : Analyse MPX (RTL-SDR) ══ -->
-      <div id="panel-mpx-rtlsdr" class="card flex flex-col gap-3">
-
-        <div class="flex items-center justify-between">
-          <span class="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            Analyse MPX
-          </span>
-          <span id="mpx-badge" class="text-xs font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-400">—</span>
-        </div>
-
-        <div class="border-t border-gray-100"></div>
-
-        <!-- Déviation / Pilote / SNR — grid 4 lignes × 3 cols pour alignement parfait -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:auto auto 6px auto;gap:0 12px;align-items:center">
-
-          <!-- Ligne 1 : labels -->
-          <div class="text-center text-xs font-semibold text-gray-600" style="margin-bottom:4px">Déviation <span class="font-normal text-gray-400">FM</span></div>
-          <div class="text-center text-xs font-semibold text-gray-600" style="margin-bottom:4px">Pilote <span class="font-normal text-gray-400">19 kHz</span></div>
-          <div class="text-center text-xs font-semibold text-gray-600" style="margin-bottom:4px">SNR <span class="font-normal text-gray-400">s/b</span></div>
-
-          <!-- Ligne 2 : valeurs -->
-          <div class="text-center text-sm font-mono font-semibold text-gray-800" style="margin-bottom:4px" id="mpx-dev-peak">— kHz</div>
-          <div class="text-center text-sm font-mono font-semibold text-gray-800" style="margin-bottom:4px" id="mpx-val-pilot">— dBFS</div>
-          <div class="text-center text-sm font-mono font-semibold text-gray-800" style="margin-bottom:4px" id="mpx-val-snr">— dB</div>
-
-          <!-- Ligne 3 : barres (même ligne garantie) -->
-          <div class="rounded-full overflow-hidden" style="height:6px;background:linear-gradient(to right,#bbf7d0 80%,#fef08a 93.3%,#fca5a5 100%)">
-            <div id="mpx-dev-bar" class="h-full w-0 rounded-full transition-all duration-150" style="background:#22c55e"></div>
-          </div>
-          <div class="rounded-full bg-gray-100 overflow-hidden" style="height:6px">
-            <div id="mpx-bar-pilot" class="h-full w-0 rounded-full bg-green-400 transition-all duration-150"></div>
-          </div>
-          <div class="rounded-full bg-gray-100 overflow-hidden" style="height:6px">
-            <div id="mpx-bar-snr" class="h-full w-0 rounded-full transition-all duration-150" style="background:#22c55e"></div>
-          </div>
-
-          <!-- Ligne 4 : échelles -->
-          <div class="flex justify-between text-xs text-gray-400 font-mono" style="margin-top:2px">
-            <span>0</span><span id="mpx-dev-rms">—</span><span class="text-red-400">75</span>
-          </div>
-          <div class="flex justify-between text-xs text-gray-400 font-mono" style="margin-top:2px">
-            <span>-65</span><span>-20</span>
-          </div>
-          <div class="flex justify-between text-xs text-gray-400 font-mono" style="margin-top:2px">
-            <span>0</span><span>30</span><span>60</span>
-          </div>
-
-        </div>
-
-        <div class="border-t border-gray-100"></div>
-
-        <!-- Puissance MPX -->
-        <div>
-          <div class="flex justify-between items-baseline mb-1">
-            <span class="text-xs font-semibold text-gray-600">Puissance <span class="font-normal text-gray-400">MPX</span></span>
-            <span class="text-sm font-mono font-semibold text-gray-800" id="mpx-power-val">— dBFS</span>
-          </div>
-          <div class="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-            <div id="mpx-power-bar" class="vu-bar w-0 bg-green-400" style="height:100%"></div>
-          </div>
-          <div class="flex justify-between text-xs text-gray-400 font-mono mt-0.5"><span>-50</span><span>0 dBFS</span></div>
-        </div>
-
-        <div class="border-t border-gray-100"></div>
-
-        <!-- RDS 57 kHz -->
-        <div>
-          <div class="flex justify-between items-baseline mb-1">
-            <span class="text-xs font-semibold text-gray-600">RDS <span class="font-normal text-gray-400">57 kHz</span></span>
-            <span class="text-sm font-mono font-semibold text-gray-800" id="mpx-val-rds-rf">— dBFS</span>
-          </div>
-          <div class="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-            <div id="mpx-bar-rds-rf" class="vu-bar w-0 bg-green-400" style="height:100%"></div>
-          </div>
-          <div class="flex justify-between text-xs text-gray-400 font-mono mt-0.5"><span>-65</span><span>-20 dBFS</span></div>
-        </div>
-
-        <div class="border-t border-gray-100"></div>
-
-        <!-- Stéréo 38 kHz -->
-        <div>
-          <div class="flex justify-between items-baseline mb-1">
-            <span class="text-xs font-semibold text-gray-600">Stéréo <span class="font-normal text-gray-400">38 kHz</span></span>
-            <span class="text-sm font-mono font-semibold text-gray-800" id="mpx-val-stereo">— dBFS</span>
-          </div>
-          <div class="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-            <div id="mpx-bar-stereo" class="vu-bar w-0 bg-green-400" style="height:100%"></div>
-          </div>
-          <div class="flex justify-between text-xs text-gray-400 font-mono mt-0.5"><span>-65</span><span>-20 dBFS</span></div>
-        </div>
-
-        <div id="mpx-disabled-msg" class="hidden text-xs text-gray-400 italic text-center">Analyse MPX désactivée</div>
-
-      </div><!-- /col droite MPX -->
-
-      <!-- ══ Col droite : Analyse audio (TEF) ══ -->
-      <div id="panel-audio-tef" class="card flex flex-col gap-3 hidden">
-        <div class="flex items-center justify-between">
-          <span class="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            Analyse audio
-          </span>
-          <span id="audio-badge" class="text-xs font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-400">&mdash;</span>
-        </div>
-        <div class="border-t border-gray-100"></div>
-        <!-- Spectre audio 0-20 kHz -->
-        <div>
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Spectre audio</span>
-            <span class="text-xs text-gray-400 font-mono">0 &ndash; 20 kHz</span>
-          </div>
-          <canvas id="audio-spectrum-canvas" style="width:100%;height:150px;display:block;border-radius:4px;" width="600" height="150"></canvas>
-        </div>
-        <div class="border-t border-gray-100"></div>
-        <!-- Qualité audio (S/B) + Puissance MPX -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto 6px auto;gap:0 12px;align-items:center">
-          <div class="text-center text-xs font-semibold text-gray-600" style="margin-bottom:4px">Qualité audio <span class="font-normal text-gray-400">(S/B)</span></div>
-          <div class="text-center text-xs font-semibold text-gray-600" style="margin-bottom:4px">Puissance <span class="font-normal text-gray-400">MPX</span></div>
-          <div class="text-center text-sm font-mono font-semibold text-gray-800" style="margin-bottom:4px" id="audio-val-snr">&mdash; dB</div>
-          <div class="text-center text-sm font-mono font-semibold text-gray-800" style="margin-bottom:4px" id="audio-val-power">&mdash; dBFS</div>
-          <div class="rounded-full bg-gray-100 overflow-hidden" style="height:6px">
-            <div id="audio-bar-snr" class="h-full w-0 rounded-full transition-all duration-150" style="background:#22c55e"></div>
-          </div>
-          <div class="rounded-full bg-gray-100 overflow-hidden" style="height:6px">
-            <div id="audio-bar-power" class="h-full w-0 rounded-full bg-green-400 transition-all duration-150"></div>
-          </div>
-          <div class="flex justify-between text-xs text-gray-400 font-mono" style="margin-top:2px"><span>0</span><span>40</span><span>80 dB</span></div>
-          <div class="flex justify-between text-xs text-gray-400 font-mono" style="margin-top:2px"><span>-50</span><span>0 dBFS</span></div>
-        </div>
-        <div class="border-t border-gray-100"></div>
-        <!-- Niveaux L / R -->
-        <div>
-          <div class="flex justify-between items-baseline mb-1">
-            <span class="text-xs font-semibold text-gray-600">Niveau <span class="font-normal text-gray-400">audio L / R</span></span>
-            <span class="text-sm font-mono font-semibold text-gray-800"><span id="audio-val-l">&mdash;</span> / <span id="audio-val-r">&mdash;</span> dBFS</span>
-          </div>
-          <div class="flex gap-1.5">
-            <div class="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden"><div id="audio-bar-l" class="vu-bar w-0 bg-blue-400" style="height:100%"></div></div>
-            <div class="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden"><div id="audio-bar-r" class="vu-bar w-0 bg-blue-400" style="height:100%"></div></div>
-          </div>
-          <div class="flex justify-between text-xs text-gray-400 font-mono mt-0.5"><span>-60</span><span>0 dBFS</span></div>
-        </div>
-      </div><!-- /col droite audio TEF -->
-    </div><!-- /grille 2 cols -->
-
-    <!-- ── Historique audio — pleine largeur ─────────────────── -->
-    <div class="card flex-1" style="min-height:140px">
-      <div class="flex justify-between items-center mb-2">
-        <span class="section-label">Signal RF — 60 s</span>
-        <span class="text-xs text-gray-400 font-mono" id="realtime-chart-status">En direct</span>
-      </div>
-      <div style="height:calc(100% - 28px)">
-        <canvas id="audioChart"></canvas>
-      </div>
+    <!-- ── Bandeau d'état ─────────────────────────────────────── -->
+    <div class="flex flex-wrap gap-2" aria-label="État général">
+      <a href="#card-fm" class="pill" style="text-decoration:none;color:inherit"><span class="pdot" id="pill-fm"></span>FM</a>
+      <a href="#card-dab" class="pill" style="text-decoration:none;color:inherit" id="pill-dab-wrap"><span class="pdot" id="pill-dab"></span>DAB+</a>
+      <a href="/chain" class="pill" style="text-decoration:none;color:inherit"><span class="pdot" id="pill-chain"></span>Chaîne <span class="mono text-gray-500" id="pill-chain-n">-</span></a>
+      <a href="/pige" class="pill" style="text-decoration:none;color:inherit"><span class="pdot" id="pill-pige"></span>Pige</a>
+      <a href="/logs" class="pill" style="text-decoration:none;color:#64748b">Alertes 24 h <span class="mono font-semibold text-gray-900" id="pill-alerts">-</span></a>
     </div>
 
+    <!-- ── Ligne 1 : FM | DAB+ ───────────────────────────────── -->
+    <div class="grid gap-5" style="grid-template-columns:repeat(auto-fit, minmax(min(100%, 420px), 1fr))">
+
+      <!-- ═══ Réception FM ═══ -->
+      <section id="card-fm" class="card flex flex-col gap-4" aria-label="Réception FM">
+        <div class="flex items-center justify-between gap-2">
+          <div class="card-title">Réception FM</div>
+          <div class="mono text-xs text-gray-500" id="fm-freq">-</div>
+        </div>
+        <div class="flex gap-4 items-start">
+          <div class="flex-shrink-0 rounded-xl border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center" style="width:112px;height:112px">
+            <img id="station-logo" src="" alt="Logo de la station" class="hidden w-full h-full object-contain">
+            <span id="station-logo-placeholder" class="text-xs text-gray-400">FM</span>
+          </div>
+          <div class="flex-1 min-w-0 flex flex-col gap-2">
+            <div class="flex gap-6 items-baseline flex-wrap">
+              <div><div class="tile-k">PS</div><div class="mono text-2xl font-semibold tracking-wide" id="fm-ps">-</div></div>
+              <div><div class="tile-k">PI</div><div class="mono text-2xl font-semibold" id="fm-pi">-</div></div>
+            </div>
+            <div><div class="tile-k">RT</div><div class="text-sm leading-snug break-words" id="fm-rt">-</div></div>
+          </div>
+        </div>
+        <!-- Lecteur FM -->
+        <div class="border border-gray-200 rounded-xl p-3 flex flex-col gap-2">
+          <div class="flex items-center gap-3 flex-wrap">
+            <button type="button" class="playbtn" id="fm-play" aria-label="Écouter la FM"></button>
+            <div class="flex-1 text-sm text-gray-500 min-w-0 truncate hidden sm:block" id="fm-play-help">Antenne en direct</div><div class="flex-1 sm:hidden"></div>
+            <label class="flex items-center gap-2 text-xs text-gray-500">Volume
+              <input type="range" id="fm-volume" min="0" max="100" value="50" class="w-20 accent-blue-600">
+              <span class="mono w-8" id="fm-volume-v">50%</span></label>
+            <a href="/stream.mp3" target="_blank" rel="noopener" class="text-xs font-medium text-blue-600 hover:text-blue-800">Externe</a>
+            <audio id="fm-audio" preload="none"></audio>
+          </div>
+          <div class="flex items-center gap-2 mono text-[11px] text-gray-500" title="Niveau reçu par le tuner, crête en dBFS">
+            <span class="w-3">G</span><div class="vu"><div class="bar" id="fm-vu-l"></div><div class="peak" id="fm-vu-lp"></div></div><span class="w-12 text-right" id="fm-vu-ld">-</span></div>
+          <div class="flex items-center gap-2 mono text-[11px] text-gray-500">
+            <span class="w-3">D</span><div class="vu"><div class="bar" id="fm-vu-r"></div><div class="peak" id="fm-vu-rp"></div></div><span class="w-12 text-right" id="fm-vu-rd">-</span></div>
+        </div>
+        <div class="tiles">
+          <div class="tile"><div class="tile-k">Signal</div><div class="tile-v" id="fm-sig">-</div><div class="tile-s" id="fm-sig-s">-</div></div>
+          <div class="tile"><div class="tile-k">Modulation</div><div class="tile-v" id="fm-mod">-</div><div class="tile-s" id="fm-mod-s">-</div></div>
+          <div class="tile"><div class="tile-k">Mode</div><div class="tile-v" id="fm-st">-</div><div class="tile-s" id="fm-st-s">-</div></div>
+          <div class="tile"><div class="tile-k">RDS</div><div class="tile-v" id="fm-rds">-</div><div class="tile-s" id="fm-rds-s">-</div></div>
+          <div class="tile"><div class="tile-k">Uptime</div><div class="tile-v" id="fm-up">-</div><div class="tile-s" id="fm-up-s">-</div></div>
+        </div>
+        <a href="/logs#reception" class="last-alert" id="fm-last">
+          <span class="text-[11px] text-gray-500 whitespace-nowrap">Dernière alerte</span>
+          <span class="mono text-xs text-gray-600 whitespace-nowrap" id="fm-last-t"></span>
+          <span class="flex-1 min-w-0 truncate" id="fm-last-l">Aucune</span>
+          <span class="text-xs text-blue-600 whitespace-nowrap">Journal ›</span>
+        </a>
+      </section>
+
+      <!-- ═══ Réception DAB+ ═══ -->
+      <section id="card-dab" class="card flex flex-col gap-4" aria-label="Réception DAB+">
+        <div class="flex items-center justify-between gap-2">
+          <div class="card-title">Réception DAB+</div>
+          <div class="mono text-xs text-gray-500 truncate" id="dab-ens">-</div>
+        </div>
+        <div id="dab-off" class="hidden text-sm text-gray-500 py-6 text-center"></div>
+        <div id="dab-on" class="flex flex-col gap-4">
+          <div class="flex gap-4 items-start">
+            <div class="flex-shrink-0 rounded-xl border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center" style="width:150px;height:112px">
+              <img id="dab-slide" alt="Diaporama du service" class="hidden w-full h-full object-cover">
+              <span id="dab-slide-ph" class="text-xs text-gray-400">DAB+</span>
+            </div>
+            <div class="flex-1 min-w-0 flex flex-col gap-2">
+              <div><div class="tile-k">Service suivi</div><div class="text-xl font-semibold truncate" id="dab-name">-</div>
+                <div class="mono text-xs text-gray-500 truncate" id="dab-sub">-</div></div>
+              <div><div class="tile-k">Titre en cours</div><div class="text-sm leading-snug break-words" id="dab-dls">-</div></div>
+            </div>
+          </div>
+          <!-- Lecteur DAB+ -->
+          <div class="border border-gray-200 rounded-xl p-3 flex flex-col gap-2">
+            <div class="flex items-center gap-3 flex-wrap">
+              <button type="button" class="playbtn" id="dab-play" aria-label="Écouter le service DAB+"></button>
+              <div class="flex-1 text-sm text-gray-500 min-w-0 truncate hidden sm:block" id="dab-play-help">Écoute via la clé DAB+</div><div class="flex-1 sm:hidden"></div>
+              <label class="flex items-center gap-2 text-xs text-gray-500">Volume
+                <input type="range" id="dab-volume" min="0" max="100" value="50" class="w-20 accent-blue-600">
+                <span class="mono w-8" id="dab-volume-v">50%</span></label>
+              <a id="dab-external" href="#" target="_blank" rel="noopener" class="text-xs font-medium text-blue-600 hover:text-blue-800">Externe</a>
+              <audio id="dab-audio" preload="none"></audio>
+            </div>
+            <div class="flex items-center gap-2 mono text-[11px] text-gray-500" title="Pendant l'écoute : crête mesurée sur l'audio reçu ; sinon, niveau relevé par welle-cli">
+              <span class="w-3">G</span><div class="vu"><div class="bar" id="dab-vu-l"></div><div class="peak" id="dab-vu-lp"></div></div><span class="w-12 text-right" id="dab-vu-ld">-</span></div>
+            <div class="flex items-center gap-2 mono text-[11px] text-gray-500">
+              <span class="w-3">D</span><div class="vu"><div class="bar" id="dab-vu-r"></div><div class="peak" id="dab-vu-rp"></div></div><span class="w-12 text-right" id="dab-vu-rd">-</span></div>
+          </div>
+          <div class="tiles">
+            <div class="tile"><div class="tile-k">Présence</div><div class="tile-v" id="dab-pres">-</div><div class="tile-s" id="dab-pres-s">-</div></div>
+            <div class="tile"><div class="tile-k">Audio</div><div class="tile-v" id="dab-aud">-</div><div class="tile-s" id="dab-aud-s">-</div></div>
+            <div class="tile"><div class="tile-k">Mode</div><div class="tile-v" id="dab-st">-</div><div class="tile-s" id="dab-st-s">-</div></div>
+            <div class="tile"><div class="tile-k">Ensemble</div><div class="tile-v" id="dab-snr">-</div><div class="tile-s" id="dab-snr-s">-</div></div>
+            <div class="tile"><div class="tile-k">Disponibilité</div><div class="tile-v" id="dab-upt">-</div><div class="tile-s">sur 24 h</div></div>
+          </div>
+          <a href="/logs#dab" class="last-alert">
+            <span class="text-[11px] text-gray-500 whitespace-nowrap">Dernière alerte</span>
+            <span class="mono text-xs text-gray-600 whitespace-nowrap" id="dab-last-t"></span>
+            <span class="flex-1 min-w-0 truncate" id="dab-last-l">Aucune</span>
+            <span class="text-xs text-blue-600 whitespace-nowrap">Journal ›</span>
+          </a>
+        </div>
+        <div class="text-xs text-gray-500">Service choisi dans <a href="/dab#reglages" class="text-blue-600 hover:text-blue-800">DAB+ › Réglages › Service du tableau de bord</a></div>
+      </section>
+    </div>
+
+    <!-- ── Ligne 2 : Chaîne | Pige ───────────────────────────── -->
+    <div class="grid gap-5 lg:grid-cols-3">
+
+      <!-- ═══ Chaîne de diffusion ═══ -->
+      <section class="card flex flex-col gap-4 lg:col-span-2 min-w-0" aria-label="Chaîne de diffusion">
+        <div class="flex items-center justify-between gap-2">
+          <div class="card-title">Chaîne de diffusion</div>
+          <a href="/chain" class="text-xs font-medium text-blue-600 hover:text-blue-800">Voir la chaîne ›</a>
+        </div>
+        <div class="chain-grid" id="chain-grid"><div class="text-sm text-gray-400">Chargement…</div></div>
+        <div class="tiles" style="grid-template-columns:repeat(auto-fit, minmax(160px, 1fr))">
+          <div class="tile"><div class="tile-k">Appareils et sondes</div><div class="tile-v" id="chain-ok">-</div></div>
+          <div class="tile"><div class="tile-k">En défaut</div><div class="tile-v" id="chain-bad">-</div></div>
+          <a href="/logs#chaine" class="tile block hover:bg-gray-100" style="text-decoration:none;color:inherit"><div class="tile-k">Dernier événement</div><div class="text-sm truncate" id="chain-last">-</div></a>
+        </div>
+      </section>
+
+      <!-- ═══ Pige ═══ -->
+      <section class="card flex flex-col gap-4" aria-label="Pige">
+        <div class="flex items-center justify-between gap-2">
+          <div class="card-title">Pige</div>
+          <a href="/pige" class="text-xs font-medium text-blue-600 hover:text-blue-800">Ouvrir la pige ›</a>
+        </div>
+        <div class="flex items-center gap-2"><span class="pdot" id="pige-dot" style="width:10px;height:10px"></span><span class="text-lg font-semibold" id="pige-state">-</span></div>
+        <div class="tiles" style="grid-template-columns:repeat(2, minmax(0, 1fr))">
+          <div class="tile"><div class="tile-k">Disponible depuis</div><div class="text-sm font-medium truncate" id="pige-since">-</div></div>
+          <div class="tile"><div class="tile-k">Espace pige / libre</div><div class="mono text-sm truncate" id="pige-disk">-</div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px] text-gray-500 mb-1"><span id="pige-cov-k">Couverture</span><span id="pige-cov-v">-</span></div>
+          <div class="h-2.5 rounded-full bg-gray-100 overflow-hidden flex justify-end"><div id="pige-cov" class="h-full bg-blue-600" style="width:0"></div></div>
+        </div>
+      </section>
+    </div>
+
+  </div>
   </div><!-- /scroll area -->
 </main>
 
 <script>
-    // Fonction pour récupérer le token CSRF
-    function getCSRFToken() {
-      const meta = document.querySelector('meta[name="csrf-token"]');
-      return meta ? meta.content : '';
-    }
+  const $ = id => document.getElementById(id);
+  const PUBLIC = {{ 'true' if public_mode else 'false' }};
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const pad = n => String(n).padStart(2, '0');
+  const IC_PLAY = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+  const IC_PAUSE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>';
+  const OK = '#15803d', WARN = '#b45309', BAD = '#b91c1c', MUTED = '#64748b';
+  const DOT = { ok: '#16a34a', warn: '#d97706', bad: '#dc2626', off: '#cbd5e1' };
 
-    // =============================================
-    // VU-MÈTRE / SIGNAL RF
-    // =============================================
-    function updateVUMeter(stats) {
-        // En mode TEF : signal_dbf (0..60 dBf)
-        // En mode RTL-SDR : current_level (-100..0 dBFS)
-        const dbf = stats.signal_dbf;
-        let pct, label;
-        if (dbf !== undefined && dbf !== null) {
-            // Mode TEF — jauge 0..60 dBf
-            pct   = Math.max(0, Math.min(100, (dbf / 90) * 100));
-            label = dbf.toFixed(1) + ' dBf';
-        } else {
-            // Mode RTL-SDR — jauge -100..0 dBFS
-            const level = stats.current_level || -100;
-            pct   = Math.max(0, Math.min(100, level + 100));
-            label = level.toFixed(2) + ' dB';
-        }
-        document.getElementById('vu-meter-value-main').textContent = label;
-        const bar = document.getElementById('vu-meter-bar-main');
-        if (bar) {
-            bar.style.width = pct + '%';
-            bar.style.background = '#10b981';
-        }
-        // SNR / Multipath / Offset affichés dans la section MPX uniquement
-    }
+  function setTile(id, text, color, sub) {
+    const el = $(id); el.textContent = text; el.style.color = color || '';
+    if (sub !== undefined) { $(id + '-s').textContent = sub; $(id + '-s').title = sub; }
+  }
+  function fmtDur(s) {
+    if (s == null) return '';
+    s = Math.round(s);
+    if (s < 60) return `${s} s`;
+    if (s < 3600) return `${Math.floor(s / 60)} min ${pad(s % 60)} s`;
+    return `${Math.floor(s / 3600)} h ${pad(Math.floor(s % 3600 / 60))} min`;
+  }
+  function fmtStamp(iso) {
+    if (!iso) return '';
+    const d = new Date(String(iso).replace(' ', 'T'));
+    return isNaN(d) ? String(iso) : `${pad(d.getDate())}-${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function fmtBytes(b) { return b == null ? '?' : b >= 1e9 ? (b / 1e9).toFixed(1).replace('.', ',') + ' Go' : Math.round(b / 1e6) + ' Mo'; }
+  function lastAlert(prefix, a) {
+    if (!a) { $(prefix + '-last-t').textContent = ''; $(prefix + '-last-l').textContent = 'Aucune alerte enregistrée'; return; }
+    $(prefix + '-last-t').textContent = fmtStamp(a.start);
+    const tail = a.status === 'ongoing' ? ', en cours' : a.duration != null ? `, rétabli après ${fmtDur(a.duration)}` : '';
+    $(prefix + '-last-l').textContent = (a.label || '') + tail;
+    $(prefix + '-last-l').style.color = a.status === 'ongoing' ? BAD : '';
+  }
 
-    // =============================================
-    // PLAYER AUDIO
-    // =============================================
-    const playButton  = document.getElementById('play-button');
-    const audioPlayer = document.getElementById('audio-player');
-    const volumeSlider = document.getElementById('volume-slider');
-    const volumeValue  = document.getElementById('volume-value');
-    let isPlaying = false;
-    let playerTimer = null;
-    const PLAYER_TIMEOUT = 15 * 60 * 1000;
-
-    function stopPlayer() {
-        audioPlayer.pause();
-        audioPlayer.src = "";
-        isPlaying = false;
-        playButton.innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
-        playButton.classList.remove("border-blue-500", "text-blue-600", "bg-blue-50");
-        if (playerTimer) { clearTimeout(playerTimer); playerTimer = null; }
-    }
-
-
-    playButton.addEventListener('click', () => {
-        if (playButton.disabled) return;
-        if (!isPlaying) {
-            audioPlayer.src = '/stream.mp3?t=' + Date.now();
-            audioPlayer.play();
-            isPlaying = true;
-            playButton.innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>';
-            playButton.classList.add('border-blue-500', 'text-blue-600', 'bg-blue-50');
-            // Auto-stop après 15 minutes
-            if (playerTimer) clearTimeout(playerTimer);
-            playerTimer = setTimeout(() => {
-                stopPlayer();
-                console.log('Player arrêté automatiquement après 15 minutes');
-            }, PLAYER_TIMEOUT);
-        } else {
-            stopPlayer();
-        }
-    });
-
-    volumeSlider.addEventListener('input', (e) => {
-        audioPlayer.volume = e.target.value / 100;
-        volumeValue.textContent = e.target.value + '%';
-    });
-
-    // =============================================
-    // STATS & CONFIG
-    // =============================================
-    async function loadConfig() {
-        try {
-            const response = await fetch('/api/config/full', {credentials: 'include'});
-            const config = await response.json();
-            document.getElementById('station-name-display').textContent = config.station?.name || 'BL-RMO';
-            const freq = config.rtl_sdr?.frequency || '88.6M';
-            document.getElementById('frequency-display').textContent = freq.replace('M', ' MHz');
-            document.getElementById('sidebar-frequency').textContent  = freq.replace('M', ' MHz');
-            let emailDisplay = 'Non configuré';
-            if (config.email?.recipient_emails) {
-                const recip = config.email.recipient_emails;
-                emailDisplay = Array.isArray(recip) ? recip[0] : recip.split(',')[0].trim();
-            }
-            document.getElementById('email-display').textContent = emailDisplay;
-        } catch (error) {
-            console.error('Erreur config:', error);
-        }
-    }
-
-    async function updateStats() {
-        try {
-            const response = await fetch('/api/stats', {credentials: 'include'});
-            const stats = await response.json();
-
-            const level = stats.current_level || -100;
-            const levelPercent = Math.max(0, Math.min(100, level + 100));
-
-            // Modulation
-            const modEl = document.getElementById('modulation-display');
-            if (!stats.signal_ok) {
-                modEl.textContent = '—';
-                modEl.className = 'text-sm font-bold font-mono text-gray-400';
-            } else if (stats.modulation_ok) {
-                modEl.textContent = 'Active';
-                modEl.className = 'text-sm font-bold font-mono text-green-600';
-            } else {
-                modEl.textContent = 'Absente';
-                modEl.className = 'text-sm font-bold font-mono text-orange-500';
-            }
-
-            updateVUMeter(stats);
-            pushRealtimeLevel(smoothedLevel(stats.signal_dbf !== undefined ? stats.signal_dbf : level));
-            updateAnalysisPanel(stats);
-
-            const uptimeSeconds = stats.uptime || 0;
-            const hours   = Math.floor(uptimeSeconds / 3600);
-            const minutes = Math.floor((uptimeSeconds % 3600) / 60);
-            document.getElementById('uptime-display').textContent  = hours + 'h ' + minutes + 'm';
-            document.getElementById('alerts-display').textContent  = stats.alerts_sent || 0;
-
-            const statusEl = document.getElementById('status-display');
-            if (stats.signal_ok) {
-                statusEl.textContent = 'OK';
-                statusEl.className = 'text-sm font-bold font-mono text-green-600';
-            } else {
-                statusEl.textContent = 'Perdu';
-                statusEl.className = 'text-sm font-bold font-mono text-orange-500';
-            }
-
-            if (stats.ps && stats.ps !== '-') document.getElementById('rds-ps-display').textContent = stats.ps;
-            if (stats.rt && stats.rt !== '-') document.getElementById('rds-rt-display').textContent = stats.rt;
-            if (stats.pi)                     document.getElementById('rds-pi-display').textContent = stats.pi;
-
-            // Voyant RDS
-            const rdsDot = document.getElementById('rds-status-dot');
-            if (!stats.rds_ever_received) {
-                rdsDot.className = 'dot dot-gray';
-                rdsDot.title = 'RDS non reçu';
-            } else if (stats.rds_ok) {
-                rdsDot.className = 'dot dot-green pulse';
-                rdsDot.title = 'RDS OK';
-            } else {
-                rdsDot.className = 'dot dot-red';
-                rdsDot.title = 'RDS absent';
-            }
-
-            // Logo station — container toujours visible, placeholder par défaut
-            const logoImg         = document.getElementById('station-logo');
-            const logoPlaceholder = document.getElementById('station-logo-placeholder');
-            if (stats.station_logo) {
-                if (logoImg && logoImg.getAttribute('data-src') !== stats.station_logo) {
-                    logoImg.setAttribute('data-src', stats.station_logo);
-                    logoImg.src = stats.station_logo;
-                    logoImg.onerror = () => {
-                        logoImg.removeAttribute('data-src');
-                        logoImg.src = '';
-                        logoImg.classList.add('hidden');
-                        if (logoPlaceholder) logoPlaceholder.classList.remove('hidden');
-                    };
-                    logoImg.onload = () => {
-                        logoImg.classList.remove('hidden');
-                        if (logoPlaceholder) logoPlaceholder.classList.add('hidden');
-                    };
-                }
-            } else {
-                if (logoImg)         logoImg.classList.add('hidden');
-                if (logoPlaceholder) logoPlaceholder.classList.remove('hidden');
-            }
-
-        } catch (error) {
-            console.error('Erreur stats:', error);
-        }
-    }
-
-    // =============================================
-    // GRAPHIQUE TEMPS RÉEL (30 secondes)
-    // =============================================
-    const REALTIME_WINDOW   = 120;
-    const REALTIME_INTERVAL = 500;
-    let audioChart = null;
-    let realtimeData = [];  // tableau d'objets {x: timestamp ms, y: valeur}
-    let lastRealtimePush = 0;
-
-    function initRealtimeChart() {
-        const ctx = document.getElementById('audioChart').getContext('2d');
-        audioChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                datasets: [{
-                    label: 'Signal RF (dBf)',
-                    data: realtimeData,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59,130,246,0.08)',
-                    borderWidth: 1.5,
-                    pointRadius: 0,
-                    tension: 0.5,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: {
-                        title: { display: true, text: 'dBf', font: { size: 10 } },
-                        ticks: { font: { size: 10 }, maxTicksLimit: 5 },
-                        grid: { color: 'rgba(0,0,0,0.04)' }
-                    },
-                    x: {
-                        type: 'time',
-                        time: {
-                            unit: 'second',
-                            displayFormats: { second: 'HH:mm:ss' },
-                            tooltipFormat: 'HH:mm:ss'
-                        },
-                        ticks: { maxTicksLimit: 6, maxRotation: 0, font: { size: 10 },
-                                 source: 'auto' },
-                        grid: { display: false }
-                    }
-                },
-                animation: { duration: 0 }
-            }
-        });
-    }
-
-    function pushRealtimeLevel(levelDb) {
-        const now = Date.now();
-        if (now - lastRealtimePush < REALTIME_INTERVAL) return;
-        lastRealtimePush = now;
-
-        realtimeData.push({ x: now, y: Math.round(levelDb * 10) / 10 });
-
-        // Garder seulement les REALTIME_WINDOW dernières secondes
-        const cutoff = now - REALTIME_WINDOW * 1000;
-        while (realtimeData.length > 0 && realtimeData[0].x < cutoff) {
-            realtimeData.shift();
-        }
-
-        if (audioChart && realtimeData.length > 0) {
-            // Fenêtre glissante : axe X = [maintenant - 60s, maintenant]
-            audioChart.options.scales.x.min = cutoff;
-            audioChart.options.scales.x.max = now;
-
-            // Échelle Y adaptative
-            const values = realtimeData.map(p => p.y);
-            const isTEF = values.some(v => v > 0);
-            if (isTEF) {
-                const dMin = Math.min(...values), dMax = Math.max(...values);
-                const center = (dMin + dMax) / 2;
-                const halfRange = Math.max(1, (dMax - dMin) / 2 + 1);
-                audioChart.options.scales.y.min = Math.max(0,  Math.floor((center - halfRange) * 10) / 10);
-                audioChart.options.scales.y.max = Math.min(90, Math.ceil( (center + halfRange) * 10) / 10);
-            } else {
-                const dMin = Math.min(...values), dMax = Math.max(...values), margin = 5;
-                audioChart.options.scales.y.min = Math.floor((dMin - margin) / 10) * 10;
-                audioChart.options.scales.y.max = Math.ceil((dMax + margin) / 10) * 10;
-            }
-            audioChart.update('none');
-        }
-    }
-
-    let historyData = [];
-    function loadAudioHistory() {}
-    function updateHistoryChart() {}
-    function updateDevMeter(deviationKhz) {}
-
-    // Buffer de lissage : moyenne sur 3 valeurs consécutives
-    let _smoothBuf = [];
-    function smoothedLevel(val) {
-        _smoothBuf.push(val);
-        if (_smoothBuf.length > 2) _smoothBuf.shift();
-        return _smoothBuf.reduce((a, b) => a + b, 0) / _smoothBuf.length;
-    }
-
-    // =============================================
-    // ANALYSE MPX
-    // =============================================
-    // ── Panneau d'analyse : bascule TEF / RTL-SDR selon le mode ──────────
-    function updateAnalysisPanel(stats) {
-      const isTEF = stats.use_tef === true
-                    || (stats.use_tef === undefined && stats.signal_dbf !== undefined && stats.signal_dbf !== null);
-      const pMpx = document.getElementById('panel-mpx-rtlsdr');
-      const pAud = document.getElementById('panel-audio-tef');
-      const specBlock = document.getElementById('mpx-spectrum-block');
-      if (isTEF) {
-        if (pMpx) pMpx.classList.add('hidden');
-        if (pAud) pAud.classList.remove('hidden');
-        if (specBlock) specBlock.classList.add('hidden');
-        updateAudioTEF(stats);
-      } else {
-        if (pAud) pAud.classList.add('hidden');
-        if (pMpx) pMpx.classList.remove('hidden');
-        if (specBlock) specBlock.classList.remove('hidden');
-        updateMPX(stats);
+  // ═══ VU-mètres : barre crête, descente 20 dB/s, maintien de crête 1,5 s ═══
+  function makeVU(prefix) {
+    const st = [{ disp: -100, hold: -100, t: 0 }, { disp: -100, hold: -100, t: 0 }];
+    const pct = d => Math.max(0, Math.min(100, (d + 60) / 60 * 100)) + '%';
+    return {
+      set(i, db, dt, stale) {
+        const s = st[i], now = performance.now();
+        s.disp = db >= s.disp ? db : Math.max(db, s.disp - 20 * dt);
+        if (db >= s.hold || now - s.t > 1500) { s.hold = db; s.t = now; }
+        const ch = i ? 'r' : 'l';
+        $(`${prefix}-vu-${ch}`).style.width = pct(s.disp);
+        $(`${prefix}-vu-${ch}`).style.background = stale ? '#cbd5e1' : '#22c55e';
+        $(`${prefix}-vu-${ch}p`).style.left = pct(s.hold);
+        $(`${prefix}-vu-${ch}d`).textContent = s.hold > -60 ? s.hold.toFixed(1).replace('.', ',') : '-';
       }
-    }
+    };
+  }
+  const fmVU = makeVU('fm'), dabVU = makeVU('dab');
 
-    function updateAudioTEF(stats) {
-      // Puissance MPX (audio)
-      const power    = stats.mpx_power ?? -100;
-      const powerPct = Math.max(0, Math.min(100, (power + 50) / 50 * 100));
-      const pBar = document.getElementById('audio-bar-power');
-      const pVal = document.getElementById('audio-val-power');
-      if (pBar) pBar.style.width = powerPct + '%';
-      if (pVal) pVal.textContent = power.toFixed(1) + ' dBFS';
-      // Qualité audio (S/B) — 0..80 dB
-      const snr    = stats.snr ?? 0;
-      const snrPct = Math.min((snr / 80) * 100, 100);
-      const sVal = document.getElementById('audio-val-snr');
-      const sBar = document.getElementById('audio-bar-snr');
-      if (sVal) sVal.textContent = snr.toFixed(1) + ' dB';
-      if (sBar) { sBar.style.width = snrPct + '%'; sBar.style.background = snr >= 40 ? '#22c55e' : snr >= 25 ? '#f59e0b' : '#ef4444'; }
-      // Niveaux L / R (-60..0 dBFS)
-      const l = stats.level_left ?? -100, r = stats.level_right ?? -100;
-      const lVal = document.getElementById('audio-val-l'), rVal = document.getElementById('audio-val-r');
-      const lBar = document.getElementById('audio-bar-l'), rBar = document.getElementById('audio-bar-r');
-      if (lVal) lVal.textContent = l.toFixed(1);
-      if (rVal) rVal.textContent = r.toFixed(1);
-      if (lBar) lBar.style.width = Math.max(0, Math.min(100, (l + 60) / 60 * 100)) + '%';
-      if (rBar) rBar.style.width = Math.max(0, Math.min(100, (r + 60) / 60 * 100)) + '%';
-      // Badge stéréo / mono
-      const badge = document.getElementById('audio-badge');
-      if (badge) {
-        const cls = 'text-xs font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full ';
-        if (stats.stereo_present) { badge.textContent = 'Stéréo'; badge.className = cls + 'bg-green-100 text-green-700'; }
-        else { badge.textContent = 'Mono'; badge.className = cls + 'bg-yellow-100 text-yellow-600'; }
-      }
-    }
+  // ═══ Lecteurs : un seul à la fois ═══
+  const fmAudio = $('fm-audio'), dabAudio = $('dab-audio');
+  let playing = null, fmTimer = null, dabSid = null, dabRetried = false;
+  function btn(id, on) { $(id).innerHTML = on ? IC_PAUSE : IC_PLAY; $(id).classList.toggle('on', on); }
+  function stopAll() {
+    [fmAudio, dabAudio].forEach(a => { a.pause(); a.removeAttribute('src'); a.load(); });
+    if (fmTimer) { clearTimeout(fmTimer); fmTimer = null; }
+    playing = null; btn('fm-play', false); btn('dab-play', false);
+    $('fm-play-help').textContent = 'Antenne en direct';
+  }
+  $('fm-play').onclick = () => {
+    if (playing === 'fm') { stopAll(); return; }
+    stopAll();
+    fmAudio.src = '/stream.mp3?t=' + Date.now();
+    fmAudio.volume = $('fm-volume').value / 100;
+    fmAudio.play().catch(() => {});
+    playing = 'fm'; btn('fm-play', true);
+    $('fm-play-help').textContent = 'En écoute (arrêt automatique après 15 min)';
+    fmTimer = setTimeout(stopAll, 15 * 60 * 1000);
+  };
+  $('fm-volume').oninput = e => { fmAudio.volume = e.target.value / 100; $('fm-volume-v').textContent = e.target.value + '%'; };
 
-    // Spectre audio 0-20 kHz (256 points, mapping direct index→fréquence).
-    const audioCanvas = () => document.getElementById('audio-spectrum-canvas');
-    let audioSpectrumSmooth = [];
-    const AUDIO_JS_ALPHA = 0.3;
-    function drawAudioSpectrum() {
-      const cv = audioCanvas();
-      if (!cv || audioSpectrumSmooth.length === 0) return;
-      const dpr = window.devicePixelRatio || 1;
-      const rect = cv.getBoundingClientRect();
-      cv.width = rect.width * dpr; cv.height = rect.height * dpr;
-      const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
-      const W = rect.width, H = rect.height;
-      const dbMax = -20, dbMin = -90;
-      const N = audioSpectrumSmooth.length;
-      const freqDisplay = 20000;
-      function freqToX(f) { return (f / freqDisplay) * W; }
-      ctx.fillStyle = '#f9fafb'; ctx.fillRect(0, 0, W, H);
-      // Zone utile 0-15 kHz (vert) et bande bruit 15-20 kHz (rouge léger)
-      ctx.fillStyle = 'rgba(16,185,129,0.06)'; ctx.fillRect(0, 0, freqToX(15000), H);
-      ctx.fillStyle = 'rgba(239,68,68,0.04)'; ctx.fillRect(freqToX(15000), 0, W - freqToX(15000), H);
-      // Grille
-      ctx.strokeStyle = 'rgba(0,0,0,0.06)'; ctx.lineWidth = 1;
-      [-40, -60, -80].forEach(db => { const y = H - ((db - dbMin) / (dbMax - dbMin)) * H; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); });
-      // Courbe
-      ctx.beginPath(); ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 1.5;
-      for (let i = 0; i < N; i++) {
-        const f = (i / N) * freqDisplay;
-        const x = freqToX(f);
-        const db = Math.max(dbMin, Math.min(dbMax, audioSpectrumSmooth[i]));
-        const y = H - ((db - dbMin) / (dbMax - dbMin)) * H;
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-      ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
-      ctx.fillStyle = 'rgba(37,99,235,0.08)'; ctx.fill();
-      // Marqueur 15 kHz
-      const xL = freqToX(15000);
-      ctx.strokeStyle = '#ef4444'; ctx.globalAlpha = 0.5; ctx.lineWidth = 1;
-      ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(xL, 0); ctx.lineTo(xL, H - 16); ctx.stroke();
-      ctx.setLineDash([]); ctx.globalAlpha = 1;
-      // Labels
-      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center';
-      [{f:5000,l:'5k',c:'#9ca3af'},{f:10000,l:'10k',c:'#9ca3af'},{f:15000,l:'15k',c:'#ef4444'}].forEach(({f,l,c}) => {
-        ctx.fillStyle = c; ctx.fillText(l, freqToX(f) * dpr, cv.height - 4);
+  // DAB+ : mesure dans le navigateur (Web Audio), volume après la mesure
+  let ctx = null, gain = null, an = [];
+  function audioGraph() {
+    if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const src = ctx.createMediaElementSource(dabAudio), split = ctx.createChannelSplitter(2);
+      gain = ctx.createGain(); gain.gain.value = $('dab-volume').value / 100;
+      src.connect(gain); gain.connect(ctx.destination); src.connect(split);
+      an = [0, 1].map(i => { const n = ctx.createAnalyser(); n.fftSize = 1024; split.connect(n, i); return n; });
+    } catch (e) { ctx = null; }
+  }
+  function dabStart() {
+    if (!dabSid) return;
+    dabAudio.src = `/api/dab/listen/${encodeURIComponent(dabSid)}?t=${Date.now()}`;
+    dabAudio.play().catch(() => {});
+  }
+  $('dab-play').onclick = () => {
+    if (playing === 'dab') { stopAll(); return; }
+    stopAll();
+    if (!dabSid) return;
+    audioGraph(); dabRetried = false;
+    playing = 'dab'; btn('dab-play', true);
+    $('dab-play-help').textContent = 'Connexion…';
+    dabStart();
+  };
+  dabAudio.onplaying = () => { $('dab-play-help').textContent = 'En écoute via la clé DAB+'; };
+  dabAudio.onerror = () => {
+    if (playing !== 'dab' || !dabAudio.getAttribute('src')) return;
+    if (!dabRetried) { dabRetried = true; $('dab-play-help').textContent = 'Démarrage du service…'; setTimeout(() => { if (playing === 'dab') dabStart(); }, 2000); return; }
+    stopAll(); $('dab-play-help').textContent = 'Écoute impossible pour le moment';
+  };
+  dabAudio.onended = () => { if (playing === 'dab') stopAll(); };
+  $('dab-volume').oninput = e => {
+    $('dab-volume-v').textContent = e.target.value + '%';
+    if (gain) gain.gain.value = e.target.value / 100; else dabAudio.volume = e.target.value / 100;
+  };
+
+  // ═══ FM en direct (SSE, 20 mesures par seconde) ═══
+  let fmLevels = [-100, -100], lastFrame = performance.now(), dabIdle = [-100, -100, true];
+  function frame(now) {
+    const dt = Math.min(0.2, (now - lastFrame) / 1000); lastFrame = now;
+    fmVU.set(0, fmLevels[0], dt); fmVU.set(1, fmLevels[1], dt);
+    if (playing === 'dab' && an.length === 2) {
+      const buf = new Float32Array(1024);
+      an.forEach((n, i) => {
+        n.getFloatTimeDomainData(buf);
+        let pk = 0; for (let k = 0; k < buf.length; k++) { const x = Math.abs(buf[k]); if (x > pk) pk = x; }
+        dabVU.set(i, pk > 1e-5 ? 20 * Math.log10(pk) : -100, dt);
       });
-      ctx.restore();
+    } else {
+      dabVU.set(0, dabIdle[0], dt, dabIdle[2]); dabVU.set(1, dabIdle[1], dt, dabIdle[2]);
     }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
 
-    function updateMPX(stats) {
-      const enabled = stats.mpx_enabled !== false;
-      const disMsg  = document.getElementById('mpx-disabled-msg');
-      const badge   = document.getElementById('mpx-badge');
-
-      // En mode TEF : signal_dbf présent mais pas de données MPX PCM
-      const isTEF = stats.signal_dbf !== undefined && stats.signal_dbf !== null;
-
-      if (!enabled || isTEF) {
-        if (isTEF) {
-          // Mode TEF : afficher ce que TEFAudioAnalyzer fournit
-          if (disMsg) { disMsg.classList.remove('hidden'); disMsg.textContent = 'Déviation/Pilote/RDS : non disponibles en mode TEF'; }
-
-          // L/R
-
-          // Puissance audio
-          const power    = stats.mpx_power ?? -100;
-          const powerPct = Math.max(0, Math.min(100, (power + 50) / 50 * 100));
-          const powerBar = document.getElementById('mpx-power-bar');
-          const powerVal = document.getElementById('mpx-power-val');
-          if (powerBar) powerBar.style.width = powerPct + '%';
-          if (powerVal) powerVal.textContent  = power.toFixed(1) + ' dBFS';
-
-          // SNR audio
-          const snr    = stats.snr ?? 0;
-          const snrPct = Math.min((snr / 60) * 100, 100);
-          const snrVal = document.getElementById('mpx-val-snr');
-          const snrBar = document.getElementById('mpx-bar-snr');
-          if (snrVal) snrVal.textContent = snr.toFixed(0) + ' dB';
-          if (snrBar) { snrBar.style.width = snrPct + '%'; snrBar.style.background = snr >= 40 ? '#22c55e' : snr >= 25 ? '#f59e0b' : '#ef4444'; }
-
-          // Badge stéréo / mono (depuis flag MS du RDS groupe 0A)
-          if (badge) {
-            const badgeCls = 'text-xs font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full ';
-            if (stats.stereo_present) {
-              badge.textContent = 'Stéréo'; badge.className = badgeCls + 'bg-green-100 text-green-700';
-            } else {
-              badge.textContent = 'Mono'; badge.className = badgeCls + 'bg-yellow-100 text-yellow-600';
-            }
-          }
-        } else {
-          if (disMsg) { disMsg.classList.remove('hidden'); disMsg.textContent = 'Analyse MPX désactivée'; }
-          if (badge) { badge.textContent = 'OFF'; badge.className = 'text-xs font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-400'; }
-        }
-        return;
-      }
-      if (disMsg) disMsg.classList.add('hidden');
-
-      const devPeak = stats.deviation_peak ?? 0;
-      const devRms  = stats.deviation_rms  ?? 0;
-      const devPct  = Math.min((devPeak / 75) * 100, 100).toFixed(1);
-      const devBar  = document.getElementById('mpx-dev-bar');
-      const devEl   = document.getElementById('mpx-dev-peak');
-      const rmsEl   = document.getElementById('mpx-dev-rms');
-      if (devBar) { devBar.style.width = devPct + '%'; devBar.style.background = devPeak > 70 ? '#ef4444' : devPeak > 60 ? '#f59e0b' : '#22c55e'; }
-      if (devEl)  { devEl.textContent = devPeak.toFixed(1) + ' kHz'; devEl.className = devPeak > 75 ? 'text-sm font-mono font-semibold text-red-600' : devPeak > 70 ? 'text-sm font-mono font-semibold text-yellow-500' : 'text-sm font-mono font-semibold text-gray-800'; }
-      if (rmsEl)  rmsEl.textContent = devRms.toFixed(1) + ' kHz';
-
-      const power    = stats.mpx_power ?? -100;
-      const powerPct = Math.max(0, Math.min(100, (power + 50) / 50 * 100));
-      const powerBar = document.getElementById('mpx-power-bar');
-      const powerVal = document.getElementById('mpx-power-val');
-      if (powerBar) powerBar.style.width = powerPct + '%';
-      if (powerVal) powerVal.textContent  = power.toFixed(1) + ' dBFS';
-
-      _updateSC('pilot',  stats.pilot_level,  stats.pilot_present);
-      _updateSC('stereo', stats.stereo_level, stats.stereo_present);
-      _updateSC('rds-rf', stats.rds_level,    stats.rds_rf_present);
-
-      const snr    = stats.snr ?? 0;
-      const snrPct = Math.min((snr / 60) * 100, 100);
-      const snrVal = document.getElementById('mpx-val-snr');
-      const snrBar = document.getElementById('mpx-bar-snr');
-      if (snrVal) snrVal.textContent = snr.toFixed(1) + ' dB';
-      if (snrBar) { snrBar.style.width = snrPct + '%'; snrBar.style.background = snr >= 40 ? '#22c55e' : snr >= 25 ? '#f59e0b' : '#ef4444'; }
-
-      const badgeCls = 'text-xs font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full ';
-      if (devPeak > 75) {
-        badge.textContent = '⚠ Sur-déviation'; badge.className = badgeCls + 'bg-red-100 text-red-600';
-      } else if (stats.pilot_present && stats.stereo_present) {
-        badge.textContent = 'Stéréo'; badge.className = badgeCls + 'bg-green-100 text-green-700';
-      } else if (stats.pilot_present) {
-        badge.textContent = 'Pilote OK'; badge.className = badgeCls + 'bg-blue-100 text-blue-600';
-      } else if (stats.modulation_active) {
-        badge.textContent = 'Mono'; badge.className = badgeCls + 'bg-yellow-100 text-yellow-600';
-      } else {
-        badge.textContent = '—'; badge.className = badgeCls + 'bg-gray-100 text-gray-400';
-      }
+  function fmUptime(sec) {
+    sec = sec || 0;
+    const d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60);
+    return d ? `${d} j ${h} h` : `${h} h ${pad(m)} min`;
+  }
+  let fmOk = null;
+  function renderFM(s) {
+    if (s.ps && s.ps !== '-') $('fm-ps').textContent = s.ps;
+    if (s.pi && s.pi !== '-') $('fm-pi').textContent = s.pi;
+    if (s.rt && s.rt !== '-') $('fm-rt').textContent = s.rt;
+    if (s.frequency) $('fm-freq').textContent = String(s.frequency).replace('M', ' MHz');
+    fmLevels = [typeof s.level_left === 'number' ? s.level_left : -100, typeof s.level_right === 'number' ? s.level_right : -100];
+    const sig = !!s.signal_ok;
+    setTile('fm-sig', sig ? 'OK' : 'Perdu', sig ? OK : BAD, s.signal_dbf != null ? `${Number(s.signal_dbf).toFixed(1).replace('.', ',')} dBf` : '-');
+    const lvl = Math.max(fmLevels[0], fmLevels[1]);
+    if (!sig) setTile('fm-mod', '-', MUTED, '-');
+    else setTile('fm-mod', s.modulation_ok ? 'Active' : 'Absente', s.modulation_ok ? OK : WARN, lvl > -100 ? `${Math.round(lvl)} dBFS` : '-');
+    if (!sig || s.stereo_known === false) setTile('fm-st', '-', MUTED, '-');
+    else setTile('fm-st', s.stereo_present ? 'Stéréo' : 'Mono', s.stereo_present ? OK : WARN, s.stereo_present ? 'pilote 19 kHz' : 'sans pilote');
+    if (!s.rds_ever_received) setTile('fm-rds', 'Non reçu', MUTED, '-');
+    else setTile('fm-rds', s.rds_ok ? 'Reçu' : 'Absent', s.rds_ok ? OK : BAD, s.snr != null ? `S/B ${Math.round(s.snr)} dB` : '-');
+    setTile('fm-up', fmUptime(s.uptime), '', s.start_time ? String(s.start_time).slice(0, 16).replace(/\//g, '-').replace(/-\d{4}/, '') : '-');
+    fmOk = sig && s.modulation_ok;
+    $('pill-fm').style.background = fmOk ? DOT.ok : sig ? DOT.warn : DOT.bad;
+    // Logo
+    const img = $('station-logo');
+    if (s.station_logo && img.dataset.src !== s.station_logo) {
+      img.dataset.src = s.station_logo;
+      img.onload = () => { img.classList.remove('hidden'); $('station-logo-placeholder').classList.add('hidden'); };
+      img.onerror = () => { img.classList.add('hidden'); $('station-logo-placeholder').classList.remove('hidden'); };
+      img.src = s.station_logo;
     }
+  }
+  function connectSSE() {
+    const es = new EventSource('/api/stream/stats');
+    es.onmessage = ev => { try { renderFM(JSON.parse(ev.data)); } catch (e) {} };
+    es.onerror = () => { es.close(); setTimeout(connectSSE, 5000); };
+  }
 
-    function _updateSC(name, level, present) {
-      const db  = level ?? -100;
-      const pct = Math.max(0, Math.min(100, (db + 65) / 45 * 100));
-      const val = document.getElementById('mpx-val-' + name);
-      const bar = document.getElementById('mpx-bar-' + name);
-      if (val) val.textContent = db.toFixed(1) + ' dBFS';
-      if (bar) { bar.style.width = pct + '%'; bar.style.background = present ? '#22c55e' : '#d1d5db'; }
+  // ═══ Résumé DAB+, chaîne, pige (toutes les 5 s) ═══
+  const STATES = {
+    up:       { label: 'OK',           dot: '#10b981', bg: '#ecfdf5', bd: '#bbf7d0', fg: '#047857' },
+    warn:     { label: 'Alerte',       dot: '#f59e0b', bg: '#fffbeb', bd: '#fde68a', fg: '#b45309' },
+    unstable: { label: 'Instable',     dot: '#f59e0b', bg: '#fffbeb', bd: '#fde68a', fg: '#b45309' },
+    down:     { label: 'Hors service', dot: '#ef4444', bg: '#fef2f2', bd: '#fecaca', fg: '#b91c1c' },
+    unknown:  { label: 'En attente',   dot: '#cbd5e1', bg: '#f8fafc', bd: '#e2e8f0', fg: '#475569' },
+    disabled: { label: 'Désactivé',    dot: '#e2e8f0', bg: '#f8fafc', bd: '#e2e8f0', fg: '#64748b' },
+  };
+  const PROBE_LABELS = { ping: 'Ping', burst: 'Ping qualité', tcp: 'Port TCP', http: 'Page web', snmp: 'SNMP', icecast: 'Icecast', fm_local: 'Récepteur FM' };
+
+  function renderDAB(d) {
+    const off = $('dab-off'), on = $('dab-on');
+    $('pill-dab-wrap').classList.toggle('opacity-50', !d.enabled);
+    if (!d.enabled) {
+      off.classList.remove('hidden'); on.classList.add('hidden');
+      off.innerHTML = 'Réception DAB+ désactivée. <a href="/dab" class="text-blue-600">Page DAB+</a>';
+      $('dab-ens').textContent = '-'; $('pill-dab').style.background = DOT.off; dabSid = null; return;
     }
-
-    function _updateLR(side, level) {
-      const db  = level ?? -100;
-      const pct = Math.max(0, Math.min(100, (db + 60) / 60 * 100));
-      const val = document.getElementById('mpx-val-' + side);
-      const bar = document.getElementById('mpx-bar-' + side);
-      if (val) val.textContent = db.toFixed(1) + ' dBFS';
-      if (bar) { bar.style.width = pct + '%'; bar.style.background = db > -3 ? '#ef4444' : db > -10 ? '#f59e0b' : '#10b981'; }
+    $('dab-ens').textContent = [d.channel, d.ensemble].filter(Boolean).join(' · ') || '-';
+    const svc = d.service;
+    if (!svc) {
+      off.classList.remove('hidden'); on.classList.add('hidden');
+      off.innerHTML = d.selected_sid ? `Le service ${esc(d.selected_sid)} n'est pas reçu pour le moment.`
+        : 'Aucun service choisi : <a href="/dab#reglages" class="text-blue-600">DAB+ › Réglages</a>.';
+      $('pill-dab').style.background = d.receiver_up ? DOT.warn : DOT.bad; dabSid = null; return;
     }
-
-    function updateBarMeter(bars, pct) {}
-
-    const lBars = [], rBars = [], snrBars = [];
-
-    // =============================================
-    // SERVER-SENT EVENTS (SSE)
-    // =============================================
-    function connectSSE() {
-        const eventSource = new EventSource('/api/stream/stats');
-
-        eventSource.onmessage = (event) => {
-            try {
-                const stats = JSON.parse(event.data);
-                const level = stats.current_level || -100;
-                const levelPercent = Math.max(0, Math.min(100, level + 100));
-
-                const modEl = document.getElementById('modulation-display');
-                if (!stats.signal_ok) {
-                    modEl.textContent = '—'; modEl.className = 'text-sm font-bold font-mono text-gray-400';
-                } else if (stats.modulation_ok) {
-                    modEl.textContent = 'Active'; modEl.className = 'text-sm font-bold font-mono text-green-600';
-                } else {
-                    modEl.textContent = 'Absente'; modEl.className = 'text-sm font-bold font-mono text-orange-500';
-                }
-
-                updateVUMeter(stats);
-                pushRealtimeLevel(smoothedLevel(stats.signal_dbf !== undefined ? stats.signal_dbf : (stats.current_level || -100)));
-                updateAnalysisPanel(stats); document.getElementById('rds-ps-display').textContent = stats.ps;
-                if (stats.rt && stats.rt !== '-') document.getElementById('rds-rt-display').textContent = stats.rt;
-
-                const rdsDotSSE = document.getElementById('rds-status-dot');
-                if (!stats.rds_ever_received) {
-                    rdsDotSSE.className = 'dot dot-gray'; rdsDotSSE.title = 'RDS non reçu';
-                } else if (stats.rds_ok) {
-                    rdsDotSSE.className = 'dot dot-green pulse'; rdsDotSSE.title = 'RDS OK';
-                } else {
-                    rdsDotSSE.className = 'dot dot-red'; rdsDotSSE.title = 'RDS absent';
-                }
-            } catch(e) { console.error('Erreur parsing SSE:', e); }
-        };
-
-        eventSource.onerror = () => { eventSource.close(); setTimeout(connectSSE, 5000); };
+    off.classList.add('hidden'); on.classList.remove('hidden');
+    dabSid = svc.sid;
+    $('dab-name').textContent = svc.label || svc.sid;
+    $('dab-sub').textContent = `${svc.sid}${svc.mode ? ' · ' + svc.mode : ''}${svc.bitrate ? ' ' + svc.bitrate + ' kb/s' : ''}`;
+    $('dab-dls').textContent = svc.dls || '-';
+    $('dab-external').href = `/api/dab/listen/${encodeURIComponent(svc.sid)}`;
+    if (PUBLIC) { $('dab-play').disabled = true; $('dab-play').title = 'Connexion requise pour écouter le DAB+'; $('dab-external').classList.add('hidden'); }
+    // Diaporama
+    const img = $('dab-slide'), url = svc.mot_time ? `/api/dab/slide/${encodeURIComponent(svc.sid)}?t=${svc.mot_time}` : '';
+    if (img.dataset.url !== url) {
+      img.dataset.url = url;
+      if (url) {
+        img.onload = () => { img.classList.remove('hidden'); $('dab-slide-ph').classList.add('hidden'); };
+        img.onerror = () => { img.classList.add('hidden'); $('dab-slide-ph').classList.remove('hidden'); };
+        img.src = url;
+      } else { img.classList.add('hidden'); $('dab-slide-ph').classList.remove('hidden'); }
     }
+    const present = svc.present, fresh = svc.level_age != null && svc.level_age < 20;
+    const lvl = Math.max(svc.audio_l ?? -100, svc.audio_r ?? -100);
+    dabIdle = [svc.audio_l ?? -100, svc.audio_r ?? -100, !fresh];
+    if (present == null) setTile('dab-pres', '-', MUTED, 'récepteur arrêté'); else
+    setTile('dab-pres', present ? 'Présent' : 'Absent', present ? OK : BAD, present ? 'multiplex' : 'hors multiplex');
+    if (!present) setTile('dab-aud', '-', MUTED, '-');
+    else setTile('dab-aud', svc.silence ? 'Silence' : 'Modulé', svc.silence ? WARN : OK, fresh && lvl > -100 ? `${lvl.toFixed(1).replace('.', ',')} dBFS` : 'niveau non rafraîchi');
+    setTile('dab-st', svc.channels === 1 ? 'Mono' : svc.channels ? 'Stéréo' : '-', svc.channels === 1 ? WARN : svc.channels ? OK : MUTED,
+            svc.samplerate ? `${svc.samplerate / 1000} kHz` : '-');
+    setTile('dab-snr', d.snr != null ? `SNR ${Math.round(d.snr)} dB` : '-', d.snr == null ? MUTED : d.ensemble_ok ? OK : BAD, d.fic != null ? `FIC ${Math.round(d.fic)} %` : '-');
+    const u = svc.uptime_pct;
+    $('dab-upt').textContent = u == null ? '-' : `${u.toFixed(u >= 99.95 ? 0 : 1).replace('.', ',')} %`;
+    lastAlert('dab', d.last_alert);
+    $('pill-dab').style.background = d.receiver_up && d.ensemble_ok && present && !svc.silence ? DOT.ok
+      : d.receiver_up && present ? DOT.warn : DOT.bad;
+  }
 
-    // =============================================
-    // HEURE ACTUELLE
-    // =============================================
-    function updateTime() {
-        const now  = new Date();
-        document.getElementById('current-time').textContent = now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-        document.getElementById('current-date').textContent = now.toLocaleDateString('fr-FR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-    }
+  function renderChain(c) {
+    if (!c.available) { $('chain-grid').innerHTML = '<div class="text-sm text-gray-400">Supervision de la chaîne non démarrée.</div>'; return; }
+    let n = 0;
+    $('chain-grid').innerHTML = c.items.map(it => {
+      const st = STATES[it.state] || STATES.unknown;
+      const probe = it.kind === 'probe';
+      const head = probe ? `sonde · ${PROBE_LABELS[it.probe] || it.probe}` : `${++n}${it.site ? ' · ' + esc(it.site) : ''}`;
+      return `<a href="/chain" class="chain-item" style="background:${probe ? '#fff' : st.bg};border-color:${st.bd}${probe ? ';border-style:dashed' : ''}" title="${esc(it.name)} : ${st.label}${it.value ? ' · ' + esc(it.value) : ''}">
+        <div class="mono truncate" style="font-size:10px;color:#64748b">${head}</div>
+        <div class="font-semibold truncate">${esc(it.name)}</div>
+        <div class="truncate" style="color:${st.fg}">${st.label}${it.value && it.state === 'up' ? ' · ' + esc(it.value) : ''}</div></a>`;
+    }).join('') || '<div class="text-sm text-gray-400">Aucun appareil configuré.</div>';
+    $('chain-ok').innerHTML = `${c.ok}/${c.total} <span class="font-normal text-gray-500">OK</span>`;
+    $('chain-bad').textContent = c.bad ? `${c.bad}` : 'Aucun';
+    $('chain-bad').style.color = c.bad ? BAD : OK;
+    const e = c.last_event;
+    $('chain-last').textContent = e ? `${fmtStamp(e.timestamp)} ${e.device} : ${(STATES[e.to_state] || {}).label || e.to_state}` : '-';
+    $('pill-chain-n').textContent = `${c.ok}/${c.total}`;
+    const anyDown = c.items.some(x => x.state === 'down');
+    $('pill-chain').style.background = anyDown ? DOT.bad : c.bad ? DOT.warn : DOT.ok;
+  }
 
-    // Pré-chargement historique 60s pour le graphique RF
-    async function loadSignalHistory() {
-        try {
-            const res = await fetch('/api/signal/history', {credentials: 'include'});
-            if (!res.ok) return;
-            const history = await res.json();
-            if (!Array.isArray(history)) return;
-            history.forEach(p => realtimeData.push({ x: p.t, y: p.l }));
-            realtimeData.sort((a, b) => a.x - b.x);
-            if (audioChart && realtimeData.length > 0) audioChart.update('none');
-        } catch (e) { console.error('loadSignalHistory error:', e); }
-    }
+  function renderPige(p) {
+    if (!p.available) { $('pige-state').textContent = 'Indisponible'; $('pill-pige').style.background = DOT.off; return; }
+    const on = p.enabled && p.recording;
+    $('pige-state').textContent = !p.enabled ? 'Désactivée' : on ? 'Enregistrement' : 'Arrêtée';
+    $('pige-dot').style.background = on ? DOT.bad : p.enabled ? DOT.warn : DOT.off;
+    $('pige-dot').classList.toggle('pulse', on);
+    $('pill-pige').style.background = on ? DOT.bad : p.enabled ? DOT.warn : DOT.off;
+    $('pill-pige').classList.toggle('pulse', on);
+    $('pige-since').textContent = p.oldest ? new Date(p.oldest * 1000).toLocaleString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Aucun enregistrement';
+    $('pige-disk').textContent = `${fmtBytes(p.used_bytes)} / ${fmtBytes(p.free_bytes)}`;
+    const days = p.retention_hours / 24, have = p.oldest ? (p.now - p.oldest) / 86400 : 0;
+    $('pige-cov-k').textContent = `Couverture, ${Math.round(days)} jour${days >= 2 ? 's' : ''}`;
+    $('pige-cov-v').textContent = `${have < 10 ? have.toFixed(1).replace('.', ',') : Math.round(have)} j sur ${Math.round(days)}`;
+    $('pige-cov').style.width = Math.min(100, have / days * 100) + '%';
+  }
 
-    // Appels initiaux
-    updateTime();
-    loadConfig();
-    updateStats();
-    initRealtimeChart();
-    loadSignalHistory();
-    connectSSE();
-    setInterval(updateTime,   1000);
-    setInterval(updateStats, 10000);
+  async function loadDashboard() {
+    try {
+      const r = await fetch('/api/dashboard', { credentials: 'include' });
+      if (!r.ok) return;
+      const d = await r.json();
+      lastAlert('fm', d.fm.last_alert);
+      renderDAB(d.dab); renderChain(d.chain); renderPige(d.pige);
+      $('pill-alerts').textContent = d.alerts_24h;
+    } catch (e) { console.error('Tableau de bord', e); }
+  }
 
-    // =============================================
-    // ENREGISTREMENT AUDIO
-    // =============================================
-    let isRecording  = false;
-    let recStartTime = null;
-    let recInterval  = null;
+  // ═══ En-tête, menu ═══
+  function updateTime() {
+    const now = new Date();
+    $('current-time').textContent = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    $('current-date').textContent = now.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
+  async function loadConfig() {
+    try {
+      const r = await fetch('/api/config/full', { credentials: 'include' });
+      if (!r.ok) return;
+      const c = await r.json();
+      $('station-name-display').textContent = c.station?.name || 'BL-RMO';
+      const f = (c.rtl_sdr?.frequency || '88.6M').replace('M', ' MHz');
+      $('frequency-display').textContent = f; $('sidebar-frequency').textContent = f;
+    } catch (e) {}
+  }
+  function toggleSidebar() { $('sidebar').classList.toggle('-translate-x-full'); $('sidebar-overlay').classList.toggle('hidden'); }
+  function closeSidebar() { $('sidebar').classList.add('-translate-x-full'); $('sidebar-overlay').classList.add('hidden'); }
 
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && isRecording) {
-            updateRecStatus();
-            clearInterval(recInterval);
-            recInterval = setInterval(updateRecStatus, 2000);
-        }
-    });
-
-    async function toggleRecord() {
-        if (!isRecording) { await startRecord(); } else { await stopRecord(); }
-    }
-
-    async function startRecord() {
-        try {
-            const res  = await fetch('/api/record/start', { method:'POST', headers:{'X-CSRFToken': await getCsrfToken()}, credentials: 'include' });
-            const data = await res.json();
-            if (data.status === 'ok') {
-                isRecording  = true;
-                recStartTime = Date.now();
-                document.getElementById('rec-btn').className  = 'w-9 h-9 rounded-full border-2 border-red-500 bg-white text-red-500 transition flex items-center justify-center';
-                document.getElementById('rec-dot').className  = 'inline-block w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse';
-                document.getElementById('rec-progress-bar').classList.remove('hidden');
-                recInterval = setInterval(updateRecStatus, 2000);
-            } else { alert('Erreur : ' + data.message); }
-        } catch(e) { console.error(e); }
-    }
-
-    async function stopRecord() {
-        clearInterval(recInterval);
-        try {
-            const res  = await fetch('/api/record/stop', { method:'POST', headers:{'X-CSRFToken': await getCsrfToken()}, credentials: 'include' });
-            const data = await res.json();
-            if (data.status === 'ok') { resetRecBtn(); window.location.href = '/api/record/download'; }
-            else { alert('Erreur : ' + data.message); resetRecBtn(); }
-        } catch(e) { console.error(e); resetRecBtn(); }
-    }
-
-    async function updateRecStatus() {
-        try {
-            const res  = await fetch('/api/record/status', {credentials: 'include'});
-            const data = await res.json();
-            if (!data.recording) { clearInterval(recInterval); resetRecBtn(); window.location.href = '/api/record/download'; return; }
-            const pct     = Math.min(100, (data.size / data.max) * 100);
-            const mo      = (data.size / 1024 / 1024).toFixed(1);
-            const elapsed = recStartTime ? Math.floor((Date.now() - recStartTime) / 1000) : 0;
-            const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
-            const ss = String(elapsed % 60).padStart(2, '0');
-            document.getElementById('rec-timer').textContent   = mm + ':' + ss;
-            document.getElementById('rec-size').textContent    = mo + ' Mo / 50 Mo';
-            document.getElementById('rec-progress').style.width = pct + '%';
-        } catch(e) { console.error(e); }
-    }
-
-    function resetRecBtn() {
-        isRecording  = false;
-        recStartTime = null;
-        document.getElementById('rec-btn').className = 'w-9 h-9 rounded-full border-2 border-gray-200 bg-white hover:border-red-400 hover:text-red-500 transition flex items-center justify-center text-gray-400';
-        document.getElementById('rec-dot').className = 'inline-block w-2.5 h-2.5 rounded-full bg-gray-300';
-        document.getElementById('rec-progress-bar').classList.add('hidden');
-        document.getElementById('rec-progress').style.width = '0%';
-    }
-
-    async function getCsrfToken() {
-        const res  = await fetch('/api/csrf-token', {credentials: 'include'});
-        const data = await res.json();
-        return data.csrf_token;
-    }
-    const mpxCanvas = document.getElementById('mpx-spectrum-canvas');
-    let mpxSpectrumData = [];
-    let mpxSampleRate = 171000;
-    let mpxHzPerBin = 167.0;
-    let mpxSpectrumSmooth = [];  // version lissée JS
-    const MPX_JS_ALPHA = 0.3;   // lissage JS (0=très lisse)
-
-    function drawMPXSpectrum() {
-        if (!mpxCanvas || mpxSpectrumData.length === 0) return;
-        const dpr = window.devicePixelRatio || 1;
-        const rect = mpxCanvas.getBoundingClientRect();
-        mpxCanvas.width  = rect.width  * dpr;
-        mpxCanvas.height = rect.height * dpr;
-        const ctx = mpxCanvas.getContext('2d');
-        ctx.scale(dpr, dpr);
-        const W = rect.width;
-        const H = rect.height;
-
-        // Fond
-        ctx.fillStyle = '#f9fafb';
-        ctx.fillRect(0, 0, W, H);
-
-        // Fréquences et mapping
-        const freqNyquist = mpxSampleRate / 2;
-        const freqDisplay = 75000;
-        const nPoints = mpxSpectrumData.length;
-        const nDisplay = Math.floor(nPoints * freqDisplay / freqNyquist);
-        function freqToX(f) { return (f / freqDisplay) * W; }
-        // Amplitude dynamique
-        const dbMax = -20;   // plafond fixe
-        const dbMin = -90;   // plancher fixe
-        // Zone audio 0-15kHz
-        ctx.fillStyle = 'rgba(16,185,129,0.06)';
-        ctx.fillRect(0, 0, freqToX(15000), H);
-        // Pilote 19kHz ± 0.5kHz
-        ctx.fillStyle = 'rgba(16,185,129,0.15)';
-        ctx.fillRect(freqToX(18500), 0, freqToX(500), H);
-        // Stéréo 23-53kHz
-        ctx.fillStyle = 'rgba(59,130,246,0.06)';
-        ctx.fillRect(freqToX(23000), 0, freqToX(30000), H);
-        // RDS 53-61kHz
-        ctx.fillStyle = 'rgba(168,85,247,0.08)';
-        ctx.fillRect(freqToX(53000), 0, freqToX(8000), H);
-
-        // Grille horizontale
-        ctx.strokeStyle = 'rgba(0,0,0,0.06)';
-        ctx.lineWidth = 1;
-        [-40, -60, -80].forEach(db => {
-            const y = H - ((db - dbMin) / (dbMax - dbMin)) * H;
-            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-        });
-
-        // Spectre
-        ctx.beginPath();
-        ctx.strokeStyle = '#2563eb';
-        ctx.lineWidth = 1.5;
-        const hzPerBin = (mpxSampleRate / 2) / nPoints;  // 85500 / 512 = 167 Hz
-        for (let i = 0; i < nPoints; i++) {
-            const x = freqToX(i * hzPerBin);
-            const db = Math.max(dbMin, Math.min(dbMax, mpxSpectrumData[i]));
-            const y = H - ((db - dbMin) / (dbMax - dbMin)) * H;
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-
-        // Remplissage sous la courbe
-        ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
-        ctx.fillStyle = 'rgba(37,99,235,0.08)';
-        ctx.fill();
-
-        // Labels fréquences clés — positionnés en bas du canvas
-        ctx.font = 'bold 9px monospace';
-        // Ligne verticale + label pour chaque fréquence clé
-        const markers = [
-            { f: 19000, label: '19k', color: '#10b981' },
-            { f: 38000, label: '38k', color: '#3b82f6' },
-            { f: 57000, label: '57k', color: '#a855f7' },
-        ];
-        // Sauvegarder le contexte, dessiner sans scaling pour le texte
-        markers.forEach(({ f, label, color }) => {
-            const x = freqToX(f);
-            // Ligne pointillée verticale (dans le contexte scalé)
-            ctx.strokeStyle = color;
-            ctx.globalAlpha = 0.5;
-            ctx.lineWidth = 1;
-            ctx.setLineDash([2, 3]);
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H - 16); ctx.stroke();
-            ctx.setLineDash([]);
-            ctx.globalAlpha = 1;
-        });
-        // Labels en dehors du scaling DPR
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.font = 'bold 9px monospace';
-        ctx.textAlign = 'center';
-        markers.forEach(({ f, label, color }) => {
-            const x = freqToX(f) * dpr;
-            const y = mpxCanvas.height - 4;
-            ctx.fillStyle = color;
-            ctx.fillText(label, x, y);
-        });
-        ctx.restore();
-    }
-
-    async function fetchMPXSpectrum() {
-        try {
-            const resp = await fetch('/api/mpx/spectrum', {credentials: 'include'});
-            if (!resp.ok) return;
-            const data = await resp.json();
-            if (data.spectrum && data.spectrum.length > 0) {
-                mpxSampleRate   = data.sample_rate || 171000;
-                mpxHzPerBin     = data.hz_per_bin || 167.0;
-                const raw = data.spectrum;
-                if (mpxSpectrumSmooth.length !== raw.length) {
-                    mpxSpectrumSmooth = raw.slice();
-                } else {
-                    for (let i = 0; i < raw.length; i++) {
-                        mpxSpectrumSmooth[i] = MPX_JS_ALPHA * raw[i] + (1 - MPX_JS_ALPHA) * mpxSpectrumSmooth[i];
-                    }
-                }
-                mpxSpectrumData = mpxSpectrumSmooth;
-                // Route le rendu : spectre audio (TEF) ou MPX (RTL-SDR)
-                const audPanel = document.getElementById('panel-audio-tef');
-                if (audPanel && !audPanel.classList.contains('hidden')) {
-                    if (audioSpectrumSmooth.length !== raw.length) audioSpectrumSmooth = raw.slice();
-                    else for (let i = 0; i < raw.length; i++) audioSpectrumSmooth[i] = AUDIO_JS_ALPHA * raw[i] + (1 - AUDIO_JS_ALPHA) * audioSpectrumSmooth[i];
-                    drawAudioSpectrum();
-                } else {
-                    drawMPXSpectrum();
-                }
-            }
-        } catch(e) {}
-    }
-
-    setInterval(fetchMPXSpectrum, 500);
-    fetchMPXSpectrum();
-    window.addEventListener('resize', drawMPXSpectrum);
-
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('-translate-x-full');
-      document.getElementById('sidebar-overlay').classList.toggle('hidden');
-    }
-    function closeSidebar() {
-      document.getElementById('sidebar').classList.add('-translate-x-full');
-      document.getElementById('sidebar-overlay').classList.add('hidden');
-    }
-
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('-translate-x-full');
-      document.getElementById('sidebar-overlay').classList.toggle('hidden');
-    }
-    function closeSidebar() {
-      document.getElementById('sidebar').classList.add('-translate-x-full');
-      document.getElementById('sidebar-overlay').classList.add('hidden');
-    }
-
-
+  btn('fm-play', false); btn('dab-play', false);
+  updateTime(); setInterval(updateTime, 1000);
+  loadConfig(); connectSSE();
+  loadDashboard(); setInterval(loadDashboard, 5000);
 </script>
 </body>
 </html>

@@ -162,6 +162,8 @@ class TEFDriver:
         self.on_signal = on_signal
         self.on_pi     = on_pi
         self._rds      = RDSDecoder(on_ps=on_ps, on_rt=on_rt, on_ms=on_ms)
+        self.stereo      = False     # indicateur stéréo du tuner (trames Ss / Sm)
+        self.stereo_seen = False
 
         self._ser           = None
         self._thread        = None
@@ -270,8 +272,11 @@ class TEFDriver:
         cmd  = line[0]
         data = line[1:]
 
-        if cmd == 'S' and data[:1] in ('s', 'm'):
-            # Ss ou Sm <dBf>,<SNR>,<multipath>,<offset>
+        if cmd == 'S' and data[:1] in ('s', 'm', 'S', 'M'):
+            # Ss / Sm <dBf>,<SNR>,<multipath>,<offset> : s = stéréo (pilote 19 kHz
+            # détecté), m = mono ; en majuscule quand le mono est forcé.
+            self.stereo = data[:1] == 's'
+            self.stereo_seen = True
             parts = data[1:].split(',')
             if len(parts) >= 2 and self.on_signal:
                 try:
