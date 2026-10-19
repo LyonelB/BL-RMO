@@ -186,52 +186,6 @@
         </div>
       </div>
 
-      <!-- Défauts audio de la chaîne, relevés sur le signal brut du tuner -->
-      <div class="section">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <div class="section-title" style="margin-bottom:0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
-            Défauts audio
-            <span class="ml-2 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-semibold normal-case tracking-normal">observation, sans mail</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <label class="flex items-center gap-1.5 text-xs text-gray-500"><input type="checkbox" id="df-rf" checked onchange="loadDefects()"> réception douteuse</label>
-            <label class="flex items-center gap-1.5 text-xs text-gray-500" title="Sauts du flux audio du tuner lui-même, sans rapport avec l'antenne"><input type="checkbox" id="df-local" onchange="loadDefects()"> sauts du tuner</label>
-            <select id="df-hours" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="loadDefects()">
-              <option value="24">24 heures</option><option value="168">7 jours</option><option value="720">30 jours</option>
-            </select>
-            <label class="need-operateur flex items-center gap-1.5 text-xs text-gray-500" title="Les 300 extraits WAV les plus récents de la période, environ 0,6 Mo chacun"><input type="checkbox" id="df-clips" checked> avec les extraits</label>
-            <button onclick="dfExport()" class="need-operateur flex items-center gap-1.5 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5" title="ZIP pour analyse : CSV des défauts, réglages du détecteur, extraits WAV">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-              Exporter
-            </button>
-          </div>
-        </div>
-        <p class="text-xs text-gray-500 mb-3">Micro-coupures, clics et craquements repérés sur le signal brut du tuner, avant tout encodage MP3. Un saut d'audio (morceau sauté ou répété par un codec) apparaît comme un clic. Plus de 3 clics en moins d'une seconde forment des craquements, surlignés en orange. « Réception douteuse » : le signal était faible ou perturbé au même moment, le défaut vient peut-être de l'antenne plutôt que de la chaîne. Chaque extrait WAV dure environ 3 s, le défaut tombe à 1,5 s. « Saut du tuner » : un saut dans le flux audio du tuner lui-même (énergie au-dessus de 20 kHz, hors de la bande FM), sans rapport avec la chaîne ; compté à part et masqué de la liste par défaut.</p>
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3 text-xs" id="df-sum"></div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-xs text-left table-fixed" style="min-width:680px">
-            <colgroup><col style="width:120px"><col style="width:110px"><col style="width:70px"><col><col style="width:130px"><col style="width:70px"></colgroup>
-            <thead>
-              <tr class="text-gray-400 border-b border-gray-100">
-                <th class="font-medium py-2 pr-3">Date</th>
-                <th class="font-medium py-2 pr-3">Défaut</th>
-                <th class="font-medium py-2 pr-3">Durée</th>
-                <th class="font-medium py-2 pr-3">Détail</th>
-                <th class="font-medium py-2 pr-3">Réception</th>
-                <th class="font-medium py-2">Extrait</th>
-              </tr>
-            </thead>
-            <tbody id="df-body" class="divide-y divide-gray-50">
-              <tr><td colspan="6" class="py-8 text-center text-gray-400">Chargement...</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
-          <span id="df-count"></span>
-          <button id="df-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="dfShowAll = true; renderDefects()">Tout afficher</button>
-        </div>
-      </div>
     </div>
 
     <!-- ══ Onglet Réception DAB+ (DAB_PATCH) ══ -->
@@ -701,73 +655,6 @@ function rcPigeLinks(startIso, endIso) {
   return `<a href="/pige?t=${t0}" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Ouvrir la pige 30 s avant l'alerte">Écouter</a>`
        + `<a href="/api/pige/export?start=${a}&end=${b}" class="font-medium text-blue-600 hover:text-blue-800" title="Extrait MP3 de 30 s avant à 30 s après">MP3</a>`;
 }
-// ── Défauts audio ─────────────────────────────────────────
-let dfRows = [], dfShowAll = false, dfAudio = null, dfPlaying = null;
-const DF_COLORS = { coupure: 'text-red-600', clic: 'text-amber-600', craquements: 'text-orange-600', capture: 'text-gray-400' };
-async function loadDefects() {
-  let d;
-  try {
-    d = await api(`/api/audio-defects?hours=${$('df-hours').value}&rf=${$('df-rf').checked ? 1 : 0}&local=${$('df-local').checked ? 1 : 0}`);
-  } catch (e) {
-    $('df-body').innerHTML = `<tr><td colspan="6" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`;
-    return;
-  }
-  dfRows = d.data || [];
-  const box = (label, v24, v7, cls) => `<div class="rounded-lg border border-gray-100 px-3 py-2">
-      <div class="text-gray-400">${label}</div>
-      <div class="font-mono"><span class="text-base font-bold ${v24 ? cls : 'text-gray-900'}">${v24}</span>
-      <span class="text-gray-400"> en 24 h · ${v7} en 7 j</span></div></div>`;
-  const a = d.summary['24h'], b = d.summary['7j'];
-  $('df-sum').innerHTML = box('Micro-coupures', a.coupure, b.coupure, 'text-red-600')
-    + box('Clics', a.clic, b.clic, 'text-amber-600')
-    + box('Craquements <span class="text-[10px]">(plus de 3 clics en 1 s)</span>', a.craquements, b.craquements, 'text-orange-600')
-    + box('Réception douteuse', a.rf_suspect, b.rf_suspect, 'text-gray-600')
-    + box('Sauts du tuner <span class="text-[10px]">(local)</span>', a.capture || 0, b.capture || 0, 'text-gray-600');
-  if (!d.active) $('df-sum').insertAdjacentHTML('beforeend',
-    '<div class="col-span-2 sm:col-span-5 text-gray-400">Détection inactive : elle demande le tuner TEF (et <code>audio_defects.enabled</code> à vrai dans la configuration).</div>');
-  renderDefects();
-}
-function renderDefects() {
-  const rows = dfShowAll ? dfRows : dfRows.slice(0, 50);
-  if (!rows.length) {
-    $('df-body').innerHTML = '<tr><td colspan="6" class="py-8 text-center text-gray-400">Aucun défaut sur la période.</td></tr>';
-  } else {
-    $('df-body').innerHTML = rows.map(r => {
-      const t = new Date(r.timestamp);
-      const date = isNaN(t) ? esc(r.timestamp) : `${pad(t.getDate())}-${pad(t.getMonth() + 1)} ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}<span class="text-gray-400">,${String(t.getMilliseconds()).padStart(3, '0').slice(0, 1)}</span>`;
-      const dur = r.type === 'coupure' || r.type === 'capture' ? `${Math.round(r.duration_ms)} ms`
-        : r.count > 1 ? `${r.count} clics` + (r.max_per_s > 1 ? `<div class="text-[10px] text-gray-400">${r.max_per_s} en &lt; 1 s</div>` : '') : '1 clic';
-      const rx = (r.dbf != null ? `${Number(r.dbf).toFixed(0)} dBf` : '') + (r.multipath != null ? ` · MP ${Number(r.multipath).toFixed(0)}` : '');
-      const play = r.has_clip
-        ? `<button class="font-medium text-blue-600 hover:text-blue-800" onclick="dfPlay(${r.id}, this)">${dfPlaying === r.id ? 'Arrêter' : 'Écouter'}</button>
-           <a class="ml-1 text-gray-400 hover:text-gray-700" href="/api/audio-defects/${r.id}/clip" download title="Télécharger le WAV">⤓</a>`
-        : '<span class="text-gray-300">-</span>';
-      return `<tr class="align-top ${r.type === 'craquements' ? 'bg-orange-50' : ''}">
-        <td class="py-2 pr-3 font-mono whitespace-nowrap">${date}</td>
-        <td class="py-2 pr-3 font-medium ${DF_COLORS[r.type] || ''} truncate">${esc(r.label)}</td>
-        <td class="py-2 pr-3 font-mono whitespace-nowrap">${dur}</td>
-        <td class="py-2 pr-3 text-gray-600 truncate" title="${esc(r.detail || '')}">${esc(r.detail || '')}</td>
-        <td class="py-2 pr-3 whitespace-nowrap ${r.rf_suspect ? 'text-amber-700' : 'text-gray-500'}">${r.rf_suspect ? 'douteuse · ' : ''}<span class="font-mono">${rx || '-'}</span></td>
-        <td class="py-2 whitespace-nowrap">${play}</td>
-      </tr>`;
-    }).join('');
-  }
-  $('df-count').textContent = dfRows.length ? `${rows.length} sur ${dfRows.length}` : '';
-  $('df-more').classList.toggle('hidden', dfShowAll || dfRows.length <= 50);
-}
-function dfExport() {
-  // Téléchargement natif du navigateur : la période et le choix des extraits de la page
-  location.href = `/api/audio-defects/export?hours=${$('df-hours').value}&clips=${$('df-clips').checked ? 1 : 0}`;
-}
-function dfPlay(id) {
-  if (!dfAudio) { dfAudio = new Audio(); dfAudio.onended = () => { dfPlaying = null; renderDefects(); }; }
-  if (dfPlaying === id) { dfAudio.pause(); dfPlaying = null; renderDefects(); return; }
-  dfAudio.src = `/api/audio-defects/${id}/clip`;
-  dfAudio.play().catch(() => {});
-  dfPlaying = id;
-  renderDefects();
-}
-
 async function loadReception() {
   try {
     const st = await api('/api/stats');
@@ -802,7 +689,6 @@ async function loadReception() {
   sel.innerHTML = '<option value="">Tous les types</option>' + types.map(t => `<option>${esc(t)}</option>`).join('');
   sel.value = types.includes(cur) ? cur : '';
   renderReception();
-  loadDefects();
 }
 async function loadRtHistory() {
   let d;

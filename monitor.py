@@ -60,12 +60,13 @@ class FMMonitor:
         else:
             self.mpx_analyzer = MPXAnalyzer(sample_rate=171000, process_every=4)
 
-        # Défauts audio de la chaîne (micro-coupures, clics, craquements),
-        # sur le PCM brut du tuner TEF. Relevé seul pour l'instant : pas de mail.
+        # Défauts audio (micro-coupures, clics, craquements) sur le PCM brut du
+        # tuner TEF : désactivé par défaut depuis octobre 2026, trop de fausses
+        # alertes sur la réception réelle. Réactivable par audio_defects.enabled.
         self.defect_detector = None
         self.defect_store = None
         dcfg = self.config.get('audio_defects', {}) or {}
-        if self.use_tef and _DEFECTS_AVAILABLE and dcfg.get('enabled', True):
+        if self.use_tef and _DEFECTS_AVAILABLE and dcfg.get('enabled', False):
             try:
                 self.defect_store = AudioDefectStore(
                     keep_days=dcfg.get('keep_days', 30), clip_days=dcfg.get('clip_days', 7),

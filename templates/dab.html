@@ -442,12 +442,23 @@
     $('pl-name').textContent = v ? v.label : sid;
     $('pl-dls').textContent = v ? v.dls || '' : '';
     $('pl-slide').classList.add('hidden'); $('pl-slide').dataset.url = '';
-    $('pl-help').textContent = "Écoute servie par la clé DAB+ : une seule à la fois, coupée automatiquement après quelques minutes. Démarrage en quelques secondes en mode carrousel.";
+    $('pl-help').textContent = 'Connexion…';
     const a = $('pl-audio');
     vuStart(a);
     playStream();
-    a.onerror = () => { if (!a.getAttribute('src')) return; playButton(false);
-      $('pl-help').textContent = "Écoute impossible : service indisponible ou une autre écoute DAB+ est déjà en cours."; };
+    let retried = false;
+    a.onerror = () => {
+      if (!a.getAttribute('src') || listening !== sid) return;
+      if (!retried) {                          // un service tout juste épinglé peut demander un instant
+        retried = true;
+        $('pl-help').textContent = 'Démarrage du service…';
+        setTimeout(() => { if (listening === sid) playStream(); }, 2000);
+        return;
+      }
+      playButton(false);
+      $('pl-help').textContent = "Écoute impossible : le service ne répond pas pour le moment. Réessayer dans quelques secondes.";
+    };
+    a.onplaying = () => { $('pl-help').textContent = "Écoute servie par la clé DAB+ : une seule à la fois, coupée automatiquement après quelques minutes."; };
     a.onended = () => playButton(false);   // écoute coupée par le serveur (durée maximale)
     renderServices();
   }

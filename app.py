@@ -1235,7 +1235,12 @@ from dab_monitor import DabReader, BAND_III, sid_decimal
 import threading as _dab_threading
 
 dab_reader = DabReader()
-_dab_listen = _dab_threading.BoundedSemaphore(1)     # une seule écoute à la fois (welle-cli et la clé)
+# Une seule écoute à la fois (welle-cli et la clé) : la plus récente remplace
+# la précédente. Refuser la nouvelle tant que l'ancienne n'était pas refermée
+# donnait « Écoute impossible » en changeant de radio : le serveur met
+# quelques secondes à voir que le navigateur a coupé l'ancien flux.
+_dab_listen_lock = _dab_threading.Lock()
+_dab_listen_cur = {'gen': 0, 'up': None}
 
 
 @app.context_processor
@@ -1309,37 +1314,57 @@ def dab_listen(sid):
     cfg = dab_reader.config()
     if not cfg.get('enabled'):
         return jsonify({'status': 'error', 'message': 'Réception DAB+ désactivée'}), 503
-    if not _dab_listen.acquire(blocking=False):
-        return jsonify({'status': 'error', 'message': 'Une écoute DAB+ est déjà en cours'}), 409
+    with _dab_listen_lock:                     # couper l'écoute en cours, s'il y en a une
+        _dab_listen_cur['gen'] += 1
+        gen = _dab_listen_cur['gen']
+        old, _dab_listen_cur['up'] = _dab_listen_cur['up'], None
+    if old is not None:
+        try:
+            old.close()
+        except Exception:
+            pass
     base = f"http://127.0.0.1:{int(cfg['port'])}"
     try:
         # Fork welle-monitor : décoder ce service tout de suite, sans attendre le carrousel
         _rq.post(f"{base}/carousel/pin/{sid}", timeout=2)
     except Exception:
         pass
-    try:
-        up = _rq.get(f"{base}/mp3/{sid}", stream=True, timeout=(5, 30))
-        if up.status_code != 200:
+    up = None
+    for attempt in range(3):                   # le service épinglé peut mettre un instant à démarrer
+        if _dab_listen_cur['gen'] != gen:
+            return jsonify({'status': 'error', 'message': 'Remplacée par une autre écoute'}), 409
+        try:
+            up = _rq.get(f"{base}/mp3/{sid}", stream=True, timeout=(5, 30))
+            if up.status_code == 200:
+                break
             up.close()
-            _dab_listen.release()
-            return jsonify({'status': 'error', 'message': 'Service non disponible'}), 503
-    except Exception:
-        _dab_listen.release()
-        return jsonify({'status': 'error', 'message': 'Récepteur DAB+ injoignable'}), 503
+            up = None
+        except Exception:
+            up = None
+        time.sleep(1.5)
+    if up is None:
+        return jsonify({'status': 'error', 'message': 'Service non disponible'}), 503
+    with _dab_listen_lock:
+        if _dab_listen_cur['gen'] != gen:      # une autre écoute est arrivée entre-temps
+            up.close()
+            return jsonify({'status': 'error', 'message': 'Remplacée par une autre écoute'}), 409
+        _dab_listen_cur['up'] = up
     deadline = time.time() + 60 * float(cfg.get('listen_max_minutes', 15))
 
     def generate():
         try:
             for chunk in up.iter_content(chunk_size=4096):
+                if _dab_listen_cur['gen'] != gen or time.time() > deadline:
+                    break
                 if chunk:
                     yield chunk
-                if time.time() > deadline:
-                    break
         except Exception:
             pass
         finally:
             up.close()
-            _dab_listen.release()
+            with _dab_listen_lock:
+                if _dab_listen_cur['up'] is up:
+                    _dab_listen_cur['up'] = None
 
     return app.response_class(generate(), mimetype='audio/mpeg',
                               headers={'Cache-Control': 'no-cache, no-store', 'X-Accel-Buffering': 'no'})

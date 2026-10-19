@@ -6,6 +6,13 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Page DAB+ : changement de radio
+- **Plus de « Écoute impossible » en changeant de radio** : une seule écoute DAB+ reste possible à la fois, mais la nouvelle remplace désormais la précédente au lieu d'être refusée. Le serveur mettait quelques secondes à voir que le navigateur avait coupé l'ancien flux, et refusait la nouvelle écoute entre-temps.
+- Le serveur attend jusqu'à 3 s qu'un service tout juste épinglé démarre, et le lecteur réessaie une fois avant d'afficher un message d'erreur.
+
+### Défauts audio : retirés de l'interface
+- Sur 24 h de réception réelle, la détection n'a produit que des fausses alertes (aucun défaut audible dans les extraits). Le bloc « Défauts audio » disparaît de Journaux, Réception FM, et la détection est désactivée par défaut (`audio_defects.enabled`). Le module reste dans le dépôt, sans effet tant qu'il n'est pas réactivé.
+
 ### Défauts audio de la réception FM (observation)
 - **Nouveau module `audio_defects.py`** : repère sur le signal brut du tuner TEF (48 kHz, avant tout encodage MP3) les défauts « numériques » de la chaîne de diffusion :
   - **micro-coupures** de 4 ms à 2 s : chute brutale du niveau (plus de 30 dB en 2 ms), ce qui les distingue d'une pause naturelle ;

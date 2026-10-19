@@ -47,7 +47,7 @@
     "retention_hours": 720
   },
   "audio_defects": {
-    "enabled": true,
+    "enabled": false,
     "drop_db": 30.0,
     "gap_max_dbfs": -45.0,
     "click_k": 20.0,

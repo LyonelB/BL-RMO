@@ -48,7 +48,7 @@ from scipy.signal import butter, lfilter, sosfilt
 logger = logging.getLogger(__name__)
 
 DEFAULTS = {
-    'enabled': True,
+    'enabled': False,         # désactivé : trop de fausses alertes sur la réception réelle
     # Coupures
     'drop_db': 30.0,          # chute minimale entre deux blocs de 2 ms
     'gap_max_dbfs': -45.0,    # niveau de crête maximal pendant le trou
