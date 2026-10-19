@@ -6,6 +6,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Configuration
+- **Email de test** : le bouton est grisé, avec un message, tant que l'expéditeur, le mot de passe ou les destinataires modifiés ne sont pas enregistrés (le test part toujours avec la configuration enregistrée).
+
 ### Chaîne de diffusion
 - **Modèle SNMP egnite Querx TH** (sonde de température et d'humidité, par exemple au shelter) : température, humidité, point de rosée, état du capteur et uptime, avec des seuils de départ (0 à 40 °C, 85 %RH) à ajuster.
 

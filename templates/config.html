@@ -227,12 +227,13 @@
           <span class="ml-2 text-xs font-medium text-gray-700" id="email-alerts-label">Chargement...</span>
         </label>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center gap-3">
         <button type="button" onclick="sendTestEmail()" id="test-email-btn" class="btn-secondary">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
           Email de test
         </button>
         <span id="test-email-result" class="text-xs text-gray-400 hidden"></span>
+        <span id="test-email-dirty" class="text-xs text-amber-600 hidden">Modifications non enregistrées : enregistrez la configuration (bouton en bas de page) avant le test, sinon il part avec les anciens réglages.</span>
       </div>
     </div>
 
@@ -506,6 +507,7 @@
       document.getElementById('recipient-emails').value         = recipientsStr;
 
       document.getElementById('sidebar-frequency').textContent  = frequency.replace('M', ' MHz');
+      snapshotEmailFields();
 
       if (config.network) {
         const isDHCP = config.network.mode === 'dhcp';
@@ -533,6 +535,24 @@
   // ═══════════════════════════════════════════════
   // EMAIL DE TEST
   // ═══════════════════════════════════════════════
+  // Le test utilise la configuration enregistrée : tant que les champs email
+  // diffèrent de celle-ci, le bouton est grisé et un message l'explique.
+  const EMAIL_FIELDS = ['sender-email', 'sender-password', 'recipient-emails'];
+  let emailSaved = null;
+  function emailValues() { return EMAIL_FIELDS.map(id => document.getElementById(id).value.trim()).join('\n'); }
+  function snapshotEmailFields() { emailSaved = emailValues(); updateEmailDirty(); }
+  function updateEmailDirty() {
+    const dirty = emailSaved !== null && emailValues() !== emailSaved;
+    const btn = document.getElementById('test-email-btn');
+    btn.disabled = dirty;
+    btn.style.opacity = dirty ? '0.5' : '';
+    btn.style.cursor = dirty ? 'not-allowed' : '';
+    btn.title = dirty ? 'Enregistrez d\'abord la configuration' : '';
+    document.getElementById('test-email-dirty').classList.toggle('hidden', !dirty);
+    if (dirty) document.getElementById('test-email-result').classList.add('hidden');
+  }
+  EMAIL_FIELDS.forEach(id => document.getElementById(id).addEventListener('input', updateEmailDirty));
+
   async function sendTestEmail() {
     const btn    = document.getElementById('test-email-btn');
     const result = document.getElementById('test-email-result');
@@ -555,8 +575,8 @@
       result.textContent = '✗ Erreur réseau';
       result.className   = 'text-xs text-red-600';
     } finally {
-      btn.disabled = false;
       result.classList.remove('hidden');
+      updateEmailDirty();
     }
   }
 
