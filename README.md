@@ -63,7 +63,7 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 - **Ensemble** : SNR, qualité FIC, gain, identifiant ; alerte quand l'ensemble se dégrade
 - **Services** : présence dans le multiplex, niveaux audio, DLS, débit, disponibilité sur 24 h ; alertes **service absent** et **silence**, sur tous les services ou seulement ceux cochés
 - **Écoute** d'un service depuis la page DAB+, diaporama (slideshow) affiché pendant l'écoute
-- Alertes DAB+ par mail et dans un onglet **Réception DAB+** de la page Journaux (la pige n'enregistre que la FM)
+- Alertes DAB+ par mail et dans un onglet **Réception DAB+** de la page Journaux, avec lien vers la pige du service s'il en a une
 - Service indépendant `bl-rmo-dab` : un plantage de welle-cli ou de la clé ne touche ni l'interface, ni la FM
 
 ### 🔊 Retour FM
@@ -71,8 +71,9 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 - **Mode public** `/public` : tableau de bord sans authentification
 
 ### 🎙️ Pige audio
-- **Enregistrement continu sur 30 jours** de l'antenne en segments MP3 (service `bl-rmo-pige`, indépendant de l'application), environ 1,4 Go par jour ; durée réglable par `"pige": {"retention_hours": 720}` dans `config.json`
-- **Frise, écoute et export** d'un créneau en MP3, sans réencodage
+- **Enregistrement continu sur 30 jours** de l'antenne en segments MP3 (service `bl-rmo-pige`, indépendant de l'application), environ 1,4 Go par jour ; durée réglable depuis la page Pige
+- **Piges DAB+** : un service DAB+ par pige, créée depuis la page Pige (nom, service, durée de conservation) ; MP3 128 kb/s, environ 1,4 Go par jour ; demande le décodage « Tous les services en continu »
+- **Écoute à l'instant choisi**, déplacements de 10 s, 1 min ou 10 min, repère de 30 min autour de la position, disponibilité jour par jour ; **extrait** marqué pendant l'écoute, écouté puis téléchargé en MP3 sans réencodage
 - **Extraits des 10 dernières alertes**, de 30 s avant l'alerte à 30 s après le rétablissement, conservés après la sortie de la pige
 - Chaque alerte et chaque événement de la chaîne ouvre la pige au bon moment
 
@@ -285,7 +286,7 @@ Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-RMO (pas `bl
 - [x] v0.9.0 : nouveau nom BL-RMO, journaux en trois onglets
 - [x] Réception DAB+ (reprise de BL-DMO), validée sur site
 - [x] Tableau de bord FM, DAB+, chaîne et pige
-- [ ] Piges multiples : plusieurs enregistrements (FM, services DAB+), créés depuis la page Pige
+- [x] Piges multiples : FM et services DAB+, créées depuis la page Pige
 - [ ] Alerte de passage en mono
 - [ ] Fermeture de BL-DMO ([dabplus-monitor](https://github.com/LyonelB/dabplus-monitor)) : annonce, archivage, puis suppression du dépôt
 - [ ] welle-monitor : reporter les changements de la prochaine version de welle.io

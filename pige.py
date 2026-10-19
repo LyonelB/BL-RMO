@@ -13,6 +13,11 @@ Deux usages :
   2. Module importé par app.py (PigeStore) : liste des segments,
      couverture, extraction d'un créneau.
 
+Piges multiples : la pige « fm » (section "pige" de config.json) enregistre
+l'antenne ; chaque entrée de "pige"."extra" enregistre un service DAB+ servi
+par welle-cli (http://127.0.0.1:<port>/mp3/<sid>), réencodé en MP3 CBR pour
+que la durée des segments se déduise du débit, comme pour la FM.
+
 Les noms de fichiers sont en UTC (AAAAMMJJ-HHMMSS.mp3 = début du segment),
 ce qui évite toute ambiguïté au passage heure d'été / heure d'hiver.
 """
@@ -28,7 +33,7 @@ import sys
 import tempfile
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger('pige')
 
@@ -47,6 +52,8 @@ DEFAULTS = {
 }
 
 SEGMENT_RE = re.compile(r'^(\d{8}-\d{6})\.mp3$')
+PIGE_ID_RE = re.compile(r'^[a-z0-9][a-z0-9-]{0,31}$')
+EXTRA_DEFAULTS = {'enabled': True, 'retention_hours': 168, 'bitrate_kbps': 128}
 
 
 def load_pige_config(config_file=CONFIG_FILE):
@@ -67,6 +74,39 @@ def load_pige_config(config_file=CONFIG_FILE):
 # Lecture / export (utilisé par Flask)
 # ════════════════════════════════════════════════════════════════════
 
+def load_piges(config_file=CONFIG_FILE):
+    """Toutes les piges : d'abord la FM (id « fm »), puis les piges DAB+."""
+    fm = load_pige_config(config_file)
+    fm.update(id='fm', kind='fm', name=fm.get('name') or 'FM', reencode=False)
+    out = [fm]
+    try:
+        with open(config_file) as f:
+            full = json.load(f)
+    except (OSError, ValueError):
+        full = {}
+    dab_port = int(((full.get('dab') or {}).get('port')) or 7979)
+    for e in (full.get('pige') or {}).get('extra') or []:
+        pid = str(e.get('id', '')).lower()
+        sid = str(e.get('sid', '')).lower()
+        if not PIGE_ID_RE.match(pid) or pid == 'fm' or not re.match(r'^[0-9a-fx]{1,8}$', sid):
+            continue
+        cfg = dict(fm)
+        cfg.update(EXTRA_DEFAULTS)
+        cfg.update({k: v for k, v in e.items() if k in ('name', 'enabled', 'retention_hours', 'bitrate_kbps')})
+        cfg.update(id=pid, kind='dab', sid=sid, name=e.get('name') or f'DAB+ {sid}', reencode=True,
+                   directory=os.path.join(fm['directory'], 'extra', pid),
+                   source_url=f'http://127.0.0.1:{dab_port}/mp3/{sid}')
+        out.append(cfg)
+    return out
+
+
+def pige_config(pige_id='fm', config_file=CONFIG_FILE):
+    for cfg in load_piges(config_file):
+        if cfg['id'] == pige_id:
+            return cfg
+    return None
+
+
 class PigeError(Exception):
     pass
 
@@ -79,7 +119,7 @@ class PigeStore:
         self.byterate = int(self.cfg['bitrate_kbps']) * 1000 / 8
 
     def reload(self):
-        self.__init__(load_pige_config())
+        self.__init__(pige_config(self.cfg.get('id', 'fm')) or load_pige_config())
 
     # ── Segments ────────────────────────────────────────────────────
     def segments(self):
@@ -118,6 +158,24 @@ class PigeStore:
                 ranges.append([s['start'], s['end']])
         return ranges
 
+    def days(self, segs=None):
+        """Secondes enregistrées par jour (heure locale), sur la durée de conservation."""
+        segs = self.segments() if segs is None else segs
+        out = {}
+        for s in segs:
+            a, b = s['start'], s['end']
+            while a < b:
+                d = datetime.fromtimestamp(a)
+                nxt = datetime(d.year, d.month, d.day) + timedelta(days=1)
+                cut = min(b, nxt.timestamp())
+                key = d.strftime('%Y-%m-%d')
+                out[key] = out.get(key, 0) + (cut - a)
+                a = cut
+        return {k: round(v) for k, v in sorted(out.items())}
+
+    def used_bytes(self):
+        return sum(s['size'] for s in self.segments())
+
     def segment_path(self, name):
         if not SEGMENT_RE.match(name or ''):
             return None
@@ -136,6 +194,11 @@ class PigeStore:
         except OSError:
             free = None
         return {
+            'id': self.cfg.get('id', 'fm'),
+            'name': self.cfg.get('name', 'FM'),
+            'kind': self.cfg.get('kind', 'fm'),
+            'sid': self.cfg.get('sid'),
+            'days': self.days(segs),
             'enabled': bool(self.cfg['enabled']),
             'recording': (time.time() - newest_mtime) < 30,
             'retention_hours': self.cfg['retention_hours'],
@@ -298,7 +361,9 @@ class PigeRecorder:
             'ffmpeg', '-nostdin', '-hide_banner', '-loglevel', 'warning',
             '-rw_timeout', '15000000',            # 15 s sans données → sortie, on relance
             '-i', self.cfg['source_url'],
-            '-map', '0:a', '-c', 'copy',
+            '-map', '0:a',
+        ] + (['-c:a', 'libmp3lame', '-b:a', f"{int(self.cfg['bitrate_kbps'])}k", '-ar', '44100']
+             if self.cfg.get('reencode') else ['-c', 'copy']) + [
             '-f', 'segment',
             # Pas d'en-tête Xing : le segment en cours d'écriture reste lisible
             # et « seekable » dans le navigateur (durée déduite du débit CBR)
@@ -315,14 +380,15 @@ class PigeRecorder:
         if self.proc and self.proc.poll() is None:
             self.proc.terminate()
 
-    def run(self):
+    def run(self, own_signals=True):
         os.makedirs(self.store.dir, exist_ok=True)
-        signal.signal(signal.SIGTERM, self.stop)
-        signal.signal(signal.SIGINT, self.stop)
+        if own_signals:
+            signal.signal(signal.SIGTERM, self.stop)
+            signal.signal(signal.SIGINT, self.stop)
         threading.Thread(target=self._purge_loop, daemon=True).start()
 
         env = dict(os.environ, TZ='UTC')        # noms de fichiers en UTC
-        logger.info(f"Pige : {self.cfg['source_url']} → {self.store.dir} "
+        logger.info(f"Pige {self.cfg.get('id', 'fm')} : {self.cfg['source_url']} → {self.store.dir} "
                     f"(segments {self.cfg['segment_minutes']} min, "
                     f"rétention {self.cfg['retention_hours']} h)")
         backoff = 2
@@ -336,21 +402,72 @@ class PigeRecorder:
                 break
             # Icecast sans source (bl-rmo qui redémarre) : on réessaie vite
             backoff = 2 if time.time() - started > 60 else min(backoff * 2, 30)
-            logger.warning(f"ffmpeg pige arrêté (code {self.proc.returncode}) "
+            logger.warning(f"ffmpeg pige {self.cfg.get('id', 'fm')} arrêté (code {self.proc.returncode}) "
                            f"{(err or '').strip()[-200:]} - relance dans {backoff} s")
             time.sleep(backoff)
+        logger.info(f"Pige {self.cfg.get('id', 'fm')} arrêtée")
+
+
+class PigeSupervisor:
+    """Une pige par thread ; relit config.json toutes les 20 s pour démarrer,
+    arrêter ou relancer les piges créées, supprimées ou modifiées."""
+
+    KEYS = ('enabled', 'source_url', 'directory', 'retention_hours', 'bitrate_kbps',
+            'segment_minutes', 'reencode', 'min_free_mb')
+
+    def __init__(self):
+        self.running = True
+        self.recorders = {}     # id -> (recorder, thread, signature)
+
+    def stop(self, *_):
+        self.running = False
+        for rec, _, _ in self.recorders.values():
+            rec.stop()
+
+    def sync(self):
+        wanted = {c['id']: c for c in load_piges() if c['enabled']}
+        for pid in list(self.recorders):
+            rec, th, sig = self.recorders[pid]
+            c = wanted.get(pid)
+            if c is None or sig != tuple(c.get(k) for k in self.KEYS) or not th.is_alive():
+                rec.stop()
+                th.join(timeout=10)
+                del self.recorders[pid]
+                if c is None:
+                    logger.info(f"Pige {pid} arrêtée (supprimée ou désactivée)")
+        for pid, c in wanted.items():
+            if pid not in self.recorders:
+                rec = PigeRecorder(c)
+                th = threading.Thread(target=rec.run, kwargs={'own_signals': False},
+                                      name=f'pige-{pid}', daemon=True)
+                th.start()
+                self.recorders[pid] = (rec, th, tuple(c.get(k) for k in self.KEYS))
+
+    def run(self):
+        signal.signal(signal.SIGTERM, self.stop)
+        signal.signal(signal.SIGINT, self.stop)
+        while self.running:
+            try:
+                self.sync()
+            except Exception as e:
+                logger.error(f"Superviseur de pige : {e}")
+            for _ in range(20):
+                if not self.running:
+                    break
+                time.sleep(1)
+        for rec, th, _ in self.recorders.values():
+            th.join(timeout=10)
         logger.info("Pige arrêtée")
 
 
 def main():
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - pige - %(levelname)s - %(message)s')
-    cfg = load_pige_config()
-    if not cfg['enabled']:
-        logger.info("Pige désactivée dans config.json (pige.enabled=false), arrêt.")
+    if not any(c['enabled'] for c in load_piges()):
+        logger.info("Aucune pige active dans config.json, arrêt.")
         # Code 0 : systemd ne relance pas en boucle
         return 0
-    PigeRecorder(cfg).run()
+    PigeSupervisor().run()
     return 0
 
 

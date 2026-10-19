@@ -6,6 +6,15 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Piges multiples et nouvelle page Pige
+- **Plusieurs piges** : la pige FM, plus une pige par service DAB+ voulu. Elles se créent, se modifient, se suspendent et se suppriment dans la nouvelle partie **Configuration des piges** de la page Pige (administrateur) : nom, service, durée de conservation (1 à 90 jours), estimation de l'espace disque.
+- Le service `bl-rmo-pige` enregistre toutes les piges actives, une par fil, et relit la configuration toutes les 20 s : une pige créée démarre sans redémarrage. La pige FM ne change pas (même dossier, mêmes fichiers).
+- **Une pige DAB+** lit le flux du service servi par welle-cli et le réencode en **MP3 128 kb/s constant** : welle-cli produit un MP3 à débit variable, or la durée des segments se déduit du débit. Environ 1,4 Go par jour. Elle demande le décodage « Tous les services en continu » (la configuration le signale). Ses fichiers sont dans `pige/extra/<pige>/` et partent avec la pige quand on la supprime.
+- **Nouvelle page Pige**, en trois étapes : choisir l'instant (date, heure à la seconde, raccourcis dont la dernière alerte), écouter et se déplacer (−10 min, −1 min, −10 s, +10 s, +1 min, +10 min), extraire (début et fin marqués pendant l'écoute, ou une durée ; écouter l'extrait, puis télécharger le MP3).
+- La grande frise disparaît : un **repère de 30 min** autour de la position montre les trous et l'extrait ; une **grille jour par jour** montre la disponibilité sur toute la durée de conservation (un clic : ce jour, à la même heure).
+- **Journaux** : un lien « Écouter » de la chaîne ou de la réception FM ouvre toujours la pige FM ; une alerte DAB+ ouvre la pige de son service, s'il en a une.
+- API : `?p=<pige>` sur `/api/pige/status`, `/api/pige/segment`, `/api/pige/export` (la FM par défaut) ; nouvelles routes `/api/pige/list` et `/api/pige/config`.
+
 ### Nouveau tableau de bord
 - **Une seule page pour tout surveiller** : un bandeau d'état (FM, DAB+, chaîne, pige, alertes des dernières 24 h), puis la réception FM et la réception DAB+ côte à côte, la chaîne de diffusion et la pige.
 - **Réception FM** : logo, PS, PI, RadioText ; lecteur avec VU-mètre (niveaux du tuner, 20 mesures par seconde, crête maintenue 1,5 s) ; signal, modulation, **stéréo ou mono**, RDS, uptime ; dernière alerte, avec lien vers le journal.

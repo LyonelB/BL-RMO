@@ -12,6 +12,8 @@ import time
 import json
 import subprocess
 import os
+import re
+import shutil
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from monitor import FMMonitor
@@ -1037,7 +1039,7 @@ def mpx_spectrum():
 # =============================================
 # PIGE AUDIO 24H
 # =============================================
-from pige import PigeStore, PigeError
+from pige import PigeStore, PigeError, load_piges, pige_config, PIGE_ID_RE
 
 pige_store = PigeStore()
 
@@ -1049,17 +1051,126 @@ def pige_page():
     return render_template('pige.html')
 
 
+def _pige(pid=None):
+    """Magasin de la pige demandée (?p=), la FM par défaut. None si inconnue."""
+    pid = (pid or request.args.get('p') or 'fm').lower()
+    if pid == 'fm':
+        pige_store.reload()
+        return pige_store
+    cfg = pige_config(pid)
+    return PigeStore(cfg) if cfg else None
+
+
 @app.route('/api/pige/status')
 @auth.login_required
 @limiter.exempt
 def pige_status():
-    pige_store.reload()
+    store = _pige()
+    if store is None:
+        return jsonify({'status': 'error', 'message': 'Pige inconnue'}), 404
     try:
         seg_from = float(request.args['from']) if request.args.get('from') else None
         seg_to = float(request.args['to']) if request.args.get('to') else None
     except ValueError:
         seg_from = seg_to = None
-    return jsonify(pige_store.status(seg_from, seg_to))
+    return jsonify(store.status(seg_from, seg_to))
+
+
+@app.route('/api/pige/list')
+@auth.login_required
+@limiter.exempt
+def pige_list():
+    """Toutes les piges, avec leur état (sans la liste des segments)."""
+    out = []
+    for cfg in load_piges():
+        st = pige_store if cfg['id'] == 'fm' else PigeStore(cfg)
+        if cfg['id'] == 'fm':
+            st.reload()
+        segs = st.segments()
+        newest = max((os.path.getmtime(x['path']) for x in segs[-1:]), default=0)
+        out.append({'id': cfg['id'], 'name': cfg['name'], 'kind': cfg['kind'], 'sid': cfg.get('sid'),
+                    'enabled': bool(cfg['enabled']), 'retention_hours': cfg['retention_hours'],
+                    'bitrate_kbps': cfg['bitrate_kbps'], 'recording': time.time() - newest < 30,
+                    'oldest': segs[0]['start'] if segs else None,
+                    'used_bytes': sum(x['size'] for x in segs)})
+    try:
+        free = shutil.disk_usage(pige_store.dir).free
+    except OSError:
+        free = None
+    return jsonify({'status': 'ok', 'piges': out, 'free_bytes': free})
+
+
+@app.route('/api/pige/config', methods=['POST'])
+@auth.login_required
+def pige_config_save():
+    """Créer, modifier ou supprimer une pige (administrateur).
+    {action: create|update|delete, id, name, sid, retention_days, enabled}"""
+    data = request.get_json(silent=True) or {}
+    action = data.get('action')
+    with open('config.json') as f:
+        config = json.load(f)
+    pige = config.setdefault('pige', {})
+    extra = pige.setdefault('extra', [])
+    pid = str(data.get('id') or '').strip().lower()
+    try:
+        days = float(data['retention_days']) if data.get('retention_days') not in (None, '') else None
+    except (TypeError, ValueError):
+        return jsonify({'status': 'error', 'message': 'Durée de conservation invalide'}), 400
+    if days is not None and not (1 <= days <= 90):
+        return jsonify({'status': 'error', 'message': 'Conservation : de 1 à 90 jours'}), 400
+    name = str(data.get('name') or '').strip()[:60]
+    cfg = None
+
+    if action == 'create':
+        sid = str(data.get('sid') or '').strip().lower()
+        if not re.match(r'^[0-9a-fx]{1,8}$', sid):
+            return jsonify({'status': 'error', 'message': 'Service DAB+ invalide'}), 400
+        base = re.sub(r'[^a-z0-9]+', '-', (name or f'dab-{sid}').lower()).strip('-')[:24] or f'dab-{sid}'
+        if base == 'fm':
+            base = f'dab-{sid}'
+        pid, n = base, 2
+        while pid in {e.get('id') for e in extra}:
+            pid, n = f'{base}-{n}', n + 1
+        extra.append({'id': pid, 'name': name or f'DAB+ {sid}', 'sid': sid,
+                      'retention_hours': int((days or 7) * 24), 'enabled': True})
+    elif action == 'update':
+        if pid == 'fm':
+            if days is not None:
+                pige['retention_hours'] = int(days * 24)
+            if name:
+                pige['name'] = name
+        else:
+            e = next((e for e in extra if e.get('id') == pid), None)
+            if e is None:
+                return jsonify({'status': 'error', 'message': 'Pige inconnue'}), 404
+            if days is not None:
+                e['retention_hours'] = int(days * 24)
+            if name:
+                e['name'] = name
+            if 'enabled' in data:
+                e['enabled'] = bool(data['enabled'])
+    elif action == 'delete':
+        if pid == 'fm':
+            return jsonify({'status': 'error', 'message': 'La pige FM ne se supprime pas'}), 400
+        cfg = pige_config(pid)
+        if cfg is None:
+            return jsonify({'status': 'error', 'message': 'Pige inconnue'}), 404
+        pige['extra'] = [e for e in extra if e.get('id') != pid]
+    else:
+        return jsonify({'status': 'error', 'message': 'Action inconnue'}), 400
+
+    tmp = 'config.json.tmp'
+    with open(tmp, 'w') as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
+    os.replace(tmp, 'config.json')
+    if action == 'delete' and cfg and PIGE_ID_RE.match(pid):
+        # Les enregistrements partent avec la pige (dossier toujours sous pige/extra/)
+        target = os.path.realpath(cfg['directory'])
+        root = os.path.realpath(os.path.join(pige_store.dir, 'extra'))
+        if target.startswith(root + os.sep):
+            shutil.rmtree(target, ignore_errors=True)
+    logger.info(f"Pige {action} {pid} par {session.get('username', '?')}")
+    return jsonify({'status': 'ok', 'id': pid})
 
 
 @app.route('/api/pige/segment/<name>')
@@ -1068,7 +1179,8 @@ def pige_status():
 def pige_segment(name):
     """Sert un segment brut (écoute de contrôle, requêtes Range pour le seek)"""
     from flask import send_file, abort
-    path = pige_store.segment_path(name)
+    store = _pige()
+    path = store.segment_path(name) if store else None
     if not path:
         abort(404)
     return send_file(path, mimetype='audio/mpeg', conditional=True, max_age=0)
@@ -1163,10 +1275,12 @@ def pige_export():
     except (KeyError, ValueError):
         return jsonify({'status': 'error', 'message': 'Paramètres start/end invalides'}), 400
 
-    pige_store.reload()
+    store = _pige()
+    if store is None:
+        return jsonify({'status': 'error', 'message': 'Pige inconnue'}), 404
     try:
         if request.args.get('check'):
-            plan = pige_store.plan_export(start, end)
+            plan = store.plan_export(start, end)
             return jsonify({'status': 'ok', 'duration': plan['duration'],
                             'recorded': plan['recorded'], 'gaps': plan['gaps']})
 
@@ -1176,12 +1290,14 @@ def pige_export():
                 station = json.load(f).get('station', {}).get('name') or station
         except Exception:
             pass
+        if store.cfg.get('kind') == 'dab':
+            station = store.cfg.get('name') or station
         d0, d1 = datetime.fromtimestamp(start), datetime.fromtimestamp(end)
         title = f"Pige {station} {d0:%d/%m/%Y %H:%M:%S} - {d1:%H:%M:%S}"
         safe = ''.join(c if c.isalnum() else '-' for c in station).strip('-').lower() or 'radio'
         download_name = f"pige_{safe}_{d0:%Y%m%d_%H%M%S}-{d1:%H%M%S}.mp3"
 
-        path = pige_store.export(start, end, title=title)
+        path = store.export(start, end, title=title)
     except PigeError as e:
         return jsonify({'status': 'error', 'message': str(e)}), 400
     except Exception as e:
@@ -1926,7 +2042,7 @@ ROLE_LECTEUR = {
     'get_stats', 'stream_stats', 'get_config_full', 'get_logs', 'get_signal_history', 'get_audio_history',
     'get_alerts_history', 'get_alerts_history_grouped', 'get_volume', 'proxy_stream', 'record_status',
     'wifi_status', 'email_alerts_status', 'mpx_spectrum', 'rt_history',
-    'pige_status', 'pige_segment', 'pige_archives', 'pige_archive_audio',
+    'pige_status', 'pige_segment', 'pige_archives', 'pige_archive_audio', 'pige_list',
     'chain_status', 'chain_events', 'chain_device_history', 'chain_device_logs',
     'logs_search', 'logs_sources', 'account_password',
     'dab_page', 'dab_status', 'dab_events', 'dab_uptime', 'dab_slide', 'dab_listen',

@@ -763,6 +763,7 @@ const DB_COLORS = {
   'Silence audio': 'bg-orange-50 text-orange-700',
   'Récepteur DAB+ hors service': 'bg-gray-100 text-gray-700',
 };
+let dbPiges = {};
 async function loadDab() {
   try {
     const st = await api('/api/dab/status');
@@ -772,6 +773,10 @@ async function loadDab() {
     $('db-sub').textContent = `Canal ${st.channel}` + (rf.ensemble_label ? ` · ${rf.ensemble_label}` : '')
       + (rf.snr != null ? ` · SNR ${rf.snr.toFixed(1)} dB` : '');
   } catch (e) {}
+  try {   // piges DAB+ : lien « Écouter » sur les alertes de leur service
+    dbPiges = {};
+    ((await api('/api/pige/list')).piges || []).forEach(p => { if (p.kind === 'dab' && p.sid) dbPiges[p.sid] = p; });
+  } catch (e) { dbPiges = {}; }
   try {
     dbEvents = (await api('/api/dab/events?limit=500')).events || [];
   } catch (e) {
@@ -819,7 +824,8 @@ function renderDab() {
     return `<tr class="hover:bg-slate-50">
       <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${day}</td>
       <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${DB_COLORS[a.label] || 'bg-gray-100 text-gray-700'}">${esc(a.label)}</span></td>
-      <td class="py-2 pr-3 font-medium text-gray-800">${esc(a.service || '-')}</td>
+      <td class="py-2 pr-3 font-medium text-gray-800">${esc(a.service || '-')}${dbPiges[a.sid] && dbPiges[a.sid].oldest && d0.getTime() / 1000 - 30 >= dbPiges[a.sid].oldest
+        ? ` <a href="/pige?p=${encodeURIComponent(dbPiges[a.sid].id)}&t=${Math.floor(d0.getTime() / 1000)}" class="ml-2 text-xs font-medium text-blue-600 hover:text-blue-800" title="Ouvrir la pige de ce service 30 s avant l'alerte">Écouter</a>` : ''}</td>
       <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${range}</td>
       <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.status === 'complete' ? fmtDur(a.duration) : '-'}</td>
       <td class="py-2 pr-3 whitespace-nowrap">${state}</td>

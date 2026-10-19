@@ -13,6 +13,21 @@
     .sidebar-link svg { width:18px; height:18px; flex-shrink:0; }
     .section { background:white; border:1px solid #f1f5f9; border-radius:12px; padding:20px; margin-bottom:16px; }
     .section-title { font-size:0.75rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .mono { font-family: ui-monospace, 'SF Mono', Menlo, monospace; }
+    .chip { padding:6px 10px; border-radius:8px; border:1px solid #e2e8f0; background:#fff; font-size:13px; }
+    .chip:hover { border-color:#93c5fd; }
+    .chip.on { border-color:#2563eb; background:#eff6ff; color:#1d4ed8; }
+    .chip-amber { border-color:#fde68a; background:#fffbeb; color:#92400e; }
+    .step { font-size:13px; font-weight:600; color:#0f172a; }
+    .fld { display:flex; flex-direction:column; gap:4px; font-size:12px; color:#64748b; }
+    .fld input, .fld select { font-size:14px; color:#0f172a; padding:9px 10px; border:1px solid #cbd5e1; border-radius:9px; background:#fff; }
+    .seek { min-height:44px; border-radius:9px; border:1px solid #e2e8f0; background:#fff; font-size:14px; font-weight:500; }
+    .seek:hover { border-color:#93c5fd; }
+    .pige-tab { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px; border:1px solid #e2e8f0; background:#fff; text-align:left; }
+    .pige-tab[aria-selected="true"] { border-color:#2563eb; background:#eff6ff; }
+    .pdot { width:9px; height:9px; border-radius:50%; background:#cbd5e1; flex-shrink:0; }
+    @keyframes pulse-ring { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .pulse { animation:pulse-ring 1.5s ease-in-out infinite; }
   </style>
 {% include '_roles.html' %}
 </head>
@@ -84,126 +99,150 @@
       </button>
       <h1 class="text-base font-semibold text-gray-900">Pige audio</h1>
     </div>
-    <p class="text-xs text-gray-400 mt-0.5">Enregistrement continu de l'antenne, export d'un créneau en MP3</p>
+    <p class="text-xs text-gray-400 mt-0.5">Enregistrement continu de l'antenne et des services DAB+, écoute et export d'un extrait</p>
   </header>
 
-  <div class="p-6 max-w-5xl">
+  <div class="p-4 md:p-6 max-w-6xl flex flex-col gap-5">
 
-    <!-- ── État ─────────────────────────────────────────────── -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-      <div class="section" style="margin-bottom:0">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">État</div>
-        <div class="flex items-center gap-2">
-          <span id="rec-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
-          <span class="text-base font-semibold text-gray-900" id="rec-state">…</span>
-        </div>
+    <!-- ── Choix de la pige ─────────────────────────────────── -->
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div id="pige-tabs" role="tablist" aria-label="Piges" class="flex flex-wrap gap-2"></div>
+      <a href="#config" class="need-admin text-sm text-blue-600 hover:text-blue-800">Configuration des piges ›</a>
+    </div>
+
+    <!-- ── État de la pige choisie ─────────────────────────── -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="section" style="margin-bottom:0;padding:14px 16px">
+        <div class="text-xs text-gray-500">État</div>
+        <div class="flex items-center gap-2 text-base font-semibold"><span id="rec-dot" class="pdot"></span><span id="rec-state">…</span></div>
       </div>
-      <div class="section" style="margin-bottom:0">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Disponible depuis</div>
-        <div class="text-base font-semibold text-gray-900" id="oldest">-</div>
+      <div class="section" style="margin-bottom:0;padding:14px 16px">
+        <div class="text-xs text-gray-500">Disponible depuis</div>
+        <div class="text-base font-semibold" id="oldest">-</div>
       </div>
-      <div class="section" style="margin-bottom:0">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Espace pige / libre</div>
-        <div class="text-base font-semibold text-gray-900 font-mono" id="disk">-</div>
+      <div class="section" style="margin-bottom:0;padding:14px 16px">
+        <div class="text-xs text-gray-500">Espace pige / libre</div>
+        <div class="text-base font-semibold mono" id="disk">-</div>
       </div>
     </div>
 
-    <!-- ── Frise : dernières 24 h, ou une journée ──────────────── -->
-    <div class="section mt-4">
-      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <div class="section-title" style="margin-bottom:0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span id="timeline-title">Dernières 24 heures</span>
-        </div>
-        <div id="day-nav" class="flex flex-wrap items-center gap-1 hidden">
-          <button id="day-prev" class="px-2.5 py-1 text-xs font-medium rounded-md border border-gray-200 hover:bg-gray-50 disabled:opacity-40" onclick="dayStep(-1)">← Jour précédent</button>
-          <input id="day-pick" type="date" class="px-2 py-1 text-xs rounded-md border border-gray-200 font-mono" onchange="dayPick(this.value)">
-          <button id="day-next" class="px-2.5 py-1 text-xs font-medium rounded-md border border-gray-200 hover:bg-gray-50 disabled:opacity-40" onclick="dayStep(1)">Jour suivant →</button>
-          <button id="day-live" class="px-2.5 py-1 text-xs font-semibold rounded-md border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 disabled:opacity-40" onclick="setView(null)">Dernières 24 h</button>
-        </div>
-      </div>
-      <div id="timeline" class="relative h-12 rounded-lg bg-gray-100 overflow-hidden cursor-pointer select-none">
-        <div id="tl-cover"></div>
-        <div id="tl-sel" class="absolute inset-y-0 bg-amber-300/50 border-x-2 border-amber-500 hidden pointer-events-none"></div>
-        <div id="tl-head" class="absolute inset-y-0 w-0.5 bg-red-500 hidden pointer-events-none"></div>
-        <div id="tl-hover" class="absolute -top-0 px-1.5 py-0.5 rounded bg-gray-900 text-white text-[10px] font-mono hidden pointer-events-none"></div>
-      </div>
-      <div id="tl-ticks" class="relative h-5 mt-1 text-[10px] text-gray-400 font-mono"></div>
-      <div class="flex flex-wrap gap-4 mt-2 text-xs text-gray-500">
-        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-blue-500"></span>Enregistré</span>
-        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-gray-200"></span>Pas d'enregistrement</span>
-        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-amber-300 border border-amber-500"></span>Créneau sélectionné</span>
-        <span class="ml-auto text-gray-400">Clic sur la frise : écoute à partir de ce moment</span>
-      </div>
-    </div>
-
-    <!-- ── Écoute ───────────────────────────────────────────── -->
-    <div class="section">
-      <div class="section-title">
+    <!-- ═══ Écoute et extrait ═══ -->
+    <section class="section flex flex-col gap-5" style="margin-bottom:0" aria-label="Écoute et extrait">
+      <div class="section-title" style="margin-bottom:0">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
-        Écoute de contrôle
+        Écoute et extrait
       </div>
-      <div class="flex flex-wrap items-center gap-3">
-        <button id="btn-play" class="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center" title="Lecture / pause">
-          <svg id="ic-play" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <svg id="ic-pause" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
-        </button>
+
+      <!-- 1. Instant -->
+      <div class="flex flex-col gap-2.5">
+        <div class="step">1. Choisir l'instant</div>
+        <div class="flex flex-wrap items-end gap-2.5">
+          <label class="fld">Date<input type="date" id="in-date"></label>
+          <label class="fld">Heure<input type="time" step="1" id="in-time" class="mono"></label>
+          <button type="button" onclick="playFromInputs()" class="flex items-center gap-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold" style="min-height:44px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Lire à partir de cet instant</button>
+        </div>
+        <div class="flex flex-wrap gap-1.5 items-center">
+          <span class="text-sm text-gray-500 mr-1">Raccourcis :</span>
+          <button type="button" class="chip" onclick="quickAgo(300)">Il y a 5 min</button>
+          <button type="button" class="chip" onclick="quickAgo(3600)">Il y a 1 h</button>
+          <button type="button" class="chip" onclick="quickAgo(86400)">Hier, même heure</button>
+          <button type="button" class="chip chip-amber hidden" id="btn-last-alert" onclick="gotoLastAlert()"></button>
+        </div>
+      </div>
+
+      <!-- 2. Lecture -->
+      <div class="flex flex-col gap-3 p-4 rounded-xl bg-slate-50">
+        <div class="step">2. Écouter et se déplacer</div>
+        <div class="flex flex-wrap items-center gap-4">
+          <button type="button" id="btn-play" aria-label="Lecture ou pause" class="w-13 h-13 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center" style="width:52px;height:52px">
+            <svg id="ic-play" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="ic-pause" class="hidden" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
+          </button>
+          <div>
+            <div class="mono font-semibold leading-none" style="font-size:34px" id="play-time">--:--:--</div>
+            <div class="text-sm text-gray-500" id="play-date">Choisir un instant ci-dessus</div>
+          </div>
+          <label class="flex items-center gap-2 text-xs text-gray-500 ml-auto">Volume
+            <input type="range" id="volume" min="0" max="100" value="80" class="w-24 accent-blue-600"></label>
+        </div>
+        <div class="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+          <button type="button" class="seek" onclick="seekRel(-600)">−10 min</button>
+          <button type="button" class="seek" onclick="seekRel(-60)">−1 min</button>
+          <button type="button" class="seek" onclick="seekRel(-10)">−10 s</button>
+          <button type="button" class="seek" onclick="seekRel(10)">+10 s</button>
+          <button type="button" class="seek" onclick="seekRel(60)">+1 min</button>
+          <button type="button" class="seek" onclick="seekRel(600)">+10 min</button>
+        </div>
+        <!-- Repère : 30 min autour de la position -->
         <div>
-          <div class="text-2xl font-bold font-mono text-gray-900" id="play-time">--:--:--</div>
-          <div class="text-xs text-gray-400" id="play-date">Choisir un moment sur la frise</div>
+          <div class="flex justify-between mono text-[11px] text-gray-500 mb-1"><span id="strip-a">-</span><span>Repère, 30 min autour de la position</span><span id="strip-b">-</span></div>
+          <div id="strip" class="relative h-7 rounded-md bg-slate-200 overflow-hidden cursor-pointer select-none" title="Clic : écouter à partir de ce moment">
+            <div id="strip-cover"></div>
+            <div id="strip-ex" class="absolute inset-y-0 hidden pointer-events-none" style="background:rgba(245,158,11,.35);border-left:2px solid #d97706;border-right:2px solid #d97706"></div>
+            <div id="strip-pos" class="absolute inset-y-0 hidden pointer-events-none" style="width:2px;background:#dc2626"></div>
+            <div id="strip-hover" class="absolute top-0 px-1.5 py-0.5 rounded bg-gray-900 text-white text-[10px] mono hidden pointer-events-none"></div>
+          </div>
+          <div class="flex flex-wrap gap-3.5 mt-1.5 text-xs text-gray-500">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm" style="background:#bfdbfe"></span>Enregistré</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-slate-200"></span>Trou</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm" style="background:rgba(245,158,11,.35);border:1px solid #d97706"></span>Extrait</span>
+            <span class="flex items-center gap-1.5"><span style="width:2px;height:10px;background:#dc2626"></span>Position</span>
+          </div>
         </div>
-        <div class="flex gap-1 ml-auto">
-          <button class="px-2.5 py-1.5 text-xs font-medium rounded-md border border-gray-200 hover:bg-gray-50" onclick="seekRel(-60)">-1 min</button>
-          <button class="px-2.5 py-1.5 text-xs font-medium rounded-md border border-gray-200 hover:bg-gray-50" onclick="seekRel(-10)">-10 s</button>
-          <button class="px-2.5 py-1.5 text-xs font-medium rounded-md border border-gray-200 hover:bg-gray-50" onclick="seekRel(10)">+10 s</button>
-          <button class="px-2.5 py-1.5 text-xs font-medium rounded-md border border-gray-200 hover:bg-gray-50" onclick="seekRel(60)">+1 min</button>
+        <audio id="audio" preload="auto"></audio>
+      </div>
+
+      <!-- 3. Extrait (opérateur et administrateur) -->
+      <div class="flex flex-col gap-3 need-operateur" id="extract">
+        <div class="step">3. Extraire</div>
+        <div class="grid gap-3" style="grid-template-columns:repeat(auto-fit, minmax(210px, 1fr))">
+          <div class="flex flex-col gap-1.5">
+            <label class="fld">Début<input type="time" step="1" id="ex-start" class="mono"></label>
+            <button type="button" class="chip chip-amber" onclick="markFromPlayer('start')">Début = position</button>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="fld">Fin<input type="time" step="1" id="ex-end" class="mono"></label>
+            <button type="button" class="chip chip-amber" onclick="markFromPlayer('end')">Fin = position</button>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <div class="text-xs text-gray-500">ou une durée depuis le début</div>
+            <div class="flex flex-wrap gap-1.5" id="dur-chips">
+              <button type="button" class="chip" data-d="30">30 s</button>
+              <button type="button" class="chip" data-d="60">1 min</button>
+              <button type="button" class="chip" data-d="300">5 min</button>
+              <button type="button" class="chip" data-d="900">15 min</button>
+              <button type="button" class="chip" data-d="3600">1 h</button>
+            </div>
+          </div>
         </div>
+        <div class="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-gray-200">
+          <div class="flex-1 text-sm" style="min-width:220px" id="ex-summary">Choisir un début et une fin.</div>
+          <button type="button" id="btn-ex-play" onclick="playExtract()" disabled class="flex items-center gap-2 px-3.5 rounded-xl border border-gray-300 bg-white hover:border-blue-400 font-medium disabled:opacity-40" style="min-height:44px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Écouter l'extrait</button>
+          <button type="button" id="btn-ex-dl" onclick="doExport()" disabled class="flex items-center gap-2 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold" style="min-height:44px">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Télécharger le MP3</button>
+        </div>
+        <div class="text-xs text-gray-400" id="export-msg"></div>
       </div>
-      <div class="flex flex-wrap gap-2 mt-4">
-        <button class="px-3 py-1.5 text-xs font-semibold rounded-md bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100" onclick="markFromPlayer('start')">Début du créneau ici</button>
-        <button class="px-3 py-1.5 text-xs font-semibold rounded-md bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100" onclick="markFromPlayer('end')">Fin du créneau ici</button>
-      </div>
-      <audio id="audio" preload="auto"></audio>
-    </div>
+    </section>
 
-    <!-- ── Export ───────────────────────────────────────────── -->
-    <div class="section">
-      <div class="section-title">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-        Exporter un créneau
+    <!-- ═══ Disponibilité ═══ -->
+    <section class="section flex flex-col gap-3" style="margin-bottom:0" aria-label="Disponibilité">
+      <div class="flex flex-wrap justify-between items-baseline gap-2">
+        <div class="section-title" style="margin-bottom:0" id="days-title">Disponibilité</div>
+        <div class="text-xs text-gray-500">Un jour : y aller, à la même heure</div>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <label class="block">
-          <span class="text-xs font-semibold text-gray-500">Début</span>
-          <input id="in-start" type="datetime-local" step="1" class="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </label>
-        <label class="block">
-          <span class="text-xs font-semibold text-gray-500">Fin</span>
-          <input id="in-end" type="datetime-local" step="1" class="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </label>
+      <div id="days" class="grid gap-1" style="grid-template-columns:repeat(auto-fill, minmax(38px, 1fr))"></div>
+      <div class="flex flex-wrap gap-3.5 text-xs text-gray-500">
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-blue-600"></span>Complet</span>
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-blue-300"></span>Avec trous</span>
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-slate-100 border border-slate-200"></span>Pas d'enregistrement</span>
       </div>
-      <div class="flex flex-wrap gap-2 mt-3">
-        <span class="text-xs text-gray-400 self-center mr-1">Raccourcis :</span>
-        <button class="px-2.5 py-1 text-xs rounded-md border border-gray-200 hover:bg-gray-50" onclick="quick(5)">5 dernières min</button>
-        <button class="px-2.5 py-1 text-xs rounded-md border border-gray-200 hover:bg-gray-50" onclick="quick(15)">15 dernières min</button>
-        <button class="px-2.5 py-1 text-xs rounded-md border border-gray-200 hover:bg-gray-50" onclick="quick(60)">Dernière heure</button>
-        <button class="px-2.5 py-1 text-xs rounded-md border border-gray-200 hover:bg-gray-50" onclick="previewSelection()">Écouter le début du créneau</button>
-      </div>
+    </section>
 
-      <div id="check" class="mt-4 text-sm"></div>
-
-      <div class="flex items-center gap-3 mt-4">
-        <button id="btn-export" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white text-sm font-semibold flex items-center gap-2" onclick="doExport()" disabled>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          Exporter le MP3
-        </button>
-        <span id="export-msg" class="text-xs text-gray-400"></span>
-      </div>
-    </div>
-
-
-    <!-- ── Extraits des dernières alertes (PIGE_ARCHIVE_PATCH) ── -->
-    <div class="section">
+    <!-- ═══ Extraits des dernières alertes (pige FM) ═══ -->
+    <section class="section" style="margin-bottom:0" id="arch-section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
         Extraits des dernières alertes
@@ -211,348 +250,359 @@
       <p class="text-xs text-gray-400 mb-3" id="arch-help">De 30 s avant l'alerte à 30 s après le rétablissement. Ces extraits restent disponibles après la sortie de la pige.</p>
       <div id="arch-list" class="text-sm text-gray-400">Chargement...</div>
       <audio id="arch-audio" controls preload="none" class="w-full mt-3" style="display:none"></audio>
-    </div>
+    </section>
+
+    <!-- ═══ Configuration des piges (administrateur) ═══ -->
+    <section class="section need-admin flex flex-col gap-4" style="margin-bottom:0;scroll-margin-top:80px" id="config" aria-label="Configuration des piges">
+      <div class="flex items-center gap-2.5">
+        <div class="section-title" style="margin-bottom:0">Configuration des piges</div>
+        <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px]">administrateur</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm" style="min-width:640px">
+          <thead><tr class="text-left text-[11px] text-gray-500 uppercase tracking-wide">
+            <th class="py-2 pr-2 font-semibold">Nom</th><th class="py-2 px-2 font-semibold">Source</th><th class="py-2 px-2 font-semibold">Conservation</th>
+            <th class="py-2 px-2 font-semibold">Espace</th><th class="py-2 px-2 font-semibold">État</th><th class="py-2 font-semibold"></th></tr></thead>
+          <tbody id="cfg-body"></tbody>
+        </table>
+      </div>
+      <form id="cfg-form" class="border border-dashed border-slate-300 rounded-xl p-4 flex flex-col gap-3" onsubmit="saveForm(event)">
+        <div class="text-sm font-semibold" id="cfg-form-title">Nouvelle pige</div>
+        <div class="grid gap-3" style="grid-template-columns:repeat(auto-fit, minmax(200px, 1fr))">
+          <label class="fld">Nom<input type="text" id="f-name" maxlength="60" placeholder="ex. Alouette DAB+"></label>
+          <label class="fld">Source<select id="f-sid"></select></label>
+          <label class="fld">Conservation (jours)<input type="number" id="f-days" min="1" max="90" value="7"></label>
+        </div>
+        <div class="text-sm text-slate-600" id="f-estimate"></div>
+        <div class="text-sm hidden" id="f-warn" style="color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:9px;padding:9px 12px"></div>
+        <div class="flex flex-wrap items-center gap-3">
+          <button type="submit" id="f-submit" class="px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold" style="min-height:44px">Créer la pige</button>
+          <button type="button" id="f-cancel" class="hidden text-sm text-gray-500 hover:text-gray-800" onclick="resetForm()">Annuler</button>
+          <span class="text-sm" id="f-msg"></span>
+        </div>
+      </form>
+    </section>
+
   </div>
 </main>
 
 <script>
-  // ═══════════════════════════════════════════════
-  // ÉTAT
-  // ═══════════════════════════════════════════════
-  let status = null;          // dernière réponse /api/pige/status
-  let curSeg = null;          // segment chargé dans le lecteur
-  let pendingOffset = 0;
-  let viewDay = null;         // null : dernières 24 h ; sinon minuit local (s) du jour affiché
-  const audio = document.getElementById('audio');
   const $ = id => document.getElementById(id);
-
   const pad = n => String(n).padStart(2, '0');
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const isAdmin = document.documentElement.dataset.role === 'admin';
   const fmtTime = ts => { const d = new Date(ts * 1000); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
-  const fmtDate = ts => new Date(ts * 1000).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-  const fmtDur  = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = s % 60;
-                         return (h ? `${h} h ` : '') + (h || m ? `${pad(m)} min ` : '') + `${pad(r)} s`; };
-  const fmtBytes = b => b == null ? '?' : b >= 1e9 ? (b / 1e9).toFixed(1) + ' Go' : (b / 1e6).toFixed(0) + ' Mo';
-  const toInput = ts => { const d = new Date(ts * 1000);
-                          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${fmtTime(ts)}`; };
-  const fromInput = v => v ? new Date(v).getTime() / 1000 : null;
-
-  // ═══════════════════════════════════════════════
-  // STATUT + FRISE
-  // ═══════════════════════════════════════════════
-  // Minuit local d'un horodatage, et les minuits voisins (gère le changement d'heure)
+  const fmtDay = ts => new Date(ts * 1000).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const fmtShort = ts => { const d = new Date(ts * 1000); return `${pad(d.getDate())}-${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  const fmtDur = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = s % 60;
+                       return (h ? `${h} h ` : '') + (h || m ? `${pad(m)} min ` : '') + `${pad(r)} s`; };
+  const fmtBytes = b => b == null ? '?' : b >= 1e9 ? (b / 1e9).toFixed(1).replace('.', ',') + ' Go' : Math.round(b / 1e6) + ' Mo';
+  const isoDate = ts => { const d = new Date(ts * 1000); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
   const dayStart = ts => { const d = new Date(ts * 1000); d.setHours(0, 0, 0, 0); return d.getTime() / 1000; };
-  const nextDay = ts => { const d = new Date(ts * 1000); d.setDate(d.getDate() + 1); d.setHours(0, 0, 0, 0); return d.getTime() / 1000; };
-  const prevDay = ts => { const d = new Date(ts * 1000); d.setDate(d.getDate() - 1); d.setHours(0, 0, 0, 0); return d.getTime() / 1000; };
-  const isoDay = ts => { const d = new Date(ts * 1000); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+  function csrf() { const m = document.querySelector('meta[name="csrf-token"]'); return m ? m.content : ''; }
 
-  async function loadStatus(extra) {
-    // Segments demandés : la journée affichée, plus une marge autour de la tête de lecture
-    const now = Date.now() / 1000;
-    let a = viewDay == null ? now - 86400 : viewDay, b = viewDay == null ? now : nextDay(viewDay);
-    const head = extra ?? playerTs();
-    if (head != null) { a = Math.min(a, head - 900); b = Math.max(b, head + 3600); }
+  // ═══ État ═══
+  let piges = [], freeBytes = null, cur = 'fm', st = null, win = [0, 0];
+  let curSeg = null, pendingOffset = 0, stopAt = null, exStart = null, exEnd = null;
+  const audio = $('audio');
+  const curPige = () => piges.find(p => p.id === cur) || { id: cur, name: cur, kind: 'fm' };
+
+  // ═══ Piges : onglets et état ═══
+  async function loadPiges() {
     try {
-      const r = await fetch(`/api/pige/status?from=${Math.floor(a - 600)}&to=${Math.ceil(b + 600)}`, { credentials: 'include' });
+      const r = await fetch('/api/pige/list', { credentials: 'include' });
       if (r.status === 401 || r.redirected) { location.href = '/login?timeout=1'; return; }
-      status = await r.json();
-    } catch (e) { console.error('Statut pige', e); return; }
-
-    const on = status.enabled && status.recording;
-    $('rec-dot').className = 'w-2.5 h-2.5 rounded-full ' + (on ? 'bg-red-500 animate-pulse' : 'bg-gray-300');
-    $('rec-state').textContent = !status.enabled ? 'Désactivée' : on ? 'Enregistrement' : 'Arrêtée';
-    const oldest = status.oldest ?? (status.segments.length ? status.segments[0].start : null);
-    $('oldest').textContent = oldest ? `${fmtDate(oldest)} ${fmtTime(oldest).slice(0, 5)}` : 'Aucun enregistrement';
-    $('disk').textContent = `${fmtBytes(status.used_bytes)} / ${fmtBytes(status.free_bytes)}`;
-    renderNav();
-    renderTimeline();
+      const d = await r.json();
+      piges = d.piges || []; freeBytes = d.free_bytes;
+    } catch (e) { console.error('Piges', e); }
+    if (!piges.some(p => p.id === cur)) cur = 'fm';
+    renderTabs(); renderConfig();
   }
-
-  function renderNav() {
-    const days = Math.round(status.retention_hours / 24);
-    const oldest = status.oldest;
-    const today = dayStart(status.now);
-    $('timeline-title').textContent = viewDay == null
-      ? 'Dernières 24 heures' + (days > 1 ? ` · pige de ${days} jours` : '')
-      : fmtDate(viewDay).replace(/^./, c => c.toUpperCase());
-    // Navigation par journée, seulement si la pige dépasse 24 h
-    $('day-nav').classList.toggle('hidden', status.retention_hours <= 24);
-    const cur = viewDay ?? today;
-    $('day-prev').disabled = !oldest || prevDay(cur) < dayStart(oldest);
-    $('day-next').disabled = viewDay == null;
-    $('day-live').disabled = viewDay == null;
-    $('day-pick').min = oldest ? isoDay(oldest) : '';
-    $('day-pick').max = isoDay(status.now);
-    $('day-pick').value = isoDay(cur);
-  }
-  function setView(day) {
-    viewDay = day;
-    if (status) { renderNav(); renderTimeline(); }
-    loadStatus();
-  }
-  function dayStep(n) {
-    if (!status) return;
-    const cur = viewDay ?? dayStart(status.now);
-    const d = n < 0 ? prevDay(cur) : nextDay(cur);
-    setView(d >= dayStart(status.now) && n > 0 ? null : d);
-  }
-  function dayPick(v) {
-    if (!v) return;
-    const [y, m, d] = v.split('-').map(Number);
-    const ts = new Date(y, m - 1, d).getTime() / 1000;
-    setView(status && ts >= dayStart(status.now) ? null : ts);
-  }
-
-  function tlRange() {
-    if (viewDay != null) return [viewDay, nextDay(viewDay)];
-    const end = status.now;
-    return [end - 86400, end];
-  }
-  function tsToPct(ts) { const [a, b] = tlRange(); return Math.min(100, Math.max(0, (ts - a) / (b - a) * 100)); }
-  function pctToTs(p)  { const [a, b] = tlRange(); return a + (b - a) * p; }
-
-  function renderTimeline() {
-    if (!status) return;
-    $('tl-cover').innerHTML = status.coverage.map(([a, b]) => {
-      const l = tsToPct(a), w = Math.max(0.15, tsToPct(b) - l);
-      return `<div class="absolute inset-y-0 bg-blue-500" style="left:${l}%;width:${w}%"></div>`;
+  function renderTabs() {
+    $('pige-tabs').innerHTML = piges.map(p => {
+      const dot = !p.enabled ? '#cbd5e1' : p.recording ? '#dc2626' : '#d97706';
+      const sub = p.kind === 'fm' ? `Antenne · ${Math.round(p.retention_hours / 24)} jours` : `${esc(p.sid)} · ${Math.round(p.retention_hours / 24)} jours`;
+      return `<button type="button" role="tab" class="pige-tab" aria-selected="${p.id === cur}" onclick="selectPige('${esc(p.id)}')">
+        <span class="pdot ${p.recording ? 'pulse' : ''}" style="background:${dot}"></span>
+        <span><span class="block font-semibold text-sm">${esc(p.name)}</span><span class="block text-xs text-gray-500">${sub}</span></span></button>`;
     }).join('');
-
-    // Graduations : toutes les 2 h (3 h sur petit écran)
-    const [a, b] = tlRange();
-    const step = (window.innerWidth < 640 ? 3 : 2) * 3600;
-    const first = new Date(a * 1000); first.setMinutes(0, 0, 0);
-    let t = first.getTime() / 1000 + (viewDay != null ? 0 : 3600);
-    let html = '';
-    for (; t < b; t += 3600) {
-      if (new Date(t * 1000).getHours() % (step / 3600)) continue;
-      html += `<span class="absolute -translate-x-1/2" style="left:${tsToPct(t)}%">${pad(new Date(t * 1000).getHours())}h</span>`;
-    }
-    $('tl-ticks').innerHTML = html;
-    renderSelection();
-    renderHead();
+  }
+  async function selectPige(id) {
+    if (id === cur && st) return;
+    cur = id;
+    try { localStorage.setItem('blrmo-pige', id); } catch (e) {}
+    audio.pause(); audio.removeAttribute('src'); curSeg = null; stopAt = null;
+    renderTabs(); updatePlayerUI();
+    $('play-date').textContent = 'Choisir un instant ci-dessus';
+    await loadStatus(inputTs() ?? Date.now() / 1000);
+    onExtractChange();
+    loadLastAlert();
+    $('arch-section').classList.toggle('hidden', cur !== 'fm');
+  }
+  function renderState() {
+    const on = st.enabled && st.recording;
+    $('rec-dot').style.background = !st.enabled ? '#cbd5e1' : on ? '#dc2626' : '#d97706';
+    $('rec-dot').classList.toggle('pulse', on);
+    $('rec-state').textContent = !st.enabled ? 'Désactivée' : on ? 'Enregistrement' : 'Arrêtée';
+    $('oldest').textContent = st.oldest ? `${fmtDay(st.oldest)} ${fmtTime(st.oldest).slice(0, 5)}` : 'Aucun enregistrement';
+    $('disk').textContent = `${fmtBytes(st.used_bytes)} / ${fmtBytes(st.free_bytes)}`;
   }
 
-  function renderSelection() {
-    const s = fromInput($('in-start').value), e = fromInput($('in-end').value);
-    const el = $('tl-sel');
-    if (!status || !s || !e || e <= s) { el.classList.add('hidden'); return; }
-    el.classList.remove('hidden');
-    el.style.left = tsToPct(s) + '%';
-    el.style.width = Math.max(0.3, tsToPct(e) - tsToPct(s)) + '%';
+  // ═══ Segments : fenêtre autour d'un instant ═══
+  async function loadStatus(center) {
+    const a = Math.floor(center - 3600), b = Math.ceil(center + 7200);
+    try {
+      const r = await fetch(`/api/pige/status?p=${encodeURIComponent(cur)}&from=${a}&to=${b}`, { credentials: 'include' });
+      if (r.status === 401 || r.redirected) { location.href = '/login?timeout=1'; return; }
+      if (!r.ok) return;
+      st = await r.json(); win = [a, b];
+    } catch (e) { console.error('Statut pige', e); return; }
+    renderState(); renderDays(); renderStrip();
   }
-
-  function renderHead() {
-    const el = $('tl-head');
-    const ts = playerTs();
-    if (!status || ts == null) { el.classList.add('hidden'); return; }
-    el.classList.remove('hidden');
-    el.style.left = tsToPct(ts) + '%';
+  async function ensureWindow(ts) {
+    if (!st || ts < win[0] + 600 || ts > win[1] - 600) await loadStatus(ts);
   }
-
-  const tl = $('timeline');
-  tl.addEventListener('mousemove', ev => {
-    if (!status) return;
-    const r = tl.getBoundingClientRect(), p = (ev.clientX - r.left) / r.width;
-    const h = $('tl-hover');
-    h.textContent = fmtTime(pctToTs(p));
-    h.classList.remove('hidden');
-    h.style.left = Math.min(r.width - 60, Math.max(0, ev.clientX - r.left - 28)) + 'px';
-  });
-  tl.addEventListener('mouseleave', () => $('tl-hover').classList.add('hidden'));
-  tl.addEventListener('click', ev => {
-    if (!status) return;
-    const r = tl.getBoundingClientRect();
-    playAt(pctToTs((ev.clientX - r.left) / r.width));
-  });
-
-  // ═══════════════════════════════════════════════
-  // LECTEUR (enchaîne les segments)
-  // ═══════════════════════════════════════════════
   function findSeg(ts) {
-    const segs = status ? status.segments : [];
-    for (const s of segs) {
-      if (ts < s.start) return { seg: s, offset: 0 };        // dans un trou : segment suivant
-      if (ts < s.end)   return { seg: s, offset: ts - s.start };
+    for (const s of (st ? st.segments : [])) {
+      if (ts < s.start) return { seg: s, offset: 0 };          // dans un trou : segment suivant
+      if (ts < s.end) return { seg: s, offset: ts - s.start };
     }
     return null;
   }
+  function coverage() {
+    const out = [];
+    for (const s of (st ? st.segments : [])) {
+      if (out.length && s.start - out[out.length - 1][1] <= 3) out[out.length - 1][1] = Math.max(out[out.length - 1][1], s.end);
+      else out.push([s.start, s.end]);
+    }
+    return out;
+  }
 
+  // ═══ Lecteur ═══
   function playerTs() { return curSeg ? curSeg.start + (audio.currentTime || pendingOffset) : null; }
-
   function loadSeg(seg, offset, autoplay = true) {
     curSeg = seg; pendingOffset = offset;
-    audio.src = '/api/pige/segment/' + encodeURIComponent(seg.name);
+    audio.src = `/api/pige/segment/${encodeURIComponent(seg.name)}?p=${encodeURIComponent(cur)}`;
     audio.onloadedmetadata = () => {
       audio.currentTime = Math.min(offset, Math.max(0, (audio.duration || offset) - 0.5));
       if (autoplay) audio.play().catch(() => {});
     };
     updatePlayerUI();
   }
-
-  function playAt(ts) {
+  async function playAt(ts, until = null) {
+    stopAt = until;
+    await ensureWindow(ts);
     const f = findSeg(ts);
-    if (!f) { $('play-date').textContent = 'Pas d\'enregistrement à ce moment'; return; }
+    if (!f) { $('play-date').textContent = "Pas d'enregistrement à ce moment"; return; }
     loadSeg(f.seg, f.offset);
   }
-
-  function seekRel(d) {
-    const ts = playerTs();
+  async function seekRel(d) {
+    const ts = playerTs() ?? inputTs();
     if (ts == null) return;
     const target = ts + d;
-    if (curSeg && target >= curSeg.start && target < curSeg.end) audio.currentTime = target - curSeg.start;
-    else playAt(target);
+    if (curSeg && target >= curSeg.start && target < curSeg.end) { audio.currentTime = target - curSeg.start; if (audio.paused) audio.play().catch(() => {}); }
+    else await playAt(target);
   }
-
-  audio.addEventListener('ended', () => {
-    if (!status || !curSeg) return;
-    const i = status.segments.findIndex(s => s.name === curSeg.name);
-    const next = status.segments[i + 1];
-    if (next) loadSeg(next, 0);
+  audio.addEventListener('ended', async () => {
+    if (!curSeg) return;
+    const end = curSeg.end;
+    await ensureWindow(end + 1);
+    const i = st.segments.findIndex(s => s.start >= end - 1);
+    if (i >= 0) loadSeg(st.segments[i], 0);
   });
-  audio.addEventListener('timeupdate', updatePlayerUI);
+  audio.addEventListener('timeupdate', () => {
+    const ts = playerTs();
+    if (stopAt != null && ts != null && ts >= stopAt) { audio.pause(); stopAt = null; }
+    updatePlayerUI();
+  });
   audio.addEventListener('play', updatePlayerUI);
   audio.addEventListener('pause', updatePlayerUI);
-
   function updatePlayerUI() {
     const ts = playerTs();
     if (ts != null) {
       $('play-time').textContent = fmtTime(ts);
-      $('play-date').textContent = fmtDate(ts);
-    }
+      $('play-date').textContent = fmtDay(ts) + (audio.paused ? ' · en pause' : ' · en lecture');
+    } else { $('play-time').textContent = '--:--:--'; }
     $('ic-play').classList.toggle('hidden', !audio.paused);
     $('ic-pause').classList.toggle('hidden', audio.paused);
-    renderHead();
+    renderStrip();
   }
+  $('btn-play').onclick = () => {
+    if (!curSeg) { playFromInputs(); return; }
+    audio.paused ? audio.play().catch(() => {}) : audio.pause();
+  };
+  $('volume').oninput = e => { audio.volume = e.target.value / 100; };
+  audio.volume = 0.8;
 
-  $('btn-play').addEventListener('click', () => {
-    if (!curSeg) {                             // rien de chargé : 1 min avant le direct
-      if (status && status.segments.length) playAt(status.now - 60);
-      return;
-    }
-    audio.paused ? audio.play() : audio.pause();
+  // ═══ 1. Instant ═══
+  function inputTs() {
+    const d = $('in-date').value, t = $('in-time').value;
+    if (!d || !t) return null;
+    const [y, m, dd] = d.split('-').map(Number), [hh, mi, ss] = t.split(':').map(Number);
+    return new Date(y, m - 1, dd, hh, mi, ss || 0).getTime() / 1000;
+  }
+  function setInputs(ts) {
+    $('in-date').value = isoDate(ts);
+    $('in-time').value = fmtTime(ts);
+  }
+  function playFromInputs() { const ts = inputTs(); if (ts != null) playAt(ts); }
+  function quickAgo(sec) { const ts = Math.floor(Date.now() / 1000 - sec); setInputs(ts); playAt(ts); }
+  let lastAlertTs = null;
+  async function loadLastAlert() {
+    lastAlertTs = null;
+    const b = $('btn-last-alert');
+    try {
+      const p = curPige();
+      if (p.kind === 'fm') {
+        const r = await fetch('/api/alerts/history/grouped?limit=1', { credentials: 'include' });
+        const a = (await r.json()).data?.[0];
+        if (a) lastAlertTs = new Date(String(a.start_time).replace(' ', 'T')).getTime() / 1000;
+      } else {
+        const r = await fetch('/api/dab/events?limit=50', { credentials: 'include' });
+        const evs = ((await r.json()).events || []).filter(e => !e.sid || e.sid === p.sid);
+        if (evs[0]) lastAlertTs = new Date(evs[0].start).getTime() / 1000;
+      }
+    } catch (e) {}
+    if (lastAlertTs && !isNaN(lastAlertTs) && st && st.oldest && lastAlertTs >= st.oldest) {
+      b.textContent = `Dernière alerte : ${fmtShort(lastAlertTs)}`; b.classList.remove('hidden');
+    } else b.classList.add('hidden');
+  }
+  function gotoLastAlert() { if (!lastAlertTs) return; setInputs(lastAlertTs - 30); playAt(lastAlertTs - 30); }
+
+  // ═══ Repère 30 min ═══
+  const strip = $('strip');
+  function stripRange() {
+    const c = playerTs() ?? inputTs() ?? Date.now() / 1000;
+    return [c - 900, c + 900];
+  }
+  const toPct = (ts, [a, b]) => Math.min(100, Math.max(0, (ts - a) / (b - a) * 100));
+  function renderStrip() {
+    if (!st) return;
+    const R = stripRange();
+    $('strip-a').textContent = fmtTime(R[0]).slice(0, 5); $('strip-b').textContent = fmtTime(R[1]).slice(0, 5);
+    $('strip-cover').innerHTML = coverage().filter(([a, b]) => b > R[0] && a < R[1]).map(([a, b]) => {
+      const l = toPct(a, R), w = Math.max(0.3, toPct(b, R) - l);
+      return `<div class="absolute inset-y-0" style="left:${l}%;width:${w}%;background:#bfdbfe"></div>`;
+    }).join('');
+    const ex = $('strip-ex');
+    if (exStart != null && exEnd != null && exEnd > exStart && exEnd > R[0] && exStart < R[1]) {
+      ex.classList.remove('hidden'); ex.style.left = toPct(exStart, R) + '%'; ex.style.width = Math.max(0.3, toPct(exEnd, R) - toPct(exStart, R)) + '%';
+    } else ex.classList.add('hidden');
+    const ts = playerTs(), pos = $('strip-pos');
+    if (ts != null) { pos.classList.remove('hidden'); pos.style.left = toPct(ts, R) + '%'; } else pos.classList.add('hidden');
+  }
+  strip.addEventListener('mousemove', ev => {
+    const r = strip.getBoundingClientRect(), R = stripRange(), h = $('strip-hover');
+    h.textContent = fmtTime(R[0] + (R[1] - R[0]) * (ev.clientX - r.left) / r.width);
+    h.classList.remove('hidden'); h.style.left = Math.min(r.width - 60, Math.max(0, ev.clientX - r.left - 28)) + 'px';
+  });
+  strip.addEventListener('mouseleave', () => $('strip-hover').classList.add('hidden'));
+  strip.addEventListener('click', ev => {
+    const r = strip.getBoundingClientRect(), R = stripRange();
+    const ts = R[0] + (R[1] - R[0]) * (ev.clientX - r.left) / r.width;
+    setInputs(ts); playAt(ts);
   });
 
+  // ═══ Disponibilité par jour ═══
+  function renderDays() {
+    const n = Math.max(1, Math.round(st.retention_hours / 24));
+    $('days-title').textContent = `Disponibilité, ${n} jour${n > 1 ? 's' : ''}`;
+    const today = dayStart(Date.now() / 1000), now = Date.now() / 1000;
+    const cells = [];
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date(today * 1000); d.setDate(d.getDate() - i);
+      const t0 = d.getTime() / 1000, key = isoDate(t0);
+      const secs = (st.days || {})[key] || 0;
+      const expected = i === 0 ? now - t0 : 86400;
+      const full = secs >= expected - 300, part = secs > 0;
+      const bg = full ? '#2563eb' : part ? '#93c5fd' : '#f1f5f9', fg = part ? '#fff' : '#64748b';
+      const title = `${d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} : ${part ? fmtDur(secs) + ' enregistrées' : "pas d'enregistrement"}`;
+      cells.push(`<button type="button" title="${esc(title)}" ${part ? '' : 'disabled'} onclick="gotoDay(${t0})" class="rounded-md py-1.5 mono text-[11px] ${part ? 'hover:opacity-80' : 'cursor-default'}" style="background:${bg};color:${fg};${part ? '' : 'border:1px solid #e2e8f0'}">${d.getDate()}</button>`);
+    }
+    $('days').innerHTML = cells.join('');
+  }
+  function gotoDay(t0) {
+    const ref = inputTs() ?? Date.now() / 1000;
+    const tod = ref - dayStart(ref);
+    let ts = t0 + tod;
+    if (ts > Date.now() / 1000 - 5) ts = Date.now() / 1000 - 60;
+    setInputs(ts); playAt(ts);
+  }
+
+  // ═══ 3. Extrait ═══
+  function timeOnDay(baseTs, hms) {
+    if (!hms) return null;
+    const [h, m, s] = hms.split(':').map(Number);
+    return dayStart(baseTs) + h * 3600 + m * 60 + (s || 0);
+  }
+  function setExtract(a, b) {
+    exStart = a; exEnd = b;
+    $('ex-start').value = a != null ? fmtTime(a) : '';
+    $('ex-end').value = b != null ? fmtTime(b) : '';
+    onExtractChange();
+  }
   function markFromPlayer(which) {
     const ts = playerTs();
     if (ts == null) return;
-    $(which === 'start' ? 'in-start' : 'in-end').value = toInput(Math.floor(ts));
-    onRangeChange();
+    if (which === 'start') setExtract(Math.floor(ts), exEnd != null && exEnd > ts ? exEnd : null);
+    else setExtract(exStart, Math.floor(ts));
   }
-
-  function previewSelection() {
-    const s = fromInput($('in-start').value);
-    if (s) playAt(s);
-  }
-
-  // ═══════════════════════════════════════════════
-  // EXPORT
-  // ═══════════════════════════════════════════════
-  function quick(min) {
-    const end = Math.floor(status ? status.now : Date.now() / 1000) - 2;
-    $('in-start').value = toInput(end - min * 60);
-    $('in-end').value = toInput(end);
-    onRangeChange();
-  }
-
+  $('ex-start').addEventListener('change', () => {
+    const base = exStart ?? inputTs() ?? Date.now() / 1000;
+    const a = timeOnDay(base, $('ex-start').value);
+    setExtract(a, exEnd);
+  });
+  $('ex-end').addEventListener('change', () => {
+    if (exStart == null) return;
+    let b = timeOnDay(exStart, $('ex-end').value);
+    if (b != null && b <= exStart) b += 86400;                 // passage de minuit
+    setExtract(exStart, b);
+  });
+  document.querySelectorAll('#dur-chips .chip').forEach(c => c.addEventListener('click', () => {
+    const a = exStart ?? playerTs() ?? inputTs();
+    if (a == null) return;
+    setExtract(Math.floor(a), Math.floor(a) + Number(c.dataset.d));
+  }));
   let checkTimer = null;
-  function onRangeChange() {
-    renderSelection();
-    clearTimeout(checkTimer);
-    checkTimer = setTimeout(checkRange, 250);
+  function onExtractChange() {
+    renderStrip();
+    document.querySelectorAll('#dur-chips .chip').forEach(c =>
+      c.classList.toggle('on', exStart != null && exEnd != null && exEnd - exStart === Number(c.dataset.d)));
+    $('btn-ex-dl').disabled = true; $('btn-ex-play').disabled = !(exStart != null && exEnd > exStart);
+    clearTimeout(checkTimer); checkTimer = setTimeout(checkExtract, 250);
   }
-  $('in-start').addEventListener('input', onRangeChange);
-  $('in-end').addEventListener('input', onRangeChange);
-
-  async function checkRange() {
-    const s = fromInput($('in-start').value), e = fromInput($('in-end').value);
-    const box = $('check'), btn = $('btn-export');
-    btn.disabled = true;
-    if (!s || !e) { box.innerHTML = ''; return; }
+  async function checkExtract() {
+    const box = $('ex-summary');
+    if (exStart == null || exEnd == null || exEnd <= exStart) { box.textContent = 'Choisir un début et une fin.'; return; }
     try {
-      const r = await fetch(`/api/pige/export?check=1&start=${s}&end=${e}`, { credentials: 'include' });
+      const r = await fetch(`/api/pige/export?check=1&p=${encodeURIComponent(cur)}&start=${exStart}&end=${exEnd}`, { credentials: 'include' });
       const d = await r.json();
-      if (d.status !== 'ok') {
-        box.innerHTML = `<div class="rounded-lg bg-red-50 border border-red-100 text-red-700 px-3 py-2 text-xs">${d.message}</div>`;
-        return;
-      }
-      let html = `<div class="text-gray-600">Durée : <strong class="font-mono">${fmtDur(d.duration)}</strong>
-                  <span class="text-gray-400">· environ ${fmtBytes(d.recorded * 16000)}</span></div>`;
-      if (d.gaps.length) {
-        html += `<div class="mt-2 rounded-lg bg-amber-50 border border-amber-100 text-amber-800 px-3 py-2 text-xs">
-                 <strong>Créneau incomplet :</strong> ${fmtDur(d.duration - d.recorded)} sans enregistrement
-                 (${d.gaps.map(([a, b]) => `${fmtTime(a)} → ${fmtTime(b)}`).join(', ')}).
-                 Ces passages seront absents du fichier.</div>`;
-      }
-      box.innerHTML = html;
-      btn.disabled = false;
-    } catch (err) {
-      box.innerHTML = '<div class="text-xs text-red-600">Vérification impossible</div>';
-    }
+      if (d.status !== 'ok') { box.innerHTML = `<span class="text-red-600">${esc(d.message || 'Créneau impossible')}</span>`; return; }
+      const gaps = d.gaps.length ? ` · <span style="color:#b45309">incomplet, ${fmtDur(d.duration - d.recorded)} manquantes</span>` : ' · complet';
+      box.innerHTML = `<span class="mono">${fmtShort(exStart).slice(0, 5)} ${fmtTime(exStart)} → ${fmtTime(exEnd)}</span> · <strong>${fmtDur(d.duration)}</strong>
+        <span class="text-gray-500">· environ ${fmtBytes(d.recorded * (curPige().bitrate_kbps || 128) * 125)}</span>${gaps}`;
+      $('btn-ex-dl').disabled = false;
+    } catch (e) { box.textContent = 'Vérification impossible'; }
   }
-
+  function playExtract() { if (exStart != null && exEnd > exStart) playAt(exStart, exEnd); }
   function doExport() {
-    const s = fromInput($('in-start').value), e = fromInput($('in-end').value);
-    if (!s || !e) return;
+    if (exStart == null || exEnd == null) return;
     $('export-msg').textContent = 'Préparation du fichier…';
-    // Téléchargement natif du navigateur (pas de blob en mémoire)
-    location.href = `/api/pige/export?start=${s}&end=${e}`;
+    location.href = `/api/pige/export?p=${encodeURIComponent(cur)}&start=${exStart}&end=${exEnd}`;
     setTimeout(() => { $('export-msg').textContent = ''; }, 6000);
   }
 
-  // ═══════════════════════════════════════════════
-  // SIDEBAR
-  // ═══════════════════════════════════════════════
-  async function updateSidebarFrequency() {
-    try {
-      const response = await fetch('/api/config/full', { credentials: 'include' });
-      const config = await response.json();
-      const freq = config.rtl_sdr?.frequency || '88.6M';
-      $('sidebar-frequency').textContent = freq.replace('M', ' MHz');
-    } catch (error) { console.error('Erreur config sidebar:', error); }
-  }
-  function toggleSidebar() {
-    $('sidebar').classList.toggle('-translate-x-full');
-    $('sidebar-overlay').classList.toggle('hidden');
-  }
-  function closeSidebar() {
-    $('sidebar').classList.add('-translate-x-full');
-    $('sidebar-overlay').classList.add('hidden');
-  }
-
-  // ═══════════════════════════════════════════════
-  // INIT
-  // ═══════════════════════════════════════════════
-  // CHAIN_HOOK_PATCH : /pige?t=<horodatage> ouvre la pige 30 s avant l'événement
-  // Au-delà des dernières 24 h, le lien ouvre la journée de l'événement
-  const tParam = parseInt(new URLSearchParams(location.search).get('t'), 10);
-  if (tParam && Date.now() / 1000 - tParam > 86400 - 300) viewDay = dayStart(tParam - 30);
-  loadStatus(tParam ? tParam - 30 : undefined).then(() => {
-    const t = tParam;
-    if (!t || !status) { quick(15); return; }
-    $('in-start').value = toInput(t - 30);
-    $('in-end').value = toInput(t + 90);
-    onRangeChange();
-    const f = findSeg(t - 30);
-    if (f) loadSeg(f.seg, f.offset, false);   // pas de lecture auto (navigateurs)
-    else $('play-date').textContent = "Cet instant n'est plus dans la pige";
-  });
-  // PIGE_ARCHIVE_PATCH : extraits des dernières alertes
+  // ═══ Extraits des dernières alertes (FM) ═══
   async function loadArchives() {
     let d;
-    try {
-      const r = await fetch('/api/pige/archives', { credentials: 'include' });
-      d = await r.json();
-    } catch (e) { return; }
+    try { d = await (await fetch('/api/pige/archives', { credentials: 'include' })).json(); } catch (e) { return; }
     const box = $('arch-list');
     if (d.keep) $('arch-help').textContent = `Les ${d.keep} derniers incidents, de 30 s avant l'alerte à 30 s après le rétablissement. Ces extraits restent disponibles après la sortie de la pige.`;
     if (!d.archives || !d.archives.length) { box.innerHTML = '<span class="text-xs">Aucun extrait pour le moment.</span>'; return; }
-    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     box.innerHTML = '<div class="divide-y divide-gray-100">' + d.archives.map(a => {
-      const d0 = new Date(a.start * 1000);
-      const day = `${pad(d0.getDate())}-${pad(d0.getMonth() + 1)}-${d0.getFullYear()}`;
       const causes = (a.causes && a.causes.length ? a.causes : [a.label]).map(esc).join('<br>');
       return `<div class="flex flex-wrap items-center gap-x-4 gap-y-1 py-2.5">
-        <div class="font-mono text-xs text-gray-500" style="min-width:150px">${day} ${fmtTime(a.start)}</div>
+        <div class="mono text-xs text-gray-500" style="min-width:120px">${fmtShort(a.start)}</div>
         <div class="flex-1 text-sm text-gray-800" style="min-width:200px">${causes}
           <div class="text-xs text-gray-400">Durée de l'incident ${fmtDur(a.end - a.start)} · extrait ${fmtDur(a.clip_end - a.clip_start)} · ${fmtBytes(a.size)}</div></div>
         <div class="flex gap-3 whitespace-nowrap">
@@ -563,16 +613,137 @@
   }
   function playArchive(id) {
     const p = $('arch-audio');
-    audio.pause();
-    p.style.display = '';
-    p.src = `/api/pige/archives/${id}/audio`;
-    p.play().catch(() => {});
+    audio.pause(); p.style.display = ''; p.src = `/api/pige/archives/${id}/audio`; p.play().catch(() => {});
   }
-  loadArchives();
-  setInterval(loadArchives, 60000);
-  updateSidebarFrequency();
-  setInterval(loadStatus, 15000);
-  window.addEventListener('resize', renderTimeline);
+
+  // ═══ Configuration des piges (administrateur) ═══
+  let dabServices = [], dabMode = null, editId = null, delArm = null;
+  async function loadDabServices() {
+    try {
+      const d = await (await fetch('/api/dab/status', { credentials: 'include' })).json();
+      dabServices = (d.services || []).filter(s => s.sid); dabMode = d.enabled ? d.mode : 'désactivé';
+    } catch (e) { dabServices = []; }
+    fillSources();
+  }
+  function fillSources() {
+    const sel = $('f-sid'), keep = sel.value;
+    sel.innerHTML = dabServices.length
+      ? dabServices.map(s => `<option value="${esc(s.sid)}">DAB+ · ${esc(s.label)} (${esc(s.sid)}${s.bitrate ? ', ' + s.bitrate + ' kb/s' : ''})</option>`).join('')
+      : '<option value="">Aucun service DAB+ reçu</option>';
+    if (keep) sel.value = keep;
+    formHints();
+  }
+  function renderConfig() {
+    if (!isAdmin) return;
+    $('cfg-body').innerHTML = piges.map(p => {
+      const src = p.kind === 'fm' ? 'Antenne FM <span class="text-gray-500">(tuner)</span>'
+        : `DAB+ · ${esc((dabServices.find(s => s.sid === p.sid) || {}).label || p.sid)} <span class="text-gray-500">(${esc(p.sid)})</span>`;
+      const state = !p.enabled ? '<span class="text-gray-500">Désactivée</span>' : p.recording ? '<span style="color:#15803d">Enregistrement</span>' : '<span style="color:#b45309">Arrêtée</span>';
+      const del = p.kind === 'fm' ? '' : ` · <button type="button" class="${delArm === p.id ? 'font-semibold' : ''}" style="color:#b91c1c" onclick="deletePige('${esc(p.id)}')">${delArm === p.id ? 'Confirmer la suppression' : 'Supprimer'}</button>`;
+      const toggle = p.kind === 'fm' ? '' : ` · <button type="button" class="text-blue-600" onclick="togglePige('${esc(p.id)}', ${!p.enabled})">${p.enabled ? 'Suspendre' : 'Reprendre'}</button>`;
+      return `<tr class="border-t border-slate-100"><td class="py-2.5 pr-2 font-semibold">${esc(p.name)}</td><td class="py-2.5 px-2">${src}</td>
+        <td class="py-2.5 px-2">${Math.round(p.retention_hours / 24)} jours</td><td class="py-2.5 px-2 mono text-[13px]">${fmtBytes(p.used_bytes)}</td>
+        <td class="py-2.5 px-2">${state}</td><td class="py-2.5 text-right whitespace-nowrap text-[13px]">
+        <button type="button" class="text-blue-600" onclick="editPige('${esc(p.id)}')">Modifier</button>${toggle}${del}</td></tr>`;
+    }).join('');
+  }
+  function formHints() {
+    const days = Number($('f-days').value) || 0, kbps = editId ? ((piges.find(p => p.id === editId) || {}).bitrate_kbps || 128) : 128;
+    const perDay = kbps * 125 * 86400;
+    $('f-estimate').innerHTML = days ? `Environ <strong>${fmtBytes(perDay)} par jour</strong>, soit ${fmtBytes(perDay * days)} pour ${days} jour${days > 1 ? 's' : ''} · ${fmtBytes(freeBytes)} libres.` : '';
+    const w = $('f-warn'), dab = !editId || (piges.find(p => p.id === editId) || {}).kind === 'dab';
+    if (dab && dabMode && dabMode !== 'complet') {
+      w.textContent = dabMode === 'désactivé' ? 'La réception DAB+ est désactivée : une pige DAB+ ne pourra rien enregistrer.'
+        : 'Une pige DAB+ demande que le service soit décodé en continu : choisir le décodage « Tous les services en continu » sur la page DAB+.';
+      w.classList.remove('hidden');
+    } else w.classList.add('hidden');
+  }
+  $('f-days').addEventListener('input', formHints);
+  function editPige(id) {
+    const p = piges.find(x => x.id === id); if (!p) return;
+    editId = id;
+    $('cfg-form-title').textContent = `Modifier : ${p.name}`;
+    $('f-name').value = p.name; $('f-days').value = Math.round(p.retention_hours / 24);
+    $('f-sid').disabled = true;
+    if (p.kind === 'dab') $('f-sid').value = p.sid;
+    else $('f-sid').innerHTML = '<option>Antenne FM (tuner)</option>';
+    $('f-submit').textContent = 'Enregistrer'; $('f-cancel').classList.remove('hidden');
+    $('cfg-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    formHints();
+  }
+  function resetForm() {
+    editId = null; $('cfg-form-title').textContent = 'Nouvelle pige';
+    $('f-name').value = ''; $('f-days').value = 7; $('f-sid').disabled = false; fillSources();
+    $('f-submit').textContent = 'Créer la pige'; $('f-cancel').classList.add('hidden'); formHints();
+  }
+  async function postConfig(body) {
+    const r = await fetch('/api/pige/config', { method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }, body: JSON.stringify(body) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
+    return d;
+  }
+  async function saveForm(ev) {
+    ev.preventDefault();
+    const msg = $('f-msg');
+    const body = editId ? { action: 'update', id: editId, name: $('f-name').value, retention_days: $('f-days').value }
+                        : { action: 'create', name: $('f-name').value, sid: $('f-sid').value, retention_days: $('f-days').value };
+    if (!editId && !body.sid) { msg.style.color = '#b91c1c'; msg.textContent = 'Choisir un service DAB+.'; return; }
+    try {
+      await postConfig(body);
+      msg.style.color = '#15803d';
+      msg.textContent = editId ? 'Enregistré.' : 'Pige créée : l\'enregistrement démarre dans les 20 secondes.';
+      resetForm(); await loadPiges();
+    } catch (e) { msg.style.color = '#b91c1c'; msg.textContent = e.message; }
+  }
+  async function togglePige(id, enabled) {
+    try { await postConfig({ action: 'update', id, enabled }); await loadPiges(); }
+    catch (e) { $('f-msg').style.color = '#b91c1c'; $('f-msg').textContent = e.message; }
+  }
+  async function deletePige(id) {
+    if (delArm !== id) { delArm = id; renderConfig(); setTimeout(() => { if (delArm === id) { delArm = null; renderConfig(); } }, 5000); return; }
+    delArm = null;
+    try {
+      await postConfig({ action: 'delete', id });
+      $('f-msg').style.color = '#15803d'; $('f-msg').textContent = 'Pige supprimée, avec ses enregistrements.';
+      if (cur === id) cur = 'fm';
+      await loadPiges(); selectPige(cur);
+    } catch (e) { $('f-msg').style.color = '#b91c1c'; $('f-msg').textContent = e.message; }
+  }
+
+  // ═══ Menu ═══
+  async function updateSidebarFrequency() {
+    try {
+      const c = await (await fetch('/api/config/full', { credentials: 'include' })).json();
+      $('sidebar-frequency').textContent = (c.rtl_sdr?.frequency || '88.6M').replace('M', ' MHz');
+    } catch (e) {}
+  }
+  function toggleSidebar() { $('sidebar').classList.toggle('-translate-x-full'); $('sidebar-overlay').classList.toggle('hidden'); }
+  function closeSidebar() { $('sidebar').classList.add('-translate-x-full'); $('sidebar-overlay').classList.add('hidden'); }
+
+  // ═══ Démarrage : ?p=<pige>&t=<horodatage> ouvre la pige 30 s avant l'événement ═══
+  (async () => {
+    const q = new URLSearchParams(location.search);
+    const t = parseInt(q.get('t'), 10);
+    // Un lien ?t= sans ?p= (journaux FM, chaîne) ouvre toujours la pige FM
+    try { cur = q.get('p') || (t ? 'fm' : localStorage.getItem('blrmo-pige')) || 'fm'; } catch (e) { cur = q.get('p') || 'fm'; }
+    await loadPiges();
+    if (isAdmin) loadDabServices().then(renderConfig);
+    const start = t ? t - 30 : Math.floor(Date.now() / 1000 - 300);
+    setInputs(start);
+    await loadStatus(start);
+    $('arch-section').classList.toggle('hidden', cur !== 'fm');
+    loadLastAlert();
+    if (t) {
+      setExtract(t - 30, t + 90);
+      const f = findSeg(t - 30);
+      if (f && f.seg.start <= t - 30) loadSeg(f.seg, f.offset, false);   // pas de lecture automatique (navigateurs)
+      else $('play-date').textContent = "Cet instant n'est plus dans la pige";
+    }
+    loadArchives(); setInterval(loadArchives, 60000);
+    setInterval(() => { loadPiges(); if (!curSeg) loadStatus(inputTs() ?? Date.now() / 1000); }, 20000);
+    updateSidebarFrequency();
+  })();
 </script>
 </body>
 </html>
