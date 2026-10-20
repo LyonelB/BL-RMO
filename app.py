@@ -653,7 +653,7 @@ def read_rds_rt():
 def rt_history():
     """Derniers RadioText diffusés (RT_HISTORY_PATCH)"""
     try:
-        limit = max(1, min(int(request.args.get('limit', 10)), 100))
+        limit = max(1, min(int(request.args.get('limit', 10)), 5000))
     except ValueError:
         limit = 10
     if monitor and hasattr(monitor, 'db'):

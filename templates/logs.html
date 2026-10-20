@@ -132,7 +132,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
             Titres diffusés (RadioText)
           </div>
-          <span class="text-xs text-gray-400">10 derniers</span>
+          <span class="flex items-center gap-2"><span class="text-xs text-gray-400">10 derniers</span><button onclick="exportRtHistory()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Historique complet du RadioText (CSV)"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button></span>
         </div>
         <p class="text-xs text-gray-500 mb-3">Chaque nouveau RadioText reçu par le tuner, avec l'heure de son premier affichage. Un texte qui revient en boucle (nom de la station, slogan) n'est repris qu'après 10 minutes.</p>
         <div class="overflow-x-auto">
@@ -157,9 +157,12 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
             Alertes de la réception FM
           </div>
+          <div class="flex flex-wrap gap-2">
           <select id="rc-type" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="renderReception()">
             <option value="">Tous les types</option>
           </select>
+          <button onclick="exportReception()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Alertes affichées (filtre compris), en CSV"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
+          </div>
         </div>
         <p class="text-xs text-gray-500 mb-3">Mesurées par le tuner, comme un auditeur. Un premier mail part quand l'alerte est confirmée, un second au rétablissement. « Écouter » ouvre la pige au moment de l'alerte, ou son extrait archivé.</p>
         <div class="overflow-x-auto">
@@ -221,6 +224,7 @@
             <select id="db-svc" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="renderDab()">
               <option value="">Tous les services</option>
             </select>
+            <button onclick="exportDab()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Alertes affichées (filtres compris), en CSV"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
           </div>
         </div>
         <p class="text-xs text-gray-500 mb-3">Mesurées par la clé DAB+ sur le multiplex reçu. Un mail part à l'alerte, un second au rétablissement. « Écouter » ouvre la pige DAB+ au moment de l'alerte : celle du service concerné, ou pour une alerte sur tout le multiplex, la première pige DAB+ configurée. Détail en direct : page <a href="/dab" class="text-blue-600 hover:text-blue-800">DAB+</a>.</p>
@@ -718,6 +722,47 @@ async function loadRtHistory() {
     </tr>`;
   }).join('');
 }
+// ── Exports CSV (séparateur point-virgule, UTF-8 avec BOM pour Excel) ─────
+function downloadCsv(name, header, rows) {
+  const cell = v => { const t = v == null ? '' : String(v); return /[;"\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+  const txt = '\ufeff' + [header, ...rows].map(r => r.map(cell).join(';')).join('\r\n') + '\r\n';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt], { type: 'text/csv;charset=utf-8' }));
+  const n = new Date();
+  a.download = `${name}_${n.getFullYear()}${pad(n.getMonth() + 1)}${pad(n.getDate())}-${pad(n.getHours())}${pad(n.getMinutes())}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+function csvStamp(iso) {
+  if (!iso) return ['', ''];
+  const d = new Date(String(iso).replace(' ', 'T'));
+  if (isNaN(d)) return [String(iso), ''];
+  return [`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`];
+}
+const CSV_STATUS = { complete: 'rétabli', ongoing: 'en cours', restored_only: 'retour seul' };
+function exportReception() {
+  const type = $('rc-type').value;
+  const list = rcAlerts.filter(a => !type || a.alert_label === type);
+  downloadCsv('blrmo-alertes-fm', ['date', 'debut', 'fin', 'alerte', 'duree_s', 'etat', 'mails', 'message', 'message_retablissement'],
+    list.map(a => { const [d, t0] = csvStamp(a.start_time), t1 = csvStamp(a.end_time)[1];
+      return [d, t0, a.status === 'ongoing' ? '' : t1, a.alert_label, a.status === 'ongoing' ? '' : a.duration, CSV_STATUS[a.status] || a.status,
+              a.emails_sent, a.message || '', a.message_restored || '']; }));
+}
+async function exportRtHistory() {
+  let d;
+  try { d = await api('/api/rds/rt_history?limit=5000'); } catch (e) { alert(e.message); return; }
+  downloadCsv('blrmo-radiotext', ['date', 'heure', 'ps', 'radiotext'],
+    (d.data || []).map(r => [...csvStamp(r.timestamp), r.ps || '', r.rt || '']));
+}
+function exportDab() {
+  const type = $('db-type').value, svc = $('db-svc').value;
+  const list = dbEvents.filter(a => (!type || a.label === type) && (!svc || a.service === svc));
+  downloadCsv('blrmo-alertes-dab', ['date', 'debut', 'fin', 'alerte', 'service', 'sid', 'canal', 'duree_s', 'etat', 'mails', 'detail'],
+    list.map(a => { const [d, t0] = csvStamp(a.start), t1 = csvStamp(a.end)[1];
+      return [d, t0, a.status === 'complete' ? t1 : '', a.label, a.service || '', a.sid || '', a.channel || '',
+              a.status === 'complete' ? a.duration : '', a.status === 'complete' ? 'rétabli' : 'en cours', a.emails, a.message || '']; }));
+}
+
 function renderReception() {
   const type = $('rc-type').value;
   const list = rcAlerts.filter(a => !type || a.alert_label === type);

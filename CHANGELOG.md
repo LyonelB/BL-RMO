@@ -6,6 +6,13 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Journaux : exports des alertes
+- **Réception FM** : bouton « Exporter » (CSV) des alertes affichées, filtre compris, avec le message de l'alerte et celui du rétablissement (par exemple « RadioText absent depuis 600s »).
+- **Titres diffusés (RadioText)** : bouton « Exporter » de l'historique complet du RadioText reçu (date, heure, PS, texte), pour comparer avec les alertes RadioText.
+- **Réception DAB+** : bouton « Exporter » (CSV) des alertes affichées, filtres compris (service, SId, canal, durée, détail SNR et FIC).
+- Fichiers CSV séparés par des points-virgules, en UTF-8 (lisibles directement dans Excel ou LibreOffice).
+- Feuille de route : battement de cœur extérieur, alerte audio figé et RadioText inchangé.
+
 ### Configuration
 - **Email de test** : le bouton est grisé, avec un message, tant que l'expéditeur, le mot de passe ou les destinataires modifiés ne sont pas enregistrés (le test part toujours avec la configuration enregistrée).
 - **Vrais réglages du tuner TEF** : avec le TEF, la section Surveillance montre le **seuil d'absence de modulation** (niveau audio reçu, en dBFS, -40 par défaut), utilisé depuis toujours mais absent de la page. Les deux anciens seuils RTL-SDR (écart-type de modulation, perte émetteur en dBFS), sans effet avec le TEF, ne s'affichent plus qu'en mode RTL-SDR, comme le gain. La perte du signal FM reste automatique (le tuner ne transmet plus de mesure).

@@ -245,6 +245,7 @@ class FMDatabase:
                                 'level_lost': alert['level_db'],
                                 'level_restored': alert['level_db'],
                                 'emails_sent': 1 if alert['email_sent'] else 0,
+                                'message_restored': alert.get('message') or '',
                                 'status': 'restored_only'
                             })
                             i += 1
@@ -258,6 +259,8 @@ class FMDatabase:
                             'level_lost': lost_alert['level_db'],
                             'level_restored': alert['level_db'],
                             'emails_sent': (1 if lost_alert['email_sent'] else 0) + (1 if alert['email_sent'] else 0),
+                            'message': lost_alert.get('message') or '',
+                            'message_restored': alert.get('message') or '',
                             'status': 'complete'
                         })
 
@@ -272,6 +275,7 @@ class FMDatabase:
                             'level_lost': alert['level_db'],
                             'level_restored': None,
                             'emails_sent': 1 if alert['email_sent'] else 0,
+                            'message': alert.get('message') or '',
                             'status': 'ongoing'
                         })
                         i += 1

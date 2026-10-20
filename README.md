@@ -288,6 +288,9 @@ Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-RMO (pas `bl
 - [x] Tableau de bord FM, DAB+, chaîne et pige
 - [x] Piges multiples : FM et services DAB+, créées depuis la page Pige
 - [ ] Alerte de passage en mono
+- [x] Capteurs de site (température, humidité... d'un shelter), hors du flux du signal
+- [ ] Battement de cœur vers un service extérieur (healthchecks.io...) : une alerte même si BL-RMO ou le serveur tombe
+- [ ] Alerte audio figé (boucle bloquée, tonalité fixe) et RadioText inchangé depuis trop longtemps
 - [ ] Fermeture de BL-DMO ([dabplus-monitor](https://github.com/LyonelB/dabplus-monitor)) : annonce, archivage, puis suppression du dépôt
 - [ ] welle-monitor : reporter les changements de la prochaine version de welle.io
 - [ ] Version anglaise de l'interface
