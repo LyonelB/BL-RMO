@@ -6,6 +6,13 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Journaux de la chaîne : alertes relevées par BL-RMO
+- **Nouveau tableau « Alertes de la chaîne »** en tête de Journaux › Chaîne de diffusion, comme pour la réception FM et le DAB+ : date, appareil, alerte ou hors service, début et fin, durée, état, détail (valeurs hors seuil), « Écouter » et « MP3 » de la pige FM, filtre par appareil et export CSV. Il reprend tout l'historique enregistré, y compris les alertes passées.
+- Les alertes qui démarrent à moins de 30 s d'écart sont signalées (« En même temps que DB91-TX ») : une cause commune en amont est probable, par exemple une source muette en studio vue par le DB91-TX, le DB91-RX et le Sound4.
+
+#### Changements d'état copiés dans le journal
+- Chaque changement d'état relevé par BL-RMO (alerte, hors service, rétabli) est aussi écrit dans les journaux de la chaîne, sous l'adresse de l'appareil, programme `bl-rmo`. Il apparaît dans **Journaux › Chaîne de diffusion**, dans l'onglet Journaux de l'appareil et dans les exports, à côté des messages syslog et des traps de l'appareil, par exemple « DB91-RX (appareil) : alerte, Valeur hors seuil : Sortie G (moy.) = -80.0 dB ». Niveaux : hors service = Erreur, alerte = Avertissement, rétabli = Info. Le premier relevé après un démarrage n'est pas copié.
+
 ### RadioText FM plus fiable
 - **Blocs RDS vérifiés** : le décodeur lit enfin le niveau d'erreur de chaque bloc envoyé par le tuner et n'utilise que les blocs intacts, comme FM-DX-Webserver. Un caractère corrompu n'entre plus dans le PS ou le RadioText.
 - **Changement de titre propre** : beaucoup de codeurs ne basculent pas le drapeau A/B quand le texte change. Un segment dont le contenu change efface désormais le texte en cours, et le nouveau RadioText n'est affiché qu'une fois reçu en entier : plus de mélange de l'ancien et du nouveau titre, plus de titre qui tarde à se mettre à jour.

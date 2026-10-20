@@ -260,6 +260,46 @@
 
     <div id="rx-warning" class="hidden mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800"></div>
 
+    <!-- ── Alertes relevées par BL-RMO sur la chaîne ──────────── -->
+    <div class="section">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div class="section-title" style="margin-bottom:0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          Alertes de la chaîne
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <select id="ca-dev" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="renderChainAlerts()">
+            <option value="">Tous les appareils</option>
+          </select>
+          <button onclick="exportChainAlerts()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Alertes affichées (filtre compris), en CSV"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 mb-3">Relevées par BL-RMO en sondant les appareils (seuils, appareil injoignable). Les alertes qui démarrent ensemble sont signalées : une cause commune, en amont, est probable. « Écouter » ouvre la pige FM 30 s avant l'alerte.</p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs text-left">
+          <thead>
+            <tr class="text-gray-400 border-b border-gray-100">
+              <th class="font-medium py-2 pr-3 whitespace-nowrap">Date</th>
+              <th class="font-medium py-2 pr-3">Appareil</th>
+              <th class="font-medium py-2 pr-3">Alerte</th>
+              <th class="font-medium py-2 pr-3 whitespace-nowrap">Début → fin</th>
+              <th class="font-medium py-2 pr-3">Durée</th>
+              <th class="font-medium py-2 pr-3">État</th>
+              <th class="font-medium py-2 pr-3">Détail</th>
+              <th class="font-medium py-2">Pige</th>
+            </tr>
+          </thead>
+          <tbody id="ca-body" class="divide-y divide-gray-50">
+            <tr><td colspan="8" class="py-8 text-center text-gray-400">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
+        <span id="ca-count"></span>
+        <button id="ca-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="caShowAll = true; renderChainAlerts()">Tout afficher</button>
+      </div>
+    </div>
+
     <!-- ── Journal ────────────────────────────────────────────── -->
     <div class="section">
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-3 pb-3 border-b border-gray-50">
@@ -627,9 +667,97 @@ function showTab(t, push) {
   try { localStorage.setItem('blfmo-logs-tab', t); } catch (e) {}
   if (t === 'reception') { loadReception(); loadRtHistory(); }
   if (t === 'dab') loadDab();
+  if (t === 'chaine') loadChainAlerts();
   if (t === 'blfmo' && !tabLoaded.blfmo) { tabLoaded.blfmo = true; loadSysLogs(); }
 }
 window.addEventListener('hashchange', () => showTab(location.hash.slice(1), false));
+
+// ══ Alertes de la chaîne (états relevés par BL-RMO) ══════════════════════
+let caAlerts = [], caShowAll = false, caPigeFrom = null;
+const CA_STATES = {
+  down:     ['Hors service', 'bg-red-50 text-red-700'],
+  warn:     ['Alerte', 'bg-amber-50 text-amber-700'],
+  unstable: ['Instable', 'bg-amber-50 text-amber-700'],
+};
+const CA_RANK = { unstable: 1, warn: 2, down: 3 };
+async function loadChainAlerts() {
+  let evs;
+  try { evs = (await api('/api/chain/events?limit=1000')).events || []; }
+  catch (e) { $('ca-body').innerHTML = `<tr><td colspan="8" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`; return; }
+  try {
+    const ps = await api('/api/pige/status');
+    caPigeFrom = ps.oldest ?? (ps.segments && ps.segments.length ? ps.segments[0].start : null);
+  } catch (e) { caPigeFrom = null; }
+  // Du plus ancien au plus récent : une alerte s'ouvre au premier état grave, se ferme au retour
+  const open = {}, out = [];
+  evs.filter(e => !e.source && e.device_id != null).reverse().forEach(e => {
+    const id = e.device_id, bad = CA_RANK[e.to_state];
+    if (bad) {
+      const a = open[id];
+      if (!a) {
+        open[id] = { device: e.device_name, device_id: id, state: e.to_state, start: e.timestamp, end: null, message: e.message || '' };
+        out.push(open[id]);
+      } else if (bad > CA_RANK[a.state]) { a.state = e.to_state; a.message = e.message || a.message; }
+    } else if (open[id] && (e.to_state === 'up' || e.to_state === 'disabled')) {
+      open[id].end = e.timestamp;
+      delete open[id];
+    }
+  });
+  const ts = iso => new Date(String(iso).replace(' ', 'T')).getTime();
+  out.forEach(a => {
+    a.t0 = ts(a.start); a.t1 = a.end ? ts(a.end) : null;
+    a.duration = a.t1 ? Math.round((a.t1 - a.t0) / 1000) : null;
+  });
+  // Alertes démarrées à moins de 30 s d'écart : cause commune probable
+  out.forEach(a => { a.with = out.filter(b => b !== a && Math.abs(b.t0 - a.t0) <= 30000).map(b => b.device); });
+  caAlerts = out.reverse();
+  const sel = $('ca-dev'), cur = sel.value;
+  const devs = [...new Set(caAlerts.map(a => a.device))].sort();
+  sel.innerHTML = '<option value="">Tous les appareils</option>' + devs.map(d => `<option>${esc(d)}</option>`).join('');
+  sel.value = devs.includes(cur) ? cur : '';
+  renderChainAlerts();
+}
+function caPigeLinks(a) {
+  const t0 = Math.floor(a.t0 / 1000);
+  if (!caPigeFrom || t0 - 30 < caPigeFrom) return '<span class="text-gray-300">hors pige</span>';
+  const t1 = a.t1 ? Math.floor(a.t1 / 1000) : t0 + 90;
+  const s0 = t0 - 30, s1 = Math.min(t1 + 30, Math.floor(Date.now() / 1000));
+  return `<a href="/pige?p=fm&t=${t0}" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Ouvrir la pige FM 30 s avant l'alerte">Écouter</a>`
+       + `<a href="/api/pige/export?p=fm&start=${s0}&end=${s1}" class="font-medium text-blue-600 hover:text-blue-800" title="Extrait MP3 de 30 s avant à 30 s après">MP3</a>`;
+}
+function caList() { const dev = $('ca-dev').value; return caAlerts.filter(a => !dev || a.device === dev); }
+function renderChainAlerts() {
+  const list = caList(), shown = caShowAll ? list : list.slice(0, 50);
+  $('ca-count').textContent = `${list.length} alerte${list.length > 1 ? 's' : ''}`;
+  $('ca-more').classList.toggle('hidden', caShowAll || list.length <= 50);
+  if (!shown.length) { $('ca-body').innerHTML = '<tr><td colspan="8" class="py-8 text-center text-gray-400">Aucune alerte relevée</td></tr>'; return; }
+  const hms = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
+  $('ca-body').innerHTML = shown.map(a => {
+    const d0 = new Date(a.t0), [lab, col] = CA_STATES[a.state] || CA_STATES.warn;
+    const range = hms(a.t0) + ' → ' + (a.t1 ? hms(a.t1) : '<span class="text-red-600 font-medium">en cours</span>');
+    const state = a.t1 ? '<span class="px-2 py-0.5 rounded-full bg-green-50 text-green-700">Rétabli</span>'
+                       : '<span class="px-2 py-0.5 rounded-full bg-red-50 text-red-700">En cours</span>';
+    const msg = (a.message || '').replace(/^Valeur hors seuil : /, '');
+    const together = a.with.length ? `<div class="text-[11px] text-blue-700 mt-0.5">En même temps que ${esc(a.with.join(', '))}</div>` : '';
+    return `<tr class="hover:bg-slate-50" style="vertical-align:top">
+      <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${pad(d0.getDate())}-${pad(d0.getMonth() + 1)}-${d0.getFullYear()}</td>
+      <td class="py-2 pr-3 font-medium text-gray-800 whitespace-nowrap">${esc(a.device)}</td>
+      <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${col}">${lab}</span></td>
+      <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${range}</td>
+      <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.duration != null ? fmtDur(a.duration) : '-'}</td>
+      <td class="py-2 pr-3 whitespace-nowrap">${state}</td>
+      <td class="py-2 pr-3 text-gray-500" style="overflow-wrap:anywhere">${esc(msg)}${together}</td>
+      <td class="py-2 whitespace-nowrap">${caPigeLinks(a)}</td>
+    </tr>`;
+  }).join('');
+}
+function exportChainAlerts() {
+  const st = t => { const d = new Date(t); return [`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`]; };
+  downloadCsv('blrmo-alertes-chaine', ['date', 'debut', 'fin', 'appareil', 'alerte', 'duree_s', 'etat', 'detail', 'en_meme_temps_que'],
+    caList().map(a => { const [d, t0] = st(a.t0);
+      return [d, t0, a.t1 ? st(a.t1)[1] : '', a.device, (CA_STATES[a.state] || CA_STATES.warn)[0], a.duration ?? '',
+              a.t1 ? 'rétabli' : 'en cours', a.message || '', a.with.join(', ')]; }));
+}
 
 // ══ Réception FM ════════════════════════════════════════════════════════
 let rcAlerts = [], rcShowAll = false, rcPigeFrom = null, rcArchives = [];

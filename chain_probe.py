@@ -1077,6 +1077,33 @@ class ChainMonitor:
             logger.error(f"Chaîne : écriture événement impossible : {e}")
         level = logging.WARNING if new == 'down' else logging.INFO
         logger.log(level, f"Chaîne : {dev['name']} {prev} → {new} ({msg})")
+        self._journal_event(dev, prev, new, msg, now)
+
+    # Niveau syslog des changements d'état : hors service = erreur, alerte = avertissement
+    JOURNAL_LEVELS = {'down': (3, 'hors service'), 'warn': (4, 'alerte'), 'unstable': (4, 'instable'), 'up': (6, 'rétabli')}
+
+    def _journal_event(self, dev, prev, new, msg, now):
+        """Copie un changement d'état dans les journaux de la chaîne (syslog.db), sous
+        l'adresse de l'appareil : il apparaît dans Journaux › Chaîne de diffusion, dans
+        l'onglet Journaux de l'appareil et dans les exports, à côté de ses propres messages."""
+        if prev == 'unknown' and new == 'up':      # premier relevé après un démarrage
+            return
+        host = self._device_host(dev)
+        if not host or new not in self.JOURNAL_LEVELS:
+            return
+        sys_db = os.path.join(os.path.dirname(os.path.abspath(self.db_path)), 'syslog.db')
+        if not os.path.exists(sys_db):
+            return
+        sev, label = self.JOURNAL_LEVELS[new]
+        kind = {'probe': 'sonde', 'sensor': 'capteur'}.get(dev.get('kind'), 'appareil')
+        try:
+            from syslog_server import SyslogStore
+            SyslogStore(sys_db).insert_many([{
+                'ts': now.isoformat(timespec='seconds'), 'src': host, 'host': '', 'facility': 1,
+                'severity': sev, 'program': 'bl-rmo',
+                'message': f"{dev['name']} ({kind}) : {label}" + (f", {msg}" if msg else '')}])
+        except Exception as e:
+            logger.warning(f"Chaîne : journal non écrit ({e})")
 
     def _maybe_email(self, dev, prev, new, msg):
         if not dev.get('alert_email') or not self.alert_getter:
