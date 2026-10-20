@@ -1564,6 +1564,10 @@ class FMMonitor:
         if self.use_tef and self.tef_driver is not None:
             stats['stereo_present'] = bool(getattr(self.tef_driver, 'stereo', False))
             stats['stereo_known'] = bool(getattr(self.tef_driver, 'stereo_seen', False))
+        if self.use_tef:
+            drv = self.tef_driver
+            ser = getattr(drv, '_ser', None) if drv is not None else None
+            stats['tuner_connected'] = bool(ser is not None and getattr(ser, 'is_open', False))
 
         if stats['start_time']:
             stats['start_time'] = stats['start_time'].strftime('%d/%m/%Y %H:%M:%S')

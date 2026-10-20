@@ -93,7 +93,7 @@
         <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">Journaux</h1></div>
         <p class="text-xs text-gray-400 mt-0.5" id="tab-subtitle">Ce qui s'est passé, côté réception, côté chaîne de diffusion et côté BL-RMO</p>
       </div>
-      <div id="rx-status" class="flex items-center gap-1.5 text-xs"></div>
+      <div id="rx-status" class="hidden"></div>
     </div>
     <nav class="flex gap-1 mt-3 -mb-px overflow-x-auto" role="tablist">
       <button class="tab-btn" data-tab="reception" role="tab" onclick="showTab('reception')">Réception FM</button>
@@ -109,19 +109,19 @@
     <div id="tab-reception" class="tab-pane">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div class="section" style="margin-bottom:0">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">BL-RMO en service depuis</div>
-          <div class="text-2xl font-bold font-mono text-gray-900" id="rc-uptime">-</div>
-          <div class="text-xs text-gray-400 mt-1" id="rc-start"></div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="rc-state-label">Tuner FM</div>
+          <div class="text-2xl font-bold text-gray-900" id="rc-state">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="rc-state-sub"></div>
         </div>
         <div class="section" style="margin-bottom:0">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Alertes, 7 derniers jours</div>
-          <div class="text-2xl font-bold font-mono text-gray-900" id="rc-7d">-</div>
-          <div class="text-xs text-gray-400 mt-1" id="rc-7d-dur"></div>
-        </div>
-        <div class="section" style="margin-bottom:0">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Alertes, 30 derniers jours</div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="rc-30d-label">Alertes, 30 derniers jours</div>
           <div class="text-2xl font-bold font-mono text-gray-900" id="rc-30d">-</div>
-          <div class="text-xs text-gray-400 mt-1" id="rc-30d-dur"></div>
+          <div class="text-xs text-gray-400 mt-1" id="rc-30d-sub"></div>
+        </div>
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="rc-ok-label">Tout est OK depuis</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="rc-ok">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="rc-ok-sub"></div>
         </div>
       </div>
 
@@ -132,7 +132,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
             Titres diffusés (RadioText)
           </div>
-          <span class="flex items-center gap-2"><span class="text-xs text-gray-400">10 derniers</span><button onclick="exportRtHistory()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Historique complet du RadioText (CSV)"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button></span>
+          <span class="flex items-center gap-2"><button onclick="exportRtHistory()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Historique complet du RadioText (CSV)"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button></span>
         </div>
         <p class="text-xs text-gray-500 mb-3">Chaque nouveau RadioText reçu par le tuner, avec l'heure de son premier affichage. Un texte qui revient en boucle (nom de la station, slogan) n'est repris qu'après 10 minutes.</p>
         <div class="overflow-x-auto">
@@ -148,6 +148,9 @@
               <tr><td colspan="3" class="py-8 text-center text-gray-400">Chargement...</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="flex justify-end mt-3 text-xs">
+          <button id="rt-more" class="px-2.5 py-1 rounded-md border border-gray-200 text-gray-500 hidden" onclick="rtLimit += 50; loadRtHistory()">Afficher plus</button>
         </div>
       </div>
 
@@ -185,7 +188,7 @@
         </div>
         <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
           <span id="rc-count"></span>
-          <button id="rc-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="rcShowAll = true; renderReception()">Tout afficher</button>
+          <button id="rc-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="rcLimit += 50; renderReception()">Afficher plus</button>
         </div>
       </div>
 
@@ -195,19 +198,19 @@
     <div id="tab-dab" class="tab-pane">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div class="section" style="margin-bottom:0">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Récepteur DAB+</div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="db-state-label">Récepteur DAB+</div>
           <div class="text-2xl font-bold text-gray-900" id="db-state">-</div>
-          <div class="text-xs text-gray-400 mt-1" id="db-sub"></div>
+          <div class="text-xs text-gray-400 mt-1" id="db-state-sub"></div>
         </div>
         <div class="section" style="margin-bottom:0">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Alertes, 7 derniers jours</div>
-          <div class="text-2xl font-bold font-mono text-gray-900" id="db-7d">-</div>
-          <div class="text-xs text-gray-400 mt-1" id="db-7d-dur"></div>
-        </div>
-        <div class="section" style="margin-bottom:0">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Alertes, 30 derniers jours</div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="db-30d-label">Alertes, 30 derniers jours</div>
           <div class="text-2xl font-bold font-mono text-gray-900" id="db-30d">-</div>
-          <div class="text-xs text-gray-400 mt-1" id="db-30d-dur"></div>
+          <div class="text-xs text-gray-400 mt-1" id="db-30d-sub"></div>
+        </div>
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="db-ok-label">Tout est OK depuis</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="db-ok">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="db-ok-sub"></div>
         </div>
       </div>
 
@@ -250,13 +253,30 @@
         </div>
         <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
           <span id="db-count"></span>
-          <button id="db-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="dbShowAll = true; renderDab()">Tout afficher</button>
+          <button id="db-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="dbLimit += 50; renderDab()">Afficher plus</button>
         </div>
       </div>
     </div>
 
     <!-- ══ Onglet Chaîne de diffusion ══ -->
     <div id="tab-chaine" class="tab-pane">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="ch-state-label">État de la chaîne</div>
+          <div class="text-2xl font-bold text-gray-900" id="ch-state">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="ch-state-sub"></div>
+        </div>
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="ch-30d-label">Alertes, 30 derniers jours</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="ch-30d">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="ch-30d-sub"></div>
+        </div>
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="ch-ok-label">Tout est OK depuis</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="ch-ok">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="ch-ok-sub"></div>
+        </div>
+      </div>
 
     <div id="rx-warning" class="hidden mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800"></div>
 
@@ -297,7 +317,7 @@
       </div>
       <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
         <span id="ca-count"></span>
-        <button id="ca-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="caShowAll = true; renderChainAlerts()">Tout afficher</button>
+        <button id="ca-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="caLimit += 50; renderChainAlerts()">Afficher plus</button>
       </div>
     </div>
 
@@ -353,6 +373,7 @@
       <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
         <span id="log-count"></span>
         <div class="flex items-center gap-1">
+          <button id="pg-more" onclick="PAGE_SIZE = Math.min(1000, PAGE_SIZE + 50); offset = 0; loadLogs()" class="px-2.5 py-1 rounded-md border border-gray-200 mr-2">Afficher plus</button>
           <button id="pg-prev" onclick="page(-1)" class="px-2.5 py-1 rounded-md border border-gray-200 disabled:opacity-40">Plus récents</button>
           <span id="pg-info" class="px-2"></span>
           <button id="pg-next" onclick="page(1)" class="px-2.5 py-1 rounded-md border border-gray-200 disabled:opacity-40">Plus anciens</button>
@@ -394,6 +415,23 @@
 
     <!-- ══ Onglet BL-RMO ══ -->
     <div id="tab-blfmo" class="tab-pane">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">BL-RMO en service depuis</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="sys-uptime">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="sys-uptime-sub"></div>
+        </div>
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Services</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="sys-svc">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="sys-svc-sub"></div>
+        </div>
+        <button type="button" class="section text-left hover:bg-slate-50" style="margin-bottom:0" onclick="showErrors()" title="Afficher les avertissements et erreurs du journal">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Erreurs et avertissements, 24 h</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="sys-err">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="sys-err-sub"></div>
+        </button>
+      </div>
       <div class="section">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div class="section-title" style="margin-bottom:0">
@@ -408,6 +446,7 @@
               <option value="bl-rmo-dab">Réception DAB+ (bl-rmo-dab)</option>
             </select>
             <select id="sl-lines" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="loadSysLogs()">
+              <option value="10">10 lignes</option>
               <option value="100">100 lignes</option>
               <option value="500">500 lignes</option>
               <option value="2000">2 000 lignes</option>
@@ -417,14 +456,14 @@
           </div>
         </div>
         <p class="text-xs text-gray-500 mb-3">Démarrages, tuner, alertes envoyées, erreurs : le fonctionnement de BL-RMO lui-même.</p>
-        <div id="sl-box" class="bg-gray-950 text-gray-300 p-4 rounded-lg font-mono overflow-y-auto border border-gray-800" style="height:32rem">Chargement...</div>
+        <div id="sl-box" class="bg-gray-950 text-gray-300 p-4 rounded-lg font-mono overflow-y-auto border border-gray-800" style="max-height:32rem">Chargement...</div>
       </div>
     </div>
   </div>
 </main>
 
 <script>
-const PAGE_SIZE = 200;
+let PAGE_SIZE = 10;     // 10 lignes, puis « Afficher plus »
 const SEV = [
   { label: 'Urgence',       cls: 'bg-red-600 text-white' },
   { label: 'Alerte',        cls: 'bg-red-100 text-red-700' },
@@ -479,6 +518,9 @@ async function loadSources() {
   const m = d.meta || {};
   const age = m.heartbeat ? (new Date(d.now) - new Date(m.heartbeat)) / 1000 : null;
   const alive = age !== null && age < 60;
+  const changed = rxAlive !== alive;
+  rxAlive = alive; rxPort = m.port || '';
+  if (changed && document.querySelector('.tab-btn.active')?.dataset.tab === 'chaine') loadChainState();
   $('rx-status').innerHTML = alive
     ? `<span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 rounded-full px-2.5 py-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Réception active · UDP ${esc(m.port)}</span>`
     : `<span class="inline-flex items-center gap-1.5 bg-red-50 text-red-700 rounded-full px-2.5 py-1"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Réception arrêtée</span>`;
@@ -576,6 +618,7 @@ function render(rows) {   // SYSLOG_CLEAN_PATCH
   $('pg-info').textContent = total ? `${first.toLocaleString('fr-FR')}-${last.toLocaleString('fr-FR')}` : '';
   $('pg-prev').disabled = offset === 0;
   $('pg-next').disabled = !capped && offset + PAGE_SIZE >= total;
+  $('pg-more').classList.toggle('hidden', PAGE_SIZE >= 1000 || (!capped && PAGE_SIZE >= total));
 }
 
 // ── Messages masqués : règles ──────────────────────────────────────────
@@ -663,18 +706,100 @@ function showTab(t, push) {
     e.classList.toggle('active', on);
     e.setAttribute('aria-selected', on ? 'true' : 'false');
   });
-  $('rx-status').style.display = t === 'chaine' ? '' : 'none';
   if (push !== false) history.replaceState(null, '', location.pathname + location.search + '#' + t);
   try { localStorage.setItem('blfmo-logs-tab', t); } catch (e) {}
   if (t === 'reception') { loadReception(); loadRtHistory(); }
   if (t === 'dab') loadDab();
-  if (t === 'chaine') loadChainAlerts();
+  if (t === 'chaine') { loadChainAlerts(); loadChainState(); }
+  if (t === 'blfmo') loadSystemSummary();
   if (t === 'blfmo' && !tabLoaded.blfmo) { tabLoaded.blfmo = true; loadSysLogs(); }
 }
 window.addEventListener('hashchange', () => showTab(location.hash.slice(1), false));
 
+// ══ En-têtes des onglets : état, alertes avec mail sur 30 jours, « tout est OK depuis » ══
+const C_OK = 'text-green-600', C_WARN = 'text-amber-600', C_BAD = 'text-red-600';
+function setTile(id, text, color, sub) {
+  $(id).textContent = text;
+  $(id).className = $(id).className.replace(/\btext-(gray|green|amber|red)-\d+\b/g, '').trim() + ' ' + (color || 'text-gray-900');
+  if (sub !== undefined && $(id + '-sub')) $(id + '-sub').innerHTML = sub;
+}
+function fmtSince(sec) {
+  sec = Math.max(0, Math.round(sec));
+  if (sec < 3600) return `${Math.max(1, Math.floor(sec / 60))} min`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)} h ${pad(Math.floor(sec % 3600 / 60))} min`;
+  return `${Math.floor(sec / 86400)} j ${Math.floor(sec % 86400 / 3600)} h`;
+}
+function fmtStamp(t) { const d = new Date(t); return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+// alerts : [{ t0, t1 (null si en cours), emails }] ; seules comptent les alertes qui ont envoyé un mail
+function headerAlerts(pfx, alerts) {
+  const now = Date.now(), mailed = alerts.filter(a => (a.emails || 0) > 0);
+  const last30 = mailed.filter(a => now - a.t0 <= 30 * 86400e3);
+  const mails = last30.reduce((n, a) => n + (a.emails || 0), 0);
+  setTile(pfx + '-30d', String(last30.length), last30.length ? 'text-gray-900' : C_OK,
+          last30.length ? `${mails} mail${mails > 1 ? 's' : ''} envoyé${mails > 1 ? 's' : ''}` : 'aucune alerte avec mail');
+  const ongoing = mailed.filter(a => !a.t1);
+  if (ongoing.length) {
+    const t0 = Math.min(...ongoing.map(a => a.t0));
+    $(pfx + '-ok-label').textContent = 'En alerte depuis';
+    setTile(pfx + '-ok', fmtSince((now - t0) / 1000), C_BAD, `depuis le ${fmtStamp(t0)}`);
+    return;
+  }
+  $(pfx + '-ok-label').textContent = 'Tout est OK depuis';
+  const ends = mailed.map(a => a.t1).filter(Boolean);
+  if (!ends.length) { setTile(pfx + '-ok', 'Aucune alerte', C_OK, 'pas d\'alerte avec mail enregistrée'); return; }
+  const last = Math.max(...ends);
+  setTile(pfx + '-ok', fmtSince((now - last) / 1000), C_OK, `fin de la dernière alerte le ${fmtStamp(last)}`);
+}
+const tms = iso => iso ? new Date(String(iso).replace(' ', 'T')).getTime() : null;
+
+// ── Chaîne : état général ──
+let rxAlive = null, rxPort = '';
+async function loadChainState() {
+  let devs = [];
+  try { devs = (await api('/api/chain/status')).devices || []; } catch (e) { return; }
+  const on = devs.filter(d => d.enabled !== false);
+  const down = on.filter(d => d.state === 'down'), warn = on.filter(d => d.state === 'warn' || d.state === 'unstable');
+  const n = k => devs.filter(d => (d.kind || 'device') === k).length;
+  const parts = [[n('device'), 'appareil'], [n('probe'), 'sonde'], [n('sensor'), 'capteur']]
+    .filter(([c]) => c).map(([c, w]) => `${c} ${w}${c > 1 ? 's' : ''}`);
+  const bad = down.concat(warn).map(d => esc(d.name));
+  const rx = rxAlive === null ? '' : rxAlive ? ` · <span class="text-green-700">syslog UDP ${esc(rxPort)} actif</span>`
+                                           : ' · <span class="text-red-600">réception syslog arrêtée</span>';
+  const sub = parts.join(' · ') + rx + (bad.length ? `<div class="mt-0.5 text-gray-600">${bad.join(', ')}</div>` : '');
+  if (down.length) setTile('ch-state', `${down.length} hors service`, C_BAD, sub);
+  else if (warn.length) setTile('ch-state', `${warn.length} en alerte`, C_WARN, sub);
+  else setTile('ch-state', on.length ? 'Tout est OK' : 'Aucun appareil', on.length ? C_OK : 'text-gray-900', sub);
+}
+
+// ── BL-RMO : service, services systemd, erreurs et disque ──
+async function loadSystemSummary() {
+  let d;
+  try { d = await api('/api/system/summary'); } catch (e) { return; }
+  setTile('sys-uptime', fmtSince(d.uptime), 'text-gray-900', `depuis le ${fmtStamp(tms(d.started))} · version ${esc(d.version)}`);
+  const exp = d.services.filter(x => x.expected), act = exp.filter(x => x.state === 'active');
+  const off = exp.filter(x => x.state !== 'active');
+  setTile('sys-svc', `${act.length} / ${exp.length} actifs`, off.length ? C_BAD : C_OK,
+    d.services.map(x => {
+      const ok = x.state === 'active', col = !x.expected ? 'text-gray-300' : ok ? '' : 'text-red-600 font-semibold';
+      return `<span class="${col}" title="${esc(x.unit)} : ${esc(x.state)}">${esc(x.label)}${x.expected && !ok ? ' (arrêté)' : ''}</span>`;
+    }).join(' · '));
+  const lc = d.log_counts || {}, dk = d.disk || {};
+  const go = v => v == null ? '-' : `${Math.round(v / 1e9)} Go`;
+  const disk = dk.low
+    ? `<div class="text-red-600 font-semibold mt-0.5">Espace disque faible : ${go(dk.free)} libres (seuil ${Math.round(dk.min_free_gb)} Go)</div>`
+    : `<div class="mt-0.5">Disque : ${go(dk.free)} libres sur ${go(dk.total)}</div>`;
+  const e = lc.errors ?? null, w = lc.warnings ?? null;
+  setTile('sys-err', e == null ? '-' : `${e} erreur${e > 1 ? 's' : ''}`, dk.low || e ? C_BAD : w ? C_WARN : C_OK,
+          (w == null ? '' : `${w} avertissement${w > 1 ? 's' : ''}`) + disk);
+}
+function showErrors() {
+  $('sl-lines').value = '2000';
+  $('sl-errors').checked = true;
+  loadSysLogs();
+}
+
 // ══ Alertes de la chaîne (états relevés par BL-RMO) ══════════════════════
-let caAlerts = [], caShowAll = false, caPigeFrom = null;
+let caAlerts = [], caLimit = 10, caPigeFrom = null;
 const CA_STATES = {
   down:     ['Hors service', 'bg-red-50 text-red-700'],
   warn:     ['Alerte', 'bg-amber-50 text-amber-700'],
@@ -717,6 +842,7 @@ async function loadChainAlerts() {
   // Alertes démarrées à moins de 30 s d'écart : cause commune probable
   out.forEach(a => { a.with = out.filter(b => b !== a && Math.abs(b.t0 - a.t0) <= 30000).map(b => b.device); });
   caAlerts = out.reverse();
+  headerAlerts('ch', caAlerts.map(a => ({ t0: a.t0, t1: a.t1, emails: a.emails || 0 })));
   const sel = $('ca-dev'), cur = sel.value;
   const devs = [...new Set(caAlerts.map(a => a.device))].sort();
   sel.innerHTML = '<option value="">Tous les appareils</option>' + devs.map(d => `<option>${esc(d)}</option>`).join('');
@@ -733,9 +859,9 @@ function caPigeLinks(a) {
 }
 function caList() { const dev = $('ca-dev').value; return caAlerts.filter(a => !dev || a.device === dev); }
 function renderChainAlerts() {
-  const list = caList(), shown = caShowAll ? list : list.slice(0, 50);
+  const list = caList(), shown = list.slice(0, caLimit);
   $('ca-count').textContent = `${list.length} alerte${list.length > 1 ? 's' : ''}`;
-  $('ca-more').classList.toggle('hidden', caShowAll || list.length <= 50);
+  $('ca-more').classList.toggle('hidden', list.length <= caLimit);
   if (!shown.length) { $('ca-body').innerHTML = '<tr><td colspan="9" class="py-8 text-center text-gray-400">Aucune alerte relevée</td></tr>'; return; }
   const hms = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
   $('ca-body').innerHTML = shown.map(a => {
@@ -767,7 +893,7 @@ function exportChainAlerts() {
 }
 
 // ══ Réception FM ════════════════════════════════════════════════════════
-let rcAlerts = [], rcShowAll = false, rcPigeFrom = null, rcArchives = [];
+let rcAlerts = [], rcLimit = 10, rcPigeFrom = null, rcArchives = [];
 const RC_COLORS = {
   'Signal perdu':       'bg-red-50 text-red-700',
   'Perte émetteur':     'bg-red-50 text-red-700',
@@ -798,13 +924,15 @@ function rcPigeLinks(startIso, endIso) {
 async function loadReception() {
   try {
     const st = await api('/api/stats');
-    const up = st.uptime || 0;
-    $('rc-uptime').textContent = up >= 86400 ? `${Math.floor(up / 86400)} j ${Math.floor(up % 86400 / 3600)} h` : `${Math.floor(up / 3600)} h ${Math.floor(up % 3600 / 60)} min`;
-    if (st.start_time) {
-      const d = new Date(st.start_time);
-      $('rc-start').textContent = isNaN(d) ? st.start_time : `depuis le ${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    }
-  } catch (e) {}
+    const parts = [String(st.frequency || '').replace('M', ' MHz').replace('.', ',')];
+    if (st.signal_dbf != null) parts.push(`${Number(st.signal_dbf).toFixed(1).replace('.', ',')} dBf`);
+    if (st.ps && st.ps !== '-') parts.push(`RDS ${esc(st.ps)}`);
+    if (st.signal_ok && st.stereo_known !== false && st.stereo_present != null) parts.push(st.stereo_present ? 'stéréo' : 'mono');
+    const sub = parts.filter(Boolean).join(' · ');
+    if (st.use_tef && st.tuner_connected === false) setTile('rc-state', 'Tuner absent', C_BAD, 'le tuner TEF ne répond plus (USB)');
+    else if (st.signal_ok) setTile('rc-state', 'En réception', C_OK, sub);
+    else setTile('rc-state', 'Pas de signal', C_BAD, sub);
+  } catch (e) { setTile('rc-state', 'Indisponible', C_BAD, esc(e.message)); }
   try {
     const ps = await api('/api/pige/status');
     rcPigeFrom = ps.oldest ?? (ps.segments && ps.segments.length ? ps.segments[0].start : null);
@@ -817,27 +945,24 @@ async function loadReception() {
     $('rc-body').innerHTML = `<tr><td colspan="7" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`;
     return;
   }
-  const now = Date.now();
-  [[7, 'rc-7d'], [30, 'rc-30d']].forEach(([days, id]) => {
-    const list = rcAlerts.filter(a => now - new Date(a.start_time).getTime() <= days * 86400e3);
-    $(id).textContent = list.length;
-    const tot = list.reduce((s, a) => s + (a.duration || 0), 0);
-    $(id + '-dur').textContent = list.length ? `durée cumulée ${fmtDur(tot)}` : 'aucune';
-  });
+  headerAlerts('rc', rcAlerts.filter(a => a.status !== 'restored_only').map(a => ({
+    t0: tms(a.start_time), t1: a.status === 'ongoing' ? null : tms(a.end_time), emails: a.emails_sent || 0 })));
   const sel = $('rc-type'), cur = sel.value;
   const types = [...new Set(rcAlerts.map(a => a.alert_label).filter(Boolean))];
   sel.innerHTML = '<option value="">Tous les types</option>' + types.map(t => `<option>${esc(t)}</option>`).join('');
   sel.value = types.includes(cur) ? cur : '';
   renderReception();
 }
+let rtLimit = 10;
 async function loadRtHistory() {
   let d;
-  try { d = await api('/api/rds/rt_history?limit=10'); }
+  try { d = await api(`/api/rds/rt_history?limit=${rtLimit}`); }
   catch (e) {
     $('rt-body').innerHTML = `<tr><td colspan="3" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`;
     return;
   }
   const rows = d.data || [];
+  $('rt-more').classList.toggle('hidden', rows.length < rtLimit);
   if (!rows.length) {
     $('rt-body').innerHTML = '<tr><td colspan="3" class="py-8 text-center text-gray-400">Aucun RadioText enregistré pour le moment</td></tr>';
     return;
@@ -901,9 +1026,9 @@ function exportDab() {
 function renderReception() {
   const type = $('rc-type').value;
   const list = rcAlerts.filter(a => !type || a.alert_label === type);
-  const shown = rcShowAll ? list : list.slice(0, 50);
+  const shown = list.slice(0, rcLimit);
   $('rc-count').textContent = `${list.length} alerte${list.length > 1 ? 's' : ''}`;
-  $('rc-more').classList.toggle('hidden', rcShowAll || list.length <= 50);
+  $('rc-more').classList.toggle('hidden', list.length <= rcLimit);
   if (!shown.length) {
     $('rc-body').innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-400">Aucune alerte enregistrée</td></tr>';
     return;
@@ -937,7 +1062,7 @@ function renderReception() {
 }
 
 // ══ Réception DAB+ (DAB_PATCH) ══════════════════════════════════════════
-let dbEvents = [], dbShowAll = false;
+let dbEvents = [], dbLimit = 10;
 const DB_COLORS = {
   'Ensemble dégradé': 'bg-red-50 text-red-700',
   'Service absent': 'bg-red-50 text-red-700',
@@ -961,11 +1086,10 @@ function dbPigeLinks(a) {
 async function loadDab() {
   try {
     const st = await api('/api/dab/status');
-    $('db-state').textContent = !st.service_running ? 'Service arrêté' : st.receiver_up ? 'En réception' : 'Hors service';
-    $('db-state').className = 'text-2xl font-bold ' + (st.service_running && st.receiver_up ? 'text-green-600' : 'text-red-600');
     const rf = st.rf || {};
-    $('db-sub').textContent = `Canal ${st.channel}` + (rf.ensemble_label ? ` · ${rf.ensemble_label}` : '')
-      + (rf.snr != null ? ` · SNR ${rf.snr.toFixed(1)} dB` : '');
+    setTile('db-state', !st.service_running ? 'Service arrêté' : st.receiver_up ? 'En réception' : 'Hors service',
+      st.service_running && st.receiver_up ? C_OK : C_BAD,
+      esc(`Canal ${st.channel}` + (rf.ensemble_label ? ` · ${rf.ensemble_label}` : '') + (rf.snr != null ? ` · SNR ${rf.snr.toFixed(1).replace('.', ',')} dB` : '')));
   } catch (e) {}
   try {   // piges DAB+ : lien « Écouter » sur les alertes de leur service
     dbPiges = ((await api('/api/pige/list')).piges || []).filter(p => p.kind === 'dab' && p.sid);
@@ -976,13 +1100,7 @@ async function loadDab() {
     $('db-body').innerHTML = `<tr><td colspan="9" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`;
     return;
   }
-  const now = Date.now();
-  [[7, 'db-7d'], [30, 'db-30d']].forEach(([days, id]) => {
-    const list = dbEvents.filter(a => now - new Date(a.start).getTime() <= days * 86400e3);
-    $(id).textContent = list.length;
-    const tot = list.reduce((s, a) => s + (a.duration || 0), 0);
-    $(id + '-dur').textContent = list.length ? `durée cumulée ${fmtDur(tot)}` : 'aucune';
-  });
+  headerAlerts('db', dbEvents.map(a => ({ t0: tms(a.start), t1: a.status === 'complete' ? tms(a.end) : null, emails: a.emails || 0 })));
   const fill = (sel, vals, all) => {
     const cur = sel.value;
     sel.innerHTML = `<option value="">${all}</option>` + vals.map(v => `<option>${esc(v)}</option>`).join('');
@@ -995,9 +1113,9 @@ async function loadDab() {
 function renderDab() {
   const type = $('db-type').value, svc = $('db-svc').value;
   const list = dbEvents.filter(a => (!type || a.label === type) && (!svc || a.service === svc));
-  const shown = dbShowAll ? list : list.slice(0, 50);
+  const shown = list.slice(0, dbLimit);
   $('db-count').textContent = `${list.length} alerte${list.length > 1 ? 's' : ''}`;
-  $('db-more').classList.toggle('hidden', dbShowAll || list.length <= 50);
+  $('db-more').classList.toggle('hidden', list.length <= dbLimit);
   if (!shown.length) {
     $('db-body').innerHTML = '<tr><td colspan="9" class="py-8 text-center text-gray-400">Aucune alerte enregistrée</td></tr>';
     return;

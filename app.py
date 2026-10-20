@@ -2067,7 +2067,7 @@ ROLE_LECTEUR = {
     'chain_status', 'chain_events', 'chain_device_history', 'chain_device_logs',
     'logs_search', 'logs_sources', 'account_password',
     'dab_page', 'dab_status', 'dab_events', 'dab_uptime', 'dab_slide', 'dab_listen',
-    'audio_defects_list', 'audio_defect_clip',
+    'audio_defects_list', 'audio_defect_clip', 'system_summary',
 }
 ROLE_LECTEUR_GET = {'chain_devices', 'chain_device', 'logs_rules', 'dab_settings'}      # lecture seule pour ces routes
 # Opérateur : exporter, enregistrer, intervenir sans rien régler
@@ -2180,6 +2180,113 @@ def user_api(user_id):
     changes = ', '.join(k if k != 'password' else 'mot de passe' for k in d)
     logger.info(f"Compte {u['username']} modifié par {me['username']} : {changes}")
     return jsonify({'status': 'success', 'user': u})
+
+
+# ── État de BL-RMO : services, erreurs, espace disque (onglet BL-RMO des Journaux) ──
+APP_STARTED = datetime.now()
+SYSTEM_UNITS = [('bl-rmo', 'application'), ('bl-rmo-pige', 'pige'),
+                ('bl-rmo-syslog', 'journaux'), ('bl-rmo-dab', 'DAB+')]
+DISK_CHECK_EVERY = 600            # s
+disk_state = {'free': None, 'total': None, 'path': None, 'low': False, 'checked': None, 'since': None}
+
+
+def _disk_min_free_gb():
+    try:
+        with open('config.json') as f:
+            return float(json.load(f).get('system', {}).get('disk_min_free_gb', 40))
+    except Exception:
+        return 40.0
+
+
+def _check_disk():
+    """Espace libre du disque des piges ; sous le seuil : alerte, mail et ligne d'erreur."""
+    path = getattr(pige_store, 'dir', None) or os.getcwd()
+    try:
+        du = shutil.disk_usage(path)
+    except OSError:
+        return
+    limit = _disk_min_free_gb()
+    low = du.free < limit * 1e9
+    was = disk_state['low']
+    disk_state.update(free=du.free, total=du.total, path=path, checked=datetime.now().isoformat(timespec='seconds'))
+    if low == was:
+        return
+    disk_state['low'] = low
+    disk_state['since'] = datetime.now().isoformat(timespec='seconds')
+    free_go = f"{du.free / 1e9:.0f} Go"
+    if low:
+        logger.error(f"Espace disque faible : {free_go} libres sur {du.total / 1e9:.0f} Go (seuil {limit:.0f} Go)")
+    else:
+        logger.info(f"Espace disque rétabli : {free_go} libres")
+    alert = getattr(monitor, 'email_alert', None)
+    if alert:
+        title = "Espace disque faible" if low else "Espace disque rétabli"
+        details = (f"Espace libre : {free_go} sur {du.total / 1e9:.0f} Go\nSeuil d'alerte : {limit:.0f} Go\n"
+                   f"Dossier : {path}\nLes piges les plus anciennes peuvent ne plus tenir sur le disque.")
+        try:
+            alert.send_alert(title, details, skip_cooldown=True)
+        except Exception as e:
+            logger.error(f"Mail espace disque non envoyé : {e}")
+
+
+def _disk_loop():
+    time.sleep(60)                # laisse démarrer le monitor (envoi des mails)
+    while True:
+        try:
+            _check_disk()
+        except Exception as e:
+            logger.error(f"Contrôle de l'espace disque : {e}")
+        time.sleep(DISK_CHECK_EVERY)
+
+
+def _errors_24h():
+    """Lignes WARNING et ERROR des services BL-RMO sur 24 h (format du module logging)."""
+    units = []
+    for u, _ in SYSTEM_UNITS:
+        units += ['-u', u]
+    try:
+        out = subprocess.run(['journalctl', *units, '--since', '24 hours ago', '--no-pager', '-o', 'cat'],
+                             capture_output=True, text=True, timeout=15).stdout
+    except Exception:
+        return None
+    err = sum(1 for l in out.splitlines() if ' - ERROR - ' in l or ' - CRITICAL - ' in l)
+    warn = sum(1 for l in out.splitlines() if ' - WARNING - ' in l)
+    return {'errors': err, 'warnings': warn}
+
+
+def _disk_now():
+    d = dict(disk_state, min_free_gb=_disk_min_free_gb())
+    try:                          # valeurs à jour pour l'affichage
+        du = shutil.disk_usage(getattr(pige_store, 'dir', None) or os.getcwd())
+        d.update(free=du.free, total=du.total)
+    except OSError:
+        pass
+    return d
+
+
+@app.route('/api/system/summary')
+@auth.login_required
+@limiter.exempt
+def system_summary():
+    services = []
+    dab_on = bool(dab_reader.config().get('enabled'))
+    for unit, label in SYSTEM_UNITS:
+        try:
+            st = subprocess.run(['systemctl', 'is-active', unit], capture_output=True, text=True, timeout=5).stdout.strip()
+        except Exception:
+            st = 'unknown'
+        services.append({'unit': unit, 'label': label, 'state': st,
+                         'expected': unit != 'bl-rmo-dab' or dab_on})
+    return jsonify({
+        'version': APP_VERSION, 'started': APP_STARTED.isoformat(timespec='seconds'),
+        'uptime': int((datetime.now() - APP_STARTED).total_seconds()),
+        'services': services, 'log_counts': _errors_24h(),
+        'disk': _disk_now(),
+    })
+
+
+threading_disk = __import__('threading').Thread(target=_disk_loop, name='disk-check', daemon=True)
+threading_disk.start()
 
 
 # Démarrage du monitor (exécuté aussi bien par Gunicorn que par python app.py)

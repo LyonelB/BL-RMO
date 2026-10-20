@@ -6,6 +6,20 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Journaux : en-têtes uniformes, 10 lignes par défaut
+- **Même en-tête de trois cases sur chaque onglet** :
+  - Réception FM : **Tuner FM** (En réception, Pas de signal ou Tuner absent ; fréquence, champ, PS, stéréo), **Alertes, 30 derniers jours**, **Tout est OK depuis** ;
+  - Réception DAB+ : **Récepteur DAB+**, alertes sur 30 jours, tout est OK depuis ;
+  - Chaîne de diffusion : **État de la chaîne** (tout est OK, N en alerte, N hors service ; nombre d'appareils, sondes et capteurs, réception syslog), alertes sur 30 jours, tout est OK depuis ;
+  - BL-RMO : **En service depuis** (déplacé de l'onglet FM, avec la version), **Services** (application, pige, journaux, DAB+ : actifs ou arrêtés), **Erreurs et avertissements, 24 h** (un clic les affiche dans le journal) avec l'espace disque.
+- Les cases « Alertes, 30 derniers jours » ne comptent que les alertes **qui ont envoyé au moins un mail**, avec le nombre de mails ; « Tout est OK depuis » part de la fin de la dernière de ces alertes, ou devient « En alerte depuis » en rouge. La durée cumulée et la case « 7 jours » disparaissent.
+- Le voyant de réception syslog quitte le bandeau pour la case « État de la chaîne ».
+- **10 lignes par défaut**, puis « Afficher plus » (50 de plus) : alertes FM, titres RadioText, alertes DAB+, alertes de la chaîne, journal des appareils ; journal de BL-RMO à 10 lignes (100, 500 ou 2 000 au choix).
+
+### Alerte espace disque
+- BL-RMO contrôle toutes les 10 min l'espace libre du disque des piges : **sous 40 Go**, une alerte, un mail et une erreur dans le journal ; un second mail au retour au-dessus du seuil. Seuil réglable : `system.disk_min_free_gb` dans `config.json`. Visible dans la case « Erreurs et avertissements » de l'onglet BL-RMO.
+- Nouvelle route `/api/system/summary` (version, démarrage, services, erreurs sur 24 h, disque).
+
 ### DAB+ : mails par type d'alerte
 - **DAB+ › Réglages › Mails d'alerte** : une case par type (silence audio d'un service surveillé, service surveillé absent, récepteur hors service, ensemble dégradé). Une alerte décochée reste enregistrée dans les journaux et sur le tableau de bord, sans mail. Par exemple, pour ne surveiller par mail que la radio et pas la réception du multiplex, décocher « Ensemble dégradé ».
 

@@ -56,5 +56,8 @@
     "keep_days": 30,
     "clip_days": 7,
     "max_clips_per_hour": 30
+  },
+  "system": {
+    "disk_min_free_gb": 40
   }
 }
