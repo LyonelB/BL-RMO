@@ -49,7 +49,7 @@ except Exception:  # pragma: no cover
 
 logger = logging.getLogger(__name__)
 
-PROBE_TYPES = ('ping', 'burst', 'tcp', 'http', 'snmp', 'icecast', 'fm_local')
+PROBE_TYPES = ('ping', 'burst', 'tcp', 'http', 'snmp', 'icecast', 'fm_local', 'livebox')
 STABLE_STATES = ('unknown', 'up', 'warn', 'down')
 KINDS = ('device', 'probe', 'sensor')   # appareil de la chaîne / sonde réseau / capteur de site
 
@@ -188,6 +188,16 @@ def validate_device(data, existing=None):
         pw = raw.get('password') or ''
         cfg['password'] = old.get('password', '') if pw == SECRET_MASK else str(pw)[:128]
         cfg['warn_ms'] = _num(raw.get('warn_ms'), 'Latence max', None, 1, 30000, allow_none=True)
+
+    elif probe == 'livebox':
+        # Livebox Orange : interface locale (API « sysbus »), compte administrateur
+        cfg['host'] = _host(raw.get('host'))
+        cfg['username'] = str(raw.get('username') or 'admin').strip()[:64] or 'admin'
+        pw = raw.get('password') or ''
+        cfg['password'] = old.get('password', '') if pw == SECRET_MASK else str(pw)[:128]
+        if not cfg['password']:
+            raise ValueError("Livebox : mot de passe administrateur requis")
+        cfg['reboot_warn_min'] = _num(raw.get('reboot_warn_min'), 'Alerte après redémarrage', 15, 1, 1440, integer=True)
 
     elif probe == 'snmp':
         cfg['host'] = _host(raw.get('host'))
@@ -414,6 +424,91 @@ def probe_http(cfg, timeout):
         return _result(True, f'Mot-clé « {kw} » absent de la page', lat, metrics, warn=True)
     warn = _latency_warn(cfg, lat)
     return _result(True, 'Latence élevée' if warn else f'HTTP {r.status_code}', lat, metrics, warn=warn)
+
+
+# ── Livebox Orange (API locale « sysbus », Livebox 4 à 7) ──────────────────
+_LB_HEADERS = {'Content-Type': 'application/x-sah-ws-4-call+json', 'User-Agent': 'BL-RMO chain probe'}
+_LB_WAN_OK = ('up', 'connected', 'bound')
+
+
+def _lb_call(sess, url, service, method, params=None, timeout=5, headers=None):
+    r = sess.post(url, data=json.dumps({'service': service, 'method': method, 'parameters': params or {}}),
+                  headers=dict(_LB_HEADERS, **(headers or {})), timeout=timeout)
+    r.raise_for_status()
+    return r.json()
+
+
+def probe_livebox(cfg, timeout):
+    """Livebox : temps de fonctionnement (redémarrage récent = alerte), redémarrages,
+    état de la connexion Internet. Interface non documentée par Orange : les champs
+    absents d'un modèle sont simplement ignorés."""
+    url = f"http://{cfg['host']}/ws"
+    t0 = time.perf_counter()
+    sess = requests.Session()
+    try:
+        login = _lb_call(sess, url, 'sah.Device.Information', 'createContext',
+                         {'applicationName': 'webui', 'username': cfg.get('username') or 'admin',
+                          'password': cfg.get('password', '')}, timeout,
+                         headers={'Authorization': 'X-Sah-Login'})
+        ctx = (login.get('data') or {}).get('contextID')
+        if not ctx:
+            return _result(False, 'Livebox : connexion refusée (mot de passe ?)', (time.perf_counter() - t0) * 1000)
+        auth = {'Authorization': f'X-Sah {ctx}', 'X-Context': ctx}
+        info = _lb_call(sess, url, 'DeviceInfo', 'get', {}, timeout, headers=auth)
+        info = info.get('status') or info.get('data') or {}
+        try:
+            wan = _lb_call(sess, url, 'NMC', 'getWANStatus', {}, timeout, headers=auth)
+            wan = wan.get('data') or wan.get('status') or {}
+        except (requests.exceptions.RequestException, ValueError):
+            wan = {}
+    except requests.exceptions.Timeout:
+        return _result(False, 'Délai dépassé')
+    except requests.exceptions.ConnectionError:
+        return _result(False, 'Connexion impossible')
+    except (requests.exceptions.RequestException, ValueError) as e:
+        return _result(False, f'Livebox : réponse inattendue ({e.__class__.__name__})')
+    finally:
+        sess.close()
+    lat = (time.perf_counter() - t0) * 1000
+
+    metrics, warn, msgs = [], False, []
+    up = info.get('UpTime')
+    if isinstance(up, (int, float)):
+        recent = up < int(cfg.get('reboot_warn_min') or 15) * 60
+        metrics.append({'label': 'En marche depuis', 'display': _fmt_uptime(up), 'value': up, 'unit': '',
+                        'state': 'warn' if recent else 'ok'})
+        if recent:
+            warn = True
+            msgs.append(f'Redémarrée il y a {_fmt_uptime(up)}')
+    if isinstance(info.get('NumberOfReboots'), (int, float)):
+        metrics.append({'label': 'Redémarrages', 'display': str(int(info['NumberOfReboots'])),
+                        'value': int(info['NumberOfReboots']), 'unit': '', 'state': None})
+    st = str(wan.get('WanState') or wan.get('ConnectionState') or '').strip()
+    if st:
+        ok = st.lower() in _LB_WAN_OK
+        metrics.append({'label': 'Internet', 'display': 'Connecté' if ok else st, 'value': st, 'unit': '',
+                        'state': 'ok' if ok else 'warn'})
+        if not ok:
+            warn = True
+            msgs.append(f'Internet : {st}')
+    link = str(wan.get('LinkType') or '').strip()
+    lstate = str(wan.get('LinkState') or '').strip()
+    if link or lstate:
+        lok = not lstate or lstate.lower() in _LB_WAN_OK
+        metrics.append({'label': 'Lien', 'display': ' '.join(x for x in (link.upper(), lstate) if x), 'value': lstate,
+                        'unit': '', 'state': 'ok' if lok else 'warn'})
+        if not lok:
+            warn = True
+            msgs.append(f'Lien {link} : {lstate}')
+    if wan.get('IPAddress'):
+        metrics.append({'label': 'IP publique', 'display': str(wan['IPAddress']), 'value': str(wan['IPAddress']),
+                        'unit': '', 'state': None})
+    model = ' '.join(str(info.get(k) or '') for k in ('ModelName', 'SoftwareVersion')).strip()
+    if model:
+        metrics.append({'label': 'Modèle', 'display': model[:60], 'value': model, 'unit': '', 'state': None})
+    if not metrics:
+        return _result(True, 'Livebox joignable, mais aucune valeur lue (modèle non reconnu ?)', lat, warn=True)
+    return _result(True, ', '.join(msgs) if msgs else 'Livebox OK', lat, metrics, warn=warn)
 
 
 def _fmt_uptime(seconds):
@@ -652,6 +747,8 @@ def run_probe(dev, fm_getter=None):
             return probe_icecast(cfg, timeout)
         if probe == 'fm_local':
             return probe_fm_local(fm_getter() if fm_getter else None)
+        if probe == 'livebox':
+            return probe_livebox(cfg, timeout)
         return _result(False, 'Type de sonde inconnu')
     except Exception as e:  # garde-fou : une sonde ne doit jamais tuer le thread
         logger.exception(f"Sonde {dev.get('name')} : erreur inattendue")
@@ -1400,6 +1497,9 @@ class ChainMonitor:
             out.append(['Sonde', f"{'Page web' if p == 'http' else 'Icecast'} : {cfg.get('url')}"])
         elif p == 'fm_local':
             out.append(['Sonde', 'Récepteur FM local'])
+        elif p == 'livebox':
+            out.append(['Sonde', f"Livebox {cfg.get('host')} (compte {cfg.get('username') or 'admin'})"])
+            out.append(['Seuils', f"alerte {cfg.get('reboot_warn_min', 15)} min après un redémarrage, Internet coupé"])
         out.append(['Intervalle', f"{d.get('interval', 30)} s"])
         out.append(['Échecs avant hors service', str(d.get('fail_threshold', 3))])
         mail = 'Non'

@@ -6,6 +6,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Chaîne : sonde Livebox
+- Nouveau type de sonde **Livebox** (Orange, Livebox 4 à 7) : lit l'interface locale de la box avec le compte administrateur (mot de passe masqué comme les autres secrets) : temps de fonctionnement, nombre de redémarrages, état de la connexion Internet et du lien (fibre, ADSL), IP publique, modèle et version. Un **redémarrage** met l'appareil en alerte pendant une durée réglable (15 min par défaut), une connexion Internet coupée aussi ; « Hors service » si la box ne répond plus. Interface non documentée par Orange : les valeurs absentes d'un modèle sont ignorées.
+
 ### RadioText : titres vides ignorés
 - Un RadioText sans lettre ni chiffre (« - », envoyé par l'automation entre deux morceaux quand l'artiste et le titre sont vides) n'est plus affiché, n'entre plus dans l'historique des titres et ne compte plus comme RadioText reçu pour l'alerte « RadioText absent ».
 

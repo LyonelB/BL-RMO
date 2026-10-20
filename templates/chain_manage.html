@@ -399,6 +399,7 @@ const PROBES = {
   snmp:     { label: 'SNMP',        desc: 'Valeurs internes (OID)' },
   icecast:  { label: 'Icecast',     desc: 'Flux en ligne, auditeurs' },
   fm_local: { label: 'Réception FM', desc: 'Ce BL-RMO, en bout de chaîne' },
+  livebox:  { label: 'Livebox',     desc: 'Orange : redémarrage, Internet' },
 };
 
 const STATES = {
@@ -1010,6 +1011,16 @@ function renderProbeFields(cfg = {}) {
     snmpMetrics = (cfg.metrics && cfg.metrics.length) ? cfg.metrics.map(m => ({ ...m })) : SNMP_PRESETS.system.metrics.map(m => ({ ...m }));
     renderMetrics();
     snmpVersionChanged();
+  } else if (currentProbe === 'livebox') {
+    f.innerHTML = `
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">${hostField}
+        <label class="field"><span>Utilisateur</span><input id="c-username" type="text" autocomplete="off" value="${esc(cfg.username || 'admin')}"></label>
+        <label class="field"><span>Mot de passe administrateur</span><input id="c-password" type="password" autocomplete="new-password" value="${esc(cfg.password || '')}"></label>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <label class="field"><span>Alerte après un redémarrage (min)</span><input id="c-reboot_warn_min" type="number" min="1" max="1440" value="${cfg.reboot_warn_min ?? 15}"></label>
+      </div>
+      <p class="hint">Lit l'interface locale de la Livebox, comme son tableau de bord : temps de fonctionnement, nombre de redémarrages, état de la connexion Internet et du lien (fibre, ADSL), IP publique. Un redémarrage met l'appareil en alerte pendant la durée choisie ; une connexion Internet coupée aussi. Cochez « aussi en cas d'alerte (dégradé) » pour recevoir un mail.</p>`;
   } else if (currentProbe === 'icecast') {
     f.innerHTML = `
       <label class="field"><span>URL du serveur Icecast</span><input id="c-url" type="text" value="${esc(cfg.url || '')}" placeholder="http://192.168.1.30:8000"></label>
@@ -1169,7 +1180,7 @@ function collect() {
   const cfg = {};
   const get = id => document.getElementById(id);
   ['host', 'port', 'warn_ms', 'count', 'spacing_ms', 'loss_pct', 'max_ms', 'jitter_ms', 'url', 'expect_status', 'keyword', 'username', 'password',
-   'community', 'version', 'mount', 'min_listeners', 'user', 'level', 'auth_proto', 'auth_pass', 'priv_proto', 'priv_pass'].forEach(k => { if (get('c-' + k)) cfg[k] = get('c-' + k).value.trim(); });
+   'community', 'version', 'mount', 'min_listeners', 'reboot_warn_min', 'user', 'level', 'auth_proto', 'auth_pass', 'priv_proto', 'priv_pass'].forEach(k => { if (get('c-' + k)) cfg[k] = get('c-' + k).value.trim(); });
   if (get('c-verify_tls')) cfg.verify_tls = get('c-verify_tls').checked;
   if (currentProbe === 'snmp') cfg.metrics = snmpMetrics.filter(m => (m.oid || '').trim());
   return {
