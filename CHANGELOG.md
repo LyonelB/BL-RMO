@@ -6,6 +6,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### DAB+ : mails par type d'alerte
+- **DAB+ › Réglages › Mails d'alerte** : une case par type (silence audio d'un service surveillé, service surveillé absent, récepteur hors service, ensemble dégradé). Une alerte décochée reste enregistrée dans les journaux et sur le tableau de bord, sans mail. Par exemple, pour ne surveiller par mail que la radio et pas la réception du multiplex, décocher « Ensemble dégradé ».
+
 ### Journaux de la chaîne : alertes relevées par BL-RMO
 - **Nouveau tableau « Alertes de la chaîne »** en tête de Journaux › Chaîne de diffusion, comme pour la réception FM et le DAB+ : date, appareil, alerte ou hors service, début et fin, durée, état, détail (valeurs hors seuil), « Écouter » et « MP3 » de la pige FM, filtre par appareil et export CSV. Il reprend tout l'historique enregistré, y compris les alertes passées.
 - Les alertes qui démarrent à moins de 30 s d'écart sont signalées (« En même temps que DB91-TX ») : une cause commune en amont est probable, par exemple une source muette en studio vue par le DB91-TX, le DB91-RX et le Sound4.

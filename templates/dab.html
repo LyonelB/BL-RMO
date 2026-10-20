@@ -263,6 +263,16 @@
         <label class="block"><span class="text-xs text-gray-500">Service absent : alerte après (s)</span>
           <input id="s-service_loss_duration" type="number" step="5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
       </div>
+      <div class="mt-4 pt-4 border-t border-gray-100">
+        <div class="text-xs font-semibold text-gray-700 mb-1">Mails d'alerte</div>
+        <p class="text-[11px] text-gray-400 mb-2">Les alertes décochées restent enregistrées dans les journaux et sur le tableau de bord, sans mail.</p>
+        <div class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+          <label class="flex items-center gap-2"><input id="e-silence" type="checkbox" class="w-4 h-4"> Silence audio d'un service surveillé</label>
+          <label class="flex items-center gap-2"><input id="e-absent" type="checkbox" class="w-4 h-4"> Service surveillé absent</label>
+          <label class="flex items-center gap-2"><input id="e-receiver" type="checkbox" class="w-4 h-4"> Récepteur DAB+ hors service</label>
+          <label class="flex items-center gap-2"><input id="e-ensemble" type="checkbox" class="w-4 h-4"> Ensemble dégradé (réception du multiplex)</label>
+        </div>
+      </div>
       <div class="flex items-center gap-3 mt-4">
         <button onclick="saveSettings()" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Enregistrer</button>
         <span class="text-xs" id="s-msg"></span>
@@ -555,6 +565,7 @@
   // ── Réglages ───────────────────────────────────────────
   const FIELDS = ['ensemble_name', 'carousel_size', 'gain', 'dashboard_sid', 'snr_threshold', 'fic_quality_threshold', 'ensemble_loss_duration',
                   'silence_threshold', 'silence_duration', 'service_loss_duration'];
+  const EMAIL_KINDS = ['silence', 'absent', 'receiver', 'ensemble'];
   async function loadSettings() {
     if (!isAdmin) return;
     const r = await fetch('/api/dab/settings', { credentials: 'include' });
@@ -564,6 +575,8 @@
     $('s-enabled').checked = !!settings.enabled;
     FIELDS.forEach(f => { if (settings[f] != null) $('s-' + f).value = settings[f]; });
     if (!$('s-carousel_size').value) $('s-carousel_size').value = '2';   // ancien réglage « 1 à la fois »
+    const ek = settings.email_kinds || {};
+    EMAIL_KINDS.forEach(k => { $('e-' + k).checked = ek[k] !== false; });
     $('s-freq').textContent = `${Number(settings.frequency_mhz).toFixed(3).replace('.', ',')} MHz`;
   }
   async function post(body) {
@@ -578,6 +591,7 @@
   async function saveSettings() {
     const body = { enabled: $('s-enabled').checked, channel: $('s-channel').value };
     FIELDS.forEach(f => { body[f] = $('s-' + f).value; });
+    body.email_kinds = Object.fromEntries(EMAIL_KINDS.map(k => [k, $('e-' + k).checked]));
     $('s-msg').className = 'text-xs text-gray-500'; $('s-msg').textContent = 'Enregistrement…';
     try {
       await post(body);

@@ -65,6 +65,8 @@ DEFAULTS = {
     'sync_timeout': 300,              # s sans ensemble décodé (FIC) avant de relancer welle-cli
                                       # (au démarrage, la synchro prend déjà 2 à 3 min sur la clé V4)
     'listen_max_minutes': 15,         # écoute depuis l'interface (protection de la clé)
+    # Mails par type d'alerte (toutes restent enregistrées dans les journaux)
+    'email_kinds': {'receiver': True, 'ensemble': True, 'absent': True, 'silence': True},
 }
 
 # Canaux de la bande III (kHz)
@@ -448,7 +450,8 @@ class DabMonitor:
         details = (f"{message}\nCanal : {self.cfg['channel']} ({self.cfg['frequency_mhz']} MHz)"
                    + (f"\nService : {label} ({sid})" if sid else ''))
         sent = False
-        if self.email:
+        kinds = self.cfg.get('email_kinds') or {}
+        if self.email and kinds.get(kind, True):
             try:
                 sent = bool(self.email.send_alert(title, details, skip_cooldown=True))
             except Exception as e:

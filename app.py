@@ -1499,6 +1499,8 @@ DAB_EDITABLE = {
     'silence_duration': int, 'service_loss_duration': int, 'ensemble_loss_duration': int,
     'receiver_loss_duration': int, 'listen_max_minutes': int,
     'dashboard_sid': lambda v: str(v or '').strip().lower(),
+    # Mails par type d'alerte DAB+ : récepteur, ensemble, service absent, silence
+    'email_kinds': lambda v: {k: bool(v.get(k, True)) for k in ('receiver', 'ensemble', 'absent', 'silence')},
 }
 
 
