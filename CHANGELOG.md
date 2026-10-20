@@ -6,6 +6,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### RadioText FM plus fiable
+- **Blocs RDS vérifiés** : le décodeur lit enfin le niveau d'erreur de chaque bloc envoyé par le tuner et n'utilise que les blocs intacts, comme FM-DX-Webserver. Un caractère corrompu n'entre plus dans le PS ou le RadioText.
+- **Changement de titre propre** : beaucoup de codeurs ne basculent pas le drapeau A/B quand le texte change. Un segment dont le contenu change efface désormais le texte en cours, et le nouveau RadioText n'est affiché qu'une fois reçu en entier : plus de mélange de l'ancien et du nouveau titre, plus de titre qui tarde à se mettre à jour.
+- RadioText en groupes **2B** (32 caractères) pris en charge, en plus des groupes 2A.
+- Toutes les 15 min, le journal `bl-rmo` donne la qualité de réception RDS (part des groupes avec erreur).
+
 ### Journaux : exports des alertes
 - **Réception FM** : bouton « Exporter » (CSV) des alertes affichées, filtre compris, avec le message de l'alerte et celui du rétablissement (par exemple « RadioText absent depuis 600s »).
 - **Titres diffusés (RadioText)** : bouton « Exporter » de l'historique complet du RadioText reçu (date, heure, PS, texte), pour comparer avec les alertes RadioText.
