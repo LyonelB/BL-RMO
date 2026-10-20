@@ -6,6 +6,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### RadioText : titres vides ignorés
+- Un RadioText sans lettre ni chiffre (« - », envoyé par l'automation entre deux morceaux quand l'artiste et le titre sont vides) n'est plus affiché, n'entre plus dans l'historique des titres et ne compte plus comme RadioText reçu pour l'alerte « RadioText absent ».
+
 ### Journaux : en-têtes uniformes, 10 lignes par défaut
 - **Même en-tête de trois cases sur chaque onglet** :
   - Réception FM : **Tuner FM** (En réception, Pas de signal ou Tuner absent ; fréquence, champ, PS, stéréo), **Alertes, 30 derniers jours**, **Tout est OK depuis** ;

@@ -657,8 +657,17 @@ class FMMonitor:
                 import threading as _t
                 _t.Thread(target=self._fetch_station_logo, daemon=True).start()
 
+    @staticmethod
+    def _rt_meaningful(rt):
+        """Un RadioText sans lettre ni chiffre (« - », « / ») est un titre vide envoyé par
+        l'automation entre deux morceaux : il ne compte ni à l'affichage, ni dans
+        l'historique, ni pour l'alerte « RadioText absent »."""
+        return bool(rt) and any(c.isalnum() for c in rt)
+
     def _on_tef_rt(self, rt):
         """Reçoit le RadioText RDS du TEF."""
+        if not self._rt_meaningful(rt):
+            return
         with self.stats_lock:
             if rt:
                 self.stats['rt']  = rt
@@ -677,7 +686,7 @@ class FMMonitor:
     def _rt_history_note(self, rt, ps=None):
         """Valide un RadioText reçu et l'enregistre s'il est nouveau (RT_HISTORY_PATCH)."""
         text = ' '.join(rt.split())
-        if not text:
+        if not self._rt_meaningful(text):
             return
         now = time.time()
         if text != self._rth_candidate:
