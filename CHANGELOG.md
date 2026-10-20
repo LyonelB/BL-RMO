@@ -14,6 +14,7 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
   - BL-RMO : **En service depuis** (déplacé de l'onglet FM, avec la version), **Services** (application, pige, journaux, DAB+ : actifs ou arrêtés), **Erreurs et avertissements, 24 h** (un clic les affiche dans le journal) avec l'espace disque.
 - Les cases « Alertes, 30 derniers jours » ne comptent que les alertes **qui ont envoyé au moins un mail**, avec le nombre de mails ; « Tout est OK depuis » part de la fin de la dernière de ces alertes, ou devient « En alerte depuis » en rouge. La durée cumulée et la case « 7 jours » disparaissent.
 - Le voyant de réception syslog quitte le bandeau pour la case « État de la chaîne ».
+- Réception FM : une alerte restée « en cours » sans retour enregistré (surveillance redémarrée pendant l'alerte, ou alerte plus récente du même type) s'affiche « Fin inconnue » et ne met plus l'en-tête « En alerte depuis ».
 - **10 lignes par défaut**, puis « Afficher plus » (50 de plus) : alertes FM, titres RadioText, alertes DAB+, alertes de la chaîne, journal des appareils ; journal de BL-RMO à 10 lignes (100, 500 ou 2 000 au choix).
 
 ### Alerte espace disque

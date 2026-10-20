@@ -893,6 +893,7 @@ function exportChainAlerts() {
 }
 
 // ══ Réception FM ════════════════════════════════════════════════════════
+let rcMonitorStart = null;
 let rcAlerts = [], rcLimit = 10, rcPigeFrom = null, rcArchives = [];
 const RC_COLORS = {
   'Signal perdu':       'bg-red-50 text-red-700',
@@ -924,6 +925,8 @@ function rcPigeLinks(startIso, endIso) {
 async function loadReception() {
   try {
     const st = await api('/api/stats');
+    const m = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})$/.exec(st.start_time || '');
+    rcMonitorStart = m ? new Date(+m[3], m[2] - 1, +m[1], +m[4], +m[5], +m[6]).getTime() : null;
     const parts = [String(st.frequency || '').replace('M', ' MHz').replace('.', ',')];
     if (st.signal_dbf != null) parts.push(`${Number(st.signal_dbf).toFixed(1).replace('.', ',')} dBf`);
     if (st.ps && st.ps !== '-') parts.push(`RDS ${esc(st.ps)}`);
@@ -945,7 +948,15 @@ async function loadReception() {
     $('rc-body').innerHTML = `<tr><td colspan="7" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`;
     return;
   }
-  headerAlerts('rc', rcAlerts.filter(a => a.status !== 'restored_only').map(a => ({
+  // Une alerte « en cours » sans retour enregistré est orpheline si la surveillance a redémarré
+  // depuis (son état a été remis à zéro) ou si une alerte plus récente du même type existe.
+  rcAlerts.forEach((a, i) => {
+    if (a.status !== 'ongoing') return;
+    const t0 = tms(a.start_time);
+    if ((rcMonitorStart && t0 < rcMonitorStart) || rcAlerts.slice(0, i).some(b => b.alert_label === a.alert_label))
+      a.status = 'orphan';
+  });
+  headerAlerts('rc', rcAlerts.filter(a => a.status !== 'orphan').filter(a => a.status !== 'restored_only').map(a => ({
     t0: tms(a.start_time), t1: a.status === 'ongoing' ? null : tms(a.end_time), emails: a.emails_sent || 0 })));
   const sel = $('rc-type'), cur = sel.value;
   const types = [...new Set(rcAlerts.map(a => a.alert_label).filter(Boolean))];
@@ -999,13 +1010,13 @@ function csvStamp(iso) {
   if (isNaN(d)) return [String(iso), ''];
   return [`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`];
 }
-const CSV_STATUS = { complete: 'rétabli', ongoing: 'en cours', restored_only: 'retour seul' };
+const CSV_STATUS = { complete: 'rétabli', ongoing: 'en cours', restored_only: 'retour seul', orphan: 'fin non enregistrée' };
 function exportReception() {
   const type = $('rc-type').value;
   const list = rcAlerts.filter(a => !type || a.alert_label === type);
   downloadCsv('blrmo-alertes-fm', ['date', 'debut', 'fin', 'alerte', 'duree_s', 'etat', 'mails', 'message', 'message_retablissement'],
     list.map(a => { const [d, t0] = csvStamp(a.start_time), t1 = csvStamp(a.end_time)[1];
-      return [d, t0, a.status === 'ongoing' ? '' : t1, a.alert_label, a.status === 'ongoing' ? '' : a.duration, CSV_STATUS[a.status] || a.status,
+      return [d, t0, ['ongoing', 'orphan'].includes(a.status) ? '' : t1, a.alert_label, ['ongoing', 'orphan'].includes(a.status) ? '' : a.duration, CSV_STATUS[a.status] || a.status,
               a.emails_sent, a.message || '', a.message_restored || '']; }));
 }
 async function exportRtHistory() {
@@ -1045,6 +1056,9 @@ function renderReception() {
     } else if (a.status === 'ongoing') {
       range = `${t0} → <span class="text-red-600 font-medium">en cours</span>`;
       state = '<span class="px-2 py-0.5 rounded-full bg-red-50 text-red-700">En cours</span>';
+    } else if (a.status === 'orphan') {
+      range = `${t0} → <span class="text-gray-400">?</span>`;
+      state = '<span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600" title="Fin non enregistrée (redémarrage de la surveillance pendant l\'alerte)">Fin inconnue</span>';
     } else {
       state = '<span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">Retour seul</span>';
     }
@@ -1053,7 +1067,7 @@ function renderReception() {
       <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${day}</td>
       <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${col}">${esc(a.alert_label || '-')}</span></td>
       <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${range}</td>
-      <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.status === 'ongoing' ? '-' : fmtDur(a.duration)}</td>
+      <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.status === 'ongoing' || a.status === 'orphan' ? '-' : fmtDur(a.duration)}</td>
       <td class="py-2 pr-3 whitespace-nowrap">${state}</td>
       <td class="py-2 pr-3 text-gray-600">${a.emails_sent}</td>
       <td class="py-2 whitespace-nowrap">${rcPigeLinks(a.start_time, a.end_time)}</td>
