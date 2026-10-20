@@ -722,6 +722,8 @@ class ChainMonitor:
             cols = [r[1] for r in c.execute('PRAGMA table_info(chain_events)').fetchall()]
             if 'source' not in cols:
                 c.execute('ALTER TABLE chain_events ADD COLUMN source TEXT')
+            if 'email_sent' not in cols:   # NULL pour les événements d'avant : inconnu
+                c.execute('ALTER TABLE chain_events ADD COLUMN email_sent INTEGER')
             c.execute('''CREATE TABLE IF NOT EXISTS chain_samples (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ts TEXT NOT NULL,
@@ -1062,15 +1064,17 @@ class ChainMonitor:
                 pass
         if event:
             prev, new, msg = event
-            self._log_event(dev, prev, new, msg, now)
-            self._maybe_email(dev, prev, new, msg)
+            eid = self._log_event(dev, prev, new, msg, now)
+            self._maybe_email(dev, prev, new, msg, eid)
 
     def _log_event(self, dev, prev, new, msg, now):
+        eid = None
         try:
             with self._conn() as c:
-                c.execute('INSERT INTO chain_events (timestamp, device_id, device_name, from_state, to_state, message) '
-                          'VALUES (?,?,?,?,?,?)',
-                          (now.isoformat(timespec='seconds'), dev['id'], dev['name'], prev, new, msg))
+                cur = c.execute('INSERT INTO chain_events (timestamp, device_id, device_name, from_state, to_state, message, email_sent) '
+                                'VALUES (?,?,?,?,?,?,0)',
+                                (now.isoformat(timespec='seconds'), dev['id'], dev['name'], prev, new, msg))
+                eid = cur.lastrowid
                 c.execute('UPDATE chain_devices SET last_state=?, last_change=? WHERE id=?',
                           (new, now.isoformat(timespec='seconds'), dev['id']))
         except Exception as e:
@@ -1078,6 +1082,21 @@ class ChainMonitor:
         level = logging.WARNING if new == 'down' else logging.INFO
         logger.log(level, f"Chaîne : {dev['name']} {prev} → {new} ({msg})")
         self._journal_event(dev, prev, new, msg, now)
+        return eid
+
+    def _send_and_mark(self, alert, title, details, eid):
+        """Envoie le mail (dans un fil) et note l'envoi sur l'événement (colonne Mails des journaux)."""
+        try:
+            ok = alert.send_alert(title, details, skip_cooldown=True)
+        except Exception as e:
+            logger.error(f"Chaîne : envoi email impossible : {e}")
+            return
+        if ok and eid:
+            try:
+                with self._conn() as c:
+                    c.execute('UPDATE chain_events SET email_sent = 1 WHERE id = ?', (eid,))
+            except sqlite3.Error:
+                pass
 
     # Niveau syslog des changements d'état : hors service = erreur, alerte = avertissement
     JOURNAL_LEVELS = {'down': (3, 'hors service'), 'warn': (4, 'alerte'), 'unstable': (4, 'instable'), 'up': (6, 'rétabli')}
@@ -1105,7 +1124,7 @@ class ChainMonitor:
         except Exception as e:
             logger.warning(f"Chaîne : journal non écrit ({e})")
 
-    def _maybe_email(self, dev, prev, new, msg):
+    def _maybe_email(self, dev, prev, new, msg, eid=None):
         if not dev.get('alert_email') or not self.alert_getter:
             return
         alert = None
@@ -1133,14 +1152,12 @@ class ChainMonitor:
                 rt['last_email'] = time.time()
                 rt['alert_sent'] = True
                 what = 'injoignable' if new == 'down' else 'dégradé'
-                threading.Thread(target=alert.send_alert,
-                                 args=(f"Chaîne : {dev['name']} {what}", details),
-                                 kwargs={'skip_cooldown': True}, daemon=True).start()
+                threading.Thread(target=self._send_and_mark,
+                                 args=(alert, f"Chaîne : {dev['name']} {what}", details, eid), daemon=True).start()
             elif not bad and rt['alert_sent'] and new in ('up', 'warn'):
                 rt['alert_sent'] = False
-                threading.Thread(target=alert.send_alert,
-                                 args=(f"Chaîne : {dev['name']} rétabli", details),
-                                 kwargs={'skip_cooldown': True}, daemon=True).start()
+                threading.Thread(target=self._send_and_mark,
+                                 args=(alert, f"Chaîne : {dev['name']} rétabli", details, eid), daemon=True).start()
         except Exception as e:
             logger.error(f"Chaîne : envoi email impossible : {e}")
 

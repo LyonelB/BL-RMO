@@ -12,6 +12,7 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ### Journaux de la chaîne : alertes relevées par BL-RMO
 - **Nouveau tableau « Alertes de la chaîne »** en tête de Journaux › Chaîne de diffusion, comme pour la réception FM et le DAB+ : date, appareil, alerte ou hors service, début et fin, durée, état, détail (valeurs hors seuil), « Écouter » et « MP3 » de la pige FM, filtre par appareil et export CSV. Il reprend tout l'historique enregistré, y compris les alertes passées.
 - Les alertes qui démarrent à moins de 30 s d'écart sont signalées (« En même temps que DB91-TX ») : une cause commune en amont est probable, par exemple une source muette en studio vue par le DB91-TX, le DB91-RX et le Sound4.
+- Colonne **Mails** : nombre de mails envoyés pour l'alerte et son rétablissement (désormais enregistré à chaque envoi ; « · » pour les alertes antérieures, non enregistrées). Elle figure aussi dans l'export CSV.
 
 #### Changements d'état copiés dans le journal
 - Chaque changement d'état relevé par BL-RMO (alerte, hors service, rétabli) est aussi écrit dans les journaux de la chaîne, sous l'adresse de l'appareil, programme `bl-rmo`. Il apparaît dans **Journaux › Chaîne de diffusion**, dans l'onglet Journaux de l'appareil et dans les exports, à côté des messages syslog et des traps de l'appareil, par exemple « DB91-RX (appareil) : alerte, Valeur hors seuil : Sortie G (moy.) = -80.0 dB ». Niveaux : hors service = Erreur, alerte = Avertissement, rétabli = Info. Le premier relevé après un démarrage n'est pas copié.

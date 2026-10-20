@@ -286,11 +286,12 @@
               <th class="font-medium py-2 pr-3">Durée</th>
               <th class="font-medium py-2 pr-3">État</th>
               <th class="font-medium py-2 pr-3">Détail</th>
+              <th class="font-medium py-2 pr-3">Mails</th>
               <th class="font-medium py-2">Pige</th>
             </tr>
           </thead>
           <tbody id="ca-body" class="divide-y divide-gray-50">
-            <tr><td colspan="8" class="py-8 text-center text-gray-400">Chargement...</td></tr>
+            <tr><td colspan="9" class="py-8 text-center text-gray-400">Chargement...</td></tr>
           </tbody>
         </table>
       </div>
@@ -683,7 +684,7 @@ const CA_RANK = { unstable: 1, warn: 2, down: 3 };
 async function loadChainAlerts() {
   let evs;
   try { evs = (await api('/api/chain/events?limit=1000')).events || []; }
-  catch (e) { $('ca-body').innerHTML = `<tr><td colspan="8" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`; return; }
+  catch (e) { $('ca-body').innerHTML = `<tr><td colspan="9" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`; return; }
   try {
     const ps = await api('/api/pige/status');
     caPigeFrom = ps.oldest ?? (ps.segments && ps.segments.length ? ps.segments[0].start : null);
@@ -695,10 +696,15 @@ async function loadChainAlerts() {
     if (bad) {
       const a = open[id];
       if (!a) {
-        open[id] = { device: e.device_name, device_id: id, state: e.to_state, start: e.timestamp, end: null, message: e.message || '' };
+        open[id] = { device: e.device_name, device_id: id, state: e.to_state, start: e.timestamp, end: null, message: e.message || '',
+                     emails: e.email_sent == null ? null : e.email_sent };
         out.push(open[id]);
-      } else if (bad > CA_RANK[a.state]) { a.state = e.to_state; a.message = e.message || a.message; }
+      } else {
+        if (bad > CA_RANK[a.state]) { a.state = e.to_state; a.message = e.message || a.message; }
+        if (e.email_sent != null) a.emails = (a.emails || 0) + e.email_sent;
+      }
     } else if (open[id] && (e.to_state === 'up' || e.to_state === 'disabled')) {
+      if (e.email_sent != null) open[id].emails = (open[id].emails || 0) + e.email_sent;
       open[id].end = e.timestamp;
       delete open[id];
     }
@@ -730,7 +736,7 @@ function renderChainAlerts() {
   const list = caList(), shown = caShowAll ? list : list.slice(0, 50);
   $('ca-count').textContent = `${list.length} alerte${list.length > 1 ? 's' : ''}`;
   $('ca-more').classList.toggle('hidden', caShowAll || list.length <= 50);
-  if (!shown.length) { $('ca-body').innerHTML = '<tr><td colspan="8" class="py-8 text-center text-gray-400">Aucune alerte relevée</td></tr>'; return; }
+  if (!shown.length) { $('ca-body').innerHTML = '<tr><td colspan="9" class="py-8 text-center text-gray-400">Aucune alerte relevée</td></tr>'; return; }
   const hms = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
   $('ca-body').innerHTML = shown.map(a => {
     const d0 = new Date(a.t0), [lab, col] = CA_STATES[a.state] || CA_STATES.warn;
@@ -747,16 +753,17 @@ function renderChainAlerts() {
       <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.duration != null ? fmtDur(a.duration) : '-'}</td>
       <td class="py-2 pr-3 whitespace-nowrap">${state}</td>
       <td class="py-2 pr-3 text-gray-500" style="overflow-wrap:anywhere">${esc(msg)}${together}</td>
+      <td class="py-2 pr-3 text-gray-600" title="${a.emails == null ? 'Non enregistré pour les alertes antérieures' : ''}">${a.emails == null ? '<span class="text-gray-300">·</span>' : a.emails}</td>
       <td class="py-2 whitespace-nowrap">${caPigeLinks(a)}</td>
     </tr>`;
   }).join('');
 }
 function exportChainAlerts() {
   const st = t => { const d = new Date(t); return [`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`]; };
-  downloadCsv('blrmo-alertes-chaine', ['date', 'debut', 'fin', 'appareil', 'alerte', 'duree_s', 'etat', 'detail', 'en_meme_temps_que'],
+  downloadCsv('blrmo-alertes-chaine', ['date', 'debut', 'fin', 'appareil', 'alerte', 'duree_s', 'etat', 'mails', 'detail', 'en_meme_temps_que'],
     caList().map(a => { const [d, t0] = st(a.t0);
       return [d, t0, a.t1 ? st(a.t1)[1] : '', a.device, (CA_STATES[a.state] || CA_STATES.warn)[0], a.duration ?? '',
-              a.t1 ? 'rétabli' : 'en cours', a.message || '', a.with.join(', ')]; }));
+              a.t1 ? 'rétabli' : 'en cours', a.emails ?? '', a.message || '', a.with.join(', ')]; }));
 }
 
 // ══ Réception FM ════════════════════════════════════════════════════════
