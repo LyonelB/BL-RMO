@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>BL-RMO · FM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .sidebar-link { display:flex; align-items:center; gap:10px; padding:10px 16px; border-radius:8px; color:#64748b; font-size:0.875rem; font-weight:500; transition:all 0.15s; text-decoration:none; }
+    .sidebar-link:hover, .sidebar-link.active { background:#eff6ff; color:#2563eb; }
+    .sidebar-link svg { width:18px; height:18px; flex-shrink:0; }
+    .section { background:white; border:1px solid #f1f5f9; border-radius:12px; padding:20px; margin-bottom:16px; }
+    .section-title { font-size:0.75rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+  </style>
+{% include '_roles.html' %}
+</head>
+<body class="flex h-screen overflow-hidden bg-slate-50">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col flex-shrink-0 h-screen transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 ease-in-out">
+  <div class="p-5 border-b border-gray-100">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">RMO</div>
+      <div>
+        <div class="text-sm font-semibold text-gray-900">BL-RMO</div>
+        <div class="text-xs text-gray-400 font-mono" id="sidebar-frequency">— MHz</div>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+    <a href="/" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </a>
+    <a href="/config" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      Configuration
+    </a>
+    <a href="/pige" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+      Pige
+    </a>
+    <a href="/fm" class="sidebar-link active">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8zm0 0l13-4M8 14a2 2 0 104 0 2 2 0 00-4 0m8-1h1m-1 3h1"/></svg>
+      FM
+    </a>
+    {% if dab_enabled or (current_user and current_user.role == 'admin') %}
+    <a href="/dab" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01"/></svg>
+      DAB+
+    </a>
+    {% endif %}
+    <a href="/chain" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+      Chaîne
+    </a>
+    <a href="/logs" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
+      Journaux
+    </a>
+    <a href="/about" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      À propos
+    </a>
+    <a href="https://github.com/LyonelB/BL-RMO" target="_blank" class="sidebar-link">
+      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+      GitHub
+    </a>
+  </nav>
+  <div class="p-4 border-t border-gray-100">
+    <a href="/logout" class="sidebar-link" style="color:#f87171" onmouseover="this.style.background='#fff1f2';this.style.color='#dc2626'" onmouseout="this.style.background='';this.style.color='#f87171'">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Déconnexion
+    </a>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
+<main class="flex-1 overflow-y-auto">
+
+  <header class="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10">
+    <div class="flex items-center gap-2">
+      <button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <h1 class="text-base font-semibold text-gray-900">Réception FM</h1>
+    </div>
+    <p class="text-xs text-gray-400 mt-0.5" id="subtitle">Antenne reçue par le tuner</p>
+  </header>
+
+  <div class="p-6 max-w-6xl">
+    <div id="notice" class="section hidden" style="border-color:#fecaca;background:#fef2f2">
+      <div class="text-sm font-semibold text-red-800" id="notice-title"></div>
+      <div class="text-xs text-red-700 mt-1 leading-relaxed" id="notice-text"></div>
+    </div>
+
+    <!-- ── État ─────────────────────────────────────────────── -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Signal</div>
+        <div class="flex items-center gap-2">
+          <span id="sig-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+          <span class="text-base font-semibold text-gray-900" id="sig">-</span>
+        </div>
+        <div class="h-1.5 rounded bg-gray-100 mt-2 overflow-hidden"><div id="sig-bar" class="h-full bg-gray-300" style="width:0"></div></div>
+        <div class="text-xs text-gray-400 mt-1 font-mono truncate" id="sig-sub">&nbsp;</div>
+      </div>
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Modulation</div>
+        <div class="text-base font-semibold text-gray-900" id="mod">-</div>
+        <div class="text-xs text-gray-400 mt-1 font-mono truncate" id="mod-sub">&nbsp;</div>
+      </div>
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Mode</div>
+        <div class="text-base font-semibold text-gray-900" id="st">-</div>
+        <div class="text-xs text-gray-400 mt-1 font-mono truncate" id="st-sub">&nbsp;</div>
+      </div>
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">RDS</div>
+        <div class="text-base font-semibold text-gray-900" id="rds">-</div>
+        <div class="text-xs text-gray-400 mt-1 font-mono truncate" id="rds-sub">&nbsp;</div>
+      </div>
+    </div>
+
+    <!-- ── Écoute et spectre ───────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
+        <span>Écoute et spectre</span>
+        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400 hidden sm:inline">Son reçu par le tuner, en direct</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <button id="pl-play" onclick="togglePlay()" title="Lecture / pause" aria-label="Écouter la FM"
+          class="w-9 h-9 rounded-full border-2 border-gray-200 bg-white hover:border-blue-500 hover:text-blue-600 transition flex items-center justify-center flex-shrink-0"></button>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-semibold text-gray-900 truncate" id="pl-name">Antenne en direct</div>
+          <div class="text-xs text-gray-500 truncate" id="pl-rt">&nbsp;</div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+          <input type="range" id="pl-volume" min="0" max="100" value="50" class="w-16 h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-blue-500" oninput="setVolume(this.value)">
+          <span id="pl-volume-value" class="text-xs text-gray-500 w-8">50%</span>
+        </div>
+        <a href="/stream.mp3" target="_blank" rel="noopener" class="text-xs font-medium text-blue-600 hover:text-blue-800" title="Ouvrir le flux dans un autre onglet ou un lecteur externe">Externe</a>
+        <audio id="pl-audio" preload="none"></audio>
+      </div>
+      <div class="text-[11px] text-gray-400 mt-1" id="pl-help"></div>
+      <div class="mt-3 space-y-1" aria-label="Niveau reçu">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3" title="Crête en dBFS, maintien 1,5 s">G</span>
+          <div class="relative flex-1 h-2 rounded bg-gray-100 overflow-hidden"><div id="vu-l" class="h-full bg-green-500" style="width:0"></div><div id="vu-lp" class="absolute top-0 h-full w-0.5 bg-green-700" style="left:0"></div></div>
+          <span id="vu-ld" class="w-16 text-right" style="font-variant-numeric:tabular-nums">-</span></div>
+        <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3">D</span>
+          <div class="relative flex-1 h-2 rounded bg-gray-100 overflow-hidden"><div id="vu-r" class="h-full bg-green-500" style="width:0"></div><div id="vu-rp" class="absolute top-0 h-full w-0.5 bg-green-700" style="left:0"></div></div>
+          <span id="vu-rd" class="w-16 text-right" style="font-variant-numeric:tabular-nums">-</span></div>
+        <div class="flex justify-between text-[9px] text-gray-400 font-mono pl-5 pr-[4.5rem]"><span>-60</span><span>-40</span><span>-20</span><span>0</span></div>
+      </div>
+      <div class="mt-4 rounded-lg border border-gray-100 p-2">
+        <canvas id="spec" style="display:block;width:100%;height:220px" role="img" aria-label="Spectre audio en tiers d'octave"></canvas>
+      </div>
+      <div class="flex justify-between gap-3 text-[11px] text-gray-400 mt-2">
+        <span>Spectre en tiers d'octave, 31 bandes · trait sombre : crête des 2 dernières secondes</span><span class="font-mono">dBFS</span>
+      </div>
+    </div>
+
+    <!-- ── Titres diffusés (RadioText) ──────────────────────── -->
+    <div class="section">
+      <div class="section-title" id="rt-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+        <span>Titres diffusés (RadioText)</span>
+        <span class="ml-auto flex items-center gap-3">
+          <a href="/logs#reception" class="text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">Tout l'historique &rarr;</a>
+          <button id="rt-toggle" class="flex items-center gap-1 text-[11px] font-medium normal-case tracking-normal text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1"></button>
+        </span>
+      </div>
+      <div id="rt-short" class="text-xs text-gray-500 truncate hidden"></div>
+      <div id="rt-full" class="overflow-x-auto">
+        <table class="w-full text-xs text-left table-fixed">
+          <colgroup><col style="width:110px"><col><col style="width:170px"></colgroup>
+          <tbody id="rt-body" class="divide-y divide-gray-50"><tr><td colspan="3" class="py-6 text-center text-gray-400">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Derniers événements ─────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <span>Derniers événements</span>
+        <a href="/logs#reception" class="ml-auto text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">Journal de réception &rarr;</a>
+      </div>
+      <div id="events" class="text-xs text-gray-400">Chargement…</div>
+    </div>
+
+    <!-- ── Réglages (administrateur) ────────────────────────── -->
+    <div class="section need-admin" id="reglages" style="scroll-margin-top:80px">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+        Réglages
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+        <label class="block"><span class="text-xs text-gray-500">Fréquence</span>
+          <input id="f-frequency" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="88.6M">
+          <span class="text-[11px] text-gray-400">Format : 88.6M, 107.5M</span></label>
+        <label class="block tef-only"><span class="text-xs text-gray-500">Seuil absence de modulation (dBFS)</span>
+          <input id="f-mod-threshold" type="number" step="1" min="-90" max="-10" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="-40">
+          <span class="text-[11px] text-gray-400">Niveau reçu sous lequel la modulation est absente</span></label>
+        <label class="block rtl-only"><span class="text-xs text-gray-500">Gain RTL-SDR (dB)</span>
+          <input id="f-gain" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="40" maxlength="5">
+          <span class="text-[11px] text-gray-400">0 à 50 dB, 0 pour automatique</span></label>
+        <label class="block rtl-only"><span class="text-xs text-gray-500">Seuil modulation (dB std)</span>
+          <input id="f-std-threshold" type="number" step="0.1" min="0.1" max="5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="0.5"></label>
+        <label class="block rtl-only"><span class="text-xs text-gray-500">Seuil perte émetteur (dBFS)</span>
+          <input id="f-lost-threshold" type="number" step="1" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="-50"></label>
+        <label class="block"><span class="text-xs text-gray-500">Modulation absente : alerte après (s)</span>
+          <input id="f-mod-delay" type="number" step="5" min="5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="30"></label>
+        <label class="block"><span class="text-xs text-gray-500">Émetteur non capté : alerte après (s)</span>
+          <input id="f-sig-delay" type="number" step="5" min="5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="30">
+          <span class="text-[11px] text-gray-400 tef-only">Perte détectée par le tuner, sans seuil à régler</span></label>
+        <label class="block"><span class="text-xs text-gray-500">RDS absent : alerte après (s)</span>
+          <input id="f-rds-delay" type="number" step="10" min="10" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="300"></label>
+        <label class="block"><span class="text-xs text-gray-500">RadioText absent : alerte après (s)</span>
+          <input id="f-rt-delay" type="number" step="10" min="10" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="600"></label>
+      </div>
+      <div class="flex flex-wrap items-center gap-3 mt-4">
+        <button onclick="saveSettings()" id="f-save" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Enregistrer</button>
+        <span class="text-xs text-gray-400" id="f-msg">Un changement de fréquence relance la réception FM (quelques secondes de coupure de l'écoute et de la pige).</span>
+      </div>
+      <div class="mt-4 pt-4 border-t border-gray-100">
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="text-xs text-gray-700"><span class="font-semibold">Source de réception :</span> <span id="src-current">-</span></div>
+          <button onclick="scanDongle()" id="btn-scan" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1">Détecter les récepteurs</button>
+          <span id="scan-status" class="text-[11px] text-gray-400"></span>
+        </div>
+        <div id="scan-found" class="mt-3 space-y-2 text-sm"></div>
+      </div>
+      <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">Les mails d'alerte (expéditeur, destinataires, coupure) se règlent dans la <a href="/config" class="text-blue-600 hover:text-blue-800">Configuration</a>.</p>
+    </div>
+  </div>
+</main>
+
+<script src="/static/spectrum.js"></script>
+<script>
+  const $ = id => document.getElementById(id);
+  const csrf = () => document.querySelector('meta[name="csrf-token"]').content;
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const pad = n => String(n).padStart(2, '0');
+  const isAdmin = document.documentElement.dataset.role === 'admin';
+  const num = (v, d = 1) => Number(v).toFixed(d).replace('.', ',');
+  const IC_PLAY = '<svg class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+  const IC_PAUSE = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>';
+
+  function fmtDur(s) {
+    if (s == null) return '';
+    s = Math.max(0, Math.round(s));
+    if (s < 60) return `${s} s`;
+    if (s < 3600) return `${Math.floor(s / 60)} min ${pad(s % 60)} s`;
+    return `${Math.floor(s / 3600)} h ${pad(Math.floor(s % 3600 / 60))} min`;
+  }
+  function fmtDate(iso) {
+    const d = new Date(String(iso).replace(' ', 'T'));
+    if (isNaN(d)) return esc(iso);
+    return `${pad(d.getDate())}-${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+  function tile(id, text, color, sub) {
+    $(id).textContent = text;
+    $(id).className = 'text-base font-semibold ' + (color || 'text-gray-900');
+    if (sub !== undefined) $(id + '-sub').textContent = sub || ' ';
+  }
+
+  // ── État de la réception (SSE, comme le tableau de bord) ─────────────
+  let modThreshold = null, lastRt = '';
+  function renderStats(s) {
+    const sig = !!s.signal_ok;
+    const freq = s.frequency ? String(s.frequency).replace('M', ' MHz') : '';
+    $('subtitle').textContent = `Antenne reçue par ${s.use_tef ? 'le tuner TEF' : 'la clé RTL-SDR'}` + (freq ? ` · ${freq}` : '');
+    if (freq) $('sidebar-frequency').textContent = freq;
+    const tunerGone = s.use_tef && s.tuner_connected === false;
+    $('notice').classList.toggle('hidden', !tunerGone);
+    if (tunerGone) { $('notice-title').textContent = 'Le tuner ne répond plus'; $('notice-text').textContent = 'Le tuner TEF n\'est plus détecté sur le port USB : vérifier son câble.'; }
+    $('sig-dot').className = 'w-2.5 h-2.5 rounded-full ' + (sig ? 'bg-green-500' : 'bg-red-500');
+    $('sig').textContent = s.signal_dbf != null ? `${num(s.signal_dbf)} dBf` : (sig ? 'OK' : 'Perdu');
+    $('sig').className = 'text-base font-semibold ' + (sig ? 'text-gray-900' : 'text-red-600');
+    const pct = s.signal_dbf != null ? Math.max(0, Math.min(100, s.signal_dbf / 100 * 100)) : 0;
+    $('sig-bar').style.width = pct + '%'; $('sig-bar').className = 'h-full ' + (sig ? 'bg-green-500' : 'bg-red-500');
+    const parts = [];
+    if (s.snr != null) parts.push(`S/B ${Math.round(s.snr)} dB`);
+    if (s.multipath != null) parts.push(`multitrajet ${Math.round(s.multipath)} %`);
+    $('sig-sub').textContent = sig ? (parts.join(' · ') || ' ') : 'Aucun signal capté';
+    const lvl = Math.max(s.level_left ?? -100, s.level_right ?? -100);
+    const thr = modThreshold != null ? ` · seuil ${modThreshold}` : '';
+    if (!sig) tile('mod', '-', 'text-gray-400', '-');
+    else tile('mod', s.modulation_ok ? 'Active' : 'Absente', s.modulation_ok ? 'text-green-600' : 'text-orange-600', (lvl > -100 ? `${Math.round(lvl)} dBFS` : '-') + thr);
+    if (!sig || s.stereo_known === false) tile('st', '-', 'text-gray-400', '-');
+    else tile('st', s.stereo_present ? 'Stéréo' : 'Mono', s.stereo_present ? 'text-green-600' : 'text-orange-600', s.stereo_present ? 'pilote 19 kHz' : 'sans pilote');
+    const id = [s.ps && s.ps !== '-' ? s.ps : '', s.pi && s.pi !== '-' ? `PI ${s.pi}` : ''].filter(Boolean).join(' · ');
+    if (!s.rds_ever_received) tile('rds', 'Non reçu', 'text-gray-400', '-');
+    else tile('rds', s.rds_ok ? 'Reçu' : 'Absent', s.rds_ok ? 'text-green-600' : 'text-red-600', id || '-');
+    $('pl-name').textContent = (s.ps && s.ps !== '-' ? s.ps + ' · ' : '') + 'Antenne en direct';
+    if (s.rt && s.rt !== '-') { $('pl-rt').textContent = s.rt; if (s.rt !== lastRt) { lastRt = s.rt; setTimeout(loadRt, 10000); } }
+  }
+  let statsT = -1e9;
+  function connectStats() {
+    const es = new EventSource('/api/stream/stats');
+    es.onmessage = ev => {
+      const now = performance.now();
+      if (now - statsT < 250) return;          // 4 rafraîchissements par seconde suffisent ici
+      statsT = now;
+      try { renderStats(JSON.parse(ev.data)); } catch (e) {}
+    };
+    es.onerror = () => { es.close(); setTimeout(connectStats, 5000); };
+  }
+
+  // ── Spectre et barres G/D ────────────────────────────────────────────
+  const spectrum = BLRMO.Spectrum($('spec'));
+  const meters = BLRMO.Meters(['vu-l', 'vu-r']);
+  spectrum.clear('Connexion…');
+  BLRMO.connectSpectrum('fm', '', d => {
+    if (d.state === 'ok' && d.bands) { spectrum.update(d.bands); meters.set(d.peak[0], d.peak[1]); }
+    else { spectrum.clear(d.message || 'En attente du son'); meters.clear(); }
+  });
+
+  // ── Écoute ───────────────────────────────────────────────────────────
+  let playing = false, stopTimer = null;
+  function setVolume(v) { $('pl-audio').volume = v / 100; $('pl-volume-value').textContent = v + '%'; }
+  function stopPlay() {
+    const a = $('pl-audio'); a.pause(); a.removeAttribute('src'); a.load();
+    playing = false; $('pl-play').innerHTML = IC_PLAY; $('pl-help').textContent = '';
+    if (stopTimer) { clearTimeout(stopTimer); stopTimer = null; }
+  }
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    const a = $('pl-audio');
+    a.src = '/stream.mp3?t=' + Date.now();
+    a.volume = $('pl-volume').value / 100;
+    a.play().catch(() => {});
+    playing = true; $('pl-play').innerHTML = IC_PAUSE;
+    $('pl-help').textContent = 'En écoute (arrêt automatique après 15 min)';
+    stopTimer = setTimeout(stopPlay, 15 * 60 * 1000);
+  }
+  $('pl-play').innerHTML = IC_PLAY;
+  $('pl-audio').onerror = () => { if (playing) { stopPlay(); $('pl-help').textContent = 'Écoute impossible pour le moment'; } };
+
+  // ── Titres diffusés ──────────────────────────────────────────────────
+  let pigeFrom = null;
+  function pigeAt(t0) { return pigeFrom && t0 >= pigeFrom; }
+  const rtBox = BLRMO.collapsible('blrmo-fm-rt', [[$('rt-full'), true], [$('rt-short'), false]], $('rt-toggle'),
+    open => { $('rt-title').style.marginBottom = open ? '' : '0'; });
+  async function loadRt() {
+    let d;
+    try { d = await (await fetch('/api/rds/rt_history?limit=10', { credentials: 'include' })).json(); } catch (e) { return; }
+    const rows = d.data || [];
+    const cur = String(d.current || '').split(/\s+/).join(' ').trim();
+    if (!rows.length) {
+      $('rt-body').innerHTML = '<tr><td colspan="3" class="py-6 text-center text-gray-400">Aucun RadioText enregistré pour le moment</td></tr>';
+      $('rt-short').textContent = 'Aucun RadioText enregistré pour le moment';
+      return;
+    }
+    const today = new Date();
+    $('rt-body').innerHTML = rows.map((r, i) => {
+      const t = new Date(String(r.timestamp).replace(' ', 'T'));
+      const same = !isNaN(t) && t.toDateString() === today.toDateString();
+      const hm = isNaN(t) ? esc(r.timestamp) : `${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}` + (same ? '' : ` <span class="text-gray-400">${pad(t.getDate())}-${pad(t.getMonth() + 1)}</span>`);
+      const live = i === 0 && r.rt === cur;
+      const t0 = isNaN(t) ? 0 : Math.floor(t.getTime() / 1000);
+      const listen = pigeAt(t0) ? `<a href="/pige?t=${t0}" class="font-medium text-blue-600 hover:text-blue-800" title="Écouter l'antenne à ce moment">Écouter</a>` : '';
+      return `<tr class="hover:bg-slate-50">
+        <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${hm}</td>
+        <td class="py-2 pr-3 truncate ${live ? 'font-semibold text-gray-900' : 'text-gray-700'}" title="${esc(r.rt)}">${esc(r.rt)}</td>
+        <td class="py-2 text-right whitespace-nowrap">${live ? '<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 mr-3">À l\'antenne</span>' : ''}${listen}</td>
+      </tr>`;
+    }).join('');
+    const first = rows[0], t = new Date(String(first.timestamp).replace(' ', 'T'));
+    $('rt-short').innerHTML = (first.rt === cur ? 'À l\'antenne : ' : 'Dernier titre : ')
+      + `<span class="text-gray-800 font-medium">${esc(first.rt)}</span>` + (isNaN(t) ? '' : ` · depuis ${pad(t.getHours())}:${pad(t.getMinutes())}`);
+  }
+
+  // ── Derniers événements ──────────────────────────────────────────────
+  function pigeLinks(a) {
+    const t0 = Math.floor(new Date(a.start_time).getTime() / 1000);
+    if (!pigeAt(t0 - 30)) return '';
+    const t1 = a.end_time && a.status === 'complete' ? Math.floor(new Date(a.end_time).getTime() / 1000) : t0 + 90;
+    const s = t0 - 30, e = Math.min(t1 + 30, Math.floor(Date.now() / 1000));
+    return `<a href="/pige?t=${t0}" class="font-medium text-blue-600 hover:text-blue-800 mr-3" title="Ouvrir la pige 30 s avant l'alerte">Écouter</a>`
+         + `<a href="/api/pige/export?start=${s}&end=${e}" class="font-medium text-blue-600 hover:text-blue-800" title="Extrait MP3 de 30 s avant à 30 s après">MP3</a>`;
+  }
+  async function loadEvents() {
+    try {
+      const ps = await (await fetch('/api/pige/status', { credentials: 'include' })).json();
+      pigeFrom = ps.oldest ?? (ps.segments && ps.segments.length ? ps.segments[0].start : null);
+    } catch (e) { pigeFrom = null; }
+    let d;
+    try { d = await (await fetch('/api/alerts/history/grouped?limit=10', { credentials: 'include' })).json(); } catch (e) { return; }
+    const list = (d.data || []).slice(0, 10);
+    if (!list.length) { $('events').innerHTML = 'Aucun événement.'; return; }
+    $('events').innerHTML = '<div class="divide-y divide-gray-100">' + list.map(a => {
+      const ongoing = a.status === 'ongoing', unknown = a.status === 'orphan';
+      const mails = a.emails_sent ? ` · ${a.emails_sent} mail${a.emails_sent > 1 ? 's' : ''}` : '';
+      const dur = ongoing ? '<span class="text-red-600 font-medium">En cours</span>'
+                : unknown ? '<span class="text-gray-400" title="Fin non enregistrée (redémarrage pendant l\'alerte)">Fin inconnue</span>'
+                : a.status === 'complete' ? 'Durée ' + fmtDur(a.duration) : 'Retour seul';
+      return `<div class="flex flex-wrap items-baseline gap-x-4 gap-y-0.5 py-2">
+        <div class="font-mono text-gray-500" style="min-width:110px">${fmtDate(a.start_time)}</div>
+        <div class="flex-1 text-sm text-gray-800" style="min-width:200px">${esc(a.alert_label || a.alert_type || 'Alerte')}
+          <div class="text-xs text-gray-400">${esc(String(a.message || '').split('\n')[0])}${mails}</div></div>
+        <div class="whitespace-nowrap text-gray-500">${dur}</div>
+        <div class="whitespace-nowrap" style="min-width:96px;text-align:right">${pigeLinks(a)}</div>
+      </div>`;
+    }).join('') + '</div>';
+    loadRt();
+  }
+
+  // ── Réglages ─────────────────────────────────────────────────────────
+  let cfgFreq = '', useTef = true;
+  async function loadSettings() {
+    let c;
+    try { c = await (await fetch('/api/config/full', { credentials: 'include' })).json(); } catch (e) { return; }
+    useTef = !!c.tef?.enabled;
+    modThreshold = c.tef?.modulation_threshold_dbfs ?? -40;
+    cfgFreq = c.rtl_sdr?.frequency || c.station?.frequency || '';
+    if (cfgFreq) $('sidebar-frequency').textContent = cfgFreq.replace('M', ' MHz');
+    if (!isAdmin) return;
+    document.querySelectorAll('.tef-only').forEach(e => e.classList.toggle('hidden', !useTef));
+    document.querySelectorAll('.rtl-only').forEach(e => e.classList.toggle('hidden', useTef));
+    const a = c.audio || {};
+    $('src-current').textContent = useTef ? `tuner TEF${c.tef?.serial_port ? ' (' + c.tef.serial_port + ')' : ''}` : 'clé RTL-SDR';
+    $('f-frequency').value = cfgFreq;
+    $('f-mod-threshold').value = modThreshold;
+    $('f-gain').value = c.rtl_sdr?.gain ?? '';
+    $('f-std-threshold').value = a.modulation_std_threshold ?? 0.5;
+    $('f-lost-threshold').value = a.signal_lost_threshold ?? -50;
+    $('f-mod-delay').value = a.modulation_alert_delay ?? 30;
+    $('f-sig-delay').value = a.silence_duration ?? 10;
+    $('f-rds-delay').value = a.rds_timeout ?? 120;
+    $('f-rt-delay').value = a.rt_timeout ?? 300;
+  }
+  async function post(url, body) {
+    const r = await fetch(url, { method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }, body: body ? JSON.stringify(body) : undefined });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || (d.status && d.status !== 'success')) throw new Error(d.message || `Erreur ${r.status}`);
+    return d;
+  }
+  async function saveSettings() {
+    const freq = $('f-frequency').value.trim().replace(',', '.');
+    if (!/^\d{2,3}(\.\d{1,2})?M$/i.test(freq)) { $('f-msg').className = 'text-xs text-red-600'; $('f-msg').textContent = 'Fréquence invalide (format 88.6M)'; return; }
+    const int = (id, d) => { const v = parseInt($(id).value, 10); return isNaN(v) ? d : v; };
+    const body = {
+      station: { frequency: freq.toUpperCase() },
+      rtl_sdr: { frequency: freq.toUpperCase() },
+      audio: {
+        modulation_alert_delay: int('f-mod-delay', 30), silence_duration: int('f-sig-delay', 10),
+        rds_timeout: int('f-rds-delay', 120), rt_timeout: int('f-rt-delay', 300),
+      },
+    };
+    if (useTef) {
+      const thr = parseFloat($('f-mod-threshold').value);
+      body.tef = { modulation_threshold_dbfs: isNaN(thr) ? -40 : thr };
+    } else {
+      body.rtl_sdr.gain = parseInt($('f-gain').value) || 0;
+      body.audio.modulation_std_threshold = parseFloat($('f-std-threshold').value) || 0.5;
+      body.audio.signal_lost_threshold = parseFloat($('f-lost-threshold').value) || -50;
+    }
+    const restart = body.rtl_sdr.frequency !== String(cfgFreq).toUpperCase() || (!useTef);
+    $('f-save').disabled = true;
+    $('f-msg').className = 'text-xs text-gray-500'; $('f-msg').textContent = 'Enregistrement…';
+    try {
+      await post('/api/config/save', body);
+      if (restart) {
+        $('f-msg').textContent = 'Enregistré. Relance de la réception FM…';
+        await post('/api/restart');
+      }
+      $('f-msg').className = 'text-xs text-green-600';
+      $('f-msg').textContent = restart ? 'Enregistré, réception FM relancée.' : 'Enregistré et appliqué.';
+      loadSettings();
+    } catch (e) { $('f-msg').className = 'text-xs text-red-600'; $('f-msg').textContent = e.message; }
+    finally { $('f-save').disabled = false; }
+  }
+
+  // ── Source de réception (repris de la Configuration) ─────────────────
+  const BTN = 'text-xs font-medium border border-gray-200 hover:border-blue-500 hover:text-blue-700 rounded-lg px-3 py-1.5 mr-2';
+  async function scanDongle() {
+    const btn = $('btn-scan'), status = $('scan-status'), found = $('scan-found');
+    btn.disabled = true; status.textContent = 'Détection en cours…'; found.innerHTML = '';
+    try {
+      const data = await post('/api/scan-dongle');
+      const tef = data.tef || [], rtl = data.rtlsdr;
+      if (!tef.length && !rtl) {
+        found.innerHTML = '<div class="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">Aucun récepteur détecté. Vérifier les branchements USB.</div>';
+      } else {
+        const opts = [];
+        tef.forEach(p => opts.push(`<button class="${BTN}" onclick="selectSource('tef', '${esc(p)}')">Tuner TEF (${esc(p)})</button>`));
+        if (rtl) {
+          opts.push(`<button class="${BTN}" onclick="selectSource('rtlsdr', '')">RTL-SDR, rtl_fm (mono)</button>`);
+          opts.push(`<button class="${BTN}" onclick="selectSource('gnuradio', '')">RTL-SDR, GNU Radio (stéréo)</button>`);
+        }
+        found.innerHTML = '<div class="text-xs text-gray-500 mb-2">Choisir la source active (BL-RMO redémarre la réception FM) :</div>' + opts.join('');
+      }
+      status.textContent = 'Détection terminée.';
+    } catch (e) { status.textContent = 'Erreur : ' + e.message; }
+    finally { btn.disabled = false; }
+  }
+  async function selectSource(source, port) {
+    try {
+      await post('/api/select-source', { source, port });
+      const label = source === 'tef' ? `tuner TEF (${port})` : source === 'gnuradio' ? 'RTL-SDR, GNU Radio' : 'RTL-SDR, rtl_fm';
+      $('scan-found').innerHTML = `<div class="p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700">Source ${esc(label)} activée, la réception FM redémarre.</div>`;
+      setTimeout(loadSettings, 5000);
+    } catch (e) { $('scan-status').textContent = 'Erreur : ' + e.message; }
+  }
+
+  // ── Menu ─────────────────────────────────────────────────────────────
+  function toggleSidebar() {
+    $('sidebar').classList.toggle('-translate-x-full');
+    $('sidebar-overlay').classList.toggle('hidden');
+  }
+  function closeSidebar() {
+    $('sidebar').classList.add('-translate-x-full');
+    $('sidebar-overlay').classList.add('hidden');
+  }
+
+  loadSettings();
+  connectStats();
+  loadEvents();
+  setInterval(loadEvents, 30000);
+</script>
+</body>
+</html>

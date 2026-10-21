@@ -176,6 +176,7 @@ class FMMonitor:
         # =============================================
         # FLAGS DE SERVICES (activables/désactivables)
         # =============================================
+        self.spectrum_sink = None         # page FM : analyseur en tiers d'octave (spectrum.py)
         self.vu_meter_enabled = True      # Calcul RMS et affichage VU-mètre
         self.audio_enabled = True          # Streaming audio (player)
         self.watchdog_enabled = False       # Watchdog auto-relance rtl_fm
@@ -576,6 +577,12 @@ class FMMonitor:
                             self.mpx_analyzer._process(accum)
                         if self.defect_detector:
                             self.defect_detector.feed(accum)
+                        sink = self.spectrum_sink          # spectre de la page FM (à la demande)
+                        if sink is not None:
+                            try:
+                                sink(accum)
+                            except Exception:
+                                pass
                         accum = b''
                         count = 0
 

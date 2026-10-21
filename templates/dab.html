@@ -42,6 +42,10 @@
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
       Pige
     </a>
+    <a href="/fm" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8zm0 0l13-4M8 14a2 2 0 104 0 2 2 0 00-4 0m8-1h1m-1 3h1"/></svg>
+      FM
+    </a>
     {% if dab_enabled or (current_user and current_user.role == 'admin') %}
     <a href="/dab" class="sidebar-link active">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01"/></svg>
@@ -122,6 +126,78 @@
       </div>
     </div>
 
+    <!-- ── Écoute et spectre (SPECTRUM_PATCH) ─────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
+        <span>Écoute et spectre</span>
+        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400 hidden sm:inline">Service suivi par défaut · « Écouter » dans le tableau pour en changer</span>
+      </div>
+      <div id="player">
+        <div class="flex flex-wrap items-center gap-3">
+          <button id="pl-play" onclick="togglePlay()" title="Lecture / pause"
+            class="w-9 h-9 rounded-full border-2 border-gray-200 bg-white hover:border-blue-500 hover:text-blue-600 transition flex items-center justify-center flex-shrink-0"></button>
+          <img id="pl-slide" class="w-16 h-12 object-cover rounded bg-gray-50 hidden" alt="">
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-semibold text-gray-900 truncate" id="pl-name"></div>
+            <div class="text-xs text-gray-500 truncate" id="pl-dls"></div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+            <input type="range" id="pl-volume" min="0" max="100" value="50" class="w-16 h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-blue-500" oninput="setVolume(this.value)">
+            <span id="pl-volume-value" class="text-xs text-gray-500 w-8">50%</span>
+          </div>
+          <a id="pl-external" href="#" target="_blank" rel="noopener" class="text-xs font-medium text-blue-600 hover:text-blue-800" title="Ouvrir le flux MP3 dans un autre onglet ou un lecteur externe (une seule écoute DAB+ à la fois)">Externe</a>
+          <audio id="pl-audio" preload="none"></audio>
+        </div>
+        <div class="mt-2 space-y-1" aria-label="Niveau audio écouté">
+          <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3" title="Crête en dBFS, maintien 1,5 s">G</span>
+            <div class="relative flex-1 h-2 rounded bg-gray-100 overflow-hidden"><div id="vu-l" class="h-full bg-green-500" style="width:0"></div><div id="vu-lp" class="absolute top-0 h-full w-0.5 bg-green-700" style="left:0"></div></div>
+            <span id="vu-ld" class="w-16 text-right" style="font-variant-numeric:tabular-nums">-</span></div>
+          <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3">D</span>
+            <div class="relative flex-1 h-2 rounded bg-gray-100 overflow-hidden"><div id="vu-r" class="h-full bg-green-500" style="width:0"></div><div id="vu-rp" class="absolute top-0 h-full w-0.5 bg-green-700" style="left:0"></div></div>
+            <span id="vu-rd" class="w-16 text-right" style="font-variant-numeric:tabular-nums">-</span></div>
+          <div class="flex justify-between text-[9px] text-gray-400 font-mono pl-5 pr-[4.5rem]"><span>-60</span><span>-40</span><span>-20</span><span>0</span></div>
+        </div>
+        <div class="text-[11px] text-gray-400 mt-1" id="pl-help"></div>
+        <div class="mt-4 rounded-lg border border-gray-100 p-2">
+          <canvas id="spec" style="display:block;width:100%;height:220px" role="img" aria-label="Spectre audio en tiers d'octave"></canvas>
+        </div>
+        <div class="flex justify-between gap-3 text-[11px] text-gray-400 mt-2">
+          <span>Spectre en tiers d'octave, 31 bandes · trait sombre : crête des 2 dernières secondes</span><span class="font-mono">dBFS</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Titres diffusés (DLS) ────────────────────────────── -->
+    <div class="section">
+      <div class="section-title" id="dls-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+        <span>Titres diffusés (DLS)</span>
+        <span class="ml-auto flex items-center gap-3">
+          <a href="/logs#dab" class="text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">Tout l'historique &rarr;</a>
+          <button id="dls-toggle" class="flex items-center gap-1 text-[11px] font-medium normal-case tracking-normal text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1"></button>
+        </span>
+      </div>
+      <div id="dls-short" class="text-xs text-gray-500 truncate hidden"></div>
+      <div id="dls-full" class="overflow-x-auto">
+        <table class="w-full text-xs text-left table-fixed">
+          <colgroup><col style="width:110px"><col><col style="width:170px"></colgroup>
+          <tbody id="dls-body" class="divide-y divide-gray-50"><tr><td colspan="3" class="py-6 text-center text-gray-400">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Événements ───────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <span>Derniers événements</span>
+        <a href="/logs#dab" class="ml-auto text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">Journal de réception &rarr;</a>
+      </div>
+      <div id="events" class="text-xs text-gray-400">Chargement…</div>
+    </div>
+
     <!-- ── Services ─────────────────────────────────────────── -->
     <div class="section">
       <div class="section-title">
@@ -149,45 +225,6 @@
           <tbody id="svc-body"><tr><td colspan="7" class="py-6 text-center text-xs text-gray-400">Chargement…</td></tr></tbody>
         </table>
       </div>
-      <div id="player" class="hidden mt-4 p-3 rounded-lg bg-white border border-gray-200">
-        <div class="flex flex-wrap items-center gap-3">
-          <button id="pl-play" onclick="togglePlay()" title="Lecture / pause"
-            class="w-9 h-9 rounded-full border-2 border-gray-200 bg-white hover:border-blue-500 hover:text-blue-600 transition flex items-center justify-center flex-shrink-0"></button>
-          <img id="pl-slide" class="w-16 h-12 object-cover rounded bg-gray-50 hidden" alt="">
-          <div class="flex-1 min-w-0">
-            <div class="text-sm font-semibold text-gray-900 truncate" id="pl-name"></div>
-            <div class="text-xs text-gray-500 truncate" id="pl-dls"></div>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
-            <input type="range" id="pl-volume" min="0" max="100" value="50" class="w-16 h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-blue-500" oninput="setVolume(this.value)">
-            <span id="pl-volume-value" class="text-xs text-gray-500 w-8">50%</span>
-          </div>
-          <a id="pl-external" href="#" target="_blank" rel="noopener" class="text-xs font-medium text-blue-600 hover:text-blue-800" title="Ouvrir le flux MP3 dans un autre onglet ou un lecteur externe (une seule écoute DAB+ à la fois)">Externe</a>
-          <button class="text-xs font-medium text-gray-500 hover:text-gray-800" onclick="stopListen()">Fermer</button>
-          <audio id="pl-audio" preload="none"></audio>
-        </div>
-        <div class="mt-2 space-y-1" aria-label="Niveau audio écouté">
-          <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3" title="Crête en dBFS, maintien 1,5 s">G</span>
-            <div class="relative flex-1 h-2 rounded bg-gray-100 overflow-hidden"><div id="vu-l" class="h-full bg-green-500" style="width:0"></div><div id="vu-lp" class="absolute top-0 h-full w-0.5 bg-green-700" style="left:0"></div></div>
-            <span id="vu-ld" class="w-16 text-right" style="font-variant-numeric:tabular-nums">-</span></div>
-          <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3">D</span>
-            <div class="relative flex-1 h-2 rounded bg-gray-100 overflow-hidden"><div id="vu-r" class="h-full bg-green-500" style="width:0"></div><div id="vu-rp" class="absolute top-0 h-full w-0.5 bg-green-700" style="left:0"></div></div>
-            <span id="vu-rd" class="w-16 text-right" style="font-variant-numeric:tabular-nums">-</span></div>
-          <div class="flex justify-between text-[9px] text-gray-400 font-mono pl-5 pr-[4.5rem]"><span>-60</span><span>-40</span><span>-20</span><span>0</span></div>
-        </div>
-        <div class="text-[11px] text-gray-400 mt-2" id="pl-help"></div>
-      </div>
-    </div>
-
-    <!-- ── Événements ───────────────────────────────────────── -->
-    <div class="section">
-      <div class="section-title">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-        <span>Derniers événements</span>
-        <a href="/logs#dab" class="ml-auto text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">Journal de réception &rarr;</a>
-      </div>
-      <div id="events" class="text-xs text-gray-400">Chargement…</div>
     </div>
 
     <!-- ── Réglages (administrateur) ────────────────────────── -->
@@ -283,6 +320,7 @@
   </div>
 </main>
 
+<script src="/static/spectrum.js"></script>
 <script>
   const $ = id => document.getElementById(id);
   const csrf = () => document.querySelector('meta[name="csrf-token"]').content;
@@ -368,6 +406,7 @@
       $('snr-bar').style.width = 0; $('fic-bar').style.width = 0;
     }
     renderServices();
+    pickDefault();
   }
 
   function fillDashboardSelect(svcs) {
@@ -415,11 +454,11 @@
         <td class="py-2 pr-3 text-xs text-gray-600 whitespace-nowrap">${esc(v.mode || '')} ${v.bitrate ? v.bitrate + ' kb/s' : ''}
           <div class="text-[11px] text-gray-400 truncate">${esc(v.protection || '')}${v.err_aac ? ' · AAC ' + v.err_aac : ''}</div></td>
         <td class="py-2 pr-3 text-xs font-mono text-gray-600">${upt}</td>
-        <td class="py-2 text-right whitespace-nowrap">${v.present ? `<button class="text-xs font-medium text-blue-600 hover:text-blue-800" onclick="listen('${esc(v.sid)}')">${listening === v.sid ? 'En écoute' : 'Écouter'}</button>` : ''}</td>
+        <td class="py-2 text-right whitespace-nowrap">${v.present ? (listening === v.sid ? `<button class="text-xs font-medium text-blue-700" onclick="stopListen()" title="Arrêter l'écoute">En écoute</button>` : `<button class="text-xs font-medium text-blue-600 hover:text-blue-800" onclick="listen('${esc(v.sid)}')">Écouter</button>`) : ''}</td>
       </tr>`;
     }).join('');
-    if (listening) {
-      const v = svcs.find(x => x.sid === listening);
+    if (shown) {
+      const v = svcs.find(x => x.sid === shown);
       if (v) {
         $('pl-dls').textContent = v.dls || '';
         if (v.mot_time) {
@@ -461,75 +500,46 @@
     }).join('') + '</div>';
   }
 
-  // ── Écoute ─────────────────────────────────────────────
-  function listen(sid) {
-    const v = (st.services || []).find(x => x.sid === sid);
-    stopListen(true);
-    listening = sid;
-    $('player').classList.remove('hidden');
+  // ── Écoute et spectre (SPECTRUM_PATCH) ───────────────
+  // Le lecteur reste affiché sur le service suivi (celui du tableau de bord) ;
+  // « Écouter » dans le tableau le bascule sur un autre service. Spectre et
+  // barres G/D sont mesurés par BL-RMO sur le service affiché, écouté ou non.
+  const spectrum = BLRMO.Spectrum($('spec'));
+  const meters = BLRMO.Meters(['vu-l', 'vu-r']);
+  let shown = null, specConn = null;
+  spectrum.clear('Connexion…');
+  function select(sid) {
+    if (!sid || sid === shown) return;
+    shown = sid;
+    const v = ((st && st.services) || []).find(x => x.sid === sid);
     $('pl-name').textContent = v ? v.label : sid;
-    $('pl-external').href = `/api/dab/listen/${encodeURIComponent(sid)}`;
     $('pl-dls').textContent = v ? v.dls || '' : '';
+    $('pl-external').href = `/api/dab/listen/${encodeURIComponent(sid)}`;
     $('pl-slide').classList.add('hidden'); $('pl-slide').dataset.url = '';
+    if (specConn) specConn.close();
+    spectrum.clear('Décodage du service…'); meters.clear();
+    specConn = BLRMO.connectSpectrum('dab', sid, d => {
+      if (d.state === 'ok' && d.bands) { spectrum.update(d.bands); meters.set(d.peak[0], d.peak[1]); }
+      else { spectrum.clear(d.message || 'Décodage du service…'); meters.clear(); }
+    });
+    loadDls();
+  }
+  function pickDefault() {
+    const svcs = (st && st.services) || [];
+    if (!st || !st.enabled) { $('pl-name').textContent = 'Réception DAB+ désactivée'; spectrum.clear('Réception DAB+ désactivée'); return; }
+    if (shown) return;
+    const want = st.default_sid || (st.watched_sids || [])[0] || (svcs[0] && svcs[0].sid);
+    if (want) select(want);
+    else { $('pl-name').textContent = 'Aucun service reçu pour le moment'; spectrum.clear('Aucun service reçu pour le moment'); }
+  }
+  function listen(sid) {
+    select(sid);
+    stopListen();
+    listening = sid;
     $('pl-help').textContent = 'Connexion…';
-    const a = $('pl-audio');
-    vuStart(a);
     playStream();
-    let retried = false;
-    a.onerror = () => {
-      if (!a.getAttribute('src') || listening !== sid) return;
-      if (!retried) {                          // un service tout juste épinglé peut demander un instant
-        retried = true;
-        $('pl-help').textContent = 'Démarrage du service…';
-        setTimeout(() => { if (listening === sid) playStream(); }, 2000);
-        return;
-      }
-      playButton(false);
-      $('pl-help').textContent = "Écoute impossible : le service ne répond pas pour le moment. Réessayer dans quelques secondes.";
-    };
-    a.onplaying = () => { $('pl-help').textContent = "Écoute servie par la clé DAB+ : une seule à la fois, coupée automatiquement après quelques minutes."; };
-    a.onended = () => playButton(false);   // écoute coupée par le serveur (durée maximale)
     renderServices();
   }
-  // VU-mètre crête, calculé dans le navigateur sur l'audio reçu (60 images/s).
-  // Le niveau du tableau, lui, vient de welle-cli toutes les 2 s.
-  let vuCtx = null, vuSplit = null, vuAn = [], vuRaf = null, vuGain = null;
-  const vuHold = [{v: -100, t: 0}, {v: -100, t: 0}], vuDisp = [-100, -100];
-  function vuStart(a) {
-    try {
-      if (!vuCtx) {
-        vuCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const src = vuCtx.createMediaElementSource(a);
-        vuSplit = vuCtx.createChannelSplitter(2);
-        vuGain = vuCtx.createGain();
-        vuGain.gain.value = $('pl-volume').value / 100;
-        src.connect(vuGain); vuGain.connect(vuCtx.destination);
-        src.connect(vuSplit);
-        vuAn = [0, 1].map(i => { const n = vuCtx.createAnalyser(); n.fftSize = 1024; vuSplit.connect(n, i); return n; });
-      }
-      if (vuCtx.state === 'suspended') vuCtx.resume();
-    } catch (e) { return; }
-    if (!vuRaf) vuRaf = requestAnimationFrame(vuDraw);
-  }
-  function vuDraw(now) {
-    if (vuAn.length < 2) { vuRaf = null; return; }
-    const buf = new Float32Array(1024);
-    ['l', 'r'].forEach((ch, i) => {
-      vuAn[i].getFloatTimeDomainData(buf);
-      let pk = 0; for (let k = 0; k < buf.length; k++) { const x = Math.abs(buf[k]); if (x > pk) pk = x; }
-      const db = pk > 1e-5 ? 20 * Math.log10(pk) : -100;
-      // montée immédiate, descente de 20 dB/s ; maintien de la crête 1,5 s
-      vuDisp[i] = db >= vuDisp[i] ? db : Math.max(db, vuDisp[i] - 20 / 60);
-      if (db >= vuHold[i].v || now - vuHold[i].t > 1500) vuHold[i] = {v: db, t: now};
-      const pct = d => Math.max(0, Math.min(100, (d + 60) / 60 * 100)) + '%';
-      $('vu-' + ch).style.width = pct(vuDisp[i]);
-      $('vu-' + ch + 'p').style.left = pct(vuHold[i].v);
-      $('vu-' + ch + 'd').textContent = vuHold[i].v > -60 ? vuHold[i].v.toFixed(1) : '-';
-    });
-    vuRaf = listening ? requestAnimationFrame(vuDraw) : null;
-  }
-  // Bouton du lecteur, comme celui du tableau de bord : un direct se relance
-  // depuis le début du flux plutôt que de reprendre un tampon périmé.
   const IC_PLAY = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
   const IC_PAUSE = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>';
   function playButton(on) {
@@ -537,29 +547,86 @@
     b.innerHTML = on ? IC_PAUSE : IC_PLAY;
     b.classList.toggle('border-blue-500', on); b.classList.toggle('text-blue-600', on); b.classList.toggle('bg-blue-50', on);
   }
+  // Un direct se relance depuis le début du flux plutôt que de reprendre un tampon périmé.
   function playStream() {
     if (!listening) return;
-    const a = $('pl-audio');
-    a.src = `/api/dab/listen/${encodeURIComponent(listening)}?t=${Date.now()}`;
+    const a = $('pl-audio'), sid = listening;
+    a.src = `/api/dab/listen/${encodeURIComponent(sid)}?t=${Date.now()}`;
+    a.volume = $('pl-volume').value / 100;
     a.play().catch(() => {});
-    if (vuCtx && vuCtx.state === 'suspended') vuCtx.resume();
     playButton(true);
+    let retried = false;
+    a.onerror = () => {
+      if (!a.getAttribute('src') || listening !== sid) return;
+      if (!retried) {                          // un service tout juste épinglé peut demander un instant
+        retried = true;
+        $('pl-help').textContent = 'Démarrage du service…';
+        setTimeout(() => { if (listening === sid) { a.src = `/api/dab/listen/${encodeURIComponent(sid)}?t=${Date.now()}`; a.play().catch(() => {}); } }, 2000);
+        return;
+      }
+      stopListen();
+      $('pl-help').textContent = 'Écoute impossible : le service ne répond pas pour le moment. Réessayer dans quelques secondes.';
+    };
+    a.onplaying = () => { $('pl-help').textContent = 'Écoute servie par la clé DAB+ : une seule à la fois, coupée automatiquement après quelques minutes.'; };
+    a.onended = () => { stopListen(); };   // écoute coupée par le serveur (durée maximale)
   }
   function togglePlay() {
-    const a = $('pl-audio');
-    if (a.paused || !a.src) { playStream(); vuStart(a); }
-    else { a.pause(); a.removeAttribute('src'); a.load(); playButton(false); }
+    if (listening) { stopListen(); return; }
+    if (shown) listen(shown);
   }
   function setVolume(v) {
     $('pl-volume-value').textContent = v + '%';
-    if (vuGain) vuGain.gain.value = v / 100; else $('pl-audio').volume = v / 100;
+    $('pl-audio').volume = v / 100;
   }
-  function stopListen(keep) {
+  function stopListen() {
     playButton(false);
     const a = $('pl-audio');
+    a.onerror = null;
     a.pause(); a.removeAttribute('src'); a.load();
     listening = null;
-    if (!keep) { $('player').classList.add('hidden'); renderServices(); }
+    $('pl-help').textContent = '';
+    renderServices();
+  }
+
+  // ── Titres diffusés (DLS) ──────────────────────────────
+  let pigeDab = [];
+  BLRMO.collapsible('blrmo-dab-dls', [[$('dls-full'), true], [$('dls-short'), false]], $('dls-toggle'),
+    open => { $('dls-title').style.marginBottom = open ? '' : '0'; });
+  async function loadDls() {
+    if (!shown) return;
+    let d;
+    try { d = await (await fetch(`/api/dab/dls_history?limit=10&sid=${encodeURIComponent(shown)}`, { credentials: 'include' })).json(); } catch (e) { return; }
+    if (d.sid !== shown) return;
+    const rows = d.data || [];
+    const cur = String(d.current || '').split(/\s+/).join(' ').trim();
+    const pg = pigeDab.find(p => p.sid === shown);
+    if (!rows.length) {
+      $('dls-body').innerHTML = `<tr><td colspan="3" class="py-6 text-center text-gray-400">Aucun texte enregistré pour ${esc(d.label || shown)} pour le moment</td></tr>`;
+      $('dls-short').innerHTML = cur ? `À l'antenne : <span class="text-gray-800 font-medium">${esc(cur)}</span>` : 'Aucun texte enregistré pour le moment';
+      return;
+    }
+    const today = new Date();
+    $('dls-body').innerHTML = rows.map((r, i) => {
+      const t = new Date(r.timestamp);
+      const same = !isNaN(t) && t.toDateString() === today.toDateString();
+      const hm = isNaN(t) ? esc(r.timestamp) : `${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}` + (same ? '' : ` <span class="text-gray-400">${pad(t.getDate())}-${pad(t.getMonth() + 1)}</span>`);
+      const live = i === 0 && r.dls === cur;
+      const t0 = isNaN(t) ? 0 : Math.floor(t.getTime() / 1000);
+      const listenLink = pg && pg.oldest && t0 >= pg.oldest
+        ? `<a href="/pige?p=${encodeURIComponent(pg.id)}&t=${t0}" class="font-medium text-blue-600 hover:text-blue-800" title="Écouter la pige ${esc(pg.name)} à ce moment">Écouter</a>` : '';
+      return `<tr class="hover:bg-slate-50">
+        <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${hm}</td>
+        <td class="py-2 pr-3 truncate ${live ? 'font-semibold text-gray-900' : 'text-gray-700'}" title="${esc(r.dls)}">${esc(r.dls)}</td>
+        <td class="py-2 text-right whitespace-nowrap">${live ? '<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 mr-3">À l\'antenne</span>' : ''}${listenLink}</td>
+      </tr>`;
+    }).join('');
+    const first = rows[0], t = new Date(first.timestamp);
+    $('dls-short').innerHTML = (first.dls === cur ? 'À l\'antenne : ' : 'Dernier titre : ')
+      + `<span class="text-gray-800 font-medium">${esc(first.dls)}</span>` + (isNaN(t) ? '' : ` · depuis ${pad(t.getHours())}:${pad(t.getMinutes())}`);
+  }
+  async function loadPigeDab() {
+    try { pigeDab = ((await (await fetch('/api/pige/list', { credentials: 'include' })).json()).piges || []).filter(p => p.kind === 'dab' && p.sid); }
+    catch (e) { pigeDab = []; }
   }
 
   // ── Réglages ───────────────────────────────────────────
@@ -628,11 +695,14 @@
   }
 
   updateSidebarFrequency();
+  playButton(false);
   loadUptime().then(loadStatus);
   loadEvents();
   loadSettings();
+  loadPigeDab().then(loadDls);
   setInterval(loadStatus, 2000);
   setInterval(loadEvents, 15000);
+  setInterval(loadDls, 20000);
   setInterval(loadUptime, 60000);
 </script>
 </body>

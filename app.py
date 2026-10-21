@@ -66,7 +66,7 @@ SESSION_TIMEOUT = timedelta(minutes=60)
 @app.before_request
 def check_session_timeout():
     # Endpoints exclus du check session (polling automatique)
-    POLLING_ENDPOINTS = ('logs_search', 'logs_sources', 'chain_status', 'stream_stats', 'proxy_stream', 'static',
+    POLLING_ENDPOINTS = ('logs_search', 'logs_sources', 'chain_status', 'stream_stats', 'stream_spectrum', 'proxy_stream', 'static',
                          'get_stats', 'get_signal_history', 'get_record_status',
                          'pige_status')
     if request.endpoint in POLLING_ENDPOINTS:
@@ -316,6 +316,8 @@ def save_config():
                 config['audio']['silence_threshold'] = float(data['audio']['silence_threshold'])
             if 'silence_duration' in data['audio']:
                 config['audio']['silence_duration'] = int(data['audio']['silence_duration'])
+                if monitor and isinstance(getattr(monitor, 'audio_config', None), dict):
+                    monitor.audio_config['silence_duration'] = int(data['audio']['silence_duration'])
             if 'modulation_alert_delay' in data['audio']:
                 config['audio']['modulation_alert_delay'] = int(data['audio']['modulation_alert_delay'])
                 if monitor:
@@ -1384,7 +1386,7 @@ def dab_page():
 @auth.login_required
 @limiter.exempt
 def dab_status():
-    return jsonify({'status': 'ok', **dab_reader.status()})
+    return jsonify({'status': 'ok', **dab_reader.status(), 'default_sid': dab_reader.default_sid()})
 
 
 @app.route('/api/dab/events')
@@ -1533,6 +1535,76 @@ def dab_settings():
     os.replace(tmp, 'config.json')
     logger.info(f"Réglages DAB+ enregistrés par {session.get('username', '?')}")
     return jsonify({'status': 'ok', 'settings': dab})
+
+
+@app.route('/api/dab/dls_history')
+@auth.login_required
+@limiter.exempt
+def dab_dls_history():
+    """Textes DLS diffusés par un service (le service du tableau de bord par défaut)."""
+    try:
+        limit = max(1, min(int(request.args.get('limit', 10) or 10), 5000))
+    except ValueError:
+        limit = 10
+    sid = (request.args.get('sid') or '').strip().lower() or dab_reader.default_sid()
+    st = dab_reader.status()
+    cur = next((s for s in st.get('services', []) if s.get('sid') == sid), None)
+    return jsonify({'status': 'ok', 'sid': sid, 'label': cur.get('label') if cur else dab_reader.label_of(sid),
+                    'current': (cur or {}).get('dls') or '', 'data': dab_reader.dls_history(sid, limit),
+                    'services': dab_reader.dls_services()})
+
+
+# ══════════════════════════════════════════════════════════════════════════
+#  Spectre en tiers d'octave des pages FM et DAB+ (SPECTRUM_PATCH)
+# ══════════════════════════════════════════════════════════════════════════
+from spectrum import FMSpectrum, DABSpectrum, LABELS as SPECTRUM_LABELS
+
+
+def _dab_mp3_url(sid):
+    cfg = dab_reader.config()
+    if not cfg.get('enabled') or not sid or not sid.replace('x', '').isalnum():
+        return None
+    return f"http://127.0.0.1:{int(cfg['port'])}/mp3/{sid}"
+
+
+fm_spectrum = FMSpectrum()
+dab_spectrum = DABSpectrum(_dab_mp3_url)
+
+
+@app.route('/api/stream/spectrum')
+@auth.login_required
+@limiter.exempt
+@csrf.exempt
+def stream_spectrum():
+    """SSE : bandes et niveaux G/D toutes les 100 ms, pour src=fm ou src=dab (&sid=)."""
+    src = request.args.get('src', 'fm')
+    sid = (request.args.get('sid') or '').strip().lower() or dab_reader.default_sid()
+    target = dab_spectrum if src == 'dab' else fm_spectrum
+
+    def gen():
+        yield f"event: labels\ndata: {json.dumps(SPECTRUM_LABELS)}\n\n"
+        last = 0
+        while True:
+            target.touch(sid)
+            snap = target.snapshot()
+            if snap.get('t', 1) != last:
+                last = snap.get('t', 1)
+                yield f"data: {json.dumps(snap)}\n\n"
+            else:
+                yield ": \n\n"                      # garde la connexion ouverte
+            time.sleep(0.1)
+
+    return Response(gen(), mimetype='text/event-stream',
+                    headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no', 'Connection': 'keep-alive'})
+
+
+# ══════════════════════════════════════════════════════════════════════════
+#  Page FM (réception et réglages FM, FM_PAGE_PATCH)
+# ══════════════════════════════════════════════════════════════════════════
+@app.route('/fm')
+@auth.login_required
+def fm_page():
+    return render_template('fm.html')
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -2068,6 +2140,7 @@ ROLE_LECTEUR = {
     'logs_search', 'logs_sources', 'account_password',
     'dab_page', 'dab_status', 'dab_events', 'dab_uptime', 'dab_slide', 'dab_listen',
     'audio_defects_list', 'audio_defect_clip', 'system_summary',
+    'fm_page', 'stream_spectrum', 'dab_dls_history',
 }
 ROLE_LECTEUR_GET = {'chain_devices', 'chain_device', 'logs_rules', 'dab_settings'}      # lecture seule pour ces routes
 # Opérateur : exporter, enregistrer, intervenir sans rien régler
@@ -2294,6 +2367,7 @@ try:
     cleanup_orphan_records()
     start_cleanup_scheduler()
     monitor = FMMonitor('config.json')
+    monitor.spectrum_sink = fm_spectrum.feed       # page FM : spectre à la demande
     monitor.start()
 except Exception as e:
     logger.error(f"Erreur démarrage monitor: {e}")

@@ -6,6 +6,24 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Pages FM et DAB+ : écoute, spectre, titres diffusés
+- **Nouvelle page FM** (menu « FM », au-dessus de DAB+), sur le modèle de la page DAB+ :
+  - quatre cases : signal (dBf, S/B, multitrajet), modulation (niveau et seuil), mode stéréo ou mono, RDS (PS et PI) ;
+  - écoute de l'antenne avec barres G/D et **analyseur de spectre** ;
+  - titres diffusés (RadioText) ;
+  - derniers événements, avec mails et liens vers la pige ;
+  - réglages FM (administrateur) : source de réception, fréquence, seuil de modulation, délais d'alerte (modulation, émetteur, RDS, RadioText). Un changement de fréquence ou de source relance la réception FM ; les délais s'appliquent tout de suite.
+- **Page DAB+ réorganisée** dans le même ordre :
+  - lecteur toujours affiché sur le service suivi (celui du tableau de bord), avec barres G/D et analyseur ; « Écouter » dans le tableau des services le bascule sur un autre service ;
+  - titres diffusés (DLS) ;
+  - derniers événements ;
+  - puis le tableau des services et les réglages, comme avant.
+- **Analyseur de spectre** en tiers d'octave : 31 bandes de 20 Hz à 20 kHz, échelle de 0 à -96 dBFS, segments verts, jaunes au-dessus de -30, rouges au-dessus de -12, crête tenue 2 s par bande. Calculé par BL-RMO (nouveau module `spectrum.py`) seulement pendant qu'une page FM ou DAB+ est ouverte, arrêté 30 s après : FM sur le son du tuner, DAB+ en décodant le service affiché depuis welle-cli. Flux temps réel `/api/stream/spectrum`, 10 mesures par seconde. Les barres G/D de la page DAB+ viennent de la même mesure : elles bougent sans lancer l'écoute.
+- **Titres diffusés repliables** sur les deux pages (« Réduire » / « Afficher », mémorisé dans le navigateur) : 10 derniers titres, « À l'antenne » sur le titre en cours, « Écouter » ouvre la pige à ce moment.
+- **Historique des textes DLS** des services surveillés (nouvelle table `dab_dls`, 1 000 lignes par service), avec la même règle que le RadioText : texte stable 8 s, texte qui revient en boucle repris après 10 minutes. Tableau « Titres diffusés (DLS) » et export CSV dans l'onglet Réception DAB+ des Journaux ; route `/api/dab/dls_history`.
+- **Configuration allégée** : il reste la station (nom), les mails, le réseau, l'authentification, le volume et la sauvegarde. La source, la fréquence, les seuils et délais FM passent sur la page FM ; un encart y renvoie.
+- Le tableau de bord ne change pas.
+
 ### Chaîne : sonde Livebox
 - Nouveau type de sonde **Livebox** (Orange, Livebox 4 à 7) : lit l'interface locale de la box avec le compte administrateur (mot de passe masqué comme les autres secrets) : temps de fonctionnement, nombre de redémarrages, état de la connexion Internet et du lien (fibre, ADSL), IP publique, modèle et version. Un **redémarrage** met l'appareil en alerte pendant une durée réglable (15 min par défaut), une connexion Internet coupée aussi ; « Hors service » si la box ne répond plus. Interface non documentée par Orange : les valeurs absentes d'un modèle sont ignorées.
 

@@ -65,6 +65,10 @@
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
       Pige
     </a>
+    <a href="/fm" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8zm0 0l13-4M8 14a2 2 0 104 0 2 2 0 00-4 0m8-1h1m-1 3h1"/></svg>
+      FM
+    </a>
     {% if dab_enabled or (current_user and current_user.role == 'admin') %}
     <a href="/dab" class="sidebar-link">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01"/></svg>
@@ -102,101 +106,29 @@
 
   <header class="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10">
     <h1 class="text-base font-semibold text-gray-900">Configuration</h1>
-    <p class="text-xs text-gray-400 mt-0.5">Paramètres du monitoring FM</p>
+    <p class="text-xs text-gray-400 mt-0.5">Paramètres généraux de BL-RMO</p>
   </header>
 
   <div class="p-6 max-w-3xl">
 
-    <!-- ── 0. SCAN DONGLE ───────────────────────────────────────── -->
-    <div class="section" id="scan-section">
-      <div class="section-title">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        0. Source d'entrée
-      </div>
-      <div class="flex items-center gap-4 mb-4">
-        <button onclick="scanDongle()" id="btn-scan" class="btn-primary">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-          Scan dongle
-        </button>
-        <span id="scan-status" class="text-xs text-gray-400">Cliquez pour détecter les dongles connectés</span>
-      </div>
-      <div id="scan-results" class="hidden">
-        <div id="scan-found" class="space-y-3"></div>
-      </div>
+    <!-- ── Réglages de la réception : pages FM et DAB+ (FM_PAGE_PATCH) ── -->
+    <div class="section" style="border-color:#bfdbfe;background:#eff6ff">
+      <div class="text-sm font-semibold text-blue-900">Réglages de la réception</div>
+      <div class="text-xs text-blue-800 mt-1 leading-relaxed">La source, la fréquence, les seuils et les délais d'alerte se règlent sur les pages
+        <a href="/fm#reglages" class="font-semibold underline">FM</a> et <a href="/dab#reglages" class="font-semibold underline">DAB+</a>.</div>
     </div>
 
-    <!-- ── 1. RTL-SDR & STATION ───────────────────────────────── -->
+    <!-- ── 1. STATION ─────────────────────────────────────────── -->
     <div class="section">
       <div class="section-title">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        1. Réception FM &amp; Station
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        1. Station
       </div>
-      <div class="grid grid-cols-3 gap-4" id="station-grid">
-        <div>
-          <div class="field-label">Fréquence FM</div>
-          <input type="text" id="frequency" class="field-input" placeholder="88.6M">
-          <div class="field-hint">Format : 88.6M, 107.5M…</div>
-        </div>
+      <div class="grid grid-cols-2 gap-4">
         <div>
           <div class="field-label">Nom de la station</div>
           <input type="text" id="station-name" class="field-input" placeholder="Graffiti Radio">
-          <div class="field-hint">Affiché dans l'interface</div>
-        </div>
-        <div class="rtl-only">
-          <div class="field-label">Gain</div>
-          <input type="text" id="gain" class="field-input" placeholder="40" maxlength="5" title="-1 ou auto pour gain automatique">
-          <div class="field-hint">0 à 50 dB</div>
-        </div>
-      </div>
-      <input type="hidden" id="silence-threshold" value="-20">
-    </div>
-
-    <!-- ── 2. SURVEILLANCE & SEUILS ───────────────────────────── -->
-    <div class="section">
-      <div class="section-title">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-        2. Surveillance &amp; Seuils
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div class="tef-only">
-          <div class="field-label">Seuil absence de modulation (dBFS)</div>
-          <input type="number" id="tef-mod-threshold" class="field-input" placeholder="-40" step="1" min="-90" max="-10">
-          <div class="field-hint">Niveau audio reçu sous lequel la modulation est considérée absente. Par défaut : -40</div>
-        </div>
-        <div class="tef-only">
-          <div class="field-label">Perte du signal FM</div>
-          <div class="text-xs text-gray-600 py-2">Automatique : le tuner ne transmet plus de mesure de signal.</div>
-          <div class="field-hint">Pas de seuil à régler avec le tuner TEF</div>
-        </div>
-        <div class="rtl-only">
-          <div class="field-label">Seuil modulation (dB std)</div>
-          <input type="number" id="modulation-std-threshold" class="field-input" placeholder="0.5" step="0.1" min="0.1" max="5">
-          <div class="field-hint">Signal normal : 2 dB environ. Recommandé : 0,5 à 1,5</div>
-        </div>
-        <div class="rtl-only">
-          <div class="field-label">Seuil perte émetteur (dBFS)</div>
-          <input type="number" id="signal-lost-threshold" class="field-input" placeholder="-50">
-          <div class="field-hint">Niveau en dessous duquel l'émetteur est hors ligne</div>
-        </div>
-        <div>
-          <div class="field-label">Délai alerte modulation (s)</div>
-          <input type="number" id="modulation-alert-delay" class="field-input" placeholder="30">
-          <div class="field-hint">Durée sans modulation avant alerte</div>
-        </div>
-        <div>
-          <div class="field-label">Délai alerte émetteur (s)</div>
-          <input type="number" id="silence-duration" class="field-input" placeholder="10">
-          <div class="field-hint">Durée sans signal FM capté avant alerte</div>
-        </div>
-        <div>
-          <div class="field-label">Délai alerte RDS absent (s)</div>
-          <input type="number" id="rds-timeout" class="field-input" placeholder="120">
-          <div class="field-hint">Durée sans signal RDS avant alerte</div>
-        </div>
-        <div>
-          <div class="field-label">Délai alerte RadioText absent (s)</div>
-          <input type="number" id="rt-timeout" class="field-input" placeholder="300">
-          <div class="field-hint">Durée sans RadioText (titres, messages) avant alerte</div>
+          <div class="field-hint">Affiché dans l'interface et les mails</div>
         </div>
       </div>
     </div>
@@ -205,7 +137,7 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        3. Alertes email (Gmail)
+        2. Alertes email (Gmail)
       </div>
       <div class="grid grid-cols-2 gap-4 mb-4">
         <div>
@@ -256,7 +188,7 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
-        4. Réseau
+        3. Réseau
       </div>
       <div class="toggle-wrap mb-4">
         <div>
@@ -330,7 +262,7 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-        5. Authentification
+        4. Authentification
       </div>
       <div class="grid grid-cols-3 gap-4">
         <div>
@@ -377,7 +309,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.54 8.46a5 5 0 010 7.07"/>
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.07 4.93a10 10 0 010 14.14"/>
         </svg>
-        6. Volume de sortie DAC+
+        5. Volume de sortie DAC+
       </div>
       <div class="flex items-center gap-4">
         <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -402,7 +334,7 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-        7. Sauvegarde &amp; Restauration
+        6. Sauvegarde &amp; Restauration
       </div>
       <div class="field-hint mb-4">Le fichier ZIP contient : <code>config.json</code>, <code>.env</code> et les certificats SSL.</div>
       <div class="flex items-center gap-3 flex-wrap">
@@ -496,7 +428,6 @@
   // ═══════════════════════════════════════════════
   // LOAD CONFIG
   // ═══════════════════════════════════════════════
-  let useTef = false;
   async function loadConfig() {
     try {
       const response = await fetch('/api/config/full', {credentials: 'include'});
@@ -509,22 +440,7 @@
         recipientsStr = typeof r === 'string' ? r : r.join(', ');
       }
 
-      document.getElementById('frequency').value                = frequency;
       document.getElementById('station-name').value             = config.station?.name || '';
-      document.getElementById('gain').value                     = config.rtl_sdr?.gain || '';
-      document.getElementById('silence-threshold').value        = config.audio?.silence_threshold || -20;
-      document.getElementById('silence-duration').value         = config.audio?.silence_duration || 10;
-      document.getElementById('modulation-alert-delay').value   = config.audio?.modulation_alert_delay || 30;
-      document.getElementById('modulation-std-threshold').value = config.audio?.modulation_std_threshold || 0.5;
-      document.getElementById('signal-lost-threshold').value    = config.audio?.signal_lost_threshold || -50;
-      document.getElementById('rds-timeout').value              = config.audio?.rds_timeout || 120;
-      document.getElementById('rt-timeout').value               = config.audio?.rt_timeout || 300;
-      document.getElementById('tef-mod-threshold').value        = config.tef?.modulation_threshold_dbfs ?? -40;
-      // Tuner TEF : réglages propres au TEF ; RTL-SDR : anciens réglages (gain, écart-type, dBFS)
-      useTef = !!config.tef?.enabled;
-      document.querySelectorAll('.tef-only').forEach(e => e.style.display = useTef ? '' : 'none');
-      document.querySelectorAll('.rtl-only').forEach(e => e.style.display = useTef ? 'none' : '');
-      document.getElementById('station-grid').className = 'grid gap-4 ' + (useTef ? 'grid-cols-2' : 'grid-cols-3');
       document.getElementById('sender-email').value             = config.email?.sender_email || '';
       document.getElementById('sender-password').value          = '';
       document.getElementById('recipient-emails').value         = recipientsStr;
@@ -623,21 +539,7 @@
     const isDHCP = networkModeToggle.checked;
     const config = {
       station: {
-        name:      document.getElementById('station-name').value,
-        frequency: document.getElementById('frequency').value
-      },
-      rtl_sdr: {
-        frequency: document.getElementById('frequency').value,
-        gain:      parseInt(document.getElementById('gain').value) || 0
-      },
-      audio: {
-        silence_threshold:        parseFloat(document.getElementById('silence-threshold').value) || -20,
-        silence_duration:         parseInt(document.getElementById('silence-duration').value) || 10,
-        modulation_alert_delay:   parseInt(document.getElementById('modulation-alert-delay').value) || 30,
-        modulation_std_threshold: parseFloat(document.getElementById('modulation-std-threshold').value) || 0.5,
-        signal_lost_threshold:    parseFloat(document.getElementById('signal-lost-threshold').value) || -50,
-        rds_timeout:              parseInt(document.getElementById('rds-timeout').value) || 120,
-        rt_timeout:               parseInt(document.getElementById('rt-timeout').value) || 300
+        name:      document.getElementById('station-name').value
       },
       email: {
         sender_email:     document.getElementById('sender-email').value,
@@ -655,11 +557,6 @@
         wifi_password:document.getElementById('wifi-password').value
       }
     };
-
-    if (useTef) {
-      const thr = parseFloat(document.getElementById('tef-mod-threshold').value);
-      config.tef = { modulation_threshold_dbfs: isNaN(thr) ? -40 : thr };
-    }
 
     if (newUsername || newPassword) {
       config.auth = {};
@@ -963,106 +860,7 @@
   // ═══════════════════════════════════════════════
   loadConfig();
   loadVolume();
-  // ── Scan dongle ────────────────────────────────────────────
-  async function scanDongle() {
-    const btn = document.getElementById('btn-scan');
-    const status = document.getElementById('scan-status');
-    const results = document.getElementById('scan-results');
-    const found = document.getElementById('scan-found');
 
-    btn.disabled = true;
-    btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Scan en cours...`;
-    status.textContent = 'Détection en cours, veuillez patienter...';
-    results.classList.add('hidden');
-
-    try {
-      const csrfResp = await fetch('/api/csrf-token', {credentials: 'include'});
-      const { csrf_token } = await csrfResp.json();
-      const resp = await fetch('/api/scan-dongle', {credentials: 'include', 
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf_token }
-      });
-      const data = await resp.json();
-
-      found.innerHTML = '';
-      const hasTef = data.tef && data.tef.length > 0;
-      const hasRtl = data.rtlsdr;
-      if (!hasTef && !hasRtl) {
-        found.innerHTML = `<div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">Aucun dongle détecté. Vérifiez les branchements USB.</div>`;
-      } else if (hasTef && !hasRtl) {
-        found.innerHTML = `
-          <div class="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 mb-3">
-            TEF détecté sur ${data.tef[0]} — source unique, sélection automatique.
-          </div>`;
-        selectSource('tef', data.tef[0]);
-      } else if (!hasTef && hasRtl) {
-        found.innerHTML = `
-          <div class="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 mb-3">
-            RTL-SDR Blog V4 détecté. Choisissez le décodeur :
-          </div>
-          <div class="flex gap-3">
-            <button onclick="selectSource('rtlsdr', '')" class="btn-secondary">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
-              rtl_fm (mono)
-            </button>
-            <button onclick="selectSource('gnuradio', '')" class="btn-primary">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg>
-              GNU Radio (stéréo)
-            </button>
-          </div>`;
-      } else {
-        // Les deux sont détectés — choix proposé
-        found.innerHTML = `
-          <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700 mb-3">
-            Deux dongles détectés. Choisissez la source active :
-          </div>
-          <div class="flex gap-3">
-            <button onclick="selectSource('tef', '${data.tef[0]}')" class="btn-primary">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-              TEF (${data.tef[0]})
-            </button>
-            <button onclick="selectSource('rtlsdr', '')" class="btn-secondary">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
-              RTL-SDR Blog V4
-            </button>
-          </div>`;
-      }
-
-      results.classList.remove('hidden');
-      status.textContent = hasTef || hasRtl ? 'Détection terminée.' : 'Aucun dongle trouvé.';
-    } catch(e) {
-      status.textContent = 'Erreur lors du scan : ' + e.message;
-      showToast('Erreur scan dongle : ' + e.message, 'error');
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Scan dongle`;
-    }
-  }
-
-  async function selectSource(source, port) {
-    const csrfResp = await fetch('/api/csrf-token', {credentials: 'include'});
-    const { csrf_token } = await csrfResp.json();
-    try {
-      const resp = await fetch('/api/select-source', {credentials: 'include', 
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf_token },
-        body: JSON.stringify({ source, port , credentials: 'include'})
-      });
-      const data = await resp.json();
-      if (data.status === 'success') {
-        const label = source === 'tef' ? 'TEF (' + port + ')' : source === 'gnuradio' ? 'GNU Radio (stéréo)' : 'RTL-SDR Blog V4 (rtl_fm)';
-        showToast('Source ' + label + ' activée — redémarrage en cours…', 'success');
-        document.getElementById('scan-found').innerHTML += `
-          <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
-            ✓ Source ${label} activée. BL-RMO redémarre…
-          </div>`;
-      } else {
-        showToast('Erreur : ' + data.message, 'error');
-      }
-    } catch(e) {
-      showToast('Erreur sélection source : ' + e.message, 'error');
-    }
-  }
 
 </script>
 </body>

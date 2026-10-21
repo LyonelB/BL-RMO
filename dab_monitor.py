@@ -197,6 +197,15 @@ CREATE TABLE IF NOT EXISTS dab_uptime (
     present INTEGER NOT NULL,
     PRIMARY KEY (channel, sid, slot)
 );
+CREATE TABLE IF NOT EXISTS dab_dls (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,          -- heure locale ISO du premier affichage
+    channel TEXT DEFAULT '',
+    sid TEXT NOT NULL,
+    label TEXT DEFAULT '',
+    dls TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_dab_dls_sid ON dab_dls(sid, id);
 CREATE TABLE IF NOT EXISTS dab_services (
     channel TEXT NOT NULL,
     sid TEXT NOT NULL,
@@ -272,6 +281,7 @@ class DabMonitor:
         self._nosync_since = None
         self._nosync_restarts = 0
         self._synced_once = False
+        self._dls = {}               # sid -> [candidat, depuis, dernier enregistré, {texte: heure}]
         self.email = None
         if email:
             try:
@@ -586,7 +596,56 @@ class DabMonitor:
             self._silence_ended(s)
         if new:
             self._save_services(new)
+        self._dls_note_all(now)
         self._account(now)
+
+    # Un texte DLS n'entre dans l'historique qu'après DLS_STABLE s de réception identique,
+    # et pas s'il a déjà été enregistré dans les DLS_REPEAT dernières secondes (messages en
+    # rotation : nom de la station, slogan). Même règle que le RadioText de la FM.
+    DLS_STABLE = 8
+    DLS_REPEAT = 600
+    DLS_KEEP = 1000                  # lignes conservées par service
+
+    def _dls_note_all(self, now):
+        with self.lock:
+            items = [(sid, s.label, ' '.join(str(s.info.get('dls') or '').split()))
+                     for sid, s in self.services.items()
+                     if s.present and is_real_service(s.label) and self._watched(sid)]
+        for sid, label, text in items:
+            self._dls_note(sid, label, text, now)
+
+    def _dls_note(self, sid, label, text, now):
+        if not any(ch.isalnum() for ch in text):
+            return
+        st = self._dls.get(sid)
+        if st is None:
+            last = None
+            try:
+                with _connect(self.db_path) as c:
+                    row = c.execute('SELECT dls FROM dab_dls WHERE sid = ? ORDER BY id DESC LIMIT 1', (sid,)).fetchone()
+                    last = row['dls'] if row else None
+            except sqlite3.Error:
+                pass
+            st = self._dls[sid] = [None, now, last, {}]
+        if text != st[0]:
+            st[0], st[1] = text, now
+            return
+        if now - st[1] < self.DLS_STABLE or text == st[2]:
+            return
+        st[2] = text
+        if now - st[3].get(text, 0) < self.DLS_REPEAT:
+            return
+        st[3] = {t: ts for t, ts in st[3].items() if now - ts < self.DLS_REPEAT}
+        st[3][text] = now
+        try:
+            with _connect(self.db_path) as c:
+                c.execute('INSERT INTO dab_dls (timestamp, channel, sid, label, dls) VALUES (?,?,?,?,?)',
+                          (datetime.fromtimestamp(st[1]).isoformat(timespec='seconds'),
+                           str(self.cfg['channel']), sid, label, text))
+                c.execute('DELETE FROM dab_dls WHERE sid = ? AND id <= (SELECT id FROM dab_dls WHERE sid = ? '
+                          'ORDER BY id DESC LIMIT 1 OFFSET ?)', (sid, sid, self.DLS_KEEP))
+        except sqlite3.Error as e:
+            logger.debug(f"dab_dls : {e}")
 
     def _save_services(self, items):
         ts = datetime.now().isoformat(timespec='seconds')
@@ -808,6 +867,43 @@ class DabReader:
             for s in st['services']:
                 s['present'] = None
         return st
+
+    def default_sid(self):
+        """Service du tableau de bord : celui choisi, sinon le premier surveillé."""
+        cfg = self.config()
+        sid = (cfg.get('dashboard_sid') or '').lower()
+        if not sid:
+            watched = cfg.get('watched_sids') or []
+            sid = str(watched[0]).lower() if watched else ''
+        return sid
+
+    def label_of(self, sid):
+        try:
+            with _connect(self.db_path) as c:
+                row = c.execute('SELECT label FROM dab_services WHERE sid = ? ORDER BY last_seen DESC LIMIT 1',
+                                (sid,)).fetchone()
+            return row['label'] if row else sid
+        except sqlite3.Error:
+            return sid
+
+    def dls_history(self, sid, limit=10):
+        """Derniers textes DLS d'un service, du plus récent au plus ancien."""
+        try:
+            with _connect(self.db_path) as c:
+                return [dict(r) for r in c.execute(
+                    'SELECT timestamp, sid, label, dls FROM dab_dls WHERE sid = ? ORDER BY id DESC LIMIT ?',
+                    (sid, limit)).fetchall()]
+        except sqlite3.Error:
+            return []
+
+    def dls_services(self):
+        """Services qui ont un historique DLS : [{sid, label, count}]."""
+        try:
+            with _connect(self.db_path) as c:
+                return [dict(r) for r in c.execute(
+                    'SELECT sid, MAX(label) AS label, COUNT(*) AS count FROM dab_dls GROUP BY sid ORDER BY label').fetchall()]
+        except sqlite3.Error:
+            return []
 
     def events(self, limit=50):
         """Événements regroupés : un défaut et son rétablissement sur une ligne."""
