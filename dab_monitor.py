@@ -358,6 +358,10 @@ class DabMonitor:
         self._force_reset = False
         cmd = self._cmd()
         logger.info("Lancement : " + ' '.join(cmd))
+        try:
+            self._log_offset = os.path.getsize(WELLE_LOG)
+        except OSError:
+            self._log_offset = 0
         log = open(WELLE_LOG, 'a')
         try:
             self.proc = subprocess.Popen(cmd, stdout=log, stderr=log, start_new_session=True)
@@ -381,6 +385,50 @@ class DabMonitor:
                 except Exception:
                     pass
         self._set_welle_up(False)
+
+    # Clé débranchée ou disparue de l'USB : welle-cli continue de tourner sur un
+    # « Null device » et ne retrouve jamais la clé, même rebranchée. On le relance
+    # toutes les 30 s jusqu'à ce que la clé revienne, et le récepteur est compté
+    # hors service (alerte « Récepteur DAB+ hors service » après son délai).
+    NO_DONGLE_MARKS = ('No valid device found', 'RTL-SDR is unplugged', 'No devices found')
+
+    @staticmethod
+    def dongle_present():
+        """Une clé RTL-SDR (Realtek 0bda:2832 ou 2838) est-elle visible sur l'USB ?"""
+        import glob
+        for d in glob.glob('/sys/bus/usb/devices/*'):
+            try:
+                with open(os.path.join(d, 'idVendor')) as f:
+                    if f.read().strip() != '0bda':
+                        continue
+                with open(os.path.join(d, 'idProduct')) as f:
+                    if f.read().strip() in ('2832', '2838'):
+                        return True
+            except OSError:
+                continue
+        return False
+
+    def _check_device(self, now=None):
+        now = now or time.time()
+        if not self.proc:
+            return
+        try:
+            with open(WELLE_LOG, 'rb') as f:
+                f.seek(getattr(self, '_log_offset', 0))
+                tail = f.read(256 * 1024).decode('utf-8', 'replace')
+        except OSError:
+            return
+        if not any(m in tail for m in self.NO_DONGLE_MARKS):
+            return
+        present = self.dongle_present()
+        self.last_error = ("clé DAB+ revenue sur l'USB, relance de welle-cli" if present
+                           else "clé DAB+ non détectée sur l'USB (débranchée ou défectueuse)")
+        if not getattr(self, '_no_dongle', False):
+            logger.warning(f"DAB+ : {self.last_error}")
+        self._no_dongle = True
+        self._kill_welle()                           # récepteur compté hors service
+        self.backoff = 30
+        self._next_start = now + (2 if present else 30)
 
     def _check_sync(self, now=None):
         """welle-cli tourne et la clé reçoit (SNR), mais aucun ensemble n'est
@@ -749,6 +797,18 @@ class DabMonitor:
             r = requests.get(self.url + '/mux.json', timeout=(3, 3), headers={'Connection': 'close'})
             if r.status_code == 200:
                 self._fails = 0
+                if getattr(self, '_no_dongle', False):
+                    # welle-cli répond aussi sur un « Null device » : on attend la preuve
+                    # que la clé reçoit (services ou ensemble) avant de le dire en service.
+                    data = r.json()
+                    eid = str((data.get('ensemble') or {}).get('id') or '').lower()
+                    if not data.get('services') and eid in ('', '0', '0x0', '0x0000'):
+                        return False
+                    self._no_dongle = False
+                    logger.info("DAB+ : clé DAB+ de nouveau détectée")
+                    self._set_welle_up(True)
+                    self.ingest(data)
+                    return True
                 self._set_welle_up(True)
                 self.ingest(r.json())
                 return True
@@ -834,6 +894,7 @@ class DabMonitor:
                 self._supervise()
                 if self.proc:
                     self.poll_once()
+                    self._check_device()
                     self._check_sync()
                 else:
                     self._set_welle_up(False)

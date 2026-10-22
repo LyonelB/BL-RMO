@@ -6,6 +6,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### DAB+ : clé débranchée puis rebranchée
+- Quand la clé RTL-SDR disparaît de l'USB, welle-cli continue de tourner sur un « Null device » et ne la retrouve jamais, même rebranchée (il fallait désactiver puis réactiver la réception DAB+). BL-RMO le détecte dans le journal de welle-cli, compte le récepteur hors service (alerte « Récepteur DAB+ hors service » après son délai, message « clé DAB+ non détectée sur l'USB ») et relance welle-cli toutes les 30 s, ou 2 s après le retour de la clé sur l'USB.
+
 ### Chaîne : case « Réception DAB+ »
 - Nouveau type de sonde **Réception DAB+** (`dab_local`), pendant de « Réception FM » : reprend ce que mesure déjà la clé pour le service suivi (ou un SId choisi) : présence, niveau et silence (son figé compris), SNR et qualité FIC, titre en cours. Aucune mesure de plus demandée à la clé. Silence et ensemble dégradé ne comptent qu'une fois l'alerte DAB+ déclenchée, après leur délai.
 - Pas de flèche entre les réceptions FM et DAB+ sur le synoptique : ce sont deux arrivées en parallèle.
