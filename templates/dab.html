@@ -131,7 +131,8 @@
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
         <span>Écoute et spectre</span>
-        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400 hidden sm:inline">Service suivi par défaut · « Écouter » dans le tableau pour en changer</span>
+        <label class="ml-auto order-last flex items-center gap-1.5 text-[11px] font-medium normal-case tracking-normal text-gray-600 cursor-pointer" title="Afficher l'analyseur de spectre (mémorisé dans ce navigateur)"><input type="checkbox" id="spec-on" class="w-3.5 h-3.5 accent-blue-600"> Spectre</label>
+        <span class="text-[11px] font-normal normal-case tracking-normal text-gray-400 hidden lg:inline ml-auto">Service suivi par défaut · « Écouter » dans le tableau pour en changer</span>
       </div>
       <div id="player">
         <div class="flex flex-wrap items-center gap-3">
@@ -160,11 +161,13 @@
           <div class="flex justify-between text-[9px] text-gray-400 font-mono pl-5 pr-[4.5rem]"><span>-60</span><span>-40</span><span>-20</span><span>0</span></div>
         </div>
         <div class="text-[11px] text-gray-400 mt-1" id="pl-help"></div>
+        <div id="spec-box">
         <div class="mt-4 rounded-lg border border-gray-100 p-2">
           <canvas id="spec" style="display:block;width:100%;height:220px" role="img" aria-label="Spectre audio en tiers d'octave"></canvas>
         </div>
         <div class="flex justify-between gap-3 text-[11px] text-gray-400 mt-2">
           <span>Spectre en tiers d'octave, 31 bandes · trait sombre : crête des 2 dernières secondes</span><span class="font-mono">dBFS</span>
+        </div>
         </div>
       </div>
     </div>
@@ -190,22 +193,29 @@
 
     <!-- ── Événements ───────────────────────────────────────── -->
     <div class="section">
-      <div class="section-title">
+      <div class="section-title" id="events-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
         <span>Derniers événements</span>
-        <a href="/logs#dab" class="ml-auto text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">Journal de réception &rarr;</a>
+        <span class="ml-auto flex items-center gap-3">
+          <a href="/logs#dab" class="text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">Journal de réception &rarr;</a>
+          <button id="events-toggle" class="flex items-center gap-1 text-[11px] font-medium normal-case tracking-normal text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1"></button>
+        </span>
       </div>
+      <div id="events-short" class="text-xs text-gray-500 truncate hidden"></div>
       <div id="events" class="text-xs text-gray-400">Chargement…</div>
     </div>
 
     <!-- ── Services ─────────────────────────────────────────── -->
     <div class="section">
-      <div class="section-title">
+      <div class="section-title" id="svc-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         <span>Services du multiplex</span>
-        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400" id="svc-help"></span>
+        <span class="ml-auto flex items-center gap-3">
+          <span class="text-[11px] font-normal normal-case tracking-normal text-gray-400" id="svc-help"></span>
+          <button id="svc-toggle" class="flex items-center gap-1 text-[11px] font-medium normal-case tracking-normal text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1"></button>
+        </span>
       </div>
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto" id="svc-full">
         <table class="w-full text-sm table-fixed" style="min-width:640px">
           <colgroup>
             <col><col style="width:84px"><col style="width:84px"><col style="width:96px">
@@ -459,6 +469,10 @@
     }).join('');
     if (shown) {
       const v = svcs.find(x => x.sid === shown);
+      if (v && !specOn) {
+        const fresh = v.present && v.level_age != null && v.level_age < 20;
+        if (fresh) meters.set(v.audio_l ?? -100, v.audio_r ?? -100); else meters.clear();
+      }
       if (v) {
         $('pl-dls').textContent = v.dls || '';
         if (v.mot_time) {
@@ -488,7 +502,10 @@
       const r = await fetch('/api/dab/events?limit=15', { credentials: 'include' });
       d = await r.json();
     } catch (e) { return; }
-    if (!d.events || !d.events.length) { $('events').innerHTML = 'Aucun événement.'; return; }
+    if (!d.events || !d.events.length) { $('events').innerHTML = 'Aucun événement.'; $('events-short').textContent = 'Aucun événement.'; return; }
+    const e0 = d.events[0];
+    $('events-short').innerHTML = `Dernier : <span class="text-gray-800 font-medium">${esc(e0.label)}${e0.service ? ' : ' + esc(e0.service) : ''}</span> le ${fmtDate(e0.start)}`
+      + (e0.status === 'ongoing' ? ' · <span class="text-red-600 font-medium">en cours</span>' : ` · ${fmtDur(e0.duration)}`);
     $('events').innerHTML = '<div class="divide-y divide-gray-100">' + d.events.map(e => {
       const ongoing = e.status === 'ongoing';
       return `<div class="flex flex-wrap items-baseline gap-x-4 gap-y-0.5 py-2">
@@ -504,10 +521,31 @@
   // Le lecteur reste affiché sur le service suivi (celui du tableau de bord) ;
   // « Écouter » dans le tableau le bascule sur un autre service. Spectre et
   // barres G/D sont mesurés par BL-RMO sur le service affiché, écouté ou non.
+  // Case « Spectre » (décochée par défaut sur cette page) : sans spectre, rien n'est
+  // calculé et les barres G/D reprennent le niveau relevé par la clé toutes les 2 s.
   const spectrum = BLRMO.Spectrum($('spec'));
   const meters = BLRMO.Meters(['vu-l', 'vu-r']);
-  let shown = null, specConn = null;
-  spectrum.clear('Connexion…');
+  let shown = null, specConn = null, specOn = false;
+  try { specOn = localStorage.getItem('blrmo-dab-spectrum') === 'on'; } catch (e) {}
+  function connectSpec() {
+    if (specConn) { specConn.close(); specConn = null; }
+    $('spec-on').checked = specOn;
+    $('spec-box').classList.toggle('hidden', !specOn);
+    meters.clear();
+    if (!specOn || !shown) return;
+    spectrum.clear('Lecture de la pige du service…');
+    specConn = BLRMO.connectSpectrum('dab', shown, d => {
+      if (d.state === 'ok' && d.bands) { spectrum.update(d.bands); meters.set(d.peak[0], d.peak[1]); }
+      else { spectrum.clear(d.message || 'Lecture de la pige du service…'); meters.clear(); }
+    });
+  }
+  $('spec-on').onchange = e => {
+    specOn = e.target.checked;
+    try { localStorage.setItem('blrmo-dab-spectrum', specOn ? 'on' : 'off'); } catch (err) {}
+    connectSpec();
+  };
+  $('spec-on').checked = specOn;
+  $('spec-box').classList.toggle('hidden', !specOn);
   function select(sid) {
     if (!sid || sid === shown) return;
     shown = sid;
@@ -516,12 +554,7 @@
     $('pl-dls').textContent = v ? v.dls || '' : '';
     $('pl-external').href = `/api/dab/listen/${encodeURIComponent(sid)}`;
     $('pl-slide').classList.add('hidden'); $('pl-slide').dataset.url = '';
-    if (specConn) specConn.close();
-    spectrum.clear('Décodage du service…'); meters.clear();
-    specConn = BLRMO.connectSpectrum('dab', sid, d => {
-      if (d.state === 'ok' && d.bands) { spectrum.update(d.bands); meters.set(d.peak[0], d.peak[1]); }
-      else { spectrum.clear(d.message || 'Décodage du service…'); meters.clear(); }
-    });
+    connectSpec();
     loadDls();
   }
   function pickDefault() {
@@ -587,6 +620,12 @@
     $('pl-help').textContent = '';
     renderServices();
   }
+
+  // ── Fenêtres repliables (mémorisé dans ce navigateur) ──
+  BLRMO.collapsible('blrmo-dab-events', [[$('events'), true], [$('events-short'), false]], $('events-toggle'),
+    open => { $('events-title').style.marginBottom = open ? '' : '0'; });
+  BLRMO.collapsible('blrmo-dab-services', [[$('svc-full'), true]], $('svc-toggle'),
+    open => { $('svc-title').style.marginBottom = open ? '' : '0'; });
 
   // ── Titres diffusés (DLS) ──────────────────────────────
   let pigeDab = [];
