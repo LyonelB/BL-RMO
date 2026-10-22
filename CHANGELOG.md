@@ -6,6 +6,13 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### DAB+ : émetteur coupé détecté (son figé)
+- Quand la réception s'arrête (émetteur DAB+ coupé), welle-cli garde la liste des services et leurs derniers niveaux audio : BL-RMO les croyait présents et ne voyait aucun silence. Désormais, **plus aucun nouveau niveau audio = silence** :
+  - multiplex entier muet (aucun service ne reçoit de son) : alerte « Silence audio » sur chaque service surveillé après le délai de silence, avec le message « Aucun son décodé depuis N s : émission DAB+ interrompue ou réception perdue », et « Ensemble dégradé » après son propre délai ;
+  - décodage complet (sans carrousel) : un service surveillé dont le son ne se rafraîchit plus est traité de même, seul.
+- Le rétablissement n'est annoncé que sur un vrai nouveau niveau audio.
+- Cas constaté le 22 octobre entre 9 h 44 et 9 h 51 : émetteur DAB+ déconnecté, coupures visibles dans la pige DAB+ (trous de 3 min et 30 s), aucune alerte.
+
 ### Mails : file d'attente quand le réseau est coupé
 - Un mail d'alerte qui ne peut pas partir (Internet coupé, Livebox qui redémarre, serveur de mail indisponible) n'est plus perdu : il est **mis en attente et retenté toutes les minutes**, dans l'ordre, pendant 24 h au plus. Le mail de rétablissement attend derrière l'alerte : on reçoit les deux, dans le bon ordre. Un mail parti en retard indique l'heure réelle de l'événement et la durée du retard.
 - La file est gardée dans un fichier (`email_queue_app.json`, `email_queue_dab_monitor.json`) : elle survit à un redémarrage du service.

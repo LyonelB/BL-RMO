@@ -249,6 +249,8 @@ class _Svc:
         self.silence_alerted = False
         self.last_raw = None
         self.last_fresh = 0.0
+        self.last_change = 0.0       # dernier niveau audio réellement nouveau (son décodé)
+        self.frozen = False          # silence constaté parce que plus aucun son n'est décodé
         self.silent = False
 
 
@@ -282,6 +284,7 @@ class DabMonitor:
         self._nosync_restarts = 0
         self._synced_once = False
         self._dls = {}               # sid -> [candidat, depuis, dernier enregistré, {texte: heure}]
+        self.last_audio_change = 0.0 # dernier son décodé, tous services confondus
         self.email = None
         if email:
             try:
@@ -509,15 +512,19 @@ class DabMonitor:
         if self._synced_once or up_for >= float(c.get('sync_timeout', 300)):
             if not self._synced_once and self.ens_bad_since is None:
                 self.ens_bad_since = self.welle_since or now
+            mute = self._mux_mute(now)
             ok = (self.rf.get('snr', 0) >= float(c['snr_threshold'])
-                  and self.rf.get('fic_quality', 0) >= float(c['fic_quality_threshold']))
+                  and self.rf.get('fic_quality', 0) >= float(c['fic_quality_threshold'])
+                  and mute is None)
             if not ok:
                 if self.ens_bad_since is None:
                     self.ens_bad_since = now
                 elif not self.ens_alerted and now - self.ens_bad_since >= float(c['ensemble_loss_duration']):
                     self._event('ensemble', 'lost', started=self.ens_bad_since,
-                                message=f"SNR {self.rf.get('snr', 0):.1f} dB (seuil {c['snr_threshold']}), "
-                                        f"FIC {self.rf.get('fic_quality', 0):.0f} % (seuil {c['fic_quality_threshold']})")
+                                message=(f"Plus aucun son décodé sur le multiplex depuis {int(mute)} s : "
+                                         f"émetteur DAB+ coupé ou réception perdue" if mute is not None else
+                                         f"SNR {self.rf.get('snr', 0):.1f} dB (seuil {c['snr_threshold']}), "
+                                         f"FIC {self.rf.get('fic_quality', 0):.0f} % (seuil {c['fic_quality_threshold']})"))
                     self.ens_alerted = True
             else:
                 if self.ens_alerted:
@@ -541,17 +548,46 @@ class DabMonitor:
                 self._event('absent', 'lost', s.sid, s.label, 'Le service n\'est plus dans le bouquet.',
                             started=s.lost_start)
                 s.lost_alerted = True
+            # Son figé : welle-cli garde le service et ses derniers niveaux quand la
+            # réception s'arrête (émetteur coupé). Plus aucun nouveau niveau = silence.
+            stale_since = self._stale_since(s, now)
+            if stale_since is not None and s.present and watched and not s.silence_start:
+                s.silence_start, s.frozen = stale_since, True
             if s.silence_start and s.present and watched and not grace and not s.silence_alerted \
                     and now - s.silence_start >= float(c['silence_duration']):
-                lvl = max(s.info.get('audio_l', -100), s.info.get('audio_r', -100))
-                self._event('silence', 'lost', s.sid, s.label,
-                            f"Niveau {lvl:.1f} dBFS (seuil {c['silence_threshold']} dBFS)", started=s.silence_start)
+                if s.frozen:
+                    msg = (f"Aucun son décodé depuis {int(now - s.silence_start)} s : "
+                           f"émission DAB+ interrompue ou réception perdue")
+                else:
+                    lvl = max(s.info.get('audio_l', -100), s.info.get('audio_r', -100))
+                    msg = f"Niveau {lvl:.1f} dBFS (seuil {c['silence_threshold']} dBFS)"
+                self._event('silence', 'lost', s.sid, s.label, msg, started=s.silence_start)
                 s.silence_alerted = True
+
+    def _mux_mute(self, now):
+        """Secondes depuis le dernier son décodé sur tout le multiplex, si cela dépasse
+        le délai de silence (émetteur coupé, réception perdue) ; None sinon."""
+        if not self.last_audio_change:
+            return None
+        quiet = now - self.last_audio_change
+        return quiet if quiet >= float(self.cfg['silence_duration']) else None
+
+    def _stale_since(self, s, now):
+        """Depuis quand ce service ne reçoit plus de son, s'il est figé ; None sinon.
+        Multiplex entier muet : tous les services. Décodage complet (sans carrousel) :
+        chaque service doit se rafraîchir à chaque relevé, le sien seul suffit."""
+        delay = float(self.cfg['silence_duration'])
+        if self._mux_mute(now) is not None:
+            return max(self.last_audio_change, s.last_change or self.last_audio_change)
+        full = int(self.cfg.get('carousel_size', 0) or 0) == 0
+        if full and s.last_change and now - s.last_change >= delay:
+            return s.last_change
+        return None
 
     def _silence_ended(self, s):
         if s.silence_alerted:
             self._event('silence', 'restored', s.sid, s.label, 'Niveau audio normal.')
-        s.silence_start, s.silence_alerted = None, False
+        s.silence_start, s.silence_alerted, s.frozen = None, False, False
 
     # ── Relevé ──────────────────────────────────────────────────────────
     def ingest(self, data, now=None):
@@ -590,14 +626,20 @@ class DabMonitor:
                 s.present = True
                 # Un niveau n'est pris en compte que s'il vient d'être mis à jour :
                 # en mode carrousel, seuls les services en cours de décodage sont frais.
-                fresh = d['raw_audio'] != s.last_raw or sid == m['carousel_sid']
+                changed = d['raw_audio'] != s.last_raw
+                fresh = changed or sid == m['carousel_sid']
                 s.last_raw = d['raw_audio']
+                if changed:
+                    s.last_change = now
+                    if is_real_service(s.label):
+                        self.last_audio_change = now
                 if fresh:
                     s.last_fresh = now
                     s.silent = max(d['audio_l'], d['audio_r']) <= thr
                     if s.silent:
                         s.silence_start = s.silence_start or now
-                    elif s.silence_start:
+                    elif s.silence_start and (changed or not s.frozen):
+                        # Un silence « son figé » ne se termine que sur un vrai nouveau niveau
                         ended.append(s)
             for sid, s in self.services.items():
                 if sid not in seen and s.present:
