@@ -801,6 +801,7 @@ class DabMonitor:
             'mode': 'carrousel' if int(c.get('carousel_size', 0) or 0) > 0 else 'complet',
             'rf': rf,
             'ensemble_ok': ens_ok,
+            'ensemble_alert': bool(self.ens_alerted),
             'ensemble_alert': self.ens_alerted,
             'thresholds': {'snr': c['snr_threshold'], 'fic': c['fic_quality_threshold'],
                            'silence': c['silence_threshold']},

@@ -2383,6 +2383,7 @@ try:
     chain_monitor = ChainMonitor(
         'fm_monitor.db',
         fm_getter=lambda: monitor,
+        dab_getter=lambda: dab_reader,
         alert_getter=lambda: getattr(monitor, 'email_alert', None),
     )
     chain_monitor.start()

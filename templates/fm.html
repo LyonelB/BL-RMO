@@ -296,7 +296,6 @@
     if (s.snr != null) parts.push(`S/B ${Math.round(s.snr)} dB`);
     if (s.multipath != null) parts.push(`multitrajet ${Math.round(s.multipath)} %`);
     $('sig-sub').textContent = sig ? (parts.join(' · ') || ' ') : 'Aucun signal capté';
-    if (!specOn) meters.set(s.level_left ?? -100, s.level_right ?? -100);
     const lvl = Math.max(s.level_left ?? -100, s.level_right ?? -100);
     const thr = modThreshold != null ? ` · seuil ${modThreshold}` : '';
     if (!sig) tile('mod', '-', 'text-gray-400', '-');
@@ -313,17 +312,22 @@
   function connectStats() {
     const es = new EventSource('/api/stream/stats');
     es.onmessage = ev => {
+      let s;
+      try { s = JSON.parse(ev.data); } catch (e) { return; }
+      // Barres G/D à chaque mesure (20 par seconde, comme le tableau de bord) ;
+      // le reste de la page 4 fois par seconde suffit.
+      meters.set(s.level_left ?? -100, s.level_right ?? -100);
       const now = performance.now();
-      if (now - statsT < 250) return;          // 4 rafraîchissements par seconde suffisent ici
+      if (now - statsT < 250) return;
       statsT = now;
-      try { renderStats(JSON.parse(ev.data)); } catch (e) {}
+      try { renderStats(s); } catch (e) {}
     };
     es.onerror = () => { es.close(); setTimeout(connectStats, 5000); };
   }
 
   // ── Spectre et barres G/D ────────────────────────────────────────────
-  // Case « Spectre » : sans spectre, rien n'est calculé côté BL-RMO et les barres G/D
-  // reprennent le niveau du tuner (flux d'état, comme le tableau de bord).
+  // Case « Spectre » : sans spectre, rien n'est calculé côté BL-RMO. Les barres G/D
+  // suivent toujours le niveau du tuner (flux d'état, 20 mesures par seconde).
   const spectrum = BLRMO.Spectrum($('spec'));
   const meters = BLRMO.Meters(['vu-l', 'vu-r']);
   let specConn = null, specOn = true;
@@ -335,8 +339,8 @@
     if (!specOn) return;
     spectrum.clear('Connexion…');
     specConn = BLRMO.connectSpectrum('fm', '', d => {
-      if (d.state === 'ok' && d.bands) { spectrum.update(d.bands); meters.set(d.peak[0], d.peak[1]); }
-      else { spectrum.clear(d.message || 'En attente du son'); meters.clear(); }
+      if (d.state === 'ok' && d.bands) spectrum.update(d.bands);
+      else spectrum.clear(d.message || 'En attente du son');
     });
   }
   $('spec-on').onchange = e => {

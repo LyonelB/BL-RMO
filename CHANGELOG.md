@@ -6,13 +6,23 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Chaîne : case « Réception DAB+ »
+- Nouveau type de sonde **Réception DAB+** (`dab_local`), pendant de « Réception FM » : reprend ce que mesure déjà la clé pour le service suivi (ou un SId choisi) : présence, niveau et silence (son figé compris), SNR et qualité FIC, titre en cours. Aucune mesure de plus demandée à la clé. Silence et ensemble dégradé ne comptent qu'une fois l'alerte DAB+ déclenchée, après leur délai.
+- Pas de flèche entre les réceptions FM et DAB+ sur le synoptique : ce sont deux arrivées en parallèle.
+- Mail désactivé par défaut sur cette case (les mails DAB+ partent déjà de la surveillance DAB+) ; elle sert à voir et à corréler (« En même temps que » dans le journal de la chaîne).
+- Bouton « Ajouter la réception DAB+ » dans Gérer la chaîne quand elle est vide ; sinon, type « Réception DAB+ » dans l'éditeur.
+
+### Barres G/D fluides
+- Page FM : les barres suivent chaque mesure du tuner (20 par seconde), spectre coché ou non.
+- Page DAB+ : pendant l'écoute, barres mesurées dans le navigateur sur le son écouté (fluides, comme avant) ; sinon mesure de BL-RMO si le spectre est coché, ou niveau relevé par la clé toutes les 2 s.
+
 ### Pages FM et DAB+ : spectre à la demande, fenêtres repliables
 - Case **« Spectre »** dans « Écoute et spectre » (FM et DAB+), mémorisée dans le navigateur : décochée, l'analyseur est masqué et rien n'est calculé côté BL-RMO. Cochée par défaut sur la FM, **décochée par défaut sur le DAB+**. Sans spectre, les barres G/D restent actives : niveau du tuner pour la FM, niveau relevé par la clé toutes les 2 s pour le DAB+.
 - Bouton **Réduire / Afficher** sur « Derniers événements » (FM et DAB+) et « Services du multiplex » (DAB+), mémorisé dans le navigateur ; réduite, la fenêtre des événements garde une ligne avec le dernier événement.
 
 ### Pige : enregistrement continu
 - Une pige enregistre maintenant **en continu** : quand la source ne donne plus de son (émetteur DAB+ coupé, welle-cli sans signal, Icecast sans source pendant un redémarrage de bl-rmo), la pige enregistre du **silence** à la place, jusqu'au retour du son. On écoute le silence tel qu'il a été reçu, au lieu d'un trou dans la barre. Un trou ne reste que si la pige elle-même est arrêtée (service ou serveur à l'arrêt).
-- Coupure détectée en 5 s (au lieu de 15 s) et ces secondes sont comblées par du silence ; retour à la source vérifié toutes les 3 s.
+- Les secondes qui précèdent la détection d'une coupure (15 s sans données) sont comblées par du silence ; retour de la source vérifié toutes les 10 s, pour ne pas multiplier les connexions à welle-cli.
 - Journal du service : « plus de son à la source, silence enregistré » puis « son revenu après N s ».
 
 ### DAB+ : le spectre ne perturbe plus la réception

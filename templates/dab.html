@@ -469,7 +469,7 @@
     }).join('');
     if (shown) {
       const v = svcs.find(x => x.sid === shown);
-      if (v && !specOn) {
+      if (v && !specOn && !listeningLive()) {
         const fresh = v.present && v.level_age != null && v.level_age < 20;
         if (fresh) meters.set(v.audio_l ?? -100, v.audio_r ?? -100); else meters.clear();
       }
@@ -535,8 +535,8 @@
     if (!specOn || !shown) return;
     spectrum.clear('Lecture de la pige du service…');
     specConn = BLRMO.connectSpectrum('dab', shown, d => {
-      if (d.state === 'ok' && d.bands) { spectrum.update(d.bands); meters.set(d.peak[0], d.peak[1]); }
-      else { spectrum.clear(d.message || 'Lecture de la pige du service…'); meters.clear(); }
+      if (d.state === 'ok' && d.bands) { spectrum.update(d.bands); if (!listeningLive()) meters.set(d.peak[0], d.peak[1]); }
+      else { spectrum.clear(d.message || 'Lecture de la pige du service…'); if (!listeningLive()) meters.clear(); }
     });
   }
   $('spec-on').onchange = e => {
@@ -581,11 +581,41 @@
     b.classList.toggle('border-blue-500', on); b.classList.toggle('text-blue-600', on); b.classList.toggle('bg-blue-50', on);
   }
   // Un direct se relance depuis le début du flux plutôt que de reprendre un tampon périmé.
+  // Pendant l'écoute, barres G/D mesurées dans le navigateur sur le son écouté (60 images/s,
+  // fluides) ; sinon, spectre coché : mesure de BL-RMO (10/s) ; sinon niveau de la clé (2 s).
+  let actx = null, again = null, aan = [];
+  function audioGraph() {
+    try {
+      if (!actx) {
+        actx = new (window.AudioContext || window.webkitAudioContext)();
+        const src = actx.createMediaElementSource($('pl-audio')), split = actx.createChannelSplitter(2);
+        again = actx.createGain(); again.gain.value = $('pl-volume').value / 100;
+        src.connect(again); again.connect(actx.destination); src.connect(split);
+        aan = [0, 1].map(i => { const n = actx.createAnalyser(); n.fftSize = 1024; split.connect(n, i); return n; });
+        requestAnimationFrame(audioMeters);
+      }
+      if (actx.state === 'suspended') actx.resume();
+    } catch (e) { actx = null; }
+  }
+  function audioMeters() {
+    if (listening && aan.length === 2 && !$('pl-audio').paused) {
+      const buf = new Float32Array(1024), pk = [-100, -100];
+      aan.forEach((n, i) => {
+        n.getFloatTimeDomainData(buf);
+        let m = 0; for (let k = 0; k < buf.length; k++) { const x = Math.abs(buf[k]); if (x > m) m = x; }
+        pk[i] = m > 1e-5 ? 20 * Math.log10(m) : -100;
+      });
+      meters.set(pk[0], pk[1]);
+    }
+    requestAnimationFrame(audioMeters);
+  }
+  const listeningLive = () => listening && aan.length === 2 && !$('pl-audio').paused;
   function playStream() {
     if (!listening) return;
+    audioGraph();
     const a = $('pl-audio'), sid = listening;
     a.src = `/api/dab/listen/${encodeURIComponent(sid)}?t=${Date.now()}`;
-    a.volume = $('pl-volume').value / 100;
+    if (!again) a.volume = $('pl-volume').value / 100;
     a.play().catch(() => {});
     playButton(true);
     let retried = false;
@@ -609,7 +639,7 @@
   }
   function setVolume(v) {
     $('pl-volume-value').textContent = v + '%';
-    $('pl-audio').volume = v / 100;
+    if (again) again.gain.value = v / 100; else $('pl-audio').volume = v / 100;
   }
   function stopListen() {
     playButton(false);

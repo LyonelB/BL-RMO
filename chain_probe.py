@@ -13,6 +13,7 @@ Types de sondes :
   snmp      lecture d'OIDs via `snmpget` (paquet Debian `snmp`), seuils min/max
   icecast   lecture de status-json.xsl, présence d'un point de montage, auditeurs
   fm_local  état de la réception FM de ce BL-RMO (signal, modulation, RDS)
+  dab_local état de la réception DAB+ du service suivi par la clé (présence, son, ensemble)
 
 Les appareils sont stockés dans la base SQLite de l'application
 (tables chain_devices et chain_events). Aucune dépendance Python nouvelle :
@@ -49,7 +50,7 @@ except Exception:  # pragma: no cover
 
 logger = logging.getLogger(__name__)
 
-PROBE_TYPES = ('ping', 'burst', 'tcp', 'http', 'snmp', 'icecast', 'fm_local', 'livebox')
+PROBE_TYPES = ('ping', 'burst', 'tcp', 'http', 'snmp', 'icecast', 'fm_local', 'dab_local', 'livebox')
 STABLE_STATES = ('unknown', 'up', 'warn', 'down')
 KINDS = ('device', 'probe', 'sensor')   # appareil de la chaîne / sonde réseau / capteur de site
 
@@ -266,6 +267,12 @@ def validate_device(data, existing=None):
 
     elif probe == 'fm_local':
         pass
+
+    elif probe == 'dab_local':
+        sid = str(raw.get('sid') or '').strip().lower()
+        if sid and not re.match(r'^(0x)?[0-9a-f]{1,8}$', sid):
+            raise ValueError('Service DAB+ : identifiant invalide (ex. 0xfa41)')
+        cfg['sid'] = sid                         # vide : le service suivi par le tableau de bord
 
     dev['config'] = cfg
     return dev
@@ -729,7 +736,50 @@ def probe_fm_local(fm):
     return _result(True, msg, None, metrics, warn=warn)
 
 
-def run_probe(dev, fm_getter=None):
+def probe_dab_local(reader, cfg):
+    """Réception DAB+ du service suivi, d'après ce que mesure déjà la clé (bl-rmo-dab) :
+    aucune mesure de plus. Silence et ensemble ne comptent qu'une fois l'alerte DAB+
+    déclenchée (après leur délai), comme les mails : pas d'alerte sur une micro-coupure."""
+    if reader is None:
+        return _result(False, 'Réception DAB+ indisponible')
+    try:
+        st = reader.status()
+        sid = (cfg.get('sid') or '').lower() or reader.default_sid()
+    except Exception as e:
+        return _result(False, f'Réception DAB+ illisible : {e}')
+    if not st.get('enabled'):
+        return _result(False, 'Réception DAB+ désactivée')
+    if not st.get('service_running'):
+        return _result(False, 'Service bl-rmo-dab arrêté')
+    if not st.get('receiver_up'):
+        return _result(False, 'Clé DAB+ hors service')
+    rf = st.get('rf') or {}
+    svc = next((x for x in st.get('services') or [] if x.get('sid') == sid), None)
+    metrics = []
+    if svc:
+        metrics.append({'label': 'Service', 'value': svc.get('label'), 'display': svc.get('label') or sid, 'unit': '', 'state': None})
+    lvl = max((svc or {}).get('audio_l', -100) or -100, (svc or {}).get('audio_r', -100) or -100)
+    if svc and lvl > -100:
+        metrics.append({'label': 'Niveau', 'value': lvl, 'display': f'{lvl:.1f}', 'unit': 'dBFS',
+                        'state': 'warn' if svc.get('silence_alert') else None})
+    if isinstance(rf.get('snr'), (int, float)):
+        metrics.append({'label': 'SNR', 'value': rf['snr'], 'display': f"{rf['snr']:.1f}", 'unit': 'dB',
+                        'state': 'warn' if st.get('ensemble_alert') else None})
+    if isinstance(rf.get('fic_quality'), (int, float)):
+        metrics.append({'label': 'Qualité FIC', 'value': rf['fic_quality'], 'display': f"{rf['fic_quality']:.0f}", 'unit': '%',
+                        'state': 'warn' if st.get('ensemble_alert') else None})
+    if svc and svc.get('dls'):
+        metrics.append({'label': 'Titre', 'value': svc['dls'], 'display': svc['dls'][:60], 'unit': '', 'state': None})
+    if not svc or svc.get('present') is False:
+        return _result(False, f"Service {(svc or {}).get('label') or sid or '?'} absent du multiplex", None, metrics)
+    if svc.get('silence_alert'):
+        return _result(True, 'Silence audio', None, metrics, warn=True)
+    if st.get('ensemble_alert'):
+        return _result(True, 'Ensemble dégradé', None, metrics, warn=True)
+    return _result(True, 'Réception DAB+ correcte', None, metrics)
+
+
+def run_probe(dev, fm_getter=None, dab_getter=None):
     """Exécute la sonde d'un appareil (dict validé). Ne lève jamais."""
     probe, cfg, timeout = dev['probe'], dev.get('config') or {}, float(dev.get('timeout') or 3)
     try:
@@ -747,6 +797,8 @@ def run_probe(dev, fm_getter=None):
             return probe_icecast(cfg, timeout)
         if probe == 'fm_local':
             return probe_fm_local(fm_getter() if fm_getter else None)
+        if probe == 'dab_local':
+            return probe_dab_local(dab_getter() if dab_getter else None, cfg)
         if probe == 'livebox':
             return probe_livebox(cfg, timeout)
         return _result(False, 'Type de sonde inconnu')
@@ -764,9 +816,10 @@ def tools_available():
 # ══════════════════════════════════════════════════════════════════════════
 
 class ChainMonitor:
-    def __init__(self, db_path='fm_monitor.db', fm_getter=None, alert_getter=None, max_workers=10):
+    def __init__(self, db_path='fm_monitor.db', fm_getter=None, alert_getter=None, max_workers=10, dab_getter=None):
         self.db_path = db_path
         self.fm_getter = fm_getter
+        self.dab_getter = dab_getter
         self.alert_getter = alert_getter
         self._lock = threading.RLock()
         self._devices = {}     # id -> dict
@@ -1031,7 +1084,7 @@ class ChainMonitor:
         if data.get('id'):
             existing = self.get_device(int(data['id']))
         dev = validate_device(data, existing)
-        return run_probe(dev, self.fm_getter)
+        return run_probe(dev, self.fm_getter, self.dab_getter)
 
     def trigger(self, device_id):
         with self._lock:
@@ -1109,7 +1162,7 @@ class ChainMonitor:
 
     def _probe_and_record(self, dev):
         try:
-            res = run_probe(dev, self.fm_getter)
+            res = run_probe(dev, self.fm_getter, self.dab_getter)
             self._record(dev, res)
         finally:
             with self._lock:
@@ -1499,6 +1552,8 @@ class ChainMonitor:
             out.append(['Sonde', f"{'Page web' if p == 'http' else 'Icecast'} : {cfg.get('url')}"])
         elif p == 'fm_local':
             out.append(['Sonde', 'Récepteur FM local'])
+        elif p == 'dab_local':
+            out.append(['Sonde', f"Réception DAB+ locale, service {cfg.get('sid') or 'suivi par le tableau de bord'}"])
         elif p == 'livebox':
             out.append(['Sonde', f"Livebox {cfg.get('host')} (compte {cfg.get('username') or 'admin'})"])
             out.append(['Seuils', f"alerte {cfg.get('reboot_warn_min', 15)} min après un redémarrage, Internet coupé"])

@@ -172,7 +172,7 @@ const STATES = {
   disabled: { label: 'Désactivé',    dot: '#e2e8f0', bg: '#f1f5f9', fg: '#64748b' },
 };
 const NO_PROBE = { label: 'Non surveillé', dot: '#cbd5e1', bg: '#f1f5f9', fg: '#475569' };
-const PROBE_LABELS = { ping: 'Ping', burst: 'Ping qualité', tcp: 'Port TCP', http: 'Page web', snmp: 'SNMP', icecast: 'Icecast', fm_local: 'Récepteur FM local', livebox: 'Livebox' };
+const PROBE_LABELS = { ping: 'Ping', burst: 'Ping qualité', tcp: 'Port TCP', http: 'Page web', snmp: 'SNMP', icecast: 'Icecast', fm_local: 'Récepteur FM local', dab_local: 'Réception DAB+ locale', livebox: 'Livebox' };
 const LINE = { up: '#10b981', warn: '#f59e0b', unstable: '#f59e0b', down: '#ef4444' };
 
 let all = [];            // état complet renvoyé par /api/chain/status
@@ -350,7 +350,9 @@ function renderSynoptic() {
       <div class="flex flex-wrap items-center gap-y-3">`;
     sec.devs.forEach((d, j) => {
       html += tileHtml(d);
-      if (j < sec.devs.length - 1) html += arrowHtml(d, sec.devs[j + 1]);
+      // Réceptions FM et DAB+ : arrivées en parallèle, pas de flèche entre elles ni vers le DAB+
+      // (le DAB+ ne sort pas de l'émetteur FM : il part du processeur vers le prestataire).
+      if (j < sec.devs.length - 1) html += sec.devs[j + 1].probe === 'dab_local' ? '<span style="width:40px" class="flex-shrink-0"></span>' : arrowHtml(d, sec.devs[j + 1]);
     });
     html += '</div></section>';
   });
@@ -405,7 +407,7 @@ function resolveSel() {
 }
 function tabsFor(r) {
   // La réception FM est BL-RMO lui-même : pas de journaux syslog à recevoir
-  if (r.kind === 'device' && r.ent.probe === 'fm_local') return [['etat', 'État'], ['historique', 'Historique'], ['reglages', 'Réglages']];
+  if (r.kind === 'device' && ['fm_local', 'dab_local'].includes(r.ent.probe)) return [['etat', 'État'], ['historique', 'Historique'], ['reglages', 'Réglages']];
   if (r.kind === 'device') return [['etat', 'État'], ['journaux', 'Journaux'], ['historique', 'Historique'], ['reglages', 'Réglages']];
   if (!r.ent) return [['etat', 'État'], ['reglages', 'Réglages']];
   return [['etat', 'État'], ['historique', 'Historique'], ['reglages', 'Réglages']];

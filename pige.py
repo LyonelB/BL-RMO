@@ -363,7 +363,10 @@ class PigeRecorder:
     def _ffmpeg_cmd(self):
         return [
             'ffmpeg', '-nostdin', '-hide_banner', '-loglevel', 'warning',
-            '-rw_timeout', '5000000',             # 5 s sans données → sortie, silence de remplacement
+            # 15 s sans données → sortie ; ces secondes sont ensuite comblées par du silence.
+            # Pas plus court : chaque reconnexion ouvre un flux de plus sur welle-cli, ce qui
+            # perturbe la réception DAB+.
+            '-rw_timeout', '15000000',
             '-i', self.cfg['source_url'],
             '-map', '0:a',
         ] + (['-c:a', 'libmp3lame', '-b:a', f"{int(self.cfg['bitrate_kbps'])}k", '-ar', '44100']
@@ -412,6 +415,8 @@ class PigeRecorder:
         logger.info(f"Pige {self.cfg.get('id', 'fm')} arrêtée")
 
     # ── Silence de remplacement (PIGE_CONTINUOUS_PATCH) ──────────────────
+    PROBE_S = 10        # retour de la source vérifié toutes les 10 s (une connexion de test à chaque fois)
+
     def _silence_args(self):
         rate = int(self.cfg.get('sample_rate') or 44100)
         return ['-f', 'lavfi', '-i', f'anullsrc=r={rate}:cl=stereo',
@@ -463,7 +468,7 @@ class PigeRecorder:
         t0 = time.time()
         try:
             while self.running and filler.poll() is None:
-                time.sleep(3)
+                time.sleep(self.PROBE_S)
                 if self._source_ok():
                     break
             if self.running and filler.poll() is not None:
