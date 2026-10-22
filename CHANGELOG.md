@@ -6,6 +6,10 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Page DAB+ : spectre pendant l'écoute, niveaux efficaces
+- Pendant l'écoute, le spectre est calculé **dans le navigateur** sur le son écouté (même échelle que celui de BL-RMO), sans pige ni flux de plus sur welle-cli. Hors écoute, il lit la pige DAB+ du service comme avant ; si elle n'enregistre pas, la page le dit et propose de lancer l'écoute.
+- Barres G/D pendant l'écoute en niveau efficace, comme la FM et le tableau de bord : la crête collait à 0 dBFS sur une antenne traitée par un processeur.
+
 ### DAB+ : clé débranchée puis rebranchée
 - Quand la clé RTL-SDR disparaît de l'USB, welle-cli continue de tourner sur un « Null device » et ne la retrouve jamais, même rebranchée (il fallait désactiver puis réactiver la réception DAB+). BL-RMO le détecte dans le journal de welle-cli, compte le récepteur hors service (alerte « Récepteur DAB+ hors service » après son délai, message « clé DAB+ non détectée sur l'USB ») et relance welle-cli toutes les 30 s, ou 2 s après le retour de la clé sur l'USB.
 

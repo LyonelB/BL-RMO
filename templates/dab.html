@@ -533,6 +533,7 @@
     $('spec-box').classList.toggle('hidden', !specOn);
     meters.clear();
     if (!specOn || !shown) return;
+    if (listening) { spectrum.clear('Spectre de l\'écoute…'); return; }   // calculé dans le navigateur
     spectrum.clear('Lecture de la pige du service…');
     specConn = BLRMO.connectSpectrum('dab', shown, d => {
       if (d.state === 'ok' && d.bands) { spectrum.update(d.bands); if (!listeningLive()) meters.set(d.peak[0], d.peak[1]); }
@@ -583,7 +584,7 @@
   // Un direct se relance depuis le début du flux plutôt que de reprendre un tampon périmé.
   // Pendant l'écoute, barres G/D mesurées dans le navigateur sur le son écouté (60 images/s,
   // fluides) ; sinon, spectre coché : mesure de BL-RMO (10/s) ; sinon niveau de la clé (2 s).
-  let actx = null, again = null, aan = [];
+  let actx = null, again = null, aan = [], amono = null, lastLocal = 0;
   function audioGraph() {
     try {
       if (!actx) {
@@ -592,6 +593,8 @@
         again = actx.createGain(); again.gain.value = $('pl-volume').value / 100;
         src.connect(again); again.connect(actx.destination); src.connect(split);
         aan = [0, 1].map(i => { const n = actx.createAnalyser(); n.fftSize = 1024; split.connect(n, i); return n; });
+        amono = actx.createAnalyser(); amono.fftSize = 8192; amono.smoothingTimeConstant = 0;
+        src.connect(amono);                    // spectre de l'écoute, calculé ici
         requestAnimationFrame(audioMeters);
       }
       if (actx.state === 'suspended') actx.resume();
@@ -599,13 +602,18 @@
   }
   function audioMeters() {
     if (listening && aan.length === 2 && !$('pl-audio').paused) {
-      const buf = new Float32Array(1024), pk = [-100, -100];
+      // Niveau efficace (comme la FM et le tableau de bord) : une crête collerait à 0 dBFS
+      // sur une antenne traitée par un processeur.
+      const buf = new Float32Array(1024), lv = [-100, -100];
       aan.forEach((n, i) => {
         n.getFloatTimeDomainData(buf);
-        let m = 0; for (let k = 0; k < buf.length; k++) { const x = Math.abs(buf[k]); if (x > m) m = x; }
-        pk[i] = m > 1e-5 ? 20 * Math.log10(m) : -100;
+        let e = 0; for (let k = 0; k < buf.length; k++) e += buf[k] * buf[k];
+        const rms = Math.sqrt(e / buf.length);
+        lv[i] = rms > 1e-5 ? 20 * Math.log10(rms) : -100;
       });
-      meters.set(pk[0], pk[1]);
+      meters.set(lv[0], lv[1]);
+      const now = performance.now();
+      if (specOn && amono && now - lastLocal > 100) { lastLocal = now; spectrum.update(BLRMO.bandsFromAnalyser(amono, actx.sampleRate)); }
     }
     requestAnimationFrame(audioMeters);
   }
@@ -613,6 +621,7 @@
   function playStream() {
     if (!listening) return;
     audioGraph();
+    connectSpec();
     const a = $('pl-audio'), sid = listening;
     a.src = `/api/dab/listen/${encodeURIComponent(sid)}?t=${Date.now()}`;
     if (!again) a.volume = $('pl-volume').value / 100;
@@ -649,6 +658,7 @@
     listening = null;
     $('pl-help').textContent = '';
     renderServices();
+    connectSpec();
   }
 
   // ── Fenêtres repliables (mémorisé dans ce navigateur) ──

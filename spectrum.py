@@ -180,9 +180,18 @@ class DABSpectrum(_Source):
             path = self._newest(directory) if directory else None
             if not path:
                 self.state = 'unavailable'
-                self.message = ('Spectre disponible pour les services enregistrés par une pige DAB+ (page Pige)'
+                self.message = ('Pas de pige DAB+ pour ce service : lancez l\'écoute pour voir le spectre'
                                 if sid else 'Aucun service choisi')
                 time.sleep(2)
+                continue
+            try:
+                stale = time.time() - os.path.getmtime(path) > 20
+            except OSError:
+                stale = True
+            if stale:                                       # pige arrêtée ou suspendue
+                self.state = 'unavailable'
+                self.message = 'La pige DAB+ de ce service n\'enregistre pas : lancez l\'écoute pour voir le spectre'
+                time.sleep(3)
                 continue
             self.state, self.message = 'starting', 'Lecture de la pige du service…'
             try:
@@ -234,7 +243,7 @@ class DABSpectrum(_Source):
                 time.sleep(0.1)
                 idle += 0.1
                 if idle > 15:
-                    self.state, self.message = 'unavailable', 'La pige de ce service ne s\'écrit plus'
+                    self.state, self.message = 'unavailable', 'La pige DAB+ de ce service n\'enregistre plus : lancez l\'écoute pour voir le spectre'
                     return
         finally:
             f.close()

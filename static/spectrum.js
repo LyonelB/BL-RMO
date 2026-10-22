@@ -136,5 +136,22 @@
     return { isOpen: () => open };
   }
 
-  window.BLRMO = Object.assign(window.BLRMO || {}, { Spectrum, Meters, connectSpectrum: connect, collapsible, SPECTRUM_LABELS: LABELS });
+  // Spectre calculé dans le navigateur sur le son écouté (AnalyserNode, fenêtre de Blackman),
+  // ramené à la même échelle que celui de BL-RMO : sinus pleine échelle = 0 dBFS.
+  const CENTERS = [20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800,
+                   1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000];
+  function bandsFromAnalyser(an, rate) {
+    const n = an.frequencyBinCount, data = new Float32Array(n), hz = rate / an.fftSize;
+    an.getFloatFrequencyData(data);
+    const REF = 0.076;                    // énergie d'un sinus d'amplitude 1, fenêtre de Blackman
+    return CENTERS.map(fc => {
+      let a = Math.floor(fc * Math.pow(2, -1 / 6) / hz), b = Math.ceil(fc * Math.pow(2, 1 / 6) / hz);
+      if (b <= a) b = a + 1;
+      let p = 0;
+      for (let k = Math.max(1, a); k < Math.min(n, b); k++) p += Math.pow(10, data[k] / 10);
+      return p > 0 ? Math.max(-120, 10 * Math.log10(p / REF)) : -120;
+    });
+  }
+
+  window.BLRMO = Object.assign(window.BLRMO || {}, { Spectrum, Meters, connectSpectrum: connect, collapsible, bandsFromAnalyser, SPECTRUM_LABELS: LABELS });
 })();
