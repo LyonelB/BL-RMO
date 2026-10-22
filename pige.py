@@ -422,14 +422,24 @@ class PigeRecorder:
         return ['-f', 'lavfi', '-i', f'anullsrc=r={rate}:cl=stereo',
                 '-c:a', 'libmp3lame', '-b:a', f"{int(self.cfg['bitrate_kbps'])}k", '-ar', str(rate)]
 
-    def _source_ok(self, timeout=4):
-        """La source répond-elle avec du son ? (ouverture et lecture de quelques octets)"""
+    def _source_ok(self, timeout=15):
+        """La source donne-t-elle du son ? Lecture d'environ 1 s de flux. welle-cli peut
+        mettre plusieurs secondes à servir les premiers octets d'un service (machine
+        chargée) : un délai trop court faisait enregistrer du silence alors que le son
+        était revenu."""
         import urllib.request
+        want = int(self.cfg.get('bitrate_kbps') or 128) * 125      # environ 1 s de MP3
+        got, deadline = 0, time.time() + timeout + 5
         try:
             with urllib.request.urlopen(self.cfg['source_url'], timeout=timeout) as r:
-                return len(r.read(2048)) > 0
+                while got < want and time.time() < deadline:
+                    chunk = r.read(min(8192, want - got))
+                    if not chunk:
+                        break
+                    got += len(chunk)
         except Exception:
-            return False
+            pass
+        return got >= want
 
     def _fill_gap(self, env):
         """Comble le temps écoulé depuis la fin du dernier segment (délai de détection) par du silence."""

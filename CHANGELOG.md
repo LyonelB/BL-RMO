@@ -24,6 +24,7 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 - Une pige enregistre maintenant **en continu** : quand la source ne donne plus de son (émetteur DAB+ coupé, welle-cli sans signal, Icecast sans source pendant un redémarrage de bl-rmo), la pige enregistre du **silence** à la place, jusqu'au retour du son. On écoute le silence tel qu'il a été reçu, au lieu d'un trou dans la barre. Un trou ne reste que si la pige elle-même est arrêtée (service ou serveur à l'arrêt).
 - Les secondes qui précèdent la détection d'une coupure (15 s sans données) sont comblées par du silence ; retour de la source vérifié toutes les 10 s, pour ne pas multiplier les connexions à welle-cli.
 - Journal du service : « plus de son à la source, silence enregistré » puis « son revenu après N s ».
+- Retour de la source vérifié en lisant environ 1 s de flux, avec jusqu'à 15 s d'attente : welle-cli met parfois plusieurs secondes à servir les premiers octets, et un délai trop court faisait enregistrer du silence alors que le son était revenu.
 
 ### DAB+ : le spectre ne perturbe plus la réception
 - Le spectre de la page DAB+ ouvrait un flux de plus sur welle-cli : la qualité FIC tombait à 0 à chaque ouverture de la page et la réception se dégradait (silences, ensemble dégradé). Il lit désormais le segment que la **pige DAB+** du service est en train d'écrire, sans rien demander à welle-cli. Un service sans pige DAB+ n'a pas de spectre (message sur la page).
