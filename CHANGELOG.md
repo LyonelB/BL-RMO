@@ -6,6 +6,14 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Mails : file d'attente quand le réseau est coupé
+- Un mail d'alerte qui ne peut pas partir (Internet coupé, Livebox qui redémarre, serveur de mail indisponible) n'est plus perdu : il est **mis en attente et retenté toutes les minutes**, dans l'ordre, pendant 24 h au plus. Le mail de rétablissement attend derrière l'alerte : on reçoit les deux, dans le bon ordre. Un mail parti en retard indique l'heure réelle de l'événement et la durée du retard.
+- La file est gardée dans un fichier (`email_queue_app.json`, `email_queue_dab_monitor.json`) : elle survit à un redémarrage du service.
+- Chaîne et DAB+ : la colonne Mails des journaux est mise à jour quand le mail part, même en différé.
+- Connexion au serveur de mail limitée à 30 s : un serveur qui ne répond pas ne bloque plus la surveillance.
+- L'email de test n'est pas mis en attente : il dit tout de suite si l'envoi fonctionne.
+- Cas constaté le 22 octobre à 3 h 25 : redémarrage de la Livebox du studio, plus d'Internet pendant 2 min ; les alertes Sound4 (flux DAB+ en surcharge réseau) et DAB+ (silence sur GRAFFITI) n'avaient pas pu partir, seuls les rétablissements étaient arrivés.
+
 ### Pages FM et DAB+ : écoute, spectre, titres diffusés
 - **Nouvelle page FM** (menu « FM », au-dessus de DAB+), sur le modèle de la page DAB+ :
   - quatre cases : signal (dBf, S/B, multitrajet), modulation (niveau et seuil), mode stéréo ou mono, RDS (PS et PI) ;

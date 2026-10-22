@@ -1183,17 +1183,19 @@ class ChainMonitor:
 
     def _send_and_mark(self, alert, title, details, eid):
         """Envoie le mail (dans un fil) et note l'envoi sur l'événement (colonne Mails des journaux)."""
-        try:
-            ok = alert.send_alert(title, details, skip_cooldown=True)
-        except Exception as e:
-            logger.error(f"Chaîne : envoi email impossible : {e}")
-            return
-        if ok and eid:
+        def mark():
+            # Appelé à l'envoi, tout de suite ou plus tard depuis la file d'attente des mails
+            if not eid:
+                return
             try:
                 with self._conn() as c:
                     c.execute('UPDATE chain_events SET email_sent = 1 WHERE id = ?', (eid,))
             except sqlite3.Error:
                 pass
+        try:
+            alert.send_alert(title, details, skip_cooldown=True, on_sent=mark)
+        except Exception as e:
+            logger.error(f"Chaîne : envoi email impossible : {e}")
 
     # Niveau syslog des changements d'état : hors service = erreur, alerte = avertissement
     JOURNAL_LEVELS = {'down': (3, 'hors service'), 'warn': (4, 'alerte'), 'unstable': (4, 'instable'), 'up': (6, 'rétabli')}

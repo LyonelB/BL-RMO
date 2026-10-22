@@ -459,21 +459,32 @@ class DabMonitor:
         title = f"DAB+ · {name}" + (" rétabli" if state == 'restored' else '')
         details = (f"{message}\nCanal : {self.cfg['channel']} ({self.cfg['frequency_mhz']} MHz)"
                    + (f"\nService : {label} ({sid})" if sid else ''))
-        sent = False
-        kinds = self.cfg.get('email_kinds') or {}
-        if self.email and kinds.get(kind, True):
-            try:
-                sent = bool(self.email.send_alert(title, details, skip_cooldown=True))
-            except Exception as e:
-                logger.warning(f"Mail DAB+ non envoyé : {e}")
         ts = datetime.fromtimestamp(started or time.time()).isoformat(timespec='seconds')
+        eid = None
         try:
             with _connect(self.db_path) as c:
-                c.execute('INSERT INTO dab_events (timestamp, kind, sid, label, state, channel, message, email_sent) '
-                          'VALUES (?,?,?,?,?,?,?,?)',
-                          (ts, kind, sid, label, state, str(self.cfg['channel']), message, int(sent)))
+                cur = c.execute('INSERT INTO dab_events (timestamp, kind, sid, label, state, channel, message, email_sent) '
+                                'VALUES (?,?,?,?,?,?,?,0)',
+                                (ts, kind, sid, label, state, str(self.cfg['channel']), message))
+                eid = cur.lastrowid
         except sqlite3.Error as e:
             logger.error(f"Enregistrement événement DAB+ : {e}")
+        kinds = self.cfg.get('email_kinds') or {}
+        if self.email and kinds.get(kind, True):
+            # Mail parti tout de suite, ou plus tard depuis la file d'attente (réseau coupé) :
+            # dans les deux cas, la colonne Mails de l'événement est mise à jour à l'envoi.
+            def mark(eid=eid):
+                if eid is None:
+                    return
+                try:
+                    with _connect(self.db_path) as c:
+                        c.execute('UPDATE dab_events SET email_sent = 1 WHERE id = ?', (eid,))
+                except sqlite3.Error:
+                    pass
+            try:
+                self.email.send_alert(title, details, skip_cooldown=True, on_sent=mark)
+            except Exception as e:
+                logger.warning(f"Mail DAB+ non envoyé : {e}")
         (logger.warning if state == 'lost' else logger.info)(title)
 
     def _watched(self, sid):
