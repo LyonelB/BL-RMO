@@ -10,10 +10,11 @@ temps réel signale sa présence (touch) et l'analyse s'arrête IDLE_S secondes
 après le dernier signe de vie.
 
   - FM : le son du tuner arrive déjà dans monitor.py, qui appelle feed().
-  - DAB+ : le service affiché est décodé par ffmpeg depuis welle-cli
-    (http://127.0.0.1:<port>/mp3/<sid>, le flux qui sert déjà à la pige).
+  - DAB+ : le segment MP3 que la pige DAB+ du service est en train d'écrire
+    est suivi et décodé par ffmpeg (aucun flux de plus demandé à welle-cli).
 """
 import logging
+import os
 import subprocess
 import threading
 import time
@@ -128,11 +129,17 @@ class FMSpectrum(_Source):
 
 
 class DABSpectrum(_Source):
-    """Décode le service affiché avec ffmpeg, tant qu'une page le demande."""
+    """Spectre du service DAB+ affiché, lu dans sa pige pendant qu'elle s'écrit.
 
-    def __init__(self, url_for):
+    Ouvrir un flux de plus sur welle-cli perturbait la réception (qualité FIC qui
+    tombe à 0 à chaque ouverture de la page DAB+) : le spectre lit donc le segment
+    MP3 que la pige DAB+ du service est en train d'enregistrer, sans rien demander
+    à welle-cli. Un service sans pige DAB+ n'a pas de spectre.
+    """
+
+    def __init__(self, dir_for):
         super().__init__()
-        self.url_for = url_for          # sid -> URL du flux MP3 de welle-cli, ou None
+        self.dir_for = dir_for          # sid -> dossier de la pige DAB+ du service, ou None
         self.sid = None
         self.thread = None
         self.proc = None
@@ -145,7 +152,7 @@ class DABSpectrum(_Source):
             if sid and sid != self.sid:
                 self.sid = sid
                 self.analyzer.reset()
-                self._kill()                       # le fil de lecture repart sur le nouveau service
+                self._kill()
             if not (self.thread and self.thread.is_alive()):
                 self.thread = threading.Thread(target=self._run, daemon=True, name='dab-spectrum')
                 self.thread.start()
@@ -158,37 +165,85 @@ class DABSpectrum(_Source):
             except Exception:
                 pass
 
+    @staticmethod
+    def _newest(directory):
+        try:
+            names = sorted(n for n in os.listdir(directory) if len(n) == 19 and n.endswith('.mp3') and n[8] == '-')
+        except OSError:
+            return None
+        return os.path.join(directory, names[-1]) if names else None
+
     def _run(self):
         while self.active():
             sid = self.sid
-            url = self.url_for(sid) if sid else None
-            if not url:
-                self.state, self.message = 'unavailable', 'Réception DAB+ désactivée ou service inconnu'
+            directory = self.dir_for(sid) if sid else None
+            path = self._newest(directory) if directory else None
+            if not path:
+                self.state = 'unavailable'
+                self.message = ('Spectre disponible pour les services enregistrés par une pige DAB+ (page Pige)'
+                                if sid else 'Aucun service choisi')
                 time.sleep(2)
                 continue
-            self.state, self.message = 'starting', 'Décodage du service…'
-            cmd = ['ffmpeg', '-hide_banner', '-loglevel', 'error', '-nostdin',
-                   '-reconnect', '1', '-reconnect_delay_max', '2', '-i', url,
-                   '-vn', '-f', 's16le', '-ac', '2', '-ar', str(RATE), 'pipe:1']
+            self.state, self.message = 'starting', 'Lecture de la pige du service…'
             try:
-                self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, bufsize=0)
-                while self.active() and self.sid == sid:
-                    chunk = self.proc.stdout.read(4800 * 4 // 5)     # 20 ms
-                    if not chunk:
-                        break
-                    self.state, self.message = 'ok', ''
-                    self.analyzer.feed(chunk)
+                self._tail(sid, directory, path)
             except Exception as e:
                 logger.debug(f"Spectre DAB+ : {e}")
             finally:
                 self._kill()
                 self.proc = None
             if self.active() and self.sid == sid:
-                self.state, self.message = 'unavailable', 'Service non disponible pour le moment'
-                time.sleep(3)
+                time.sleep(1)
         self.state = 'idle'
+
+    def _tail(self, sid, directory, path):
+        """Suit le segment en cours (et les suivants) et décode le MP3 vers l'analyseur."""
+        self.proc = subprocess.Popen(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-nostdin',
+                                      '-probesize', '32768', '-analyzeduration', '0', '-fflags', 'nobuffer',
+                                      '-f', 'mp3', '-i', 'pipe:0', '-f', 's16le', '-ac', '2', '-ar', str(RATE), '-flush_packets', '1', 'pipe:1'],
+                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, bufsize=0)
+        proc = self.proc
+
+        def reader():
+            try:
+                while True:
+                    chunk = proc.stdout.read(3840)
+                    if not chunk:
+                        return
+                    self.state, self.message = 'ok', ''
+                    self.analyzer.feed(chunk)
+            except Exception:
+                pass
+        threading.Thread(target=reader, daemon=True).start()
+
+        f = open(path, 'rb')
+        try:
+            f.seek(max(0, os.path.getsize(path) - 16000))     # environ 1 s avant la fin
+            idle = 0.0
+            while self.active() and self.sid == sid and proc.poll() is None:
+                data = f.read(8192)
+                if data:
+                    idle = 0.0
+                    proc.stdin.write(data)
+                    continue
+                newer = self._newest(directory)
+                if newer and newer != path:                    # segment suivant
+                    f.close()
+                    path, f = newer, open(newer, 'rb')
+                    continue
+                time.sleep(0.1)
+                idle += 0.1
+                if idle > 15:
+                    self.state, self.message = 'unavailable', 'La pige de ce service ne s\'écrit plus'
+                    return
+        finally:
+            f.close()
+            try:
+                proc.stdin.close()
+            except Exception:
+                pass
 
     def snapshot(self):
         r = self.analyzer.latest()
         state = 'ok' if r else (self.state if self.state != 'ok' else 'starting')
-        return {'state': state, 'sid': self.sid, 'message': '' if r else (self.message or 'Décodage du service…'), **(r or {})}
+        return {'state': state, 'sid': self.sid, 'message': '' if r else (self.message or 'Lecture de la pige du service…'), **(r or {})}

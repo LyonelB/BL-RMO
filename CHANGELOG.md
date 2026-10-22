@@ -6,6 +6,14 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Pige : enregistrement continu
+- Une pige enregistre maintenant **en continu** : quand la source ne donne plus de son (émetteur DAB+ coupé, welle-cli sans signal, Icecast sans source pendant un redémarrage de bl-rmo), la pige enregistre du **silence** à la place, jusqu'au retour du son. On écoute le silence tel qu'il a été reçu, au lieu d'un trou dans la barre. Un trou ne reste que si la pige elle-même est arrêtée (service ou serveur à l'arrêt).
+- Coupure détectée en 5 s (au lieu de 15 s) et ces secondes sont comblées par du silence ; retour à la source vérifié toutes les 3 s.
+- Journal du service : « plus de son à la source, silence enregistré » puis « son revenu après N s ».
+
+### DAB+ : le spectre ne perturbe plus la réception
+- Le spectre de la page DAB+ ouvrait un flux de plus sur welle-cli : la qualité FIC tombait à 0 à chaque ouverture de la page et la réception se dégradait (silences, ensemble dégradé). Il lit désormais le segment que la **pige DAB+** du service est en train d'écrire, sans rien demander à welle-cli. Un service sans pige DAB+ n'a pas de spectre (message sur la page).
+
 ### DAB+ : émetteur coupé détecté (son figé)
 - Quand la réception s'arrête (émetteur DAB+ coupé), welle-cli garde la liste des services et leurs derniers niveaux audio : BL-RMO les croyait présents et ne voyait aucun silence. Désormais, **plus aucun nouveau niveau audio = silence** :
   - multiplex entier muet (aucun service ne reçoit de son) : alerte « Silence audio » sur chaque service surveillé après le délai de silence, avec le message « Aucun son décodé depuis N s : émission DAB+ interrompue ou réception perdue », et « Ensemble dégradé » après son propre délai ;

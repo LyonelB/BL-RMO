@@ -1560,15 +1560,20 @@ def dab_dls_history():
 from spectrum import FMSpectrum, DABSpectrum, LABELS as SPECTRUM_LABELS
 
 
-def _dab_mp3_url(sid):
-    cfg = dab_reader.config()
-    if not cfg.get('enabled') or not sid or not sid.replace('x', '').isalnum():
-        return None
-    return f"http://127.0.0.1:{int(cfg['port'])}/mp3/{sid}"
+def _dab_pige_dir(sid):
+    """Dossier de la pige DAB+ qui enregistre ce service (le spectre la lit), ou None."""
+    try:
+        from pige import load_piges
+        for p in load_piges():
+            if p.get('kind') == 'dab' and p.get('enabled', True) and str(p.get('sid', '')).lower() == (sid or '').lower():
+                return p['directory']
+    except Exception:
+        pass
+    return None
 
 
 fm_spectrum = FMSpectrum()
-dab_spectrum = DABSpectrum(_dab_mp3_url)
+dab_spectrum = DABSpectrum(_dab_pige_dir)
 
 
 @app.route('/api/stream/spectrum')

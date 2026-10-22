@@ -77,13 +77,17 @@ def load_pige_config(config_file=CONFIG_FILE):
 def load_piges(config_file=CONFIG_FILE):
     """Toutes les piges : d'abord la FM (id « fm »), puis les piges DAB+."""
     fm = load_pige_config(config_file)
-    fm.update(id='fm', kind='fm', name=fm.get('name') or 'FM', reencode=False)
-    out = [fm]
     try:
         with open(config_file) as f:
             full = json.load(f)
     except (OSError, ValueError):
         full = {}
+    try:   # fréquence d'échantillonnage du flux Icecast (silence de remplacement identique)
+        rate = int(((full.get('audio') or {}).get('output_rate')) or 44100)
+    except (TypeError, ValueError):
+        rate = 44100
+    fm.update(id='fm', kind='fm', name=fm.get('name') or 'FM', reencode=False, sample_rate=rate)
+    out = [fm]
     dab_port = int(((full.get('dab') or {}).get('port')) or 7979)
     for e in (full.get('pige') or {}).get('extra') or []:
         pid = str(e.get('id', '')).lower()
@@ -93,7 +97,7 @@ def load_piges(config_file=CONFIG_FILE):
         cfg = dict(fm)
         cfg.update(EXTRA_DEFAULTS)
         cfg.update({k: v for k, v in e.items() if k in ('name', 'enabled', 'retention_hours', 'bitrate_kbps')})
-        cfg.update(id=pid, kind='dab', sid=sid, name=e.get('name') or f'DAB+ {sid}', reencode=True,
+        cfg.update(id=pid, kind='dab', sid=sid, name=e.get('name') or f'DAB+ {sid}', reencode=True, sample_rate=44100,
                    directory=os.path.join(fm['directory'], 'extra', pid),
                    source_url=f'http://127.0.0.1:{dab_port}/mp3/{sid}')
         out.append(cfg)
@@ -359,7 +363,7 @@ class PigeRecorder:
     def _ffmpeg_cmd(self):
         return [
             'ffmpeg', '-nostdin', '-hide_banner', '-loglevel', 'warning',
-            '-rw_timeout', '15000000',            # 15 s sans données → sortie, on relance
+            '-rw_timeout', '5000000',             # 5 s sans données → sortie, silence de remplacement
             '-i', self.cfg['source_url'],
             '-map', '0:a',
         ] + (['-c:a', 'libmp3lame', '-b:a', f"{int(self.cfg['bitrate_kbps'])}k", '-ar', '44100']
@@ -391,21 +395,89 @@ class PigeRecorder:
         logger.info(f"Pige {self.cfg.get('id', 'fm')} : {self.cfg['source_url']} → {self.store.dir} "
                     f"(segments {self.cfg['segment_minutes']} min, "
                     f"rétention {self.cfg['retention_hours']} h)")
-        backoff = 2
         while self.running:
-            started = time.time()
             self.proc = subprocess.Popen(self._ffmpeg_cmd(), env=env,
                                          stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
                                          text=True)
             _, err = self.proc.communicate()
             if not self.running:
                 break
-            # Icecast sans source (bl-rmo qui redémarre) : on réessaie vite
-            backoff = 2 if time.time() - started > 60 else min(backoff * 2, 30)
             logger.warning(f"ffmpeg pige {self.cfg.get('id', 'fm')} arrêté (code {self.proc.returncode}) "
-                           f"{(err or '').strip()[-200:]} - relance dans {backoff} s")
-            time.sleep(backoff)
+                           f"{(err or '').strip()[-200:]}")
+            # La pige enregistre en continu : tant que la source ne donne plus de son
+            # (émetteur coupé, welle-cli sans signal, Icecast sans source pendant un
+            # redémarrage de bl-rmo), on enregistre du silence à la place. Un trou ne
+            # reste que si la pige elle-même est arrêtée.
+            self._record_silence_until_source()
         logger.info(f"Pige {self.cfg.get('id', 'fm')} arrêtée")
+
+    # ── Silence de remplacement (PIGE_CONTINUOUS_PATCH) ──────────────────
+    def _silence_args(self):
+        rate = int(self.cfg.get('sample_rate') or 44100)
+        return ['-f', 'lavfi', '-i', f'anullsrc=r={rate}:cl=stereo',
+                '-c:a', 'libmp3lame', '-b:a', f"{int(self.cfg['bitrate_kbps'])}k", '-ar', str(rate)]
+
+    def _source_ok(self, timeout=4):
+        """La source répond-elle avec du son ? (ouverture et lecture de quelques octets)"""
+        import urllib.request
+        try:
+            with urllib.request.urlopen(self.cfg['source_url'], timeout=timeout) as r:
+                return len(r.read(2048)) > 0
+        except Exception:
+            return False
+
+    def _fill_gap(self, env):
+        """Comble le temps écoulé depuis la fin du dernier segment (délai de détection) par du silence."""
+        segs = self.store.segments()
+        if not segs:
+            return
+        last_end = segs[-1]['end']
+        gap = time.time() - last_end
+        if gap < 1 or gap > self.store.seg_len:
+            return
+        name = datetime.fromtimestamp(last_end, tz=timezone.utc).strftime('%Y%m%d-%H%M%S') + '.mp3'
+        path = os.path.join(self.store.dir, name)
+        if os.path.exists(path):
+            return
+        cmd = ['ffmpeg', '-nostdin', '-hide_banner', '-loglevel', 'error', '-y'] + self._silence_args() + \
+              ['-t', f'{gap:.2f}', '-write_xing', '0', '-f', 'mp3', path]
+        subprocess.run(cmd, env=env, capture_output=True, timeout=60)
+
+    def _record_silence_until_source(self):
+        env = dict(os.environ, TZ='UTC')
+        pid = self.cfg.get('id', 'fm')
+        if self._source_ok():                  # coupure de quelques secondes : on relance tout de suite
+            self._fill_gap(env)
+            time.sleep(1)
+            return
+        self._fill_gap(env)
+        # -re : silence produit en temps réel (sinon ffmpeg l'écrit aussi vite qu'il peut)
+        cmd = ['ffmpeg', '-nostdin', '-hide_banner', '-loglevel', 'error', '-re'] + self._silence_args() + [
+            '-f', 'segment', '-segment_format_options', 'write_xing=0',
+            '-segment_time', str(int(self.cfg['segment_minutes']) * 60),
+            '-segment_atclocktime', '1', '-reset_timestamps', '1', '-strftime', '1',
+            os.path.join(self.store.dir, '%Y%m%d-%H%M%S.mp3')]
+        logger.warning(f"Pige {pid} : plus de son à la source, silence enregistré en attendant son retour")
+        filler = subprocess.Popen(cmd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.proc = filler
+        t0 = time.time()
+        try:
+            while self.running and filler.poll() is None:
+                time.sleep(3)
+                if self._source_ok():
+                    break
+            if self.running and filler.poll() is not None:
+                logger.error(f"Pige {pid} : silence de remplacement impossible (code {filler.returncode})")
+                time.sleep(10)
+        finally:
+            if filler.poll() is None:
+                filler.terminate()
+                try:
+                    filler.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    filler.kill()
+        if self.running:
+            logger.info(f"Pige {pid} : son revenu après {int(time.time() - t0)} s de silence enregistré")
 
 
 class PigeSupervisor:
