@@ -656,9 +656,9 @@
     const perDay = kbps * 125 * 86400;
     $('f-estimate').innerHTML = days ? `Environ <strong>${fmtBytes(perDay)} par jour</strong>, soit ${fmtBytes(perDay * days)} pour ${days} jour${days > 1 ? 's' : ''} · ${fmtBytes(freeBytes)} libres.` : '';
     const w = $('f-warn'), dab = !editId || (piges.find(p => p.id === editId) || {}).kind === 'dab';
-    if (dab && dabMode && dabMode !== 'complet') {
+    if (dab && (dabMode === 'désactivé' || dabMode === 'carrousel')) {
       w.textContent = dabMode === 'désactivé' ? 'La réception DAB+ est désactivée : une pige DAB+ ne pourra rien enregistrer.'
-        : 'Une pige DAB+ demande que le service soit décodé en continu : choisir le décodage « Tous les services en continu » sur la page DAB+.';
+        : 'Une pige DAB+ demande que le service soit décodé en continu : choisir le décodage « Services surveillés seulement » ou « Tous les services en continu » sur la page DAB+.';
       w.classList.remove('hidden');
     } else w.classList.add('hidden');
   }

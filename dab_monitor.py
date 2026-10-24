@@ -50,7 +50,8 @@ DEFAULTS = {
     'port': 7979,
     'gain': -1,                   # -1 = AGC de welle-cli ; sinon indice dans la table de gains de la clé
                                   # (15 = 28 dB) : un gain fixe synchronise bien plus vite
-    'carousel_size': 2,           # 0 = décoder tous les services (-D), N = carrousel (-C N, N >= 2)
+    'carousel_size': 2,           # -1 = services surveillés seulement (décodage à la demande),
+                                  # 0 = tous les services (-D), N = carrousel (-C N, N >= 2)
     'poll_interval': 2,
     'snr_threshold': 5.0,         # dB
     'fic_quality_threshold': 80,  # %
@@ -112,6 +113,18 @@ def raw_to_dbfs(raw):
     if raw <= 0:
         return -100.0
     return round(20.0 * math.log10(min(raw, 32768) / 32768.0), 1)
+
+
+def decode_mode(cfg):
+    """'watched' (services surveillés seulement), 'all' (-D) ou 'carousel' (-C N)."""
+    try:
+        n = int(cfg.get('carousel_size', 0) or 0)
+    except (TypeError, ValueError):
+        n = 0
+    return 'watched' if n < 0 else 'all' if n == 0 else 'carousel'
+
+
+MODE_LABELS = {'watched': 'services surveillés', 'all': 'complet', 'carousel': 'carrousel'}
 
 
 def is_real_service(label):
@@ -254,6 +267,54 @@ class _Svc:
         self.silent = False
 
 
+class _Holder:
+    """Garde ouvert le flux /mp3/<sid> de welle-cli pour que le service reste décodé.
+    Le son est lu puis jeté ; reconnexion toutes les 5 s si le flux tombe."""
+
+    def __init__(self, base_url, sid):
+        self.url = f"{base_url}/mp3/{sid}"
+        self.sid = sid
+        self._stop = threading.Event()
+        self._resp = None
+        self._last_data = 0.0
+        self.thread = threading.Thread(target=self._run, daemon=True, name=f'dab-hold-{sid}')
+
+    def start(self):
+        self.thread.start()
+
+    def alive(self):
+        return self.thread.is_alive()
+
+    def streaming(self):
+        return time.time() - self._last_data < 10
+
+    def stop(self):
+        self._stop.set()
+        r = self._resp
+        if r is not None:
+            try:
+                r.close()
+            except Exception:
+                pass
+
+    def _run(self):
+        while not self._stop.is_set():
+            try:
+                with requests.get(self.url, stream=True, timeout=(5, 30)) as r:
+                    self._resp = r
+                    if r.status_code == 200:
+                        for chunk in r.iter_content(chunk_size=4096):
+                            if self._stop.is_set():
+                                break
+                            if chunk:
+                                self._last_data = time.time()
+            except Exception:
+                pass
+            finally:
+                self._resp = None
+            self._stop.wait(5)
+
+
 class DabMonitor:
     def __init__(self, config_file=CONFIG_FILE, db_path=DB_FILE, state_file=STATE_FILE, email=True):
         self.config_file = config_file
@@ -285,6 +346,7 @@ class DabMonitor:
         self._synced_once = False
         self._dls = {}               # sid -> [candidat, depuis, dernier enregistré, {texte: heure}]
         self.last_audio_change = 0.0 # dernier son décodé, tous services confondus
+        self._holders = {}           # sid -> _Holder (mode « services surveillés »)
         self.email = None
         if email:
             try:
@@ -329,12 +391,15 @@ class DabMonitor:
     def _cmd(self):
         c = self.cfg
         cmd = [c['welle_cli'], '-c', str(c['channel']), '-g', str(int(c.get('gain', -1)))]
-        n = int(c.get('carousel_size', 0) or 0)
-        # Avec -C 1, welle-cli perd la liste des services (tous indiqués
-        # absents) ; le carrousel commence donc à 2 services.
-        if n == 1:
-            n = 2
-        cmd += ['-C', str(n)] if n > 0 else ['-D']
+        mode = decode_mode(c)
+        if mode == 'all':
+            cmd += ['-D']
+        elif mode == 'carousel':
+            # Avec -C 1, welle-cli perd la liste des services (tous indiqués
+            # absents) ; le carrousel commence donc à 2 services.
+            cmd += ['-C', str(max(2, int(c.get('carousel_size'))))]
+        # 'watched' : ni -D ni -C. welle-cli ne décode alors que les services dont
+        # un flux /mp3 est ouvert ; BL-RMO en garde un ouvert par service surveillé.
         cmd += ['-w', str(int(c['port']))]
         return cmd
 
@@ -374,6 +439,7 @@ class DabMonitor:
             log.close()
 
     def _kill_welle(self):
+        self._stop_holders()
         p, self.proc = self.proc, None
         if p and p.poll() is None:
             try:
@@ -528,6 +594,45 @@ class DabMonitor:
         elif not up and self.receiver_down_since is None:
             self.receiver_down_since = now
 
+    # ── Mode « services surveillés » ────────────────────────────────────
+    # welle-cli lancé sans -D ni -C ne décode que les services demandés : un flux
+    # /mp3 reste ouvert sur chaque service surveillé (son lu puis jeté). Le service
+    # est mesuré en continu, sans le trou d'un tour de carrousel, pour la charge
+    # d'un seul décodeur. L'ensemble (SNR, FIC, liste des services) reste suivi.
+    def held_sids(self):
+        """Services à décoder en continu : les services cochés, sinon celui du tableau de bord."""
+        if decode_mode(self.cfg) != 'watched':
+            return []
+        sids = list(self.cfg.get('watched_sids') or [])
+        if not sids and self.cfg.get('dashboard_sid'):
+            sids = [str(self.cfg['dashboard_sid']).lower()]
+        return sids
+
+    def _sync_holders(self):
+        want = set()
+        if self.welle_up and self.proc:
+            with self.lock:
+                want = {sid for sid in self.held_sids()
+                        if sid in self.services and self.services[sid].present}
+        for sid in list(self._holders):
+            h = self._holders[sid]
+            if sid not in want or not h.alive():
+                h.stop()
+                del self._holders[sid]
+        for sid in want - set(self._holders):
+            h = self._holders[sid] = _Holder(self.url, sid)
+            h.start()
+
+    def _stop_holders(self):
+        for h in self._holders.values():
+            h.stop()
+        self._holders.clear()
+
+    def _continuous(self, sid):
+        """Ce service est-il décodé en continu (niveau neuf attendu à chaque relevé) ?"""
+        mode = decode_mode(self.cfg)
+        return mode == 'all' or (mode == 'watched' and sid in self._holders and self._holders[sid].streaming())
+
     # ── Événements et alertes ───────────────────────────────────────────
     def _event(self, kind, state, sid='', label='', message='', started=None):
         name = KIND_LABELS[kind] + (f" : {label}" if label else '')
@@ -646,13 +751,12 @@ class DabMonitor:
 
     def _stale_since(self, s, now):
         """Depuis quand ce service ne reçoit plus de son, s'il est figé ; None sinon.
-        Multiplex entier muet : tous les services. Décodage complet (sans carrousel) :
-        chaque service doit se rafraîchir à chaque relevé, le sien seul suffit."""
+        Multiplex entier muet : tous les services. Service décodé en continu (décodage
+        complet, ou service surveillé) : il doit se rafraîchir à chaque relevé, le sien seul suffit."""
         delay = float(self.cfg['silence_duration'])
         if self._mux_mute(now) is not None:
             return max(self.last_audio_change, s.last_change or self.last_audio_change)
-        full = int(self.cfg.get('carousel_size', 0) or 0) == 0
-        if full and s.last_change and now - s.last_change >= delay:
+        if self._continuous(s.sid) and s.last_change and now - s.last_change >= delay:
             return s.last_change
         return None
 
@@ -698,7 +802,9 @@ class DabMonitor:
                 s.present = True
                 # Un niveau n'est pris en compte que s'il vient d'être mis à jour :
                 # en mode carrousel, seuls les services en cours de décodage sont frais.
-                changed = d['raw_audio'] != s.last_raw
+                # Le premier relevé d'un service ne dit rien : ses niveaux peuvent dater
+                # d'avant (service non décodé, en mode carrousel ou « services surveillés »).
+                changed = s.last_raw is not None and d['raw_audio'] != s.last_raw
                 fresh = changed or sid == m['carousel_sid']
                 s.last_raw = d['raw_audio']
                 if changed:
@@ -882,11 +988,11 @@ class DabMonitor:
             'receiver_up': self.welle_up,
             'receiver_since': self.welle_since,
             'receiver_error': self.last_error,
-            'mode': 'carrousel' if int(c.get('carousel_size', 0) or 0) > 0 else 'complet',
+            'mode': MODE_LABELS[decode_mode(c)],
+            'held_sids': sorted(self._holders),
             'rf': rf,
             'ensemble_ok': ens_ok,
             'ensemble_alert': bool(self.ens_alerted),
-            'ensemble_alert': self.ens_alerted,
             'thresholds': {'snr': c['snr_threshold'], 'fic': c['fic_quality_threshold'],
                            'silence': c['silence_threshold']},
             'watched_sids': c.get('watched_sids') or [],
@@ -918,6 +1024,7 @@ class DabMonitor:
                 self._supervise()
                 if self.proc:
                     self.poll_once()
+                    self._sync_holders()
                     self._check_device()
                     self._check_sync()
                     self._rotate_log()

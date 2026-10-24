@@ -6,6 +6,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### DAB+ : décodage « Services surveillés seulement »
+- Nouveau choix de décodage, conseillé pour surveiller une radio : welle-cli est lancé sans `-D` ni `-C` et ne décode que les services cochés (à défaut, celui du tableau de bord). BL-RMO garde ouvert un flux sur chacun d'eux : ils sont mesurés en continu, sans le trou d'un tour de carrousel (10 s par service), et la détection du son figé s'applique comme en décodage complet.
+- Charge processeur d'un seul décodeur : le décodage complet occupait plus de deux cœurs (welle-cli réencode chaque service du multiplex en MP3), charge moyenne à 9 sur 4 cœurs constatée. SNR, FIC et présence de tous les services restent suivis.
+- L'écoute n'épingle plus le service dans ce mode (hors carrousel, un service épinglé restait décodé indéfiniment) ; la pige DAB+ fonctionne dans ce mode.
+- Le premier relevé d'un service n'est plus pris pour un niveau neuf : plus de « silence » affiché sur un service jamais décodé.
+
 ### DAB+ : journal de welle-cli limité à 20 Mo
 - welle-cli écrit sans arrêt dans `logs/welle-cli.log` (une ligne par surcharge du convertisseur ou perte de synchronisation) : 139 Mo en 16 h constatés avec une NESDR SMArTee réglée trop fort. Le journal n'était renouvelé qu'au redémarrage de welle-cli ; il est désormais copié en `.1` et vidé dès qu'il dépasse 20 Mo, sans relancer welle-cli.
 

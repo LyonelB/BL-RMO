@@ -1449,11 +1449,14 @@ def dab_listen(sid):
         except Exception:
             pass
     base = f"http://127.0.0.1:{int(cfg['port'])}"
-    try:
-        # Fork welle-monitor : décoder ce service tout de suite, sans attendre le carrousel
-        _rq.post(f"{base}/carousel/pin/{sid}", timeout=2)
-    except Exception:
-        pass
+    if int(cfg.get('carousel_size', 0) or 0) > 0:
+        try:
+            # Fork welle-monitor : décoder ce service tout de suite, sans attendre le carrousel.
+            # Pas en mode « services surveillés » : hors carrousel, un service épinglé
+            # resterait décodé indéfiniment ; le flux ouvert ci-dessous suffit à le décoder.
+            _rq.post(f"{base}/carousel/pin/{sid}", timeout=2)
+        except Exception:
+            pass
     up = None
     for attempt in range(3):                   # le service épinglé peut mettre un instant à démarrer
         if _dab_listen_cur['gen'] != gen:

@@ -256,10 +256,12 @@
           <input id="s-ensemble_name" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="ex. LA ROCHE SUR YON"></label>
         <label class="block"><span class="text-xs text-gray-500">Décodage</span>
           <select id="s-carousel_size" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
+            <option value="-1">Services surveillés seulement (conseillé)</option>
             <option value="0">Tous les services en continu</option>
             <option value="2">Carrousel, 2 services à la fois</option>
             <option value="4">Carrousel, 4 services à la fois</option>
-          </select></label>
+          </select>
+          <span class="text-[11px] text-gray-400">« Services surveillés » : seuls les services cochés sont décodés, en continu, pour une charge minimale. L'ensemble et la présence de tous les services restent suivis.</span></label>
         <label class="block"><span class="text-xs text-gray-500">Service du tableau de bord</span>
           <select id="s-dashboard_sid" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
             <option value="">Premier service surveillé</option>
@@ -381,7 +383,8 @@
     const s = st, rf = s.rf || {};
     const freq = Number(s.frequency_mhz).toFixed(3).replace('.', ',');
     $('subtitle').textContent = `Canal ${s.channel} · ${freq} MHz` + (s.ensemble_name ? ` · ${s.ensemble_name}` : '')
-      + (s.mode ? ` · décodage ${s.mode}` : '');
+      + (s.mode ? ` · décodage ${s.mode}` : '')
+      + (s.mode === 'services surveillés' && s.receiver_up && !(s.held_sids || []).length ? ' (aucun service coché : cochez la radio à surveiller)' : '');
     // Bandeau
     const n = $('notice');
     if (!s.enabled) {
@@ -460,7 +463,7 @@
         <td class="py-2 pr-3">${box}</td>
         <td class="py-2 pr-3 text-xs whitespace-nowrap">${state}</td>
         <td class="py-2 pr-3 text-xs font-mono whitespace-nowrap ${fresh ? 'text-gray-700' : 'text-gray-300'}" style="font-variant-numeric:tabular-nums"
-            title="${fresh ? 'Niveau relevé toutes les 2 s' : 'Niveau non rafraîchi (carrousel)'}">${v.present && lvl > -100 ? lvl.toFixed(1) + ' dBFS' : '-'}</td>
+            title="${fresh ? 'Niveau relevé toutes les 2 s' : 'Niveau non rafraîchi : service non décodé en ce moment'}">${v.present && lvl > -100 ? lvl.toFixed(1) + ' dBFS' : '-'}</td>
         <td class="py-2 pr-3 text-xs text-gray-600 whitespace-nowrap">${esc(v.mode || '')} ${v.bitrate ? v.bitrate + ' kb/s' : ''}
           <div class="text-[11px] text-gray-400 truncate">${esc(v.protection || '')}${v.err_aac ? ' · AAC ' + v.err_aac : ''}</div></td>
         <td class="py-2 pr-3 text-xs font-mono text-gray-600">${upt}</td>
