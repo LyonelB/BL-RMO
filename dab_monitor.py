@@ -804,7 +804,11 @@ class DabMonitor:
                 # en mode carrousel, seuls les services en cours de décodage sont frais.
                 # Le premier relevé d'un service ne dit rien : ses niveaux peuvent dater
                 # d'avant (service non décodé, en mode carrousel ou « services surveillés »).
-                changed = s.last_raw is not None and d['raw_audio'] != s.last_raw
+                # Pas de niveau du tout (service que welle-cli ne décode pas, ou plus) : rien de neuf.
+                decoded = d['raw_audio'][0] is not None
+                changed = decoded and s.last_raw is not None and d['raw_audio'] != s.last_raw
+                if not decoded and not s.silence_alerted and not self._continuous(sid):
+                    s.silence_start, s.frozen = None, False
                 fresh = changed or sid == m['carousel_sid']
                 s.last_raw = d['raw_audio']
                 if changed:
