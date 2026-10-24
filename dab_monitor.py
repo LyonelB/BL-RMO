@@ -413,6 +413,8 @@ class DabMonitor:
         if not self.proc:
             return
         try:
+            if os.path.getsize(WELLE_LOG) < getattr(self, '_log_offset', 0):
+                self._log_offset = 0                 # journal vidé par la rotation
             with open(WELLE_LOG, 'rb') as f:
                 f.seek(getattr(self, '_log_offset', 0))
                 tail = f.read(256 * 1024).decode('utf-8', 'replace')
@@ -429,6 +431,28 @@ class DabMonitor:
         self._kill_welle()                           # récepteur compté hors service
         self.backoff = 30
         self._next_start = now + (2 if present else 30)
+
+    WELLE_LOG_MAX = 20 * 1024 * 1024
+
+    def _rotate_log(self):
+        """welle-cli écrit sans arrêt dans son journal (une ligne par surcharge du
+        convertisseur, par perte de synchro...) : jusqu'à plus de 100 Mo par jour. Au-delà
+        de 20 Mo, le journal est copié en .1 puis vidé, sans relancer welle-cli (il écrit
+        en ajout, il continue simplement au début du fichier vidé)."""
+        now = time.time()
+        if now - getattr(self, '_rot_checked', 0) < 60:
+            return
+        self._rot_checked = now
+        try:
+            if os.path.getsize(WELLE_LOG) < self.WELLE_LOG_MAX:
+                return
+            import shutil
+            shutil.copyfile(WELLE_LOG, WELLE_LOG + '.1')
+            with open(WELLE_LOG, 'r+') as f:
+                f.truncate(0)
+            self._log_offset = 0
+        except OSError as e:
+            logger.debug(f"Rotation du journal welle-cli : {e}")
 
     def _check_sync(self, now=None):
         """welle-cli tourne et la clé reçoit (SNR), mais aucun ensemble n'est
@@ -896,6 +920,7 @@ class DabMonitor:
                     self.poll_once()
                     self._check_device()
                     self._check_sync()
+                    self._rotate_log()
                 else:
                     self._set_welle_up(False)
                 self.check_alerts()

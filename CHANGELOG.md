@@ -6,6 +6,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### DAB+ : journal de welle-cli limité à 20 Mo
+- welle-cli écrit sans arrêt dans `logs/welle-cli.log` (une ligne par surcharge du convertisseur ou perte de synchronisation) : 139 Mo en 16 h constatés avec une NESDR SMArTee réglée trop fort. Le journal n'était renouvelé qu'au redémarrage de welle-cli ; il est désormais copié en `.1` et vidé dès qu'il dépasse 20 Mo, sans relancer welle-cli.
+
 ### Page DAB+ : spectre pendant l'écoute, niveaux efficaces
 - Pendant l'écoute, le spectre est calculé **dans le navigateur** sur le son écouté (même échelle que celui de BL-RMO), sans pige ni flux de plus sur welle-cli. Hors écoute, il lit la pige DAB+ du service comme avant ; si elle n'enregistre pas, la page le dit et propose de lancer l'écoute.
 - Barres G/D pendant l'écoute en niveau efficace, comme la FM et le tableau de bord : la crête collait à 0 dBFS sur une antenne traitée par un processeur.
