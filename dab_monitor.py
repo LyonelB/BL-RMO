@@ -60,6 +60,8 @@ DEFAULTS = {
     'silence_threshold': -60.0,       # dBFS
     'silence_duration': 30,           # s avant alerte silence
     'receiver_loss_duration': 300,    # s avant alerte récepteur hors service
+    'restore_delay': 30,              # s de retour à la normale avant le rétablissement d'une alerte
+                                      # (réception qui hésite : une seule alerte, pas une rafale)
     'startup_grace': 180,             # s sans alerte service après (re)démarrage de welle-cli
     'watched_sids': [],               # vide = tous les services
     'usb_reset_cmd': '',              # vide : script installé par 67-dab.sh s'il existe
@@ -264,6 +266,8 @@ class _Svc:
         self.last_fresh = 0.0
         self.last_change = 0.0       # dernier niveau audio réellement nouveau (son décodé)
         self.frozen = False          # silence constaté parce que plus aucun son n'est décodé
+        self.recover_since = None    # son revenu depuis (alerte silence en cours de rétablissement)
+        self.present_since = None    # de retour dans le bouquet depuis (alerte absent en cours de rétablissement)
         self.silent = False
 
 
@@ -336,6 +340,7 @@ class DabMonitor:
         self.rf_window = []          # (t, snr, fic, gain), moyenne glissante 15 s
         self.ens_bad_since = None
         self.ens_alerted = False
+        self.ens_ok_since = None
         self.services = {}
         self.slot = None
         self.slot_stats = {}
@@ -637,8 +642,8 @@ class DabMonitor:
     def _event(self, kind, state, sid='', label='', message='', started=None):
         name = KIND_LABELS[kind] + (f" : {label}" if label else '')
         title = f"DAB+ · {name}" + (" rétabli" if state == 'restored' else '')
-        details = (f"{message}\nCanal : {self.cfg['channel']} ({self.cfg['frequency_mhz']} MHz)"
-                   + (f"\nService : {label} ({sid})" if sid else ''))
+        details = message + (f"\nService : {label} ({sid})" if sid else '')
+        canal = f"{self.cfg['channel']} ({float(self.cfg['frequency_mhz']):.3f} MHz)".replace('.', ',')
         ts = datetime.fromtimestamp(started or time.time()).isoformat(timespec='seconds')
         eid = None
         try:
@@ -662,7 +667,7 @@ class DabMonitor:
                 except sqlite3.Error:
                     pass
             try:
-                self.email.send_alert(title, details, skip_cooldown=True, on_sent=mark)
+                self.email.send_alert(title, details, skip_cooldown=True, on_sent=mark, source=('Canal DAB+', canal))
             except Exception as e:
                 logger.warning(f"Mail DAB+ non envoyé : {e}")
         (logger.warning if state == 'lost' else logger.info)(title)
@@ -693,7 +698,9 @@ class DabMonitor:
             ok = (self.rf.get('snr', 0) >= float(c['snr_threshold'])
                   and self.rf.get('fic_quality', 0) >= float(c['fic_quality_threshold'])
                   and mute is None)
+            restore = float(c.get('restore_delay', 30))
             if not ok:
+                self.ens_ok_since = None
                 if self.ens_bad_since is None:
                     self.ens_bad_since = now
                 elif not self.ens_alerted and now - self.ens_bad_since >= float(c['ensemble_loss_duration']):
@@ -703,11 +710,15 @@ class DabMonitor:
                                          f"SNR {self.rf.get('snr', 0):.1f} dB (seuil {c['snr_threshold']}), "
                                          f"FIC {self.rf.get('fic_quality', 0):.0f} % (seuil {c['fic_quality_threshold']})"))
                     self.ens_alerted = True
-            else:
-                if self.ens_alerted:
+            elif self.ens_alerted:
+                # Rétabli seulement après restore_delay s sans nouveau défaut
+                self.ens_ok_since = self.ens_ok_since or now
+                if now - self.ens_ok_since >= restore:
                     self._event('ensemble', 'restored',
                                 message=f"SNR {self.rf.get('snr', 0):.1f} dB, FIC {self.rf.get('fic_quality', 0):.0f} %")
-                self.ens_bad_since, self.ens_alerted = None, False
+                    self.ens_bad_since, self.ens_alerted, self.ens_ok_since = None, False, None
+            else:
+                self.ens_bad_since, self.ens_ok_since = None, None
         # Services
         grace = up_for < float(c['startup_grace'])
         with self.lock:
@@ -716,10 +727,17 @@ class DabMonitor:
             if not is_real_service(s.label):
                 continue
             watched = self._watched(s.sid)
+            restore = float(c.get('restore_delay', 30))
             if s.present:
-                if s.lost_alerted:
-                    self._event('absent', 'restored', s.sid, s.label, 'Le service est de nouveau dans le bouquet.')
-                s.lost_start, s.lost_alerted = None, False
+                if not s.lost_alerted:
+                    s.lost_start, s.present_since = None, None
+                else:
+                    s.present_since = s.present_since or now
+                    if now - s.present_since >= restore:
+                        self._event('absent', 'restored', s.sid, s.label, 'Le service est de nouveau dans le bouquet.')
+                        s.lost_start, s.lost_alerted, s.present_since = None, False, None
+            elif s.lost_alerted:
+                s.present_since = None
             elif s.lost_start and watched and not grace and not s.lost_alerted \
                     and now - s.lost_start >= float(c['service_loss_duration']):
                 self._event('absent', 'lost', s.sid, s.label, 'Le service n\'est plus dans le bouquet.',
@@ -727,6 +745,19 @@ class DabMonitor:
                 s.lost_alerted = True
             # Son figé : welle-cli garde le service et ses derniers niveaux quand la
             # réception s'arrête (émetteur coupé). Plus aucun nouveau niveau = silence.
+            if s.recover_since:
+                # Alerte silence en cours de rétablissement : le son doit rester présent
+                # restore_delay s d'affilée, sinon l'alerte en cours continue (pas de nouveau mail).
+                if self._continuous(s.sid):
+                    flowing = now - (s.last_change or 0) <= 3 * float(c['poll_interval']) + 1
+                else:
+                    flowing = self._mux_mute(now) is None and not s.silent
+                if not flowing:
+                    s.recover_since = None
+                elif now - s.recover_since >= restore:
+                    self._event('silence', 'restored', s.sid, s.label, 'Niveau audio normal.')
+                    s.silence_start, s.silence_alerted, s.frozen, s.recover_since = None, False, False, None
+                    continue
             stale_since = self._stale_since(s, now)
             if stale_since is not None and s.present and watched and not s.silence_start:
                 s.silence_start, s.frozen = stale_since, True
@@ -760,10 +791,13 @@ class DabMonitor:
             return s.last_change
         return None
 
-    def _silence_ended(self, s):
+    def _silence_ended(self, s, now=None):
+        """Son revenu. Silence trop court pour une alerte : oublié tout de suite. Alerte en
+        cours : rétablie par check_alerts après restore_delay s de son sans interruption."""
         if s.silence_alerted:
-            self._event('silence', 'restored', s.sid, s.label, 'Niveau audio normal.')
-        s.silence_start, s.silence_alerted, s.frozen = None, False, False
+            s.recover_since = s.recover_since or now or time.time()
+            return
+        s.silence_start, s.frozen, s.recover_since = None, False, None
 
     # ── Relevé ──────────────────────────────────────────────────────────
     def ingest(self, data, now=None):
@@ -820,6 +854,7 @@ class DabMonitor:
                     s.silent = max(d['audio_l'], d['audio_r']) <= thr
                     if s.silent:
                         s.silence_start = s.silence_start or now
+                        s.recover_since = None
                     elif s.silence_start and (changed or not s.frozen):
                         # Un silence « son figé » ne se termine que sur un vrai nouveau niveau
                         ended.append(s)
@@ -828,7 +863,7 @@ class DabMonitor:
                     s.present = False
                     s.lost_start = now
         for s in ended:
-            self._silence_ended(s)
+            self._silence_ended(s, now)
         if new:
             self._save_services(new)
         self._dls_note_all(now)

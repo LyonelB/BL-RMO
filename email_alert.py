@@ -4,6 +4,7 @@ Module de gestion des alertes email pour le système de surveillance FM
 """
 
 import smtplib
+import html
 import json
 import os
 import sys
@@ -76,7 +77,7 @@ class EmailAlert:
 
         return datetime.now() - self.last_alert_time > self.cooldown
 
-    def send_alert(self, alert_type, details="", skip_cooldown=False, on_sent=None):
+    def send_alert(self, alert_type, details="", skip_cooldown=False, on_sent=None, source=None):
         """Envoie une alerte email
         
         Args:
@@ -84,6 +85,8 @@ class EmailAlert:
             details: Détails de l'alerte
             skip_cooldown: Si True, ignore le cooldown (pour les rétablissements)
             on_sent: appelé quand le mail est parti, tout de suite ou plus tard depuis la file
+            source: (libellé, valeur) de la ligne sous « Station » ; par défaut la fréquence FM.
+                    Les alertes DAB+ y mettent leur canal : ('Canal DAB+', '9A (202,928 MHz)').
 
         Renvoie True si le mail est parti tout de suite. En cas d'échec, il est mis
         en attente et retenté (sauf l'email de test).
@@ -101,6 +104,8 @@ class EmailAlert:
             return False
 
         item = {'type': alert_type, 'details': details, 'ts': time.time(), 'tries': 0}
+        if source:
+            item['source'] = [str(source[0]), str(source[1])]
         if alert_type == "Test":                   # le test dit tout de suite si l'envoi marche
             try:
                 self._deliver(item)
@@ -133,6 +138,7 @@ class EmailAlert:
     def _deliver(self, item):
         """Construit et envoie le mail ; lève une exception si l'envoi échoue."""
         alert_type, details = item['type'], item['details']
+        src_label, src_value = item.get('source') or ('Fréquence', self.frequency)
         recovered = "rétabli" in alert_type.lower()
         msg = MIMEMultipart('alternative')
         msg['Subject'] = (f"✅ RÉTABLI - {self.station_name} - {alert_type}" if recovered
@@ -151,7 +157,7 @@ ALERTE DE SURVEILLANCE
 ======================
 
 Station: {self.station_name}
-Fréquence: {self.frequency}
+{src_label}: {src_value}
 Type d'alerte: {alert_type}
 Date et heure: {timestamp}
 {late}
@@ -162,6 +168,7 @@ Détails:
 BL-RMO · Surveillance radio
             """
         late_html = f'<div class="info" style="color:#b45309"><b>{late}</b></div>' if late else ''
+        details_html = html.escape(str(details)).replace('\n', '<br>')
         html_content = f"""
             <html>
             <head>
@@ -184,12 +191,12 @@ BL-RMO · Surveillance radio
                     <div class="header">{"✅" if recovered else "⚠️"} {alert_type.upper()}</div>
                     <hr>
                     <div class="info"><span class="label">Station:</span> {self.station_name}</div>
-                    <div class="info"><span class="label">Fréquence:</span> {self.frequency}</div>
+                    <div class="info"><span class="label">{src_label}:</span> {src_value}</div>
                     <div class="info"><span class="label">Type d'alerte:</span> {alert_type}</div>
                     <div class="info"><span class="label">Date et heure:</span> {timestamp}</div>
                     {late_html}
                     <hr>
-                    <div class="info"><span class="label">Détails:</span><br>{details}</div>
+                    <div class="info"><span class="label">Détails:</span><br>{details_html}</div>
                     <div class="footer">BL-RMO · Surveillance radio</div>
                 </div>
             </body>

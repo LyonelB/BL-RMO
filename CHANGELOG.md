@@ -6,6 +6,10 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### DAB+ : une alerte par incident, canal dans les mails
+- Délai de rétablissement (`restore_delay`, 30 s) pour les alertes silence, ensemble dégradé et service absent : le retour à la normale doit durer 30 s avant le mail de rétablissement, et une nouvelle coupure dans l'intervalle prolonge l'alerte en cours. Le 26 octobre, une réception hésitante de 5 min avait envoyé 4 alertes et 4 rétablissements.
+- Les mails DAB+ indiquaient la fréquence FM de la station (« Fréquence: 88.6M ») : ils affichent maintenant le canal DAB+ (« Canal DAB+: 9A (202,928 MHz) »). Les retours à la ligne des détails sont conservés dans la version HTML du mail.
+
 ### DAB+ : décodage « Services surveillés seulement »
 - Nouveau choix de décodage, conseillé pour surveiller une radio : welle-cli est lancé sans `-D` ni `-C` et ne décode que les services cochés (à défaut, celui du tableau de bord). BL-RMO garde ouvert un flux sur chacun d'eux : ils sont mesurés en continu, sans le trou d'un tour de carrousel (10 s par service), et la détection du son figé s'applique comme en décodage complet.
 - Charge processeur d'un seul décodeur : le décodage complet occupait plus de deux cœurs (welle-cli réencode chaque service du multiplex en MP3), charge moyenne à 9 sur 4 cœurs constatée. SNR, FIC et présence de tous les services restent suivis.
