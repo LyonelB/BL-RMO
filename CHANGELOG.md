@@ -6,6 +6,11 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Connexion refusée après une fin de session
+- Après une déconnexion pour inactivité, la connexion échouait (« Erreur de connexion au serveur ») tant que la page n'était pas rechargée : le jeton de sécurité (CSRF) de la page de connexion avait expiré (onglet resté ouvert plus d'une heure), ou avait été effacé par un autre onglet BL-RMO qui interrogeait le serveur au moment où la session expirait.
+- La page de connexion demande un jeton frais à chaque essai et réessaie une fois si le jeton est refusé ; la fin de session ne retire plus que la connexion, pas le jeton.
+- Messages lisibles au lieu de « Erreur de connexion au serveur » : jeton expiré, trop de tentatives (5 par minute), autre erreur du serveur. Bandeau « Session fermée après 60 minutes d'inactivité » quand on arrive sur la page après une fin de session.
+
 ### DAB+ : une alerte par incident, canal dans les mails
 - Délai de rétablissement (`restore_delay`, 30 s) pour les alertes silence, ensemble dégradé et service absent : le retour à la normale doit durer 30 s avant le mail de rétablissement, et une nouvelle coupure dans l'intervalle prolonge l'alerte en cours. Le 26 octobre, une réception hésitante de 5 min avait envoyé 4 alertes et 4 rétablissements.
 - Les mails DAB+ indiquaient la fréquence FM de la station (« Fréquence: 88.6M ») : ils affichent maintenant le canal DAB+ (« Canal DAB+: 9A (202,928 MHz) »). Les retours à la ligne des détails sont conservés dans la version HTML du mail.

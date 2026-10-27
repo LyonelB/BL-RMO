@@ -63,6 +63,15 @@ auth = Auth()
 
 SESSION_TIMEOUT = timedelta(minutes=60)
 
+
+def _end_login():
+    """Fin de session par inactivité : seule la connexion est retirée. Vider toute la
+    session effaçait aussi le jeton CSRF de la page de connexion déjà affichée (un
+    autre onglet BL-RMO qui interroge le serveur suffisait) : la connexion était
+    ensuite refusée tant que la page n'était pas rechargée."""
+    for k in ('logged_in', 'username', 'last_active'):
+        session.pop(k, None)
+
 @app.before_request
 def check_session_timeout():
     # Endpoints exclus du check session (polling automatique)
@@ -76,7 +85,7 @@ def check_session_timeout():
             if last_active:
                 elapsed = datetime.now(timezone.utc) - datetime.fromisoformat(last_active).replace(tzinfo=timezone.utc)
                 if elapsed > SESSION_TIMEOUT:
-                    session.clear()
+                    _end_login()
                     if request.is_json:
                         from flask import abort
                         abort(401)
@@ -87,7 +96,7 @@ def check_session_timeout():
         if last_active:
             elapsed = datetime.now(timezone.utc) - datetime.fromisoformat(last_active).replace(tzinfo=timezone.utc)
             if elapsed > SESSION_TIMEOUT:
-                session.clear()
+                _end_login()
                 if request.is_json:
                     from flask import abort
                     abort(401)
@@ -181,7 +190,24 @@ def login():
             else:
                 return render_template('login.html', error='Identifiants incorrects')
 
-    return render_template('login.html')
+    return render_template('login.html', timeout=request.args.get('timeout') == '1')
+
+
+from flask_wtf.csrf import CSRFError
+
+
+@app.errorhandler(CSRFError)
+def _csrf_error(e):
+    if request.is_json or request.path.startswith('/api/') or request.path == '/login':
+        return jsonify({'status': 'error', 'message': 'Jeton de sécurité expiré : rechargez la page.'}), 400
+    return e.description, 400
+
+
+@app.errorhandler(429)
+def _too_many(e):
+    if request.endpoint == 'login' and request.method == 'POST':
+        return jsonify({'status': 'error', 'message': 'Trop de tentatives : réessayez dans une minute.'}), 429
+    return e
 
 @app.route('/logout')
 def logout():
@@ -192,6 +218,7 @@ def logout():
     return redirect(url_for('login'))
 
 @app.route('/api/csrf-token')
+@limiter.exempt
 def get_csrf_token():
     """Retourne un token CSRF pour les requêtes AJAX"""
     return jsonify({'csrf_token': generate_csrf()})
