@@ -586,22 +586,36 @@ def probe_snmp(cfg, timeout):
     elif p.returncode == 0 or 'noSuchName' in err or 'Error in packet' in err:
         # Réponse incomplète (certains agents, ex. BW Broadcast, ne renvoient qu'une
         # valeur par requête) ou SNMP v1 avec un OID inconnu : on interroge chaque OID.
+        # Une requête perdue (UDP, liaison radio vers le pylône) est retentée une fois ;
+        # sans réponse, la valeur est notée « pas de réponse », pas « OID absent » :
+        # un paquet perdu ne doit pas faire passer l'appareil en « dégradé ».
         lines = []
         for m in metrics_cfg:
-            try:
-                q = _get([m['oid']])
-                lines.append(q.stdout.strip() if q.returncode == 0 else 'No Such Object')
-            except subprocess.TimeoutExpired:
-                lines.append('No Such Object')
+            val = None
+            for _ in range(2):
+                try:
+                    q = _get([m['oid']])
+                except subprocess.TimeoutExpired:
+                    continue
+                if q.returncode == 0:
+                    val = q.stdout.strip()
+                    break
+                if 'Timeout' not in (q.stderr or ''):
+                    val = 'No Such Object'           # l'agent a répondu : l'OID n'existe pas
+                    break
+            lines.append(val if val is not None else 'No Response')
     else:
         msg = err.splitlines()[-1] if err else 'Erreur SNMP'
         return _result(False, msg[:160])
 
-    metrics, warn, missing = [], False, 0
+    metrics, warn, missing, noresp = [], False, 0, 0
     for i, m in enumerate(metrics_cfg):
         raw = lines[i].strip() if i < len(lines) else ''
         item = {'label': m['label'], 'unit': m.get('unit', ''), 'value': None, 'display': '?', 'state': None}
-        if not raw or raw.startswith('No Such') or raw.startswith('No more'):
+        if raw == 'No Response':
+            item['display'] = 'pas de réponse'
+            noresp += 1
+        elif not raw or raw.startswith('No Such') or raw.startswith('No more'):
             item['display'] = 'OID absent'
             item['state'] = 'warn'
             missing += 1
@@ -645,6 +659,8 @@ def probe_snmp(cfg, timeout):
                     item['state'] = 'ok'
         metrics.append(item)
 
+    if noresp == len(metrics_cfg):
+        return _result(False, 'Pas de réponse SNMP', lat, metrics)
     if missing == len(metrics_cfg):
         return _result(True, 'Répond en SNMP, mais aucun OID trouvé', lat, metrics, warn=True)
     if missing:

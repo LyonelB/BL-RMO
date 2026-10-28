@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>BL-RMO · Parc</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .sidebar-link { display:flex; align-items:center; gap:10px; padding:10px 16px; border-radius:8px; color:#64748b; font-size:0.875rem; font-weight:500; transition:all 0.15s; text-decoration:none; }
+    .sidebar-link:hover, .sidebar-link.active { background:#eff6ff; color:#2563eb; }
+    .sidebar-link svg { width:18px; height:18px; flex-shrink:0; }
+    .section { background:white; border:1px solid #f1f5f9; border-radius:12px; padding:20px; margin-bottom:16px; }
+    .section-title { font-size:0.75rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+  </style>
+{% include '_roles.html' %}
+</head>
+<body class="flex h-screen overflow-hidden bg-slate-50">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col flex-shrink-0 h-screen transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 ease-in-out">
+  <div class="p-5 border-b border-gray-100">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">RMO</div>
+      <div>
+        <div class="text-sm font-semibold text-gray-900">BL-RMO</div>
+        <div class="text-xs text-gray-400 font-mono" id="sidebar-frequency">— MHz</div>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+    <a href="/" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </a>
+    <a href="/config" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      Configuration
+    </a>
+    <a href="/pige" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+      Pige
+    </a>
+    <a href="/fm" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8zm0 0l13-4M8 14a2 2 0 104 0 2 2 0 00-4 0m8-1h1m-1 3h1"/></svg>
+      FM
+    </a>
+    {% if dab_enabled or (current_user and current_user.role == 'admin') %}
+    <a href="/dab" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01"/></svg>
+      DAB+
+    </a>
+    {% endif %}
+    <a href="/chain" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+      Chaîne
+    </a>
+    <a href="/park" class="sidebar-link active">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      Parc
+    </a>
+    <a href="/logs" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
+      Journaux
+    </a>
+    <a href="/about" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      À propos
+    </a>
+    <a href="https://github.com/LyonelB/BL-RMO" target="_blank" class="sidebar-link">
+      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+      GitHub
+    </a>
+  </nav>
+  <div class="p-4 border-t border-gray-100">
+    <a href="/logout" class="sidebar-link" style="color:#f87171" onmouseover="this.style.background='#fff1f2';this.style.color='#dc2626'" onmouseout="this.style.background='';this.style.color='#f87171'">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Déconnexion
+    </a>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
+<main class="flex-1 overflow-y-auto">
+
+  <header class="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10">
+    <div class="flex items-center gap-2">
+      <button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <h1 class="text-base font-semibold text-gray-900">Parc</h1>
+    </div>
+    <p class="text-xs text-gray-400 mt-0.5">PC de production, NAS et sites web · relevé toutes les minutes</p>
+  </header>
+
+  <div class="p-6 max-w-6xl">
+
+    <div id="notice" class="section hidden" style="border-color:#fde68a;background:#fffbeb">
+      <div class="text-sm font-semibold text-amber-800" id="notice-title"></div>
+      <div class="text-xs text-amber-700 mt-1 leading-relaxed" id="notice-text"></div>
+    </div>
+
+    <!-- ── Synthèse ── -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">PC 24 h/24</div>
+        <div class="flex items-center gap-2"><span id="t-pc-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+          <span class="text-base font-semibold text-gray-900" id="t-pc">-</span></div>
+        <div class="text-xs text-gray-400 mt-1 truncate" id="t-pc-sub">&nbsp;</div>
+      </div>
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">NAS</div>
+        <div class="flex items-center gap-2"><span id="t-nas-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+          <span class="text-base font-semibold text-gray-900" id="t-nas">-</span></div>
+        <div class="text-xs text-gray-400 mt-1 truncate" id="t-nas-sub">&nbsp;</div>
+      </div>
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Sites web</div>
+        <div class="flex items-center gap-2"><span id="t-site-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+          <span class="text-base font-semibold text-gray-900" id="t-site">-</span></div>
+        <div class="text-xs text-gray-400 mt-1 truncate" id="t-site-sub">&nbsp;</div>
+      </div>
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Alertes en cours</div>
+        <div class="text-base font-semibold text-gray-900" id="t-alerts">-</div>
+        <div class="text-xs text-gray-400 mt-1 truncate" id="t-alerts-sub">&nbsp;</div>
+      </div>
+    </div>
+
+    <!-- ── PC ── -->
+    <div class="section" id="pc-section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        PC de production
+        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400">SNMP (HOST-RESOURCES-MIB)</span>
+      </div>
+      <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead><tr class="text-[11px] text-gray-400 uppercase tracking-wide text-left border-b border-gray-100">
+          <th class="py-2 pr-3 font-semibold">PC</th><th class="py-2 pr-3 font-semibold">État</th>
+          <th class="py-2 pr-3 font-semibold w-44">Processeur</th><th class="py-2 pr-3 font-semibold w-60">Disques</th></tr></thead>
+        <tbody id="pc-body"></tbody>
+      </table>
+      </div>
+      <div class="text-[11px] text-gray-400 mt-3">« 24 h/24 » : éteint ou injoignable = alerte. Les autres PC peuvent être éteints : simple information. Processeur : valeur actuelle et maximum depuis l'allumage.</div>
+    </div>
+
+    <!-- ── NAS ── -->
+    <div id="nas-list"></div>
+
+    <!-- ── Sites web ── -->
+    <div class="section" id="site-section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+        Sites web
+        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400">HTTPS et texte attendu</span>
+      </div>
+      <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead><tr class="text-[11px] text-gray-400 uppercase tracking-wide text-left border-b border-gray-100">
+          <th class="py-2 pr-3 font-semibold">Site</th><th class="py-2 pr-3 font-semibold">État</th><th class="py-2 pr-3 font-semibold">Réponse</th>
+          <th class="py-2 pr-3 font-semibold">Disponibilité 24 h</th></tr></thead>
+        <tbody id="site-body" class="text-xs"></tbody>
+      </table>
+      </div>
+      <div class="text-[11px] text-gray-400 mt-3">Alertes : site injoignable ou en erreur (2 relevés de suite), texte attendu absent, réponse lente.</div>
+    </div>
+
+    <!-- ── Événements ── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Derniers événements
+        <button id="ev-toggle" type="button" class="ml-auto inline-flex items-center gap-1 text-[11px] font-medium normal-case tracking-normal text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1"></button>
+      </div>
+      <div id="ev-body" class="text-xs divide-y divide-gray-50"></div>
+      <div id="ev-short" class="text-xs text-gray-500 hidden"></div>
+    </div>
+
+    <!-- ── Réglages (administrateur) ── -->
+    <div class="section need-admin" id="manage">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+        Appareils surveillés <span class="text-[11px] font-normal normal-case tracking-normal text-gray-400">(administrateur)</span>
+        <button type="button" onclick="editDevice(null)" class="ml-auto text-[11px] font-medium normal-case tracking-normal text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-3 py-1">Ajouter</button>
+      </div>
+      <table class="w-full text-sm mb-2">
+        <tbody id="dev-list"></tbody>
+      </table>
+
+      <form id="dev-form" class="hidden border-t border-gray-100 pt-4 mt-2" onsubmit="saveDevice(event)">
+        <div class="text-sm font-semibold text-gray-800 mb-3" id="f-title">Nouvel appareil</div>
+        <div class="grid md:grid-cols-3 gap-4 text-sm">
+          <label class="block"><span class="text-xs text-gray-500">Type</span>
+            <select id="f-kind" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="kindChanged()">
+              <option value="pc">PC Windows (SNMP)</option><option value="nas">NAS Synology (SNMP)</option><option value="site">Site web</option></select></label>
+          <label class="block"><span class="text-xs text-gray-500">Nom</span><input id="f-name" required maxlength="40" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+          <label class="block k-snmp"><span class="text-xs text-gray-500">Adresse IP</span><input id="f-host" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 font-mono" placeholder="192.168.1.x"></label>
+          <label class="block k-site md:col-span-2"><span class="text-xs text-gray-500">Adresse du site</span><input id="f-url" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 font-mono" placeholder="https://www.graffitiradio.fr"></label>
+          <label class="block k-site"><span class="text-xs text-gray-500">Texte attendu (facultatif)</span><input id="f-keyword" maxlength="100" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="ex. Graffiti"></label>
+          <label class="block k-site"><span class="text-xs text-gray-500">Réponse lente au-delà de (ms)</span><input id="f-slow_ms" type="number" min="200" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="5000"></label>
+          <label class="block k-pc"><span class="text-xs text-gray-500">Usage</span>
+            <select id="f-always_on" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"><option value="0">Peut être éteint : simple information</option><option value="1">24 h/24 : éteint = alerte</option></select></label>
+          <label class="block k-pc"><span class="text-xs text-gray-500">Système (affichage)</span><input id="f-os" maxlength="30" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="Windows 11"></label>
+          <label class="block k-snmp"><span class="text-xs text-gray-500">Port SNMP</span><input id="f-port" type="number" min="1" max="65535" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="161"></label>
+          <label class="block k-snmp"><span class="text-xs text-gray-500">Seuil disque (%)</span><input id="f-disk_pct" type="number" min="50" max="100" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="90"></label>
+          <label class="block k-pc"><span class="text-xs text-gray-500">Seuil processeur (%)</span><input id="f-cpu_pct" type="number" min="10" max="100" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="90"></label>
+          <label class="block k-pc"><span class="text-xs text-gray-500">pendant (minutes)</span><input id="f-cpu_minutes" type="number" min="1" max="240" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="10"></label>
+          <label class="block k-nas"><span class="text-xs text-gray-500">Température max (°C)</span><input id="f-temp_max" type="number" min="30" max="90" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="60"></label>
+          <label class="block k-snmp"><span class="text-xs text-gray-500">Version SNMP</span>
+            <select id="f-version" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="kindChanged()"><option value="2c">v2c</option><option value="1">v1</option><option value="3">v3</option></select></label>
+          <label class="block k-snmp k-v12"><span class="text-xs text-gray-500">Communauté</span><input id="f-community" type="password" autocomplete="new-password" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">Utilisateur SNMPv3</span><input id="f-user" autocomplete="off" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">Authentification</span>
+            <select id="f-auth_proto" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"><option>SHA</option><option>MD5</option><option>SHA-224</option><option>SHA-256</option><option>SHA-384</option><option>SHA-512</option></select></label>
+          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">Mot de passe d'authentification</span><input id="f-auth_pass" type="password" autocomplete="new-password" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">Chiffrement</span>
+            <select id="f-priv_proto" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"><option>AES</option><option>DES</option><option>AES192</option><option>AES256</option></select></label>
+          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">Mot de passe de chiffrement</span><input id="f-priv_pass" type="password" autocomplete="new-password" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+          <label class="flex items-center gap-2 mt-6"><input type="checkbox" id="f-alert_email" class="w-4 h-4" checked> Mails pour cet appareil</label>
+          <label class="flex items-center gap-2 mt-6"><input type="checkbox" id="f-enabled" class="w-4 h-4" checked> Surveillé</label>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center gap-2">
+          <button type="button" onclick="testDevice()" class="text-sm border border-gray-200 rounded-lg px-4 py-2 font-medium text-gray-700 hover:bg-gray-50">Tester</button>
+          <button type="submit" class="text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-medium">Enregistrer</button>
+          <button type="button" onclick="closeForm()" class="text-sm text-gray-500 px-3 py-2">Annuler</button>
+          <span id="f-msg" class="text-xs text-gray-500"></span>
+        </div>
+        <pre id="f-test" class="hidden mt-3 text-[11px] bg-slate-50 border border-gray-100 rounded-lg p-3 whitespace-pre-wrap"></pre>
+      </form>
+    </div>
+
+  </div>
+</main>
+
+<script src="/static/spectrum.js"></script>
+<script>
+  const $ = id => document.getElementById(id);
+  const csrf = () => document.querySelector('meta[name="csrf-token"]').content;
+  const isAdmin = document.documentElement.dataset.role === 'admin';
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const pad = n => String(n).padStart(2, '0');
+  const DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+  let st = null, devices = [], editing = null;
+
+  function when(ts) {
+    if (!ts) return '-';
+    const d = new Date(ts * 1000), now = new Date(), hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const day0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    if (d.getTime() >= day0) return hm;
+    if (d.getTime() >= day0 - 86400000) return `hier ${hm}`;
+    if (d.getTime() >= day0 - 6 * 86400000) return `${DAYS[d.getDay()]} ${hm}`;
+    return `le ${pad(d.getDate())}/${pad(d.getMonth() + 1)} à ${hm}`;
+  }
+  function size(b) {
+    if (b == null) return '-';
+    for (const [u, div] of [['To', 1e12], ['Go', 1e9], ['Mo', 1e6]]) if (b >= div) { const v = b / div; return (v < 10 ? v.toFixed(1).replace('.', ',').replace(',0', '') : Math.round(v)) + ' ' + u; }
+    return b + ' o';
+  }
+  const bar = (pct, cls) => `<div class="flex-1 h-1.5 rounded bg-gray-100 overflow-hidden"><div class="h-full ${cls}" style="width:${Math.max(0, Math.min(100, pct || 0))}%"></div></div>`;
+  const fmtPct = v => v == null ? '-' : `${Math.round(v)} %`;
+  const badge24 = '<span class="ml-2 align-middle text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">24 h/24</span>';
+
+  // ── Synthèse ──
+  function renderSummary() {
+    const s = st.summary, dev = st.devices.filter(d => d.enabled);
+    const pcs = dev.filter(d => d.kind === 'pc' && d.always_on);
+    const downPc = pcs.filter(d => d.state === 'off');
+    $('t-pc').textContent = pcs.length ? `${s.pc24_on} en ligne sur ${s.pc24_total}` : 'Aucun';
+    $('t-pc-dot').className = 'w-2.5 h-2.5 rounded-full ' + (!pcs.length ? 'bg-gray-300' : downPc.length ? 'bg-red-500' : 'bg-green-500');
+    $('t-pc-sub').innerHTML = downPc.length ? `<span class="text-red-600">${esc(downPc.map(d => d.name).join(', '))} injoignable${downPc.length > 1 ? 's' : ''} depuis ${when(downPc[0].since)}</span>` : (pcs.length ? esc(pcs.map(d => d.name).join(' · ')) : '&nbsp;');
+    const nas = dev.filter(d => d.kind === 'nas');
+    if (!nas.length) { $('t-nas').textContent = 'Aucun'; $('t-nas-dot').className = 'w-2.5 h-2.5 rounded-full bg-gray-300'; $('t-nas-sub').innerHTML = '&nbsp;'; }
+    else {
+      const n = nas[0], bad = Object.keys(n.alerts || {}).length, off = n.state === 'off';
+      $('t-nas').textContent = off ? 'Injoignable' : bad ? `${bad} alerte${bad > 1 ? 's' : ''}` : n.state === 'on' ? 'Normal' : 'En attente';
+      $('t-nas-dot').className = 'w-2.5 h-2.5 rounded-full ' + (off ? 'bg-red-500' : bad ? 'bg-amber-500' : n.state === 'on' ? 'bg-green-500' : 'bg-gray-300');
+      const v = (n.nas && n.nas.volumes || [])[0];
+      $('t-nas-sub').textContent = [n.name, v && v.pct != null ? `volume ${Math.round(v.pct)} %` : '', n.nas && n.nas.temp != null ? `${n.nas.temp} °C` : ''].filter(Boolean).join(' · ');
+    }
+    const sites = dev.filter(d => d.kind === 'site'), sdown = sites.filter(d => d.state === 'down');
+    $('t-site').textContent = sites.length ? `${s.sites_up} en ligne sur ${s.sites_total}` : 'Aucun';
+    $('t-site-dot').className = 'w-2.5 h-2.5 rounded-full ' + (!sites.length ? 'bg-gray-300' : sdown.length ? 'bg-red-500' : sites.some(d => d.alerts && d.alerts.slow) ? 'bg-amber-500' : 'bg-green-500');
+    const ms = sites.map(d => d.result && d.result.ms).filter(v => v != null);
+    $('t-site-sub').innerHTML = sdown.length ? `<span class="text-red-600">${esc(sdown.map(d => d.name).join(', '))}</span>` : (ms.length ? `réponse moyenne ${Math.round(ms.reduce((a, b) => a + b, 0) / ms.length)} ms` : '&nbsp;');
+    $('t-alerts').textContent = s.alerts.length;
+    $('t-alerts-sub').textContent = s.alerts.length ? s.alerts.slice(0, 3).map(a => a.device).filter((v, i, a) => a.indexOf(v) === i).join(' · ') : 'aucune';
+  }
+
+  // ── PC ──
+  function renderPcs() {
+    const pcs = st.devices.filter(d => d.kind === 'pc' && d.enabled);
+    $('pc-section').classList.toggle('hidden', !pcs.length);
+    pcs.sort((a, b) => (b.always_on && b.state === 'off') - (a.always_on && a.state === 'off'));
+    $('pc-body').innerHTML = pcs.map(d => {
+      const off = d.state === 'off', alarm = off && d.always_on;
+      let state;
+      if (d.state === 'on') state = `<span class="text-green-600 font-medium">Allumé</span><div class="text-[11px] text-gray-500">depuis ${when(d.since)}${d.rebooted_at && Date.now() / 1000 - d.rebooted_at < 86400 ? ' <span class="text-blue-700">(redémarré)</span>' : ''}</div>`;
+      else if (alarm) state = `<span class="text-red-600 font-semibold">Injoignable</span><div class="text-[11px] text-gray-500">depuis ${when(d.since)}</div>`;
+      else if (off) state = `<span class="text-gray-500 font-medium">Éteint</span><div class="text-[11px] text-gray-500">depuis ${when(d.since)}</div>`;
+      else state = `<span class="text-gray-400">En attente du premier relevé</span>${d.error ? `<div class="text-[11px] text-gray-400">${esc(d.error)}</div>` : ''}`;
+      const cpuWarn = d.alerts && d.alerts.cpu;
+      const cpu = d.state === 'on' && d.cpu != null
+        ? `<div class="flex items-center gap-2">${bar(d.cpu, cpuWarn ? 'bg-amber-500' : d.cpu >= (d.cpu_pct || 90) ? 'bg-amber-500' : 'bg-green-500')}<span class="text-xs font-mono text-gray-600 w-9 text-right">${Math.round(d.cpu)} %</span></div>`
+          + (d.cpu_max != null ? `<div class="text-[11px] text-gray-400 mt-0.5">max ${Math.round(d.cpu_max)} % à ${when(d.cpu_max_at)}</div>` : '')
+        : '<span class="text-xs text-gray-300">-</span>';
+      const disks = (d.disks || []);
+      let dk;
+      if (!disks.length) dk = '<span class="text-xs text-gray-300">-</span>';
+      else if (d.state !== 'on') dk = `<span class="text-[11px] text-gray-400">${disks.map(x => `${esc(x.label)} ${Math.round(x.pct)} %`).join(' · ')} au dernier relevé</span>`;
+      else dk = disks.map(x => {
+        const w = x.pct >= (d.disk_pct || 90);
+        return `<div class="flex items-center gap-2"><span class="text-[11px] font-mono text-gray-400 w-6">${esc(x.label)}</span>${bar(x.pct, w ? 'bg-amber-500' : 'bg-green-500')}<span class="text-[11px] font-mono ${w ? 'text-amber-700 font-semibold' : 'text-gray-600'} w-24 text-right whitespace-nowrap">${Math.round(x.pct)} % · ${size(x.size)}</span></div>`;
+      }).join('');
+      return `<tr class="border-b border-gray-50 ${alarm ? 'bg-red-50/50' : ''}">
+        <td class="py-2.5 pr-3"><div class="font-medium text-gray-900">${esc(d.name)}${d.always_on ? badge24 : ''}</div>
+          <div class="text-[11px] text-gray-400 font-mono">${esc(d.host)}${d.os ? ' · ' + esc(d.os) : ''}${/windows 10/i.test(d.os) ? ' <span class="text-amber-700">· sans mises à jour de sécurité</span>' : ''}</div></td>
+        <td class="py-2.5 pr-3 text-xs">${state}</td>
+        <td class="py-2.5 pr-3">${cpu}</td>
+        <td class="py-2.5 pr-3 space-y-1">${dk}</td></tr>`;
+    }).join('');
+  }
+
+  // ── NAS ──
+  const ok = (v, good = 1) => v == null ? '<span class="text-gray-400">-</span>' : v === good ? '<span class="text-green-600 font-medium">Normal</span>' : '<span class="text-red-600 font-semibold">En panne</span>';
+  function renderNas() {
+    const list = st.devices.filter(d => d.kind === 'nas' && d.enabled);
+    $('nas-list').innerHTML = list.map(d => {
+      const n = d.nas || {}, off = d.state === 'off';
+      const row = (k, v) => `<div class="flex justify-between gap-2"><span class="text-gray-500">${k}</span><span class="text-right">${v}</span></div>`;
+      const vols = (n.volumes || []).map(v => {
+        const cls = v.level === 'ok' ? (v.pct >= (d.disk_pct || 90) ? 'bg-amber-500' : 'bg-green-500') : v.level === 'down' ? 'bg-red-500' : 'bg-amber-500';
+        const lab = v.level === 'ok' ? '<span class="text-green-600 font-medium">Normal</span>' : `<span class="${v.level === 'down' ? 'text-red-600' : 'text-amber-700'} font-semibold">${esc(v.status_label)}</span>`;
+        return `<div class="text-xs mb-1 flex justify-between"><span>${esc(v.name)} · ${lab}</span><span class="font-mono text-gray-600">${size(v.used)} / ${size(v.total)}</span></div>
+          <div class="h-2 rounded bg-gray-100 overflow-hidden"><div class="h-full ${cls}" style="width:${v.pct || 0}%"></div></div>
+          <div class="text-[11px] text-gray-400 mt-1 mb-3">${v.pct != null ? Math.round(v.pct) + ' %' : ''}</div>`;
+      }).join('') || '<div class="text-xs text-gray-400 mb-3">-</div>';
+      const disks = (n.disks || []).map(x => `<div class="border ${x.ok ? 'border-gray-100' : 'border-red-200 bg-red-50/40'} rounded-lg p-2"><div class="font-medium text-gray-700">${esc(x.name)}</div>
+          <div class="${x.ok ? 'text-green-600' : 'text-red-600 font-semibold'}">${esc(x.ok ? 'Normal' : (x.health_label && x.health !== 1 ? x.health_label : x.status_label))}</div>
+          <div class="text-gray-400 font-mono">${x.temp != null ? x.temp + ' °C' : ''}</div><div class="text-gray-400 truncate" title="${esc(x.model)}">${esc(x.model)}</div></div>`).join('');
+      const tmax = d.temp_max || 60;
+      return `<div class="section">
+        <div class="section-title"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+          NAS <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400">SNMP (SYNOLOGY-MIB)</span></div>
+        <div class="grid md:grid-cols-4 gap-4 ${off ? 'opacity-60' : ''}">
+          <div>
+            <div class="font-medium text-gray-900">${esc(d.name)}</div>
+            <div class="text-[11px] text-gray-400 font-mono">${esc(d.host)}${n.model ? ' · ' + esc(n.model) : ''}${n.version ? ' · ' + esc(n.version) : ''}</div>
+            <div class="mt-2 text-xs space-y-1">
+              ${off ? row('État', `<span class="text-red-600 font-semibold">Injoignable</span> <span class="text-gray-400">depuis ${when(d.since)}</span>`) : ''}
+              ${row('Système', ok(n.status))}
+              ${row('Température', n.temp == null ? '-' : `<span class="font-mono ${n.temp >= tmax ? 'text-red-600 font-semibold' : 'text-gray-700'}">${n.temp} °C</span>`)}
+              ${row('Ventilateurs', n.fan == null ? '-' : ok(n.fan === 1 && (n.cpu_fan == null || n.cpu_fan === 1) ? 1 : 2))}
+              ${row('Alimentation', ok(n.power))}
+              ${row('Démarré', d.state === 'on' ? when(d.since) : '-')}
+              ${row('Mise à jour DSM', n.upgrade ? `<span class="${n.upgrade === 'disponible' ? 'text-blue-700' : 'text-gray-700'}">${esc(n.upgrade)}</span>` : '-')}
+            </div>
+          </div>
+          <div class="md:col-span-2">
+            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Volumes</div>${vols}
+            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Disques</div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">${disks || '<span class="text-gray-400">-</span>'}</div>
+          </div>
+          <div>
+            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Charge</div>
+            <div class="text-xs flex justify-between"><span class="text-gray-500">Processeur</span><span class="font-mono">${fmtPct(d.cpu)}</span></div>
+            <div class="h-1.5 rounded bg-gray-100 overflow-hidden mt-1 mb-2"><div class="h-full bg-green-500" style="width:${d.cpu || 0}%"></div></div>
+            <div class="text-xs flex justify-between"><span class="text-gray-500">Mémoire</span><span class="font-mono">${fmtPct(d.ram_pct)}</span></div>
+            <div class="h-1.5 rounded bg-gray-100 overflow-hidden mt-1"><div class="h-full bg-green-500" style="width:${d.ram_pct || 0}%"></div></div>
+            <div class="text-[11px] text-gray-400 mt-3">Alertes : système, alimentation, ventilateur, disque, volume dégradé, volume plein (${d.disk_pct || 90} %), température (${tmax} °C), injoignable.</div>
+          </div>
+        </div></div>`;
+    }).join('');
+  }
+
+  // ── Sites ──
+  function renderSites() {
+    const sites = st.devices.filter(d => d.kind === 'site' && d.enabled);
+    $('site-section').classList.toggle('hidden', !sites.length);
+    $('site-body').innerHTML = sites.map(d => {
+      const r = d.result || {}, down = d.state === 'down';
+      const label = d.url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      const state = down ? `<span class="text-red-600 font-semibold">Injoignable</span><div class="text-[11px] text-gray-500">depuis ${when(d.since)} · ${esc(r.message || '')}</div>`
+        : d.state === 'up' ? (d.alerts && d.alerts.slow ? '<span class="text-amber-700 font-semibold">Lent</span>' : '<span class="text-green-600 font-medium">En ligne</span>')
+        : !r.ok && r.message ? `<span class="text-amber-700">${esc(r.message)}</span>` : '<span class="text-gray-400">En attente</span>';
+      return `<tr class="border-b border-gray-50 ${down ? 'bg-red-50/50' : ''}">
+        <td class="py-2.5 pr-3"><a href="${esc(d.url)}" target="_blank" rel="noopener" class="font-medium text-gray-900 text-sm hover:text-blue-700">${esc(d.name || label)}</a>${d.name && d.name !== label ? `<div class="text-[11px] text-gray-400 font-mono">${esc(label)}</div>` : ''}</td>
+        <td class="py-2.5 pr-3">${state}</td>
+        <td class="py-2.5 pr-3 font-mono text-gray-600">${r.code ? r.code : '-'}${r.ms != null ? ' · ' + r.ms + ' ms' : ''}</td>
+        <td class="py-2.5 pr-3 font-mono text-gray-600">${d.availability != null ? String(d.availability).replace('.', ',') + ' %' : '-'}</td></tr>`;
+    }).join('');
+  }
+
+  // ── Événements ──
+  const EV_CLS = { alert: 'text-red-600 font-semibold', restored: 'text-green-600 font-semibold', info: 'text-gray-500' };
+  const EV_LBL = { down: 'Injoignable', on: 'Allumé', off: 'Éteint', reboot: 'Redémarrage', disk: 'Disque', cpu: 'Processeur', nas: 'NAS', slow: 'Lent' };
+  function evTime(ts) { const d = new Date(ts); return when(d.getTime() / 1000); }
+  function renderEvents() {
+    const ev = st.events || [];
+    const label = e => e.level === 'restored' ? 'Rétabli' : e.kind === 'down' && e.level === 'alert' ? 'Injoignable' : EV_LBL[e.kind] || e.kind;
+    $('ev-body').innerHTML = ev.length ? ev.slice(0, 20).map(e => `<div class="py-2 flex gap-3"><span class="font-mono text-gray-400 w-28 flex-shrink-0">${evTime(e.timestamp)}</span>
+        <span class="${EV_CLS[e.level] || ''} w-28 flex-shrink-0">${esc(label(e))}</span><span class="text-gray-700">${esc(e.device_name)} : ${esc(e.message)}${e.email_sent ? ' <span class="text-gray-400">· mail envoyé</span>' : ''}</span></div>`).join('')
+      : '<div class="py-3 text-gray-400">Aucun événement pour le moment.</div>';
+    const e = ev[0];
+    $('ev-short').innerHTML = e ? `Dernier : <span class="text-gray-800 font-medium">${esc(e.device_name)}, ${esc(e.message)}</span> · ${evTime(e.timestamp)}` : 'Aucun événement.';
+  }
+
+  async function load() {
+    try {
+      const r = await fetch('/api/park/status', { credentials: 'include' });
+      if (r.status === 401) { location.href = '/login?timeout=1'; return; }
+      st = await r.json();
+      if (st.status === 'error') throw new Error(st.message);
+      $('notice').classList.toggle('hidden', st.devices.length > 0);
+      $('notice-title').textContent = 'Aucun appareil surveillé';
+      $('notice-text').textContent = isAdmin ? 'Ajoutez les PC, le NAS et les sites web dans « Appareils surveillés », en bas de page.' : "Un administrateur doit ajouter les appareils à surveiller.";
+      renderSummary(); renderPcs(); renderNas(); renderSites(); renderEvents();
+    } catch (e) {
+      $('notice').classList.remove('hidden'); $('notice-title').textContent = 'Surveillance du parc indisponible'; $('notice-text').textContent = e.message;
+    }
+  }
+
+  // ── Réglages ──
+  const KIND_LBL = { pc: 'PC', nas: 'NAS', site: 'Site web' };
+  async function loadDevices() {
+    if (!isAdmin) return;
+    const r = await fetch('/api/park/devices', { credentials: 'include' });
+    devices = (await r.json()).devices || [];
+    $('dev-list').innerHTML = devices.map((d, i) => `<tr class="border-b border-gray-50">
+        <td class="py-2 pr-3 w-20 text-[11px] text-gray-400 uppercase">${KIND_LBL[d.kind]}</td>
+        <td class="py-2 pr-3"><span class="font-medium ${d.enabled ? 'text-gray-900' : 'text-gray-400 line-through'}">${esc(d.name)}</span>${d.always_on ? badge24 : ''}</td>
+        <td class="py-2 pr-3 font-mono text-xs text-gray-500">${esc(d.config.host || d.config.url || '')}</td>
+        <td class="py-2 text-right whitespace-nowrap text-xs">
+          <button type="button" class="text-gray-400 hover:text-gray-700 px-1" ${i ? '' : 'disabled'} onclick="move(${i}, -1)" title="Monter">↑</button>
+          <button type="button" class="text-gray-400 hover:text-gray-700 px-1" ${i < devices.length - 1 ? '' : 'disabled'} onclick="move(${i}, 1)" title="Descendre">↓</button>
+          <button type="button" class="text-blue-600 ml-2" onclick="editDevice(${d.id})">Modifier</button>
+          <button type="button" class="text-red-500 ml-2" onclick="delDevice(${d.id})">Supprimer</button></td></tr>`).join('')
+      || '<tr><td class="py-3 text-xs text-gray-400">Aucun appareil.</td></tr>';
+  }
+  async function api(url, method, body) {
+    const r = await fetch(url, { method, credentials: 'include', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }, body: body ? JSON.stringify(body) : undefined });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || d.status === 'error') throw new Error(d.message || `Erreur ${r.status}`);
+    return d;
+  }
+  async function move(i, dir) {
+    const ids = devices.map(d => d.id); [ids[i], ids[i + dir]] = [ids[i + dir], ids[i]];
+    await api('/api/park/reorder', 'POST', { ids }); loadDevices(); load();
+  }
+  async function delDevice(id) {
+    if (!confirmDel(id)) return;
+    await api(`/api/park/devices/${id}`, 'DELETE'); loadDevices(); load();
+  }
+  let delArm = null;
+  function confirmDel(id) {           // deux clics, sans boîte de dialogue du navigateur
+    if (delArm === id) { delArm = null; return true; }
+    delArm = id;
+    const btn = [...document.querySelectorAll('#dev-list button')].find(b => b.getAttribute('onclick') === `delDevice(${id})`);
+    if (btn) { btn.textContent = 'Confirmer ?'; setTimeout(() => { if (delArm === id) { delArm = null; btn.textContent = 'Supprimer'; } }, 4000); }
+    return false;
+  }
+  const FIELDS = ['name', 'host', 'port', 'url', 'keyword', 'slow_ms', 'os', 'disk_pct', 'cpu_pct', 'cpu_minutes', 'temp_max', 'version', 'community', 'user', 'auth_proto', 'auth_pass', 'priv_proto', 'priv_pass'];
+  function kindChanged() {
+    const k = $('f-kind').value, v3 = $('f-version').value === '3';
+    document.querySelectorAll('#dev-form [class*="k-"]').forEach(el => {
+      const c = el.classList;
+      let show = (c.contains('k-snmp') && k !== 'site') || (c.contains('k-site') && k === 'site') || (c.contains('k-pc') && k === 'pc') || (c.contains('k-nas') && k === 'nas');
+      if (c.contains('k-v3') && !v3) show = false;
+      if (c.contains('k-v12') && v3) show = false;
+      el.classList.toggle('hidden', !show);
+    });
+  }
+  function editDevice(id) {
+    const d = id ? devices.find(x => x.id === id) : null;
+    editing = id;
+    $('f-title').textContent = d ? `Modifier : ${d.name}` : 'Nouvel appareil';
+    $('f-kind').value = d ? d.kind : 'pc'; $('f-kind').disabled = !!d;
+    const c = d ? d.config : {};
+    const defaults = { port: 161, slow_ms: 5000, disk_pct: 90, cpu_pct: 90, cpu_minutes: 10, temp_max: 60, version: '2c', auth_proto: 'SHA', priv_proto: 'AES' };
+    FIELDS.forEach(f => { const el = $('f-' + f); el.value = f === 'name' ? (d ? d.name : '') : (c[f] ?? defaults[f] ?? ''); });
+    $('f-always_on').value = d && d.always_on ? '1' : '0';
+    $('f-alert_email').checked = d ? d.alert_email !== false : true;
+    $('f-enabled').checked = d ? d.enabled !== false : true;
+    $('f-msg').textContent = ''; $('f-test').classList.add('hidden');
+    $('dev-form').classList.remove('hidden'); kindChanged();
+    $('f-name').focus();
+  }
+  function closeForm() { $('dev-form').classList.add('hidden'); editing = null; }
+  function formData() {
+    const k = $('f-kind').value, config = {};
+    FIELDS.filter(f => f !== 'name').forEach(f => { const v = $('f-' + f).value; if (v !== '') config[f] = v; });
+    if (config.version === '3') config.level = 'authPriv';
+    const body = { kind: k, name: $('f-name').value.trim(), config, alert_email: $('f-alert_email').checked, enabled: $('f-enabled').checked, always_on: $('f-always_on').value === '1' };
+    if (editing) body.id = editing;
+    return body;
+  }
+  async function testDevice() {
+    $('f-msg').className = 'text-xs text-gray-500'; $('f-msg').textContent = 'Test en cours…';
+    try {
+      const r = (await api('/api/park/test', 'POST', formData())).result;
+      $('f-msg').className = 'text-xs ' + (r.ok ? 'text-green-600' : 'text-red-600');
+      $('f-msg').textContent = r.ok ? 'Répond.' : (r.message || 'Échec');
+      const x = r.data;
+      let txt = '';
+      if (x && x.disks && 'sysname' in x) txt = `Nom : ${x.sysname}\nProcesseur : ${x.cpu ?? '-'} % (${x.cores} cœurs)\nDisques : ${x.disks.map(d => `${d.label} ${Math.round(d.pct)} % de ${size(d.size)}`).join(', ') || '-'}`;
+      else if (x && x.volumes) txt = `Modèle : ${x.model} ${x.version}\nSystème : ${x.status === 1 ? 'normal' : x.status}\nTempérature : ${x.temp} °C\nDisques : ${x.disks.map(d => `${d.name} ${d.ok ? 'normal' : d.status_label}`).join(', ')}\nVolumes : ${x.volumes.map(v => `${v.name} ${v.status_label} ${v.pct != null ? Math.round(v.pct) + ' %' : ''}`).join(', ')}`;
+      else if (x && 'code' in x) txt = `${x.message}${x.code ? ` · HTTP ${x.code}` : ''}${x.ms != null ? ` · ${x.ms} ms` : ''}`;
+      $('f-test').textContent = txt; $('f-test').classList.toggle('hidden', !txt);
+    } catch (e) { $('f-msg').className = 'text-xs text-red-600'; $('f-msg').textContent = e.message; }
+  }
+  async function saveDevice(ev) {
+    ev.preventDefault();
+    try {
+      if (editing) await api(`/api/park/devices/${editing}`, 'PUT', formData());
+      else await api('/api/park/devices', 'POST', formData());
+      closeForm(); loadDevices(); setTimeout(load, 1500); load();
+    } catch (e) { $('f-msg').className = 'text-xs text-red-600'; $('f-msg').textContent = e.message; }
+  }
+
+  // ── Menu ──
+  async function updateSidebarFrequency() {
+    try {
+      const config = await (await fetch('/api/config/full', { credentials: 'include' })).json();
+      $('sidebar-frequency').textContent = (config.rtl_sdr?.frequency || '88.6M').replace('M', ' MHz');
+    } catch (error) { }
+  }
+  function toggleSidebar() { $('sidebar').classList.toggle('-translate-x-full'); $('sidebar-overlay').classList.toggle('hidden'); }
+  function closeSidebar() { $('sidebar').classList.add('-translate-x-full'); $('sidebar-overlay').classList.add('hidden'); }
+
+  BLRMO.collapsible('blrmo-park-events', [[$('ev-body'), true], [$('ev-short'), false]], $('ev-toggle'));
+  updateSidebarFrequency();
+  load(); loadDevices();
+  setInterval(load, 15000);
+</script>
+</body>
+</html>

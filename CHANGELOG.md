@@ -6,6 +6,18 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Chaîne : plus de « dégradé » pour un paquet SNMP perdu
+- Les appareils qui ne renvoient qu'une valeur par requête (émetteur BW Broadcast) sont interrogés OID par OID, sans nouvel essai : un seul paquet perdu sur la liaison vers le pylône donnait « OID absent » et un mail « dégradé » (BW TX600, Régulation, le 27/10 à 17:47). Chaque requête perdue est maintenant retentée une fois ; sans réponse, la valeur est notée « pas de réponse » sans changer l'état. « OID absent » ne reste que si l'appareil répond que l'OID n'existe pas.
+
+### Nouvelle page Parc : PC de production, NAS et sites web
+- **PC Windows** (SNMP, HOST-RESOURCES-MIB) : allumé ou éteint et depuis quand, processeur (moyenne des cœurs, maximum depuis l'allumage), occupation des disques fixes. « 24 h/24 » : injoignable et redémarrage = alerte ; les autres PC peuvent être éteints (simple information). « Allumé depuis » est noté par BL-RMO, car avec le démarrage rapide de Windows la durée de fonctionnement ne repart pas de zéro après un arrêt.
+- **NAS Synology** (SNMP v2c ou v3, SYNOLOGY-MIB) : système, alimentation, ventilateurs, température, disques (état et santé), volumes (état et remplissage), mise à jour DSM, processeur et mémoire.
+- **Sites web** : réponse HTTPS (certificat vérifié), texte attendu, temps de réponse, disponibilité sur 24 h.
+- Alertes par mail à l'apparition et au retour : injoignable, redémarrage, disque presque plein, processeur saturé, défauts du NAS, site en erreur ou lent ; journal des événements sur la page.
+- Appareils ajoutés et réglés sur la page (administrateur), bouton Tester ; tables `park_devices`, `park_events`, `park_samples` dans `fm_monitor.db`.
+- `install/windows/activer-snmp-bl-rmo.ps1` : installe le service SNMP de Windows 10 ou 11, en lecture seule et réservé à BL-RMO, et ouvre le pare-feu pour lui seul.
+- Lien « Parc » dans le menu de toutes les pages.
+
 ### Connexion refusée après une fin de session
 - Après une déconnexion pour inactivité, la connexion échouait (« Erreur de connexion au serveur ») tant que la page n'était pas rechargée : le jeton de sécurité (CSRF) de la page de connexion avait expiré (onglet resté ouvert plus d'une heure), ou avait été effacé par un autre onglet BL-RMO qui interrogeait le serveur au moment où la session expirait.
 - La page de connexion demande un jeton frais à chaque essai et réessaie une fois si le jeton est refusé ; la fin de session ne retire plus que la connexion, pas le jeton.

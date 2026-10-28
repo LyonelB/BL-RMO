@@ -84,6 +84,12 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 - **Sondes réseau** (rafales de pings : pertes, latence, gigue) rattachées aux liens
 - **Historique en courbes**, alertes mail avec les valeurs en défaut, export ZIP
 
+### 🖥️ Parc (PC, NAS, sites web)
+- **PC Windows** en SNMP : allumé ou éteint et depuis quand, processeur (valeur actuelle et maximum depuis l'allumage), occupation des disques ; « 24 h/24 » : éteint ou redémarrage = alerte, sinon simple information
+- **NAS Synology** en SNMP (v2c ou v3) : système, alimentation, ventilateurs, température, disques, volumes, mise à jour DSM
+- **Sites web** : réponse HTTPS, texte attendu, temps de réponse, disponibilité sur 24 h
+- SNMP sur un PC Windows 10 ou 11 : `install/windows/activer-snmp-bl-rmo.ps1` (PowerShell en administrateur), lecture seule, réservé à l'adresse de BL-RMO
+
 ### 📜 Journaux et traps
 - **Serveur syslog** UDP 514 (service `bl-rmo-syslog`) : les appareils de la radio envoient leurs journaux à BL-RMO
 - **Traps SNMP** UDP 162 traduits en français, avec relevé immédiat de l'appareil
@@ -215,6 +221,7 @@ bl-rmo/
 ├── tef_driver.py       # Pilote du tuner TEF668X (protocole XDR)
 ├── tef_audio_analyzer.py # Analyse audio (niveaux, spectre, S/B)
 ├── chain_probe.py      # Supervision de la chaîne (SNMP, sondes, événements)
+├── park.py             # Parc : PC Windows, NAS Synology, sites web
 ├── audio_defects.py    # Défauts audio : micro-coupures, clics, craquements
 ├── pige.py             # Pige 30 jours (enregistreur et export)
 ├── pige_archive.py     # Extraits audio des dernières alertes
@@ -226,6 +233,7 @@ bl-rmo/
 ├── database.py         # Base SQLite (historique, alertes)
 ├── install.sh          # Installation complète
 ├── install/build/      # Étapes d'installation (pige, journaux...)
+├── install/windows/    # Script d'activation SNMP pour les PC Windows
 ├── update.sh           # Mise à jour
 ├── templates/          # Pages : tableau de bord, pige, chaîne, journaux...
 └── static/             # CSS et JS

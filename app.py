@@ -77,7 +77,7 @@ def check_session_timeout():
     # Endpoints exclus du check session (polling automatique)
     POLLING_ENDPOINTS = ('logs_search', 'logs_sources', 'chain_status', 'stream_stats', 'stream_spectrum', 'proxy_stream', 'static',
                          'get_stats', 'get_signal_history', 'get_record_status',
-                         'pige_status')
+                         'pige_status', 'park_status')
     if request.endpoint in POLLING_ENDPOINTS:
         # Vérifier expiration mais NE PAS mettre à jour last_active
         if session.get('logged_in'):
@@ -2163,6 +2163,88 @@ def dashboard_data():
     return jsonify(data)
 
 
+# ── Parc : PC de production, NAS, sites web (PARK_PATCH) ───────────────
+park_monitor = None
+
+
+def _park_ready():
+    if park_monitor is None:
+        return jsonify({'status': 'error', 'message': 'Surveillance du parc non démarrée'}), 503
+    return None
+
+
+@app.route('/park')
+@auth.login_required
+def park_page():
+    return render_template('park.html')
+
+
+@app.route('/api/park/status')
+@auth.login_required
+@limiter.exempt
+def park_status():
+    return _park_ready() or jsonify(park_monitor.status())
+
+
+@app.route('/api/park/devices', methods=['GET', 'POST'])
+@auth.login_required
+@limiter.exempt
+def park_devices():
+    err = _park_ready()
+    if err:
+        return err
+    if request.method == 'GET':
+        return jsonify({'devices': park_monitor.list_devices()})
+    try:
+        did = park_monitor.create_device(request.get_json(silent=True) or {})
+    except ValueError as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+    return jsonify({'status': 'success', 'id': did})
+
+
+@app.route('/api/park/devices/<int:device_id>', methods=['PUT', 'DELETE'])
+@auth.login_required
+@limiter.exempt
+def park_device(device_id):
+    err = _park_ready()
+    if err:
+        return err
+    try:
+        if request.method == 'DELETE':
+            park_monitor.delete_device(device_id)
+        else:
+            park_monitor.update_device(device_id, request.get_json(silent=True) or {})
+    except KeyError:
+        return jsonify({'status': 'error', 'message': 'Appareil inconnu'}), 404
+    except ValueError as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+    return jsonify({'status': 'success'})
+
+
+@app.route('/api/park/test', methods=['POST'])
+@auth.login_required
+@limiter.exempt
+def park_test():
+    err = _park_ready()
+    if err:
+        return err
+    try:
+        return jsonify({'status': 'success', 'result': park_monitor.test(request.get_json(silent=True) or {})})
+    except ValueError as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+
+
+@app.route('/api/park/reorder', methods=['POST'])
+@auth.login_required
+@limiter.exempt
+def park_reorder():
+    err = _park_ready()
+    if err:
+        return err
+    park_monitor.reorder((request.get_json(silent=True) or {}).get('ids') or [])
+    return jsonify({'status': 'success'})
+
+
 ROLE_ALWAYS = {'login', 'logout', 'get_csrf_token', 'public_dashboard', 'static', 'chain_hook', 'dashboard_data'}
 # Lecteur : consulter et écouter
 ROLE_LECTEUR = {
@@ -2176,8 +2258,9 @@ ROLE_LECTEUR = {
     'dab_page', 'dab_status', 'dab_events', 'dab_uptime', 'dab_slide', 'dab_listen',
     'audio_defects_list', 'audio_defect_clip', 'system_summary',
     'fm_page', 'stream_spectrum', 'dab_dls_history',
+    'park_page', 'park_status',
 }
-ROLE_LECTEUR_GET = {'chain_devices', 'chain_device', 'logs_rules', 'dab_settings'}      # lecture seule pour ces routes
+ROLE_LECTEUR_GET = {'chain_devices', 'chain_device', 'logs_rules', 'dab_settings', 'park_devices'}      # lecture seule pour ces routes
 # Opérateur : exporter, enregistrer, intervenir sans rien régler
 ROLE_OPERATEUR = {
     'pige_export', 'chain_export', 'logs_export', 'record_start', 'record_stop', 'record_download',
@@ -2419,6 +2502,15 @@ try:
     chain_monitor.start()
 except Exception as e:
     logger.error(f"Erreur démarrage supervision chaîne: {e}")
+
+
+# Démarrage de la surveillance du parc (PARK_PATCH)
+try:
+    from park import ParkMonitor
+    park_monitor = ParkMonitor('fm_monitor.db', alert_getter=lambda: getattr(monitor, 'email_alert', None))
+    park_monitor.start()
+except Exception as e:
+    logger.error(f"Erreur démarrage surveillance du parc: {e}")
 
 
 # Extraits des dernières alertes (PIGE_ARCHIVE_PATCH)
