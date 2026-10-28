@@ -39,7 +39,8 @@ logger = logging.getLogger(__name__)
 
 KINDS = ('pc', 'nas', 'site')
 INTERVAL = 60                  # s entre deux relevés
-FAILS_DOWN = 2                 # relevés manqués de suite avant « éteint » ou « injoignable »
+FAILS_DOWN = 2                 # sites : relevés en erreur de suite avant « injoignable »
+REBOOT_TOLERANCE = 300         # s d'écart sur l'heure de démarrage avant de conclure à un redémarrage
 EVENTS_RETENTION_DAYS = 90
 SAMPLES_RETENTION_DAYS = 7     # disponibilité des sites
 
@@ -117,6 +118,8 @@ def validate_device(data, existing=None):
         'alert_email': bool(data.get('alert_email', True)),
         'enabled': bool(data.get('enabled', True)),
         'notes': str(data.get('notes', '')).strip()[:200],
+        # Délai avant « injoignable » / « SNMP ne répond plus » (un relevé manqué n'alerte pas)
+        'down_minutes': _num(data.get('down_minutes'), 'Délai avant alerte', 3, 1, 60, integer=True),
     }
     cfg = {}
     if kind in ('pc', 'nas'):
@@ -166,13 +169,13 @@ def _auth_args(cfg):
     return ['-v', cfg.get('version', '2c'), '-c', cfg['community']]
 
 
-def _snmp(tool, cfg, oids, timeout=2):
+def _snmp(tool, cfg, oids, timeout=3):
     """Lance snmpget/snmpwalk, renvoie {oid numérique: valeur brute}."""
     if not shutil.which(tool):
         raise SnmpError(f'Commande {tool} absente (sudo apt install snmp)')
-    cmd = [tool] + _auth_args(cfg) + ['-t', str(timeout), '-r', '1', '-On', '-OQ', '-Oe', '-Ot', '-m', '', f"{cfg['host']}:{cfg.get('port', 161)}"] + oids
+    cmd = [tool] + _auth_args(cfg) + ['-t', str(timeout), '-r', '2', '-On', '-OQ', '-Oe', '-Ot', '-m', '', f"{cfg['host']}:{cfg.get('port', 161)}"] + oids
     try:
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout * 2 * max(1, len(oids)) + 10)
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout * 3 * max(1, len(oids)) + 15)
     except subprocess.TimeoutExpired:
         raise SnmpError('Pas de réponse SNMP')
     err = (p.stderr or '').strip()
@@ -253,9 +256,20 @@ def probe_nas(cfg):
     v = {k: got.get(o) for k, o in oids.items()}
     if v['status'] is None and v['model'] is None:
         raise SnmpError("Répond, mais sans les informations Synology")
-    disks_t = _snmp('snmpwalk', cfg, [SYNO_DISK])
-    raid_t = _snmp('snmpwalk', cfg, [SYNO_RAID])
-    cpu = [x for x in (_int(c) for c in _snmp('snmpwalk', cfg, [HR_CPU_LOAD]).values()) if x is not None]
+    # Les tables (disques, volumes, processeur) sont relues à part : si le NAS, très
+    # chargé, n'en renvoie pas une à temps, les valeurs précédentes sont gardées
+    # plutôt que de compter le NAS comme injoignable.
+    partial = []
+
+    def walk(oid, what):
+        try:
+            return _snmp('snmpwalk', cfg, [oid])
+        except SnmpError:
+            partial.append(what)
+            return None
+    disks_t, raid_t, cpu_t = walk(SYNO_DISK, 'disks'), walk(SYNO_RAID, 'volumes'), walk(HR_CPU_LOAD, 'cpu')
+    disks_t, raid_t = disks_t or {}, raid_t or {}
+    cpu = [x for x in (_int(c) for c in (cpu_t or {}).values()) if x is not None]
     disks = []
     names, models = _column(disks_t, SYNO_DISK, 2), _column(disks_t, SYNO_DISK, 3)
     status, temps, health = _column(disks_t, SYNO_DISK, 5), _column(disks_t, SYNO_DISK, 6), _column(disks_t, SYNO_DISK, 13)
@@ -288,7 +302,7 @@ def probe_nas(cfg):
             'upgrade': SYNO_UPGRADE.get(_int(v['upgrade']), ''),
             'uptime': up / 100.0 if up is not None else None,
             'cpu': round(sum(cpu) / len(cpu), 1) if cpu else None, 'ram_pct': mem,
-            'disks': disks, 'volumes': vols}
+            'disks': disks, 'volumes': vols, 'partial': partial}
 
 
 def probe_site(cfg, timeout=10):
@@ -312,6 +326,28 @@ def probe_site(cfg, timeout=10):
         return {'ok': False, 'message': f'Texte « {kw} » absent de la page', 'code': r.status_code, 'ms': ms}
     slow = ms > int(cfg.get('slow_ms') or 5000)
     return {'ok': True, 'slow': slow, 'message': 'Réponse lente' if slow else 'En ligne', 'code': r.status_code, 'ms': ms}
+
+
+def host_alive(host, ports=(445, 139, 135, 5000, 22, 80)):
+    """L'appareil répond-il sur le réseau (ping, ou un port TCP courant) ? Sert à
+    distinguer « SNMP ne répond plus » (appareil allumé) de « injoignable ».
+    Windows bloque souvent le ping : le partage de fichiers (445) répond quand même."""
+    import socket
+    if shutil.which('ping'):
+        try:
+            if subprocess.run(['ping', '-n', '-c', '1', '-W', '1', host], capture_output=True, timeout=4).returncode == 0:
+                return True
+        except subprocess.TimeoutExpired:
+            pass
+    for port in ports:
+        try:
+            with socket.create_connection((host, port), timeout=1):
+                return True
+        except ConnectionRefusedError:
+            return True                       # port fermé, mais l'appareil a répondu
+        except OSError:
+            continue
+    return False
 
 
 def run_probe(dev):
@@ -484,7 +520,7 @@ class ParkMonitor:
                     data = probe_pc(dev['config']) if dev['kind'] == 'pc' else probe_nas(dev['config'])
                     self._record_snmp(dev, data, None)
                 except SnmpError as e:
-                    self._record_snmp(dev, None, str(e))
+                    self._record_snmp(dev, None, str(e), host_alive(dev['config']['host']))
         except Exception as e:
             logger.exception(f"Parc : relevé de {dev.get('name')} : {e}")
         finally:
@@ -543,7 +579,7 @@ class ParkMonitor:
         except sqlite3.Error:
             pass
 
-    def _record_snmp(self, dev, data, error):
+    def _record_snmp(self, dev, data, error, alive=None):
         did, now = dev['id'], time.time()
         with self._lock:
             st = self._state.setdefault(did, {'alerts': {}})
@@ -553,48 +589,71 @@ class ParkMonitor:
         pc = dev['kind'] == 'pc'
         always = pc and dev.get('always_on') or dev['kind'] == 'nas'
         prev = st.get('state')
+        delay = 60 * int(dev.get('down_minutes') or 3)
         if data is None:
-            st['fails'] = st.get('fails', 0) + 1
             st['error'] = error
-            if st['fails'] >= FAILS_DOWN and prev != 'off':
-                st['state'], st['since'] = 'off', st.get('last_seen') or now
+            st['alive'] = alive
+            st['silent_since'] = st.get('silent_since') or st.get('last_seen') or now
+            if now - st['silent_since'] < delay:
+                self._save_state(did, st)          # un relevé manqué : on attend le délai
+                return
+            if alive and prev != 'snmp':
+                # Répond sur le réseau, mais plus en SNMP : ni éteint ni redémarré
+                if prev == 'off' and always:
+                    st['alerts'].pop('down', None)
+                    self._event(dev, 'down', 'restored', 'Répond de nouveau sur le réseau (SNMP muet)', f"{name} rétabli")
+                st['state'], st['since'] = 'snmp', st['silent_since']
+                st['alerts']['snmp'] = 'SNMP ne répond plus'
+                self._event(dev, 'snmp', 'alert', f"SNMP ne répond plus ({error}), l'appareil répond sur le réseau",
+                            f"{name} : SNMP ne répond plus")
+            elif not alive and prev != 'off':
+                if st['alerts'].pop('snmp', None):
+                    self._event(dev, 'snmp', 'restored', 'Plus de réponse SNMP ni réseau : voir « injoignable »')
+                st['state'], st['since'] = 'off', st['silent_since']
                 if always:
                     st['alerts']['down'] = 'Injoignable'
-                    self._event(dev, 'down', 'alert', f"Ne répond plus ({error})", f"{name} injoignable")
-                elif prev == 'on':
+                    self._event(dev, 'down', 'alert', f"Ne répond plus, ni en SNMP ni sur le réseau ({error})", f"{name} injoignable")
+                else:
                     self._event(dev, 'off', 'info', 'Éteint')
                 st['cpu'] = None
             self._save_state(did, st)
             return
-        # Répond
-        st['fails'], st['error'] = 0, ''
+        # Répond en SNMP
+        st['error'], st['silent_since'], st['alive'] = '', None, True
         st['last_seen'] = now
-        old_up, up = st.get('uptime'), data.get('uptime')
-        rebooted = always and old_up is not None and up is not None and up + 120 < old_up
-        if prev != 'on':
-            off_since = st.get('since') or now
-            st['state'], st['since'] = 'on', now
+        up = data.get('uptime')
+        boot = now - up if up is not None else None
+        old_boot = st.get('boot')
+        rebooted = always and boot is not None and old_boot is not None and boot - old_boot > REBOOT_TOLERANCE
+        if always and boot is not None:
+            st['boot'] = boot
+        if rebooted:
+            st['rebooted_at'] = now
             st['cpu_max'], st['cpu_max_at'] = None, None
-            if prev == 'off':
+        if prev != 'on':
+            st['state'], st['since'] = 'on', now
+            if prev == 'snmp':
+                st['alerts'].pop('snmp', None)
+                self._event(dev, 'snmp', 'restored', 'SNMP répond de nouveau' + (' (redémarré)' if rebooted else ''),
+                            f"{name} : SNMP rétabli" + (' (redémarré)' if rebooted else ''))
+            elif prev == 'off':
                 if always:
                     st['alerts'].pop('down', None)
-                    # Démarré pendant la coupure : uptime plus court que la coupure
-                    boot = up is not None and up < now - off_since + 120
-                    if boot:
-                        st['since'] = now - up
-                    self._event(dev, 'down', 'restored', 'Répond de nouveau' + (' (redémarré)' if boot else ''),
-                                f"{name} rétabli")
+                    self._event(dev, 'down', 'restored', 'Répond de nouveau' + (' (redémarré)' if rebooted else ''),
+                                f"{name} rétabli" + (' (redémarré)' if rebooted else ''))
                 else:
+                    st['boot'] = now                  # démarrage rapide de Windows : l'heure vue fait foi
+                    st['cpu_max'], st['cpu_max_at'] = None, None
                     self._event(dev, 'on', 'info', 'Allumé')
-            elif prev is None and always and up:
-                st['since'] = now - up                       # première observation : depuis son démarrage
+            elif not always:
+                st['boot'] = now
         elif rebooted:
-            st['since'], st['rebooted_at'] = now - up, now
-            st['cpu_max'], st['cpu_max_at'] = None, None
             self._event(dev, 'reboot', 'alert', f"Redémarré il y a {max(1, int(up // 60))} min", f"{name} redémarré")
         st['uptime'] = up
         cfg = dev['config']
         cpu = data.get('cpu')
+        if cpu is None and 'cpu' in (data.get('partial') or []):
+            cpu = st.get('cpu')
         st['cpu'] = cpu
         if cpu is not None and (st.get('cpu_max') is None or cpu >= st['cpu_max']):
             st['cpu_max'], st['cpu_max_at'] = cpu, now
@@ -620,6 +679,10 @@ class ParkMonitor:
                                 f"{name} : disque {d['label']} presque plein", f"{name} : disque {d['label']} normal")
             st['sysname'] = data.get('sysname', '')
         else:
+            old = st.get('nas') or {}
+            for k in data.get('partial') or []:
+                if k in ('disks', 'volumes'):
+                    data[k] = old.get(k) or []
             st['nas'] = {k: data[k] for k in ('model', 'version', 'status', 'temp', 'power', 'fan', 'cpu_fan', 'upgrade', 'disks', 'volumes')}
             self._set_alert(dev, st, 'system', data['status'] not in (1, None), 'nas',
                             'Système en panne (état DSM)', 'Système normal', f"{name} : système en panne", f"{name} : système normal")
@@ -723,7 +786,8 @@ class ParkMonitor:
                         'temp_max': cfg.get('temp_max'), 'alert_email': d.get('alert_email', True),
                         'state': st.get('state'), 'since': st.get('since'), 'last_check': st.get('last_check'),
                         'error': st.get('error', ''), 'alerts': st.get('alerts', {}),
-                        'rebooted_at': st.get('rebooted_at')}
+                        'rebooted_at': st.get('rebooted_at'), 'boot': st.get('boot'),
+                        'down_minutes': d.get('down_minutes', 3)}
                 if d['kind'] == 'pc':
                     item.update({k: st.get(k) for k in ('cpu', 'cpu_max', 'cpu_max_at', 'ram_pct', 'disks', 'sysname')})
                 elif d['kind'] == 'nas':

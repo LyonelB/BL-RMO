@@ -203,6 +203,7 @@
           <label class="block k-site"><span class="text-xs text-gray-500">Réponse lente au-delà de (ms)</span><input id="f-slow_ms" type="number" min="200" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="5000"></label>
           <label class="block k-pc"><span class="text-xs text-gray-500">Usage</span>
             <select id="f-always_on" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"><option value="0">Peut être éteint : simple information</option><option value="1">24 h/24 : éteint = alerte</option></select></label>
+          <label class="block k-snmp"><span class="text-xs text-gray-500" title="Un relevé manqué n'alerte pas : l'alerte part si l'appareil reste sans réponse pendant ce délai">Alerte après (minutes sans réponse)</span><input id="f-down_minutes" type="number" min="1" max="60" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="3"></label>
           <label class="block k-pc"><span class="text-xs text-gray-500">Système (affichage)</span><input id="f-os" maxlength="30" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="Windows 11"></label>
           <label class="block k-snmp"><span class="text-xs text-gray-500">Port SNMP</span><input id="f-port" type="number" min="1" max="65535" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="161"></label>
           <label class="block k-snmp"><span class="text-xs text-gray-500">Seuil disque (%)</span><input id="f-disk_pct" type="number" min="50" max="100" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="90"></label>
@@ -268,14 +269,16 @@
     const s = st.summary, dev = st.devices.filter(d => d.enabled);
     const pcs = dev.filter(d => d.kind === 'pc' && d.always_on);
     const downPc = pcs.filter(d => d.state === 'off');
+    const mutePc = pcs.filter(d => d.state === 'snmp');
     $('t-pc').textContent = pcs.length ? `${s.pc24_on} en ligne sur ${s.pc24_total}` : 'Aucun';
-    $('t-pc-dot').className = 'w-2.5 h-2.5 rounded-full ' + (!pcs.length ? 'bg-gray-300' : downPc.length ? 'bg-red-500' : 'bg-green-500');
-    $('t-pc-sub').innerHTML = downPc.length ? `<span class="text-red-600">${esc(downPc.map(d => d.name).join(', '))} injoignable${downPc.length > 1 ? 's' : ''} depuis ${when(downPc[0].since)}</span>` : (pcs.length ? esc(pcs.map(d => d.name).join(' · ')) : '&nbsp;');
+    $('t-pc-dot').className = 'w-2.5 h-2.5 rounded-full ' + (!pcs.length ? 'bg-gray-300' : downPc.length ? 'bg-red-500' : mutePc.length ? 'bg-amber-500' : 'bg-green-500');
+    $('t-pc-sub').innerHTML = downPc.length ? `<span class="text-red-600">${esc(downPc.map(d => d.name).join(', '))} injoignable${downPc.length > 1 ? 's' : ''} depuis ${when(downPc[0].since)}</span>`
+      : mutePc.length ? `<span class="text-amber-700">${esc(mutePc.map(d => d.name).join(', '))} : SNMP muet</span>` : (pcs.length ? esc(pcs.map(d => d.name).join(' · ')) : '&nbsp;');
     const nas = dev.filter(d => d.kind === 'nas');
     if (!nas.length) { $('t-nas').textContent = 'Aucun'; $('t-nas-dot').className = 'w-2.5 h-2.5 rounded-full bg-gray-300'; $('t-nas-sub').innerHTML = '&nbsp;'; }
     else {
       const n = nas[0], bad = Object.keys(n.alerts || {}).length, off = n.state === 'off';
-      $('t-nas').textContent = off ? 'Injoignable' : bad ? `${bad} alerte${bad > 1 ? 's' : ''}` : n.state === 'on' ? 'Normal' : 'En attente';
+      $('t-nas').textContent = off ? 'Injoignable' : n.state === 'snmp' ? 'SNMP muet' : bad ? `${bad} alerte${bad > 1 ? 's' : ''}` : n.state === 'on' ? 'Normal' : 'En attente';
       $('t-nas-dot').className = 'w-2.5 h-2.5 rounded-full ' + (off ? 'bg-red-500' : bad ? 'bg-amber-500' : n.state === 'on' ? 'bg-green-500' : 'bg-gray-300');
       const v = (n.nas && n.nas.volumes || [])[0];
       $('t-nas-sub').textContent = [n.name, v && v.pct != null ? `volume ${Math.round(v.pct)} %` : '', n.nas && n.nas.temp != null ? `${n.nas.temp} °C` : ''].filter(Boolean).join(' · ');
@@ -293,11 +296,13 @@
   function renderPcs() {
     const pcs = st.devices.filter(d => d.kind === 'pc' && d.enabled);
     $('pc-section').classList.toggle('hidden', !pcs.length);
-    pcs.sort((a, b) => (b.always_on && b.state === 'off') - (a.always_on && a.state === 'off'));
+    const rank = d => d.always_on && d.state === 'off' ? 2 : d.state === 'snmp' ? 1 : 0;
+    pcs.sort((a, b) => rank(b) - rank(a));
     $('pc-body').innerHTML = pcs.map(d => {
       const off = d.state === 'off', alarm = off && d.always_on;
       let state;
-      if (d.state === 'on') state = `<span class="text-green-600 font-medium">Allumé</span><div class="text-[11px] text-gray-500">depuis ${when(d.since)}${d.rebooted_at && Date.now() / 1000 - d.rebooted_at < 86400 ? ' <span class="text-blue-700">(redémarré)</span>' : ''}</div>`;
+      if (d.state === 'on') state = `<span class="text-green-600 font-medium">Allumé</span><div class="text-[11px] text-gray-500">depuis ${when(d.boot || d.since)}${d.rebooted_at && Date.now() / 1000 - d.rebooted_at < 86400 ? ' <span class="text-blue-700">(redémarré)</span>' : ''}</div>`;
+      else if (d.state === 'snmp') state = `<span class="text-amber-700 font-semibold">SNMP ne répond plus</span><div class="text-[11px] text-gray-500">depuis ${when(d.since)} · le PC répond sur le réseau</div>`;
       else if (alarm) state = `<span class="text-red-600 font-semibold">Injoignable</span><div class="text-[11px] text-gray-500">depuis ${when(d.since)}</div>`;
       else if (off) state = `<span class="text-gray-500 font-medium">Éteint</span><div class="text-[11px] text-gray-500">depuis ${when(d.since)}</div>`;
       else state = `<span class="text-gray-400">En attente du premier relevé</span>${d.error ? `<div class="text-[11px] text-gray-400">${esc(d.error)}</div>` : ''}`;
@@ -328,7 +333,7 @@
   function renderNas() {
     const list = st.devices.filter(d => d.kind === 'nas' && d.enabled);
     $('nas-list').innerHTML = list.map(d => {
-      const n = d.nas || {}, off = d.state === 'off';
+      const n = d.nas || {}, off = d.state === 'off', mute = d.state === 'snmp';
       const row = (k, v) => `<div class="flex justify-between gap-2"><span class="text-gray-500">${k}</span><span class="text-right">${v}</span></div>`;
       const vols = (n.volumes || []).map(v => {
         const cls = v.level === 'ok' ? (v.pct >= (d.disk_pct || 90) ? 'bg-amber-500' : 'bg-green-500') : v.level === 'down' ? 'bg-red-500' : 'bg-amber-500';
@@ -344,17 +349,18 @@
       return `<div class="section">
         <div class="section-title"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
           NAS <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400">SNMP (SYNOLOGY-MIB)</span></div>
-        <div class="grid md:grid-cols-4 gap-4 ${off ? 'opacity-60' : ''}">
+        <div class="grid md:grid-cols-4 gap-4 ${off || mute ? 'opacity-60' : ''}">
           <div>
             <div class="font-medium text-gray-900">${esc(d.name)}</div>
             <div class="text-[11px] text-gray-400 font-mono">${esc(d.host)}${n.model ? ' · ' + esc(n.model) : ''}${n.version ? ' · ' + esc(n.version) : ''}</div>
             <div class="mt-2 text-xs space-y-1">
               ${off ? row('État', `<span class="text-red-600 font-semibold">Injoignable</span> <span class="text-gray-400">depuis ${when(d.since)}</span>`) : ''}
+              ${mute ? row('État', `<span class="text-amber-700 font-semibold">SNMP muet</span> <span class="text-gray-400">depuis ${when(d.since)}, répond sur le réseau</span>`) : ''}
               ${row('Système', ok(n.status))}
               ${row('Température', n.temp == null ? '-' : `<span class="font-mono ${n.temp >= tmax ? 'text-red-600 font-semibold' : 'text-gray-700'}">${n.temp} °C</span>`)}
               ${row('Ventilateurs', n.fan == null ? '-' : ok(n.fan === 1 && (n.cpu_fan == null || n.cpu_fan === 1) ? 1 : 2))}
               ${row('Alimentation', ok(n.power))}
-              ${row('Démarré', d.state === 'on' ? when(d.since) : '-')}
+              ${row('Démarré', d.boot ? when(d.boot) : '-')}
               ${row('Mise à jour DSM', n.upgrade ? `<span class="${n.upgrade === 'disponible' ? 'text-blue-700' : 'text-gray-700'}">${esc(n.upgrade)}</span>` : '-')}
             </div>
           </div>
@@ -395,7 +401,7 @@
 
   // ── Événements ──
   const EV_CLS = { alert: 'text-red-600 font-semibold', restored: 'text-green-600 font-semibold', info: 'text-gray-500' };
-  const EV_LBL = { down: 'Injoignable', on: 'Allumé', off: 'Éteint', reboot: 'Redémarrage', disk: 'Disque', cpu: 'Processeur', nas: 'NAS', slow: 'Lent' };
+  const EV_LBL = { down: 'Injoignable', on: 'Allumé', off: 'Éteint', reboot: 'Redémarrage', disk: 'Disque', cpu: 'Processeur', nas: 'NAS', slow: 'Lent', snmp: 'SNMP' };
   function evTime(ts) { const d = new Date(ts); return when(d.getTime() / 1000); }
   function renderEvents() {
     const ev = st.events || [];
@@ -481,6 +487,7 @@
     const defaults = { port: 161, slow_ms: 5000, disk_pct: 90, cpu_pct: 90, cpu_minutes: 10, temp_max: 60, version: '2c', auth_proto: 'SHA', priv_proto: 'AES' };
     FIELDS.forEach(f => { const el = $('f-' + f); el.value = f === 'name' ? (d ? d.name : '') : (c[f] ?? defaults[f] ?? ''); });
     $('f-always_on').value = d && d.always_on ? '1' : '0';
+    $('f-down_minutes').value = d ? (d.down_minutes || 3) : 3;
     $('f-alert_email').checked = d ? d.alert_email !== false : true;
     $('f-enabled').checked = d ? d.enabled !== false : true;
     $('f-msg').textContent = ''; $('f-test').classList.add('hidden');
@@ -492,7 +499,7 @@
     const k = $('f-kind').value, config = {};
     FIELDS.filter(f => f !== 'name').forEach(f => { const v = $('f-' + f).value; if (v !== '') config[f] = v; });
     if (config.version === '3') config.level = 'authPriv';
-    const body = { kind: k, name: $('f-name').value.trim(), config, alert_email: $('f-alert_email').checked, enabled: $('f-enabled').checked, always_on: $('f-always_on').value === '1' };
+    const body = { kind: k, name: $('f-name').value.trim(), config, alert_email: $('f-alert_email').checked, enabled: $('f-enabled').checked, always_on: $('f-always_on').value === '1', down_minutes: $('f-down_minutes').value };
     if (editing) body.id = editing;
     return body;
   }

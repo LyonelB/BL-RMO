@@ -6,6 +6,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Parc : délai avant alerte, SNMP muet distingué d'une panne
+- **Délai avant alerte** réglable par appareil (« Alerte après », 3 min par défaut) : un relevé SNMP manqué n'envoie plus de mail. Le 28/10, le NAS, très chargé par les transferts d'archives, avait produit une douzaine d'alertes « injoignable » de 1 à 3 min.
+- **SNMP muet ou appareil injoignable** : quand SNMP ne répond plus, BL-RMO vérifie si l'appareil répond encore sur le réseau (ping, ou un port courant comme le partage de fichiers, Windows bloquant souvent le ping). S'il répond : état « SNMP ne répond plus », mail dédié, sans le compter éteint ; sinon : « injoignable » (24 h/24 et NAS) ou « éteint ».
+- **Redémarrage** reconnu à l'heure de démarrage annoncée par l'appareil : un retour après un silence SNMP n'est plus pris pour un redémarrage, et « Démarré » / « Allumé depuis » restent justes (24 h/24 et NAS). Les autres PC gardent l'heure à laquelle BL-RMO les voit revenir (démarrage rapide de Windows).
+- SNMP plus patient (3 s, 2 nouveaux essais) ; si le NAS ne renvoie pas à temps la table des disques, des volumes ou du processeur, les valeurs précédentes sont gardées au lieu de le compter injoignable.
+
 ### Chaîne : plus de « dégradé » pour un paquet SNMP perdu
 - Les appareils qui ne renvoient qu'une valeur par requête (émetteur BW Broadcast) sont interrogés OID par OID, sans nouvel essai : un seul paquet perdu sur la liaison vers le pylône donnait « OID absent » et un mail « dégradé » (BW TX600, Régulation, le 27/10 à 17:47). Chaque requête perdue est maintenant retentée une fois ; sans réponse, la valeur est notée « pas de réponse » sans changer l'état. « OID absent » ne reste que si l'appareil répond que l'OID n'existe pas.
 
