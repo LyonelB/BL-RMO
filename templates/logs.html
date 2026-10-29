@@ -140,8 +140,9 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
             Titres diffusés (RadioText)
           </div>
-          <span class="flex items-center gap-2"><button onclick="exportRtHistory()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Historique complet du RadioText (CSV)"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button></span>
+          <span class="flex items-center gap-2"><button onclick="exportRtHistory()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Historique complet du RadioText (CSV)"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button><button id="rt-toggle" type="button" class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1.5"></button></span>
         </div>
+        <div id="rt-content">
         <p class="text-xs text-gray-500 mb-3">Chaque nouveau RadioText reçu par le tuner, avec l'heure de son premier affichage. Un texte qui revient en boucle (nom de la station, slogan) n'est repris qu'après 10 minutes.</p>
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left">
@@ -159,6 +160,7 @@
         </div>
         <div class="flex justify-end mt-3 text-xs">
           <button id="rt-more" class="px-2.5 py-1 rounded-md border border-gray-200 text-gray-500 hidden" onclick="rtLimit += 50; loadRtHistory()">Afficher plus</button>
+        </div>
         </div>
       </div>
 
@@ -232,8 +234,10 @@
           <div class="flex flex-wrap gap-2">
             <select id="dls-svc" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="dlsLimit = 10; loadDlsHistory()"></select>
             <button onclick="exportDlsHistory()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Historique complet du service choisi (CSV)"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
+            <button id="dls-toggle" type="button" class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1.5"></button>
           </div>
         </div>
+        <div id="dls-content">
         <p class="text-xs text-gray-500 mb-3">Chaque nouveau texte DLS des services surveillés, avec l'heure de son premier affichage. Un texte qui revient en boucle (nom de la station, slogan) n'est repris qu'après 10 minutes.</p>
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left">
@@ -251,6 +255,7 @@
         </div>
         <div class="flex justify-end mt-3 text-xs">
           <button id="dls-more" class="px-2.5 py-1 rounded-md border border-gray-200 text-gray-500 hidden" onclick="dlsLimit += 50; loadDlsHistory()">Afficher plus</button>
+        </div>
         </div>
       </div>
 
@@ -502,6 +507,7 @@
   </div>
 </main>
 
+<script src="/static/spectrum.js"></script>
 <script>
 let PAGE_SIZE = 10;     // 10 lignes, puis « Afficher plus »
 const SEV = [
@@ -1303,6 +1309,9 @@ function closeSidebar() {
   document.getElementById('sidebar').classList.add('-translate-x-full');
   document.getElementById('sidebar-overlay').classList.add('hidden');
 }
+// Blocs repliables (état mémorisé dans ce navigateur)
+BLRMO.collapsible('blrmo-logs-rt', [[document.getElementById('rt-content'), true]], document.getElementById('rt-toggle'));
+BLRMO.collapsible('blrmo-logs-dls', [[document.getElementById('dls-content'), true]], document.getElementById('dls-toggle'));
 </script>
 </body>
 </html>

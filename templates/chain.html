@@ -205,6 +205,8 @@ function pad(n) { return String(n).padStart(2, '0'); }
 function dur(iso) {
   if (!iso) return '--:--:--';
   const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  // Moins de 24 h : compteur ; au-delà : jours et heures (la date exacte est au survol et dans le détail)
+  if (s >= 86400) return `${Math.floor(s / 86400)} j ${Math.floor(s % 86400 / 3600)} h`;
   return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s % 3600 / 60))}:${pad(s % 60)}`;
 }
 function when(iso) {

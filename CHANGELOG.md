@@ -6,6 +6,14 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Petites améliorations
+- **DAB+** : un service présent dans le multiplex mais non décodé (décodage « Services surveillés seulement ») est affiché « Non surveillé », en gris.
+- **Parc** : le bloc d'ajout s'appelle « Appareils et sites surveillés ».
+- **Journaux** : les blocs « Titres diffusés (RadioText) » et « Titres diffusés (DLS) » se replient, état mémorisé dans le navigateur.
+- **Chaîne** : au-delà de 24 h, la durée d'un état s'affiche en jours et heures (« 13 j 4 h ») au lieu d'un compteur d'heures ; la date exacte reste au survol et dans le détail.
+- **Pige** : après une coupure de la source, les 2 à 5 s que ffmpeg met à se reconnecter sont comblées par du silence, comme le reste de la coupure : plus de petits trous dans la pige (vus sur la pige DAB+ le 26/10), ni d'extrait signalé incomplet pour si peu.
+- **README** : décodage DAB+ conseillé, réglage du gain de la clé (14,4 dB sur une NESDR SMArTee), filtre coupe-bande FM en option.
+
 ### Parc : délai avant alerte, SNMP muet distingué d'une panne
 - **Délai avant alerte** réglable par appareil (« Alerte après », 3 min par défaut) : un relevé SNMP manqué n'envoie plus de mail. Le 28/10, le NAS, très chargé par les transferts d'archives, avait produit une douzaine d'alertes « injoignable » de 1 à 3 min.
 - **SNMP muet ou appareil injoignable** : quand SNMP ne répond plus, BL-RMO vérifie si l'appareil répond encore sur le réseau (ping, ou un port courant comme le partage de fichiers, Windows bloquant souvent le ping). S'il répond : état « SNMP ne répond plus », mail dédié, sans le compter éteint ; sinon : « injoignable » (24 h/24 et NAS) ou « éteint ».

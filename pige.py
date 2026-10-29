@@ -398,10 +398,18 @@ class PigeRecorder:
         logger.info(f"Pige {self.cfg.get('id', 'fm')} : {self.cfg['source_url']} → {self.store.dir} "
                     f"(segments {self.cfg['segment_minutes']} min, "
                     f"rétention {self.cfg['retention_hours']} h)")
+        restarted = False
         while self.running:
+            segs = self.store.segments() if restarted else []
+            prev_end = segs[-1]['end'] if segs else None
             self.proc = subprocess.Popen(self._ffmpeg_cmd(), env=env,
                                          stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
                                          text=True)
+            if prev_end is not None:
+                # Reconnexion après une coupure : les secondes que ffmpeg met à
+                # rouvrir la source sont comblées par du silence dès son premier segment
+                threading.Thread(target=self._fill_restart_gap, args=(env, prev_end), daemon=True).start()
+            restarted = True
             _, err = self.proc.communicate()
             if not self.running:
                 break
@@ -457,6 +465,31 @@ class PigeRecorder:
         cmd = ['ffmpeg', '-nostdin', '-hide_banner', '-loglevel', 'error', '-y'] + self._silence_args() + \
               ['-t', f'{gap:.2f}', '-write_xing', '0', '-f', 'mp3', path]
         subprocess.run(cmd, env=env, capture_output=True, timeout=60)
+
+    def _fill_restart_gap(self, env, prev_end, wait=60):
+        """Attend le premier segment de ffmpeg relancé, puis remplit de silence l'intervalle
+        entre la fin de l'enregistrement précédent (silence de remplacement compris) et ce
+        segment : 2 à 5 s de reconnexion qui restaient en trou dans la pige."""
+        deadline = time.time() + wait
+        while self.running and time.time() < deadline:
+            time.sleep(2)
+            newer = [x for x in self.store.segments() if x['start'] > prev_end - 1 and x['size'] > 0]
+            if not newer:
+                continue
+            gap = newer[0]['start'] - prev_end
+            if gap < 0.5 or gap > self.store.seg_len:
+                return
+            name = datetime.fromtimestamp(prev_end, tz=timezone.utc).strftime('%Y%m%d-%H%M%S') + '.mp3'
+            path = os.path.join(self.store.dir, name)
+            if os.path.exists(path):
+                return
+            cmd = ['ffmpeg', '-nostdin', '-hide_banner', '-loglevel', 'error', '-y'] + self._silence_args() + \
+                  ['-t', f'{gap:.2f}', '-write_xing', '0', '-f', 'mp3', path]
+            try:
+                subprocess.run(cmd, env=env, capture_output=True, timeout=60)
+            except subprocess.TimeoutExpired:
+                pass
+            return
 
     def _record_silence_until_source(self):
         env = dict(os.environ, TZ='UTC')

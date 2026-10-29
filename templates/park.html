@@ -183,7 +183,7 @@
     <div class="section need-admin" id="manage">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
-        Appareils surveillés <span class="text-[11px] font-normal normal-case tracking-normal text-gray-400">(administrateur)</span>
+        Appareils et sites surveillés <span class="text-[11px] font-normal normal-case tracking-normal text-gray-400">(administrateur)</span>
         <button type="button" onclick="editDevice(null)" class="ml-auto text-[11px] font-medium normal-case tracking-normal text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-3 py-1">Ajouter</button>
       </div>
       <table class="w-full text-sm mb-2">
@@ -421,7 +421,7 @@
       if (st.status === 'error') throw new Error(st.message);
       $('notice').classList.toggle('hidden', st.devices.length > 0);
       $('notice-title').textContent = 'Aucun appareil surveillé';
-      $('notice-text').textContent = isAdmin ? 'Ajoutez les PC, le NAS et les sites web dans « Appareils surveillés », en bas de page.' : "Un administrateur doit ajouter les appareils à surveiller.";
+      $('notice-text').textContent = isAdmin ? 'Ajoutez les PC, le NAS et les sites web dans « Appareils et sites surveillés », en bas de page.' : "Un administrateur doit ajouter les appareils à surveiller.";
       renderSummary(); renderPcs(); renderNas(); renderSites(); renderEvents();
     } catch (e) {
       $('notice').classList.remove('hidden'); $('notice-title').textContent = 'Surveillance du parc indisponible'; $('notice-text').textContent = e.message;

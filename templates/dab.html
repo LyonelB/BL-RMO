@@ -453,6 +453,8 @@
       let state;
       if (v.present === null || v.present === undefined) state = '<span class="text-gray-400">-</span>';
       else if (!v.present) state = '<span class="text-red-600 font-medium">Absent</span>';
+      else if (st.mode === 'services surveillés' && !(st.held_sids || []).includes(v.sid))
+        state = '<span class="text-gray-400 font-medium" title="Présent dans le multiplex, mais pas décodé : seuls les services surveillés le sont">Non surveillé</span>';
       else if (v.silence) state = '<span class="text-amber-600 font-medium">Silence</span>';
       else state = '<span class="text-green-600 font-medium">Présent</span>';
       const u = uptime[v.sid];

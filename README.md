@@ -65,6 +65,7 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 - **Écoute** d'un service depuis la page DAB+, diaporama (slideshow) affiché pendant l'écoute
 - Alertes DAB+ par mail et dans un onglet **Réception DAB+** de la page Journaux, avec lien vers la pige du service s'il en a une
 - Service indépendant `bl-rmo-dab` : un plantage de welle-cli ou de la clé ne touche ni l'interface, ni la FM
+- **Décodage « Services surveillés seulement »** (conseillé) : seuls les services cochés sont décodés, en continu, pour la charge d'un seul décodeur ; l'ensemble et la présence de tous les services restent suivis. « Tous les services en continu » occupe plus de deux cœurs (welle-cli réencode chaque service en MP3) ; le carrousel n'écoute chaque service que 10 s par tour
 
 ### 🔊 Retour FM
 - **Écoute de l'antenne** dans le navigateur, flux Icecast2 MP3 128 kbps
@@ -72,7 +73,7 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 
 ### 🎙️ Pige audio
 - **Enregistrement continu sur 30 jours** de l'antenne en segments MP3 (service `bl-rmo-pige`, indépendant de l'application), environ 1,4 Go par jour ; durée réglable depuis la page Pige
-- **Piges DAB+** : un service DAB+ par pige, créée depuis la page Pige (nom, service, durée de conservation) ; MP3 128 kb/s, environ 1,4 Go par jour ; demande le décodage « Tous les services en continu »
+- **Piges DAB+** : un service DAB+ par pige, créée depuis la page Pige (nom, service, durée de conservation) ; MP3 128 kb/s, environ 1,4 Go par jour ; demande un décodage continu du service (« Services surveillés seulement » ou « Tous les services en continu »)
 - **Écoute à l'instant choisi**, déplacements de 10 s, 1 min ou 10 min, repère de 30 min autour de la position, disponibilité jour par jour ; **extrait** marqué pendant l'écoute, écouté puis téléchargé en MP3 sans réencodage
 - **Extraits des 10 dernières alertes**, de 30 s avant l'alerte à 30 s après le rétablissement, conservés après la sortie de la pige
 - Chaque alerte et chaque événement de la chaîne ouvre la pige au bon moment
@@ -120,7 +121,7 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 | Tuner | [Headless TEF Lite SE](https://github.com/FMDX-org/Headless-TEF-lite-SE) (FMDX.org) | TEF668X V205 (TEF6687 recommandé), entrées AM et FM séparées, audio numérique par USB, firmware [FM-DX-Tuner](https://github.com/kkonradpl/FM-DX-Tuner) |
 | Antenne | Antenne FM extérieure | Bien dégagée : BL-RMO écoute comme un auditeur |
 | Câble | USB de **données** | Un câble « charge seule » ne laisse pas passer le port série |
-| DAB+ (option) | Clé RTL-SDR + antenne bande III | NooElec NESDR SmartEE conseillée pour un usage 24 h/24 (le RTL-SDR Blog V4 a montré des instabilités USB) |
+| DAB+ (option) | Clé RTL-SDR + antenne bande III | NooElec NESDR SMArTee ou SMArt (tuner R820T2) conseillée pour un usage 24 h/24 (le RTL-SDR Blog V4 a montré des instabilités USB). Voir [Réglage de la clé DAB+](#réglage-de-la-clé-dab) |
 
 Le tuner apparaît sous Linux comme un port série (`/dev/ttyACM0`, protocole XDR) et une carte son (`hw:Tuner`). Il est reconnu par son identifiant USB `1209:6687`.
 
@@ -174,6 +175,16 @@ sudo BUILD_WELLE=1 bash install/build/67-dab.sh   # réception DAB+ (bl-rmo-dab)
 ```
 
 La réception DAB+ reste en veille jusqu'à son activation dans la page **DAB+** (menu, administrateur) : canal, seuils et services surveillés s'y règlent.
+
+#### Réglage de la clé DAB+
+
+- **Décodage** : « Services surveillés seulement », en cochant le ou les services à surveiller.
+- **Gain** : un gain fixe synchronise bien plus vite que l'automatique. Avec une NESDR SMArTee (R820T2) près d'émetteurs FM, **14,4 dB** a supprimé les saturations du convertisseur (« ADC overload » dans `logs/welle-cli.log`) tout en gardant un SNR d'environ 15 dB. Pour vérifier un réglage, compter les saturations sur 30 s :
+  ```bash
+  { timeout 30 tail -n0 -f ~/bl-rmo/logs/welle-cli.log; true; } | grep -c overload
+  ```
+  Garder le gain le plus élevé qui reste à 0 saturation, avec un SNR au-dessus d'environ 10 dB.
+- **Filtre coupe-bande FM** (option, une vingtaine d'euros, ex. celui de RTL-SDR Blog) entre l'antenne et la clé : il atténue les émetteurs FM proches et permet de remonter le gain sans saturer. Choisir un modèle qui laisse passer le courant continu sans le court-circuiter (le bias-tee de la SMArTee alimente l'antenne en 4,5 V).
 
 | Service | Rôle | Ports |
 |---|---|---|
