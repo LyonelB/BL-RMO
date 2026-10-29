@@ -6,6 +6,10 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Chaîne : flux web écouté, flèche « Diffusion »
+- **Nouvelle sonde « Flux audio »** : à chaque relevé, BL-RMO écoute le flux quelques secondes, comme un auditeur. Son reçu ou non, niveaux crête et moyen, silence prolongé (seuil et durée réglables, 60 s par défaut), titre en cours (métadonnées ICY), auditeurs et débit lus sur la page d'état Icecast quand elle est publique. Un point de montage « présent » sur le serveur peut ne diffuser que du silence : seule l'écoute le voit. Exemple : le flux web de Graffiti sur le serveur de la Frap, en tuile « Flux web » dans le bloc Réception.
+- **Synoptique** : à l'entrée du bloc Réception, une simple flèche « Diffusion » remplace le bandeau de la liaison hertzienne, qui reprenait en double l'état et les mesures de la réception FM et laissait croire que le DAB+ et le flux web sortent de l'émetteur FM. Pas de flèche entre les réceptions (FM, DAB+, flux web), arrivées en parallèle.
+
 ### Petites améliorations
 - **DAB+** : un service présent dans le multiplex mais non décodé (décodage « Services surveillés seulement ») est affiché « Non surveillé », en gris.
 - **Parc** : le bloc d'ajout s'appelle « Appareils et sites surveillés ».

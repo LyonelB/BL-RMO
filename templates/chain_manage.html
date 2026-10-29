@@ -407,6 +407,7 @@ const PROBES = {
   http:     { label: 'Page web',    desc: 'Interface web, code, mot-clé' },
   snmp:     { label: 'SNMP',        desc: 'Valeurs internes (OID)' },
   icecast:  { label: 'Icecast',     desc: 'Flux en ligne, auditeurs' },
+  stream:   { label: 'Flux audio',  desc: 'Écoute le flux : son, silence, titre' },
   fm_local: { label: 'Réception FM', desc: 'Ce BL-RMO, en bout de chaîne' },
   dab_local: { label: 'Réception DAB+', desc: 'Le service suivi par la clé DAB+' },
   livebox:  { label: 'Livebox',     desc: 'Orange : redémarrage, Internet' },
@@ -1041,6 +1042,17 @@ function renderProbeFields(cfg = {}) {
       </div>
       <label class="flex items-center gap-2 text-xs text-gray-700"><input id="c-verify_tls" type="checkbox" class="rounded" ${cfg.verify_tls ? 'checked' : ''}> Vérifier le certificat HTTPS</label>
       <p class="hint">Lit <code>status-json.xsl</code>. Le point de montage absent signifie que la source (encodeur, processeur) n'alimente plus le serveur.</p>`;
+  } else if (currentProbe === 'stream') {
+    f.innerHTML = `
+      <label class="field"><span>Adresse du flux</span><input id="c-url" type="text" value="${esc(cfg.url || '')}" placeholder="https://diffusion.lafrap.fr/graffiti.mp3"></label>
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <label class="field"><span>Écoute (s)</span><input id="c-listen_s" type="number" min="2" max="20" value="${cfg.listen_s ?? 5}"></label>
+        <label class="field"><span>Silence sous (dBFS)</span><input id="c-silence_db" type="number" min="-90" max="-10" step="1" value="${cfg.silence_db ?? -50}"></label>
+        <label class="field"><span>Silence pendant (s)</span><input id="c-silence_s" type="number" min="10" max="3600" value="${cfg.silence_s ?? 60}"></label>
+        <label class="field"><span>Auditeurs minimum</span><input id="c-min_listeners" type="number" min="0" value="${cfg.min_listeners ?? ''}" placeholder="facultatif"></label>
+      </div>
+      <label class="flex items-center gap-2 text-xs text-gray-700"><input id="c-verify_tls" type="checkbox" class="rounded" ${cfg.verify_tls === false ? '' : 'checked'}> Vérifier le certificat HTTPS</label>
+      <p class="hint">À chaque relevé, BL-RMO écoute le flux quelques secondes, comme un auditeur : le son arrive-t-il, à quel niveau, quel titre ? Un silence plus long que la durée choisie met le flux en alerte (cochez « aussi en cas d'alerte (dégradé) » pour le mail). Les auditeurs et le débit viennent de la page d'état du serveur Icecast quand elle est publique. Intervalle conseillé : 30 à 60 s. À placer sur le site Réception, à côté de la FM et du DAB+.</p>`;
   } else if (currentProbe === 'fm_local') {
     f.innerHTML = `<p class="hint">Reprend l'état de réception de ce BL-RMO (signal, modulation, RDS, stéréo). À placer en dernier : c'est ce qui sort réellement de l'antenne.</p>`;  } else if (currentProbe === 'dab_local') {
     f.innerHTML = `
@@ -1194,7 +1206,7 @@ function collect() {
   const cfg = {};
   const get = id => document.getElementById(id);
   ['host', 'port', 'warn_ms', 'count', 'spacing_ms', 'loss_pct', 'max_ms', 'jitter_ms', 'url', 'expect_status', 'keyword', 'username', 'password',
-   'community', 'version', 'mount', 'min_listeners', 'reboot_warn_min', 'user', 'level', 'auth_proto', 'auth_pass', 'priv_proto', 'priv_pass', 'sid'].forEach(k => { if (get('c-' + k)) cfg[k] = get('c-' + k).value.trim(); });
+   'community', 'version', 'mount', 'min_listeners', 'listen_s', 'silence_db', 'silence_s', 'reboot_warn_min', 'user', 'level', 'auth_proto', 'auth_pass', 'priv_proto', 'priv_pass', 'sid'].forEach(k => { if (get('c-' + k)) cfg[k] = get('c-' + k).value.trim(); });
   if (get('c-verify_tls')) cfg.verify_tls = get('c-verify_tls').checked;
   if (currentProbe === 'snmp') cfg.metrics = snmpMetrics.filter(m => (m.oid || '').trim());
   return {

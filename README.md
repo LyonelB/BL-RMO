@@ -81,6 +81,7 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 ### 🔗 Chaîne de diffusion
 - **Synoptique** du studio à l'antenne : état de chaque appareil et de chaque lien, depuis quand, détail en un clic
 - **SNMP v1, v2c, v3** (lecture seule), ping, TCP, page web, Icecast ; seuils et valeurs attendues
+- **Flux audio écouté** (flux web MP3, AAC...) : BL-RMO l'écoute quelques secondes à chaque relevé, comme un auditeur : son reçu, niveau, silence prolongé, titre en cours, auditeurs et débit si la page d'état Icecast est publique ; tuile à placer dans le bloc Réception, à côté de la FM et du DAB+
 - **Préréglages** : BW Broadcast TX V3, Deva DB91-TX / DB91-RX, Sound4 PULSE / IMPACT
 - **Sondes réseau** (rafales de pings : pertes, latence, gigue) rattachées aux liens
 - **Historique en courbes**, alertes mail avec les valeurs en défaut, export ZIP

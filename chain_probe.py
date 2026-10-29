@@ -50,7 +50,7 @@ except Exception:  # pragma: no cover
 
 logger = logging.getLogger(__name__)
 
-PROBE_TYPES = ('ping', 'burst', 'tcp', 'http', 'snmp', 'icecast', 'fm_local', 'dab_local', 'livebox')
+PROBE_TYPES = ('ping', 'burst', 'tcp', 'http', 'snmp', 'icecast', 'stream', 'fm_local', 'dab_local', 'livebox')
 STABLE_STATES = ('unknown', 'up', 'warn', 'down')
 KINDS = ('device', 'probe', 'sensor')   # appareil de la chaîne / sonde réseau / capteur de site
 
@@ -264,6 +264,16 @@ def validate_device(data, existing=None):
         cfg['min_listeners'] = _num(raw.get('min_listeners'), 'Auditeurs min', None, 0, 100000,
                                     integer=True, allow_none=True)
         cfg['verify_tls'] = bool(raw.get('verify_tls', False))
+
+    elif probe == 'stream':
+        # Flux audio écouté (MP3, AAC, Ogg...) : son reçu, niveau, silence, titre, auditeurs
+        cfg['url'] = _url(raw.get('url'))
+        cfg['listen_s'] = _num(raw.get('listen_s'), "Durée d'écoute", 5, 2, 20, integer=True)
+        cfg['silence_db'] = _num(raw.get('silence_db'), 'Seuil de silence', -50, -90, -10)
+        cfg['silence_s'] = _num(raw.get('silence_s'), 'Durée de silence', 60, 10, 3600, integer=True)
+        cfg['min_listeners'] = _num(raw.get('min_listeners'), 'Auditeurs min', None, 0, 100000,
+                                    integer=True, allow_none=True)
+        cfg['verify_tls'] = bool(raw.get('verify_tls', True))
 
     elif probe == 'fm_local':
         pass
@@ -718,6 +728,135 @@ def probe_icecast(cfg, timeout):
     return _result(True, 'Moins d\'auditeurs que prévu' if warn else 'Flux en ligne', lat, metrics, warn=warn)
 
 
+# ── Flux audio écouté (STREAM_PROBE_PATCH) ─────────────────────────────────
+_STREAM_SILENCE = {}          # url -> début du silence en cours (s)
+
+
+def _icy_strip(chunks, metaint):
+    """Retire les métadonnées ICY intercalées tous les `metaint` octets ; renvoie (audio, titre)."""
+    data = b''.join(chunks)
+    if not metaint:
+        return data, ''
+    audio, title, i = bytearray(), '', 0
+    while i < len(data):
+        audio += data[i:i + metaint]
+        i += metaint
+        if i >= len(data):
+            break
+        n = data[i] * 16
+        meta = data[i + 1:i + 1 + n].rstrip(b'\0').decode('utf-8', 'replace')
+        i += 1 + n
+        m = re.search(r"StreamTitle='(.*?)';", meta)
+        if m and m.group(1).strip():
+            title = m.group(1).strip()
+    return bytes(audio), title
+
+
+def _stream_listeners(url, timeout, verify):
+    """Auditeurs et débit depuis la page d'état Icecast du serveur, si elle est publique."""
+    u = urlparse(url)
+    try:
+        r = requests.get(f"{u.scheme}://{u.netloc}/status-json.xsl", timeout=timeout, verify=verify)
+        sources = (r.json().get('icestats') or {}).get('source') or []
+    except (requests.exceptions.RequestException, ValueError, AttributeError):
+        return None
+    if isinstance(sources, dict):
+        sources = [sources]
+    for src in sources:
+        if urlparse(str(src.get('listenurl', ''))).path.rstrip('/') == u.path.rstrip('/'):
+            return src
+    return None
+
+
+def probe_stream(cfg, timeout):
+    """Écoute le flux quelques secondes : le son arrive-t-il, à quel niveau, depuis quand
+    est-il silencieux ? Un point de montage peut rester « présent » sur le serveur en ne
+    diffusant que du silence : seule l'écoute le voit."""
+    if not shutil.which('ffmpeg'):
+        return _result(False, 'ffmpeg absent (sudo apt install ffmpeg)')
+    url, listen = cfg['url'], float(cfg.get('listen_s') or 5)
+    t0 = time.perf_counter()
+    try:
+        r = requests.get(url, stream=True, timeout=(timeout, timeout), verify=cfg.get('verify_tls', True),
+                         headers={'Icy-MetaData': '1', 'User-Agent': 'BL-RMO stream probe'})
+    except requests.exceptions.SSLError:
+        return _result(False, 'Erreur de certificat HTTPS')
+    except requests.exceptions.RequestException:
+        return _result(False, 'Flux injoignable')
+    lat = (time.perf_counter() - t0) * 1000
+    try:
+        if r.status_code != 200:
+            return _result(False, f'Flux indisponible (HTTP {r.status_code})', lat)
+        ctype = r.headers.get('Content-Type', '').split(';')[0].strip().lower()
+        if ctype and not (ctype.startswith('audio/') or ctype in ('application/ogg', 'video/mp2t', 'application/octet-stream')):
+            return _result(False, f'Pas un flux audio ({ctype})', lat)
+        try:
+            metaint = int(r.headers.get('icy-metaint') or 0)
+        except ValueError:
+            metaint = 0
+        chunks, got, end = [], 0, time.monotonic() + listen
+        for chunk in r.iter_content(chunk_size=8192):
+            if chunk:
+                chunks.append(chunk)
+                got += len(chunk)
+            if time.monotonic() >= end or got > 4_000_000:
+                break
+    except requests.exceptions.RequestException:
+        return _result(False, 'Flux coupé pendant l\'écoute', lat)
+    finally:
+        r.close()
+    audio, title = _icy_strip(chunks, metaint)
+    if len(audio) < 4096:
+        return _result(False, 'Aucun son reçu', lat)
+    try:
+        p = subprocess.run(['ffmpeg', '-hide_banner', '-nostats', '-nostdin', '-i', 'pipe:0',
+                            '-af', 'volumedetect', '-f', 'null', '-'],
+                           input=audio, capture_output=True, timeout=30)
+        err = p.stderr.decode('utf-8', 'replace')
+    except subprocess.TimeoutExpired:
+        return _result(False, 'Décodage du flux trop long', lat)
+    mx = re.search(r'max_volume:\s*(-?[\d.]+|-inf) dB', err)
+    mean = re.search(r'mean_volume:\s*(-?[\d.]+|-inf) dB', err)
+    if not mx:
+        return _result(False, 'Flux reçu mais illisible (format ?)', lat)
+    peak = -120.0 if mx.group(1) == '-inf' else float(mx.group(1))
+    rms = None if not mean or mean.group(1) == '-inf' else float(mean.group(1))
+
+    now, warn, msg = time.time(), False, 'Son présent'
+    metrics = [{'label': 'Niveau crête', 'value': round(peak, 1), 'display': f'{peak:.1f}'.replace('.', ','), 'unit': 'dBFS', 'state': None}]
+    if rms is not None:
+        metrics.append({'label': 'Niveau moyen', 'value': round(rms, 1), 'display': f'{rms:.1f}'.replace('.', ','), 'unit': 'dBFS', 'state': None})
+    if peak < float(cfg.get('silence_db', -50)):
+        since = _STREAM_SILENCE.setdefault(url, now)
+        lasted = now - since
+        metrics[0]['state'] = 'warn'
+        if lasted >= float(cfg.get('silence_s', 60)):
+            warn, msg = True, 'Silence depuis ' + (f'{int(lasted)} s' if lasted < 120 else _fmt_uptime(lasted))
+        else:
+            msg = f'Silence ({int(lasted)} s, alerte à {int(cfg.get("silence_s", 60))} s)'
+    else:
+        _STREAM_SILENCE.pop(url, None)
+    src = _stream_listeners(url, timeout, cfg.get('verify_tls', True))
+    br = None
+    if src:
+        listeners = int(src.get('listeners') or 0)
+        item = {'label': 'Auditeurs', 'value': listeners, 'display': str(listeners), 'unit': '', 'state': None}
+        if cfg.get('min_listeners') is not None and listeners < cfg['min_listeners']:
+            item['state'], warn = 'warn', True
+            msg = msg if msg != 'Son présent' else 'Moins d\'auditeurs que prévu'
+        metrics.append(item)
+        br = src.get('bitrate') or src.get('ice-bitrate')
+    br = br or r.headers.get('icy-br')
+    try:
+        br = int(str(br).split(',')[0]) if br else None
+        metrics.append({'label': 'Débit', 'value': br, 'display': str(br), 'unit': 'kb/s', 'state': None})
+    except ValueError:
+        pass
+    if title:
+        metrics.append({'label': 'Titre', 'value': title, 'display': title[:60], 'unit': '', 'state': None})
+    return _result(True, msg, lat, metrics, warn=warn)
+
+
 def probe_fm_local(fm):
     if fm is None:
         return _result(False, 'Moniteur FM arrêté')
@@ -811,6 +950,8 @@ def run_probe(dev, fm_getter=None, dab_getter=None):
             return probe_snmp(cfg, timeout)
         if probe == 'icecast':
             return probe_icecast(cfg, timeout)
+        if probe == 'stream':
+            return probe_stream(cfg, timeout)
         if probe == 'fm_local':
             return probe_fm_local(fm_getter() if fm_getter else None)
         if probe == 'dab_local':

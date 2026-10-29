@@ -176,7 +176,7 @@ const STATES = {
   disabled: { label: 'Désactivé',    dot: '#e2e8f0', bg: '#f1f5f9', fg: '#64748b' },
 };
 const NO_PROBE = { label: 'Non surveillé', dot: '#cbd5e1', bg: '#f1f5f9', fg: '#475569' };
-const PROBE_LABELS = { ping: 'Ping', burst: 'Ping qualité', tcp: 'Port TCP', http: 'Page web', snmp: 'SNMP', icecast: 'Icecast', fm_local: 'Récepteur FM local', dab_local: 'Réception DAB+ locale', livebox: 'Livebox' };
+const PROBE_LABELS = { ping: 'Ping', burst: 'Ping qualité', tcp: 'Port TCP', http: 'Page web', snmp: 'SNMP', icecast: 'Icecast', stream: 'Flux audio', fm_local: 'Récepteur FM local', dab_local: 'Réception DAB+ locale', livebox: 'Livebox' };
 const LINE = { up: '#10b981', warn: '#f59e0b', unstable: '#f59e0b', down: '#ef4444' };
 
 let all = [];            // état complet renvoyé par /api/chain/status
@@ -310,6 +310,16 @@ function arrowHtml(a, b) {
     <span class="text-[10px] text-gray-500 font-mono">${esc(l2)}</span>
   </button>`;
 }
+const isReception = d => d && ['fm_local', 'dab_local', 'stream'].includes(d.probe);
+// Vers le bloc Réception : la FM, le DAB+ et le flux web arrivent par des chemins
+// différents ; leur état est dans leurs tuiles, pas répété sur la flèche.
+function diffusionHtml(a) {
+  return `<div class="w-full flex items-center gap-3 rounded-xl px-4 py-2" style="border:1px dashed #e2e8f0">
+    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16m0 0l-5-5m5 5l5-5"/></svg>
+    <span class="text-[13px] font-semibold text-gray-700">Diffusion</span>
+    <span class="text-[11px] text-gray-500">FM, DAB+ et flux web arrivent chacun par leur chemin : état de chaque réception ci-dessous</span>
+  </div>`;
+}
 function bandHtml(a, b) {
   const air = airLink(b);
   const p = air ? b : linkProbe(a, b), key = air ? `d:${b.id}` : `l:${a.id}-${b.id}`, on = sel === key, s = st(p);
@@ -347,7 +357,7 @@ function renderSynoptic() {
   sections.forEach((sec, i) => {
     if (i > 0) {
       const prev = sections[i - 1].devs;
-      html += bandHtml(prev[prev.length - 1], sec.devs[0]);
+      html += isReception(sec.devs[0]) ? diffusionHtml(prev[prev.length - 1]) : bandHtml(prev[prev.length - 1], sec.devs[0]);
     }
     const secSensors = sensors().filter(c => !placed.has(c.id) && (c.site || '') === sec.site);
     secSensors.forEach(c => placed.add(c.id));
@@ -358,7 +368,8 @@ function renderSynoptic() {
       html += tileHtml(d);
       // Réceptions FM et DAB+ : arrivées en parallèle, pas de flèche entre elles ni vers le DAB+
       // (le DAB+ ne sort pas de l'émetteur FM : il part du processeur vers le prestataire).
-      if (j < sec.devs.length - 1) html += sec.devs[j + 1].probe === 'dab_local' ? '<span style="width:40px" class="flex-shrink-0"></span>' : arrowHtml(d, sec.devs[j + 1]);
+      if (j < sec.devs.length - 1) html += isReception(sec.devs[j + 1]) && (sec.devs[j + 1].probe !== 'fm_local' || isReception(d))
+        ? '<span style="width:40px" class="flex-shrink-0"></span>' : arrowHtml(d, sec.devs[j + 1]);
     });
     html += '</div></section>';
   });
@@ -413,7 +424,7 @@ function resolveSel() {
 }
 function tabsFor(r) {
   // La réception FM est BL-RMO lui-même : pas de journaux syslog à recevoir
-  if (r.kind === 'device' && ['fm_local', 'dab_local'].includes(r.ent.probe)) return [['etat', 'État'], ['historique', 'Historique'], ['reglages', 'Réglages']];
+  if (r.kind === 'device' && ['fm_local', 'dab_local', 'stream'].includes(r.ent.probe)) return [['etat', 'État'], ['historique', 'Historique'], ['reglages', 'Réglages']];
   if (r.kind === 'device') return [['etat', 'État'], ['journaux', 'Journaux'], ['historique', 'Historique'], ['reglages', 'Réglages']];
   if (!r.ent) return [['etat', 'État'], ['reglages', 'Réglages']];
   return [['etat', 'État'], ['historique', 'Historique'], ['reglages', 'Réglages']];
@@ -543,7 +554,7 @@ function renderMetrics() {
   const r = resolveSel();
   if (!r || !r.ent || !$('p-metrics')) return;
   const e = r.ent;
-  const okMsg = ['SNMP OK', 'Réception FM correcte', 'Répond au ping'].includes(e.message) || /^\d+\/\d+ réponses$/.test(e.message || '');
+  const okMsg = ['SNMP OK', 'Réception FM correcte', 'Répond au ping', 'Son présent'].includes(e.message) || /^\d+\/\d+ réponses$/.test(e.message || '');
   $('p-msg').innerHTML = e.message && !okMsg
     ? `<div class="mb-3 rounded-lg px-3 py-2 text-xs" style="background:${st(e).bg};color:${st(e).fg}">${esc(e.message)}</div>` : '';
   const ms = mergeStereo(e.metrics || []);
