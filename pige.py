@@ -24,6 +24,7 @@ ce qui évite toute ambiguïté au passage heure d'été / heure d'hiver.
 import glob
 import json
 import logging
+import math
 import os
 import re
 import shutil
@@ -140,6 +141,13 @@ class PigeStore:
                 size = os.path.getsize(path)
             except (ValueError, OSError):
                 continue
+            # ffmpeg (-segment_atclocktime) coupe parfois une fraction de seconde avant
+            # l'heure ronde, et le nom tronqué à la seconde recule alors d'une seconde
+            # (104459 au lieu de 104500) : la lecture sautait de 11:49:58 à 11:50:00.
+            # Un début à moins de 1,5 s avant une limite de segment est recalé dessus.
+            boundary = math.ceil(start / self.seg_len) * self.seg_len if self.seg_len else start
+            if 0 < boundary - start <= 1.5:
+                start = boundary
             items.append({'name': name, 'path': path, 'start': start, 'size': size})
         items.sort(key=lambda s: s['start'])
 

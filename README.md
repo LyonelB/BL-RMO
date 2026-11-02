@@ -192,7 +192,7 @@ La réception DAB+ reste en veille jusqu'à son activation dans la page **DAB+**
 | `bl-rmo` | Application web, réception FM, supervision de la chaîne | 5000 (derrière Nginx 80/443) |
 | `bl-rmo-pige` | Enregistrement de la pige | lit Icecast 8000 |
 | `bl-rmo-syslog` | Réception des journaux et des traps | UDP 514, UDP 162 |
-| `bl-rmo-dab` | Réception DAB+ (pilote welle-cli) | welle-cli 7979, local |
+| `bl-rmo-dab` | Réception DAB+ (pilote welle-cli) | welle-cli 7979 (interface web de welle-cli, accessible sur le réseau) |
 | `icecast2` | Flux audio de l'antenne (retour FM et pige) | 8000 |
 
 La supervision SNMP de la chaîne utilise `snmpget` : `sudo apt install snmp` s'il n'est pas déjà présent.

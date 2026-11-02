@@ -16,6 +16,8 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 - **Journaux** : les blocs « Titres diffusés (RadioText) » et « Titres diffusés (DLS) » se replient, état mémorisé dans le navigateur.
 - **Chaîne** : au-delà de 24 h, la durée d'un état s'affiche en jours et heures (« 13 j 4 h ») au lieu d'un compteur d'heures ; la date exacte reste au survol et dans le détail.
 - **Pige** : après une coupure de la source, les 2 à 5 s que ffmpeg met à se reconnecter sont comblées par du silence, comme le reste de la coupure : plus de petits trous dans la pige (vus sur la pige DAB+ le 26/10), ni d'extrait signalé incomplet pour si peu.
+- **Pige** : la lecture ne saute plus d'une ou deux secondes au changement de segment (11:49:58 puis 11:50:00). ffmpeg coupe parfois un segment une fraction de seconde avant l'heure ronde et son nom, tronqué à la seconde, reculait d'une seconde : le début est recalé sur l'heure ronde. Aucun son n'était perdu.
+- **Chaîne** : descriptions des sondes plus claires dans l'ajout d'un appareil : « Icecast » lit la page d'état du serveur sans écouter, « Flux audio » écoute le flux.
 - **README** : décodage DAB+ conseillé, réglage du gain de la clé (14,4 dB sur une NESDR SMArTee), filtre coupe-bande FM en option.
 
 ### Parc : délai avant alerte, SNMP muet distingué d'une panne
