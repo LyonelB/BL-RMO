@@ -1229,6 +1229,9 @@ function renderDab() {
     if (a.status === 'complete') {
       range += ' → ' + hms(new Date(a.end));
       state = '<span class="px-2 py-0.5 rounded-full bg-green-50 text-green-700">Rétabli</span>';
+    } else if (a.status === 'orphan') {
+      range += ' → <span class="text-gray-400">?</span>';
+      state = '<span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600" title="Fin non enregistrée (surveillance DAB+ redémarrée pendant l\'alerte)">Fin inconnue</span>';
     } else {
       range += ' → <span class="text-red-600 font-medium">en cours</span>';
       state = '<span class="px-2 py-0.5 rounded-full bg-red-50 text-red-700">En cours</span>';

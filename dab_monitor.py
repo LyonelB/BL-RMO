@@ -46,6 +46,8 @@ DEFAULTS = {
     'channel': '9A',
     'frequency_mhz': 202.928,
     'ensemble_name': '',          # libellé attendu (affichage seulement)
+    'receiver': 'rtlsdr',         # rtlsdr : clé RTL-SDR + welle-cli ; si468x : dongle Si468X Headless (mc_popa)
+    'si468x_card': 'hw:DAB',      # carte son du dongle Si468x
     'welle_cli': 'welle-cli',     # chemin du binaire (fork welle-monitor conseillé)
     'port': 7979,
     'gain': -1,                   # -1 = AGC de welle-cli ; sinon indice dans la table de gains de la clé
@@ -118,7 +120,10 @@ def raw_to_dbfs(raw):
 
 
 def decode_mode(cfg):
-    """'watched' (services surveillés seulement), 'all' (-D) ou 'carousel' (-C N)."""
+    """'watched' (services surveillés seulement), 'all' (-D) ou 'carousel' (-C N).
+    Le dongle Si468x ne décode qu'un service : toujours 'watched'."""
+    if cfg.get('receiver') == 'si468x':
+        return 'watched'
     try:
         n = int(cfg.get('carousel_size', 0) or 0)
     except (TypeError, ValueError):
@@ -149,6 +154,8 @@ def parse_mux(data):
         'snr': float(demod.get('snr', 0) or 0),
         'freq_corr': float(demod.get('frequencycorrection', 0) or 0),
         'fic_errors': int((demod.get('fic', {}) or {}).get('numcrcerrors', 0) or 0),
+        # Dongle Si468x : qualité FIC donnée directement par la puce (%)
+        'fic_direct': (float(demod['ficquality']) if demod.get('ficquality') is not None else None),
         'gain': float(((data.get('receiver', {}) or {}).get('hardware', {}) or {}).get('gain', 0) or 0),
         'hardware': ((data.get('receiver', {}) or {}).get('hardware', {}) or {}).get('name', ''),
         'ensemble_label': ((ens.get('label', {}) or {}).get('label', '') or '').strip(),
@@ -360,6 +367,30 @@ class DabMonitor:
             except Exception as e:
                 logger.warning(f"Mail indisponible ({e}) : alertes en base seulement")
         init_db(db_path)
+        self._close_open_events()
+
+    def _close_open_events(self):
+        """Au démarrage, les alertes restées ouvertes ne seront jamais rétablies (leur état
+        est perdu) : elles sont marquées « fin non enregistrée » au lieu de rester en cours."""
+        try:
+            with _connect(self.db_path) as c:
+                rows = c.execute('SELECT kind, sid, label, state FROM dab_events ORDER BY timestamp, id').fetchall()[-2000:]
+                open_ = {}
+                for r in rows:
+                    key = (r['kind'], r['sid'])
+                    if r['state'] == 'lost':
+                        open_[key] = r['label']
+                    else:
+                        open_.pop(key, None)
+                now = datetime.now().isoformat(timespec='seconds')
+                for (kind, sid), label in open_.items():
+                    c.execute('INSERT INTO dab_events (timestamp, kind, sid, label, state, channel, message, email_sent) '
+                              'VALUES (?,?,?,?,?,?,?,0)', (now, kind, sid, label, 'reset', str(self.cfg['channel']),
+                                                           'Surveillance DAB+ redémarrée pendant l\'alerte'))
+                if open_:
+                    logger.info(f"{len(open_)} alerte(s) DAB+ restée(s) ouverte(s) marquée(s) « fin non enregistrée »")
+        except sqlite3.Error as e:
+            logger.error(f"Clôture des alertes DAB+ ouvertes : {e}")
 
     @staticmethod
     def _mtime(p):
@@ -384,17 +415,28 @@ class DabMonitor:
                 self.email.reload_config(self.config_file)
             except Exception:
                 pass
-        keys = ('channel', 'welle_cli', 'port', 'gain', 'carousel_size')
+        keys = ['channel', 'welle_cli', 'port', 'gain', 'carousel_size', 'receiver', 'si468x_card']
+        if self.cfg.get('receiver') == 'si468x':
+            keys += ['watched_sids', 'dashboard_sid']        # le dongle ne décode que le service surveillé
         if any(old.get(k) != self.cfg.get(k) for k in keys):
-            logger.info("Réglages du récepteur modifiés : relance de welle-cli")
+            logger.info("Réglages du récepteur modifiés : relance du récepteur")
             if old.get('channel') != self.cfg.get('channel'):
                 with self.lock:
                     self.services.clear()
             self._kill_welle()
 
     # ── welle-cli ────────────────────────────────────────────────────────
+    def is_si468x(self):
+        return self.cfg.get('receiver') == 'si468x'
+
     def _cmd(self):
         c = self.cfg
+        if self.is_si468x():
+            # Dongle Si468x servi avec l'API de welle-cli (/mux.json, /mp3, /slide)
+            held = self.held_sids()
+            cmd = [sys.executable, os.path.join(BASE_DIR, 'si468x_server.py'), '-c', str(c['channel']),
+                   '-w', str(int(c['port'])), '--card', str(c.get('si468x_card') or 'hw:DAB')]
+            return cmd + (['--sid', held[0]] if held else [])
         cmd = [c['welle_cli'], '-c', str(c['channel']), '-g', str(int(c.get('gain', -1)))]
         mode = decode_mode(c)
         if mode == 'all':
@@ -417,7 +459,7 @@ class DabMonitor:
             pass
         reset = self.cfg.get('usb_reset_cmd') or (
             'sudo -n /usr/local/bin/rtlsdr-usb-reset.sh' if os.path.exists('/usr/local/bin/rtlsdr-usb-reset.sh') else '')
-        if reset and (self.backoff > 5 or self._force_reset):
+        if reset and not self.is_si468x() and (self.backoff > 5 or self._force_reset):
             logger.info("Réinitialisation USB de la clé RTL-SDR")
             try:
                 subprocess.run(reset, shell=True, timeout=30,
@@ -463,17 +505,17 @@ class DabMonitor:
     # hors service (alerte « Récepteur DAB+ hors service » après son délai).
     NO_DONGLE_MARKS = ('No valid device found', 'RTL-SDR is unplugged', 'No devices found')
 
-    @staticmethod
-    def dongle_present():
-        """Une clé RTL-SDR (Realtek 0bda:2832 ou 2838) est-elle visible sur l'USB ?"""
+    def dongle_present(self):
+        """Le récepteur configuré (clé RTL-SDR 0bda:2832/2838 ou dongle Si468x 1209:468f)
+        est-il visible sur l'USB ?"""
         import glob
+        want = {('1209', '468f')} if self.is_si468x() else {('0bda', '2832'), ('0bda', '2838')}
         for d in glob.glob('/sys/bus/usb/devices/*'):
             try:
                 with open(os.path.join(d, 'idVendor')) as f:
-                    if f.read().strip() != '0bda':
-                        continue
+                    v = f.read().strip()
                 with open(os.path.join(d, 'idProduct')) as f:
-                    if f.read().strip() in ('2832', '2838'):
+                    if (v, f.read().strip()) in want:
                         return True
             except OSError:
                 continue
@@ -611,6 +653,11 @@ class DabMonitor:
         sids = list(self.cfg.get('watched_sids') or [])
         if not sids and self.cfg.get('dashboard_sid'):
             sids = [str(self.cfg['dashboard_sid']).lower()]
+        if self.is_si468x():
+            # Le Si4684 ne décode qu'un service : le service du tableau de bord s'il est
+            # coché, sinon le premier coché
+            dash = str(self.cfg.get('dashboard_sid') or '').lower()
+            sids = [dash] if dash and (dash in sids or not sids) else sids[:1]
         return sids
 
     def _sync_holders(self):
@@ -807,7 +854,7 @@ class DabMonitor:
         # Qualité FIC : erreurs CRC apparues depuis le relevé précédent (compteur cumulatif)
         delta = 0 if self.fic_prev is None or m['fic_errors'] < self.fic_prev else m['fic_errors'] - self.fic_prev
         self.fic_prev = m['fic_errors']
-        fic_q = max(0.0, 100.0 - min(delta * 2.0, 100.0))
+        fic_q = max(0.0, 100.0 - min(delta * 2.0, 100.0)) if m['fic_direct'] is None else m['fic_direct']
         self.rf_window.append((now, m['snr'], fic_q, m['gain']))
         self.rf_window = [w for w in self.rf_window if w[0] >= now - 15]
         n = len(self.rf_window)
@@ -1028,6 +1075,7 @@ class DabMonitor:
             'receiver_since': self.welle_since,
             'receiver_error': self.last_error,
             'mode': MODE_LABELS[decode_mode(c)],
+            'receiver': c.get('receiver') or 'rtlsdr',
             'held_sids': sorted(self._holders),
             'rf': rf,
             'ensemble_ok': ens_ok,
@@ -1091,6 +1139,17 @@ RTL_USB_IDS = {('0bda', '2838'), ('0bda', '2832')}
 def prerequisites(cfg):
     """Ce qui manque pour recevoir le DAB+ : welle-cli, clé RTL-SDR, pilote TNT écarté."""
     import shutil
+    if cfg.get('receiver') == 'si468x':
+        dongle = None
+        try:
+            from usb_receivers import list_receivers
+            d = next((r for r in list_receivers() if r['kind'] == 'si468x'), None)
+            if d:
+                dongle = f"{d['product'] or 'Si468X Headless DAB'} ({d['card'] or 'carte son ?'})"
+        except Exception:
+            pass
+        return {'receiver': 'si468x', 'welle_cli': 'non nécessaire', 'dongle': dongle,
+                'arecord': shutil.which('arecord'), 'dvb_driver_loaded': False}
     exe = cfg.get('welle_cli') or 'welle-cli'
     welle = shutil.which(exe) or (exe if os.path.isabs(exe) and os.access(exe, os.X_OK) else None)
     dongle = None
@@ -1114,6 +1173,7 @@ def prerequisites(cfg):
     except OSError:
         pass
     return {
+        'receiver': 'rtlsdr',
         'welle_cli': welle,
         'dongle': dongle,
         'dvb_driver_loaded': os.path.isdir('/sys/module/dvb_usb_rtl28xxu'),
@@ -1199,6 +1259,13 @@ class DabReader:
         open_, out = {}, []
         for r in rows:
             key = (r['kind'], r['sid'])
+            if r['state'] == 'reset' or (r['state'] == 'lost' and key in open_):
+                # Surveillance DAB+ redémarrée (ou nouveau défaut) pendant l'alerte :
+                # la fin de la précédente n'a pas été constatée
+                if key in open_:
+                    open_.pop(key)['status'] = 'orphan'
+                if r['state'] == 'reset':
+                    continue
             if r['state'] == 'lost':
                 item = {'kind': r['kind'], 'label': KIND_LABELS.get(r['kind'], r['kind']),
                         'service': r['label'], 'sid': r['sid'], 'channel': r['channel'],

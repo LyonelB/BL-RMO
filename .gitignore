@@ -94,3 +94,7 @@ syslog.db*
 # État courant de la réception DAB+ (écrit par bl-rmo-dab)
 dab_state.json
 .dab_state.*
+
+# Dongle DAB+ Si468x : SID appris par ensemble
+si468x_sids.json
+si468x_sids.json.tmp

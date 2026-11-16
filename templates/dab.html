@@ -119,7 +119,7 @@
         <div class="text-xs text-gray-400 mt-1 font-mono" id="ens-sub">&nbsp;</div>
       </div>
       <div class="section" style="margin-bottom:0">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">SNR</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="snr-title">SNR</div>
         <div class="text-base font-semibold font-mono" id="snr">-</div>
         <div class="h-1.5 rounded bg-gray-100 mt-2 overflow-hidden"><div id="snr-bar" class="h-full bg-gray-300" style="width:0"></div></div>
       </div>
@@ -255,7 +255,7 @@
           <div class="text-xs font-semibold text-gray-700">Balayage de la bande III (dongle Si468x, essai)</div>
           <button onclick="startScan()" id="scan-btn" class="ml-auto text-[11px] font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1">Lancer le balayage</button>
         </div>
-        <p class="text-[11px] text-gray-400 mt-1">Les 38 canaux de 5A à 13F, environ 1 min 30. Le dongle n'est utilisé que pendant le balayage : la clé RTL-SDR et welle-cli continuent la surveillance.</p>
+        <p class="text-[11px] text-gray-400 mt-1">Les 38 canaux de 5A à 13F, environ 1 min 30. Possible quand le dongle n'assure pas la surveillance DAB+ (récepteur « Clé RTL-SDR » dans les réglages, ou réception désactivée).</p>
         <div id="scan-progress" class="hidden mt-3">
           <div class="flex items-center gap-2 text-xs text-gray-500"><span id="scan-label"></span></div>
           <div class="h-1.5 rounded bg-gray-100 mt-1 overflow-hidden"><div id="scan-bar" class="h-full bg-blue-500" style="width:0"></div></div>
@@ -275,14 +275,19 @@
         <label class="flex items-center gap-2 sm:col-span-2 lg:col-span-3">
           <input type="checkbox" id="s-enabled" class="w-4 h-4">
           <span class="font-medium text-gray-800">Activer la réception DAB+</span>
-          <span class="text-xs text-gray-400">(clé RTL-SDR dédiée, welle-cli installé)</span>
         </label>
+        <label class="block"><span class="text-xs text-gray-500">Récepteur</span>
+          <select id="s-receiver" onchange="receiverFields()" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
+            <option value="rtlsdr">Clé RTL-SDR + welle-cli</option>
+            <option value="si468x">Dongle Si468x (essai)</option>
+          </select>
+          <span class="text-[11px] text-gray-400" id="s-receiver-help"></span></label>
         <label class="block"><span class="text-xs text-gray-500">Canal</span>
           <select id="s-channel" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"></select>
           <span class="text-[11px] text-gray-400 font-mono" id="s-freq"></span></label>
         <label class="block"><span class="text-xs text-gray-500">Nom de l'ensemble (affichage)</span>
           <input id="s-ensemble_name" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="ex. LA ROCHE SUR YON"></label>
-        <label class="block"><span class="text-xs text-gray-500">Décodage</span>
+        <label class="block rtl-only"><span class="text-xs text-gray-500">Décodage</span>
           <select id="s-carousel_size" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
             <option value="-1">Services surveillés seulement (conseillé)</option>
             <option value="0">Tous les services en continu</option>
@@ -294,7 +299,7 @@
           <select id="s-dashboard_sid" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
             <option value="">Premier service surveillé</option>
           </select></label>
-        <label class="block"><span class="text-xs text-gray-500" title="Gain de la clé RTL-SDR (tuner R820T/R828D). L'automatique de welle-cli peut retarder la synchronisation de plusieurs minutes ; un gain fixe synchronise en quelques secondes.">Gain de la clé</span>
+        <label class="block rtl-only"><span class="text-xs text-gray-500" title="Gain de la clé RTL-SDR (tuner R820T/R828D). L'automatique de welle-cli peut retarder la synchronisation de plusieurs minutes ; un gain fixe synchronise en quelques secondes.">Gain de la clé</span>
           <select id="s-gain" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
             <option value="-1">Automatique (welle-cli)</option>
             <option value="0">0,0 dB</option>
@@ -397,6 +402,14 @@
   // Étapes de mise en service : seules celles qui restent à faire sont en attente
   function prereqList(p) {
     const ok = '<span class="text-green-600 font-bold">✓</span>', todo = '<span class="text-amber-600 font-bold">○</span>';
+    if (p.receiver === 'si468x') {
+      const rows2 = [
+        [!!p.dongle, p.dongle ? `Dongle Si468x branché : ${esc(p.dongle)}` : 'Brancher le dongle Si468x et son antenne bande III'],
+        [!!p.arecord, p.arecord ? 'arecord installé' : 'Installer arecord : <code>sudo apt install alsa-utils</code>'],
+        [false, 'Cocher « Activer la réception DAB+ » dans les réglages en bas de page'],
+      ];
+      return '<ul class="space-y-1 mt-1">' + rows2.map(([d, t]) => `<li class="flex gap-2"><span>${d ? ok : todo}</span><span>${t}</span></li>`).join('') + '</ul>';
+    }
     const rows = [
       [!!p.welle_cli, p.welle_cli ? `welle-cli installé (<code>${esc(p.welle_cli)}</code>)`
                                   : 'Installer welle-cli : <code>sudo BUILD_WELLE=1 bash install/build/67-dab.sh</code>'],
@@ -433,7 +446,9 @@
     $('rx-sub').title = $('rx-sub').textContent;
     // Ensemble et RF
     $('ens-label').textContent = rf.ensemble_label || '-';
-    $('ens-sub').textContent = rf.ensemble_id ? `EId ${rf.ensemble_id} · gain ${rf.gain} dB` : ' ';
+    const dongle = s.receiver === 'si468x';
+    $('ens-sub').textContent = rf.ensemble_id ? `EId ${rf.ensemble_id}` + (dongle ? '' : ` · gain ${rf.gain} dB`) : ' ';
+    $('snr-title').textContent = dongle ? 'CNR (MER)' : 'SNR';
     const th = s.thresholds || {};
     if (up && rf.snr != null) {
       $('snr').textContent = `${rf.snr.toFixed(1)} dB`;
@@ -538,14 +553,14 @@
     if (!d.events || !d.events.length) { $('events').innerHTML = 'Aucun événement.'; $('events-short').textContent = 'Aucun événement.'; return; }
     const e0 = d.events[0];
     $('events-short').innerHTML = `Dernier : <span class="text-gray-800 font-medium">${esc(e0.label)}${e0.service ? ' : ' + esc(e0.service) : ''}</span> le ${fmtDate(e0.start)}`
-      + (e0.status === 'ongoing' ? ' · <span class="text-red-600 font-medium">en cours</span>' : ` · ${fmtDur(e0.duration)}`);
+      + (e0.status === 'ongoing' ? ' · <span class="text-red-600 font-medium">en cours</span>' : e0.status === 'orphan' ? ' · fin inconnue' : ` · ${fmtDur(e0.duration)}`);
     $('events').innerHTML = '<div class="divide-y divide-gray-100">' + d.events.map(e => {
       const ongoing = e.status === 'ongoing';
       return `<div class="flex flex-wrap items-baseline gap-x-4 gap-y-0.5 py-2">
         <div class="font-mono text-gray-500" style="min-width:110px">${fmtDate(e.start)}</div>
         <div class="flex-1 text-sm text-gray-800" style="min-width:200px">${esc(e.label)}${e.service ? ' : <b>' + esc(e.service) + '</b>' : ''}
           <div class="text-xs text-gray-400">${esc(e.message || '')}</div></div>
-        <div class="whitespace-nowrap ${ongoing ? 'text-red-600 font-medium' : 'text-gray-500'}">${ongoing ? 'En cours' : 'Durée ' + fmtDur(e.duration)}</div>
+        <div class="whitespace-nowrap ${ongoing ? 'text-red-600 font-medium' : 'text-gray-500'}" ${e.status === 'orphan' ? 'title="Surveillance DAB+ redémarrée pendant l\'alerte"' : ''}>${ongoing ? 'En cours' : e.status === 'orphan' ? 'Fin inconnue' : 'Durée ' + fmtDur(e.duration)}</div>
       </div>`;
     }).join('') + '</div>';
   }
@@ -594,7 +609,12 @@
   function pickDefault() {
     const svcs = (st && st.services) || [];
     if (!st || !st.enabled) { $('pl-name').textContent = 'Réception DAB+ désactivée'; spectrum.clear('Réception DAB+ désactivée'); return; }
-    if (shown) return;
+    if (shown) {
+      // Nom du service encore inconnu à la première sélection (liste pas encore reçue)
+      const v = svcs.find(x => x.sid === shown);
+      if (v && $('pl-name').textContent === shown) $('pl-name').textContent = v.label;
+      return;
+    }
     const want = st.default_sid || (st.watched_sids || [])[0] || (svcs[0] && svcs[0].sid);
     if (want) select(want);
     else { $('pl-name').textContent = 'Aucun service reçu pour le moment'; spectrum.clear('Aucun service reçu pour le moment'); }
@@ -742,7 +762,7 @@
   }
 
   // ── Réglages ───────────────────────────────────────────
-  const FIELDS = ['ensemble_name', 'carousel_size', 'gain', 'dashboard_sid', 'snr_threshold', 'fic_quality_threshold', 'ensemble_loss_duration',
+  const FIELDS = ['receiver', 'ensemble_name', 'carousel_size', 'gain', 'dashboard_sid', 'snr_threshold', 'fic_quality_threshold', 'ensemble_loss_duration',
                   'silence_threshold', 'silence_duration', 'service_loss_duration'];
   const EMAIL_KINDS = ['silence', 'absent', 'receiver', 'ensemble'];
   async function loadSettings() {
@@ -757,6 +777,15 @@
     const ek = settings.email_kinds || {};
     EMAIL_KINDS.forEach(k => { $('e-' + k).checked = ek[k] !== false; });
     $('s-freq').textContent = `${Number(settings.frequency_mhz).toFixed(3).replace('.', ',')} MHz`;
+    if (!settings.receiver) $('s-receiver').value = 'rtlsdr';
+    receiverFields();
+  }
+  function receiverFields() {
+    const dongle = $('s-receiver').value === 'si468x';
+    document.querySelectorAll('.rtl-only').forEach(el => el.classList.toggle('hidden', dongle));
+    $('s-receiver-help').textContent = dongle
+      ? "Un seul service décodé : celui du tableau de bord, sinon le premier coché. Les autres services restent suivis (présence), sans son."
+      : 'Décodage par welle-cli : plusieurs services possibles.';
   }
   async function post(body) {
     const r = await fetch('/api/dab/settings', {
@@ -810,8 +839,9 @@
       const d = await r.json();
       if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
       if (!d.receivers.length) { $('rx-list').textContent = 'Aucun récepteur reconnu (TEF, dongle Si468x ou clé RTL-SDR).'; return; }
-      const role = x => x.kind === 'rtlsdr' ? (d.dab_enabled ? 'Réception DAB+ (welle-cli)' : 'DAB+ désactivé')
-                    : x.kind === 'si468x' ? 'Essai : balayage' : 'Réception FM';
+      const rx = d.dab_enabled ? d.dab_receiver : '';
+      const role = x => x.kind === 'rtlsdr' ? (rx === 'rtlsdr' ? 'Réception DAB+ (welle-cli)' : 'Inutilisée')
+                    : x.kind === 'si468x' ? (rx === 'si468x' ? 'Réception DAB+' : 'Balayage') : 'Réception FM';
       $('rx-list').className = 'overflow-x-auto';
       $('rx-list').innerHTML = `<table class="w-full text-xs"><thead><tr class="text-left text-gray-400 border-b border-gray-100">
         <th class="py-1.5 pr-3 font-medium">Récepteur</th><th class="py-1.5 pr-3 font-medium">Appareil</th><th class="py-1.5 pr-3 font-medium">USB</th>

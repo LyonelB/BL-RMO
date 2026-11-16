@@ -126,7 +126,7 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 
 Le tuner apparaît sous Linux comme un port série (`/dev/ttyACM0`, protocole XDR) et une carte son (`hw:Tuner`). Il est reconnu par son identifiant USB `1209:6687` : si `/dev/ttyACM0` désigne un autre appareil (dongle DAB+ branché à côté), BL-RMO ouvre le port stable du TEF (`/dev/serial/by-id/...`).
 
-**En essai** : dongle DAB+ Si468X Headless (puce Skyworks Si4684, contrôle série et carte son USB `hw:DAB`, identifiant `1209:468f`). Pour l'instant, il sert au balayage de la bande III depuis la page DAB+ (bloc Récepteurs), à côté de la clé RTL-SDR qui reste le récepteur de surveillance.
+**En essai** : dongle DAB+ Si468X Headless (puce Skyworks Si4684, contrôle série et carte son USB `hw:DAB`, identifiant `1209:468f`), à la place de la clé RTL-SDR et de welle-cli (page DAB+, Réglages, « Récepteur ») : surveillance d'un service et écoute, avec la même interface. Un seul service décodé à la fois ; les autres services du multiplex restent suivis (présence). Quand il ne sert pas de récepteur, il balaye la bande III (bloc Récepteurs).
 
 ---
 
@@ -235,7 +235,8 @@ bl-rmo/
 ├── tef_driver.py       # Pilote du tuner TEF668X (protocole XDR)
 ├── tef_audio_analyzer.py # Analyse audio (niveaux, spectre, S/B)
 ├── usb_receivers.py    # Récepteurs USB branchés (TEF, dongle Si468x, clés RTL-SDR)
-├── si468x.py           # Dongle DAB+ Si468x : balayage de la bande III (essai)
+├── si468x.py           # Dongle DAB+ Si468x : protocole série, balayage de la bande III
+├── si468x_server.py    # Dongle DAB+ Si468x servi avec l'API de welle-cli (réception DAB+)
 ├── chain_probe.py      # Supervision de la chaîne (SNMP, sondes, événements)
 ├── park.py             # Parc : PC Windows, NAS Synology, sites web
 ├── audio_defects.py    # Défauts audio : micro-coupures, clics, craquements

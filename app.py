@@ -1520,7 +1520,8 @@ def dab_listen(sid):
 
 
 DAB_EDITABLE = {
-    'enabled': bool, 'channel': str, 'ensemble_name': str, 'gain': int, 'carousel_size': int,
+    'enabled': bool, 'channel': str,
+    'receiver': lambda v: 'si468x' if str(v) == 'si468x' else 'rtlsdr', 'ensemble_name': str, 'gain': int, 'carousel_size': int,
     'snr_threshold': float, 'fic_quality_threshold': float, 'silence_threshold': float,
     'silence_duration': int, 'service_loss_duration': int, 'ensemble_loss_duration': int,
     'receiver_loss_duration': int, 'listen_max_minutes': int,
@@ -1576,8 +1577,9 @@ def dab_receivers():
         recs = list_receivers()
     except Exception as e:
         return jsonify({'status': 'error', 'message': f'Détection impossible : {e}'}), 500
-    return jsonify({'status': 'ok', 'receivers': recs,
-                    'dab_enabled': bool(dab_reader.config().get('enabled'))})
+    cfg = dab_reader.config()
+    return jsonify({'status': 'ok', 'receivers': recs, 'dab_enabled': bool(cfg.get('enabled')),
+                    'dab_receiver': cfg.get('receiver') or 'rtlsdr'})
 
 
 @app.route('/api/dab/scan', methods=['GET', 'POST'])
@@ -1592,6 +1594,10 @@ def dab_scan():
         dongles = [r for r in list_receivers() if r['kind'] == 'si468x']
         if not dongles:
             return jsonify({'status': 'error', 'message': 'Aucun dongle Si468x branché'}), 400
+        cfg = dab_reader.config()
+        if cfg.get('enabled') and cfg.get('receiver') == 'si468x':
+            return jsonify({'status': 'error', 'message': "Le dongle assure la surveillance DAB+ : choisir la clé RTL-SDR "
+                                                          "ou désactiver la réception DAB+ avant de balayer"}), 409
         if not dab_band_scan.start(dongles[0]['port']):
             return jsonify({'status': 'error', 'message': 'Un balayage est déjà en cours'}), 409
         logger.info(f"Balayage DAB+ (dongle Si468x) lancé par {session.get('username', '?')}")
