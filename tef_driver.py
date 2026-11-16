@@ -213,8 +213,13 @@ class TEFDriver:
     ]
 
     def __init__(self, port='/dev/ttyACM0',
-                 on_signal=None, on_pi=None, on_ps=None, on_rt=None, on_ms=None):
+                 on_signal=None, on_pi=None, on_ps=None, on_rt=None, on_ms=None,
+                 port_resolver=None):
         self.port      = port
+        self.configured_port = port
+        # Appelé à chaque (re)connexion : port réel du TEF, ou None s'il est absent
+        # (évite d'ouvrir le dongle DAB+ quand l'ordre des /dev/ttyACM* change)
+        self.port_resolver = port_resolver
         self.on_signal = on_signal
         self.on_pi     = on_pi
         self._rds      = RDSDecoder(on_ps=on_ps, on_rt=on_rt, on_ms=on_ms)
@@ -286,6 +291,19 @@ class TEFDriver:
     def _loop(self):
         retry = 5
         while self._running:
+            if self.port_resolver:
+                try:
+                    real = self.port_resolver(self.configured_port)
+                except Exception:
+                    real = self.configured_port
+                if real is None:
+                    logger.warning(f"TEF absent ({self.configured_port} est un autre appareil), "
+                                   f"nouvel essai dans {retry}s")
+                    time.sleep(retry)
+                    continue
+                if real != self.port:
+                    logger.warning(f"TEF : ouverture de {real} (port configuré {self.configured_port})")
+                    self.port = real
             try:
                 with self._lock:
                     self._ser = serial.Serial(self.port, 115200, timeout=1)

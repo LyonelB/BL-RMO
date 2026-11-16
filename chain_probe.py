@@ -756,7 +756,10 @@ def _stream_listeners(url, timeout, verify):
     """Auditeurs et débit depuis la page d'état Icecast du serveur, si elle est publique."""
     u = urlparse(url)
     try:
-        r = requests.get(f"{u.scheme}://{u.netloc}/status-json.xsl", timeout=timeout, verify=verify)
+        # Page d'état de tout le serveur (38 points de montage à la Frap) : plus lente à
+        # servir que le flux, le délai de l'appareil (3 s par défaut) la faisait souvent
+        # abandonner et la ligne « Auditeurs » disparaissait.
+        r = requests.get(f"{u.scheme}://{u.netloc}/status-json.xsl", timeout=max(timeout, 10), verify=verify)
         sources = (r.json().get('icestats') or {}).get('source') or []
     except (requests.exceptions.RequestException, ValueError, AttributeError):
         return None

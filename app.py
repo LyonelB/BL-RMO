@@ -901,20 +901,14 @@ def scan_dongle():
     import glob, serial as _serial
     result = {'tef': [], 'rtlsdr': False}
 
-    # Détection TEF Headless FMDX.org par VID:PID (déterministe).
-    # 1209:6687 = FMDX.org TEF668X Headless (firmware FM-DX-Tuner, port CDC-ACM).
-    import subprocess as _sp
-    fmdx_present = False
+    # Détection TEF Headless FMDX.org par VID:PID (1209:6687, firmware FM-DX-Tuner),
+    # port par son chemin stable /dev/serial/by-id : le dongle DAB+ Si468x, lui aussi
+    # en /dev/ttyACM*, n'est jamais proposé comme récepteur FM.
     try:
-        _lsusb = _sp.run(['lsusb'], capture_output=True, text=True, timeout=5)
-        if '1209:6687' in (_lsusb.stdout + _lsusb.stderr):
-            fmdx_present = True
-    except Exception:
-        pass
-    # Associe le VID:PID à son /dev/ttyACM* (le firmware s'énumère en CDC-ACM).
-    acm_ports = sorted(glob.glob('/dev/ttyACM*'))
-    if fmdx_present:
-        result['tef'].extend(acm_ports if acm_ports else ['/dev/ttyACM0'])
+        from usb_receivers import list_receivers
+        result['tef'].extend(r['port'] for r in list_receivers() if r['kind'] == 'tef')
+    except Exception as e:
+        logger.warning(f"Détection des récepteurs USB : {e}")
     # Fallback : probe série PE5PVB pour un TEF6686 CH340 sur ttyUSB* (ancien montage).
     usb_ports = sorted(glob.glob('/dev/ttyUSB*'))
     for port in usb_ports:
@@ -1565,6 +1559,39 @@ def dab_settings():
     os.replace(tmp, 'config.json')
     logger.info(f"Réglages DAB+ enregistrés par {session.get('username', '?')}")
     return jsonify({'status': 'ok', 'settings': dab})
+
+
+# ── Récepteurs USB et dongle Si468x (essai) ─────────────────────────────────
+from si468x import BandScan
+dab_band_scan = BandScan()
+
+
+@app.route('/api/dab/receivers')
+@auth.login_required
+def dab_receivers():
+    """Récepteurs USB branchés (lecture de /sys, aucun port ouvert)."""
+    from usb_receivers import list_receivers
+    try:
+        recs = list_receivers()
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'Détection impossible : {e}'}), 500
+    return jsonify({'status': 'ok', 'receivers': recs,
+                    'dab_enabled': bool(dab_reader.config().get('enabled'))})
+
+
+@app.route('/api/dab/scan', methods=['GET', 'POST'])
+@auth.login_required
+def dab_scan():
+    """Balayage de la bande III avec le dongle Si468x (environ 1 min 30)."""
+    if request.method == 'POST':
+        from usb_receivers import list_receivers
+        dongles = [r for r in list_receivers() if r['kind'] == 'si468x']
+        if not dongles:
+            return jsonify({'status': 'error', 'message': 'Aucun dongle Si468x branché'}), 400
+        if not dab_band_scan.start(dongles[0]['port']):
+            return jsonify({'status': 'error', 'message': 'Un balayage est déjà en cours'}), 409
+        logger.info(f"Balayage DAB+ (dongle Si468x) lancé par {session.get('username', '?')}")
+    return jsonify({'status': 'ok', **dab_band_scan.snapshot()})
 
 
 @app.route('/api/dab/dls_history')

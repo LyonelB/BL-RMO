@@ -492,6 +492,12 @@ class FMMonitor:
         freq_khz = self._parse_freq_khz(self.rtl_config['frequency'])
         port     = self.tef_config.get('serial_port', '/dev/ttyACM0')
         alsa_dev = self.tef_config.get('alsa_device', 'hw:Tuner')
+        # Avec le dongle DAB+ branché à côté, /dev/ttyACM0 peut désigner le dongle :
+        # le pilote ouvre le port stable du TEF (/dev/serial/by-id), vérifié à chaque reconnexion.
+        try:
+            from usb_receivers import resolve_tef_port
+        except Exception:
+            resolve_tef_port = None
 
         self.tef_driver = TEFDriver(
             port=port,
@@ -500,6 +506,7 @@ class FMMonitor:
             on_ps=self._on_tef_ps,
             on_rt=self._on_tef_rt,
             on_ms=self._on_tef_ms,
+            port_resolver=resolve_tef_port,
         )
         self.tef_driver.start(freq_khz)
 

@@ -6,6 +6,11 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### DAB+ : récepteurs USB et balayage de la bande III (dongle Si468x, essai)
+- **Bloc « Récepteurs »** sur la page DAB+ (administrateur) : « Détecter les récepteurs » liste le TEF, le dongle DAB+ Si468X Headless et les clés RTL-SDR branchés, avec leur identifiant USB, leur port série stable (`/dev/serial/by-id`), leur carte son et leur rôle. Lecture de `/sys` seulement : aucun port n'est ouvert, welle-cli et le TEF ne sont pas dérangés.
+- **Balayage de la bande III** avec le dongle Si468x : les 38 canaux de 5A à 13F en 1 min 30 environ ; pour chaque multiplex trouvé, l'ensemble, son EId et son ECC, le CNR, la qualité FIC et ses services. Un canal n'est retenu qu'avec synchronisation et ensemble (pas de verrouillage fantôme), et la liste des services est attendue avec ses noms décodés. Le dongle n'est ouvert que pendant le balayage : la clé RTL-SDR et welle-cli continuent la surveillance.
+- **FM** : si `/dev/ttyACM0` n'est pas le TEF (dongle DAB+ branché à côté, ordre des ports inversé au redémarrage), BL-RMO ouvre le port stable du TEF, vérifié à chaque reconnexion ; TEF débranché, aucune commande FM n'est envoyée au dongle DAB+. « Détecter les récepteurs » de la page FM ne propose plus que les TEF, par leur port stable, et plus tous les `/dev/ttyACM*`.
+
 ### Chaîne : flux web écouté, flèche « Diffusion »
 - **Nouvelle sonde « Flux audio »** : à chaque relevé, BL-RMO écoute le flux quelques secondes, comme un auditeur. Son reçu ou non, niveaux crête et moyen, silence prolongé (seuil et durée réglables, 60 s par défaut), titre en cours (métadonnées ICY), auditeurs et débit lus sur la page d'état Icecast quand elle est publique. Un point de montage « présent » sur le serveur peut ne diffuser que du silence : seule l'écoute le voit. Exemple : le flux web de Graffiti sur le serveur de la Frap, en tuile « Flux web » dans le bloc Réception.
 - **Synoptique** : à l'entrée du bloc Réception, une simple flèche « Diffusion » remplace le bandeau de la liaison hertzienne, qui reprenait en double l'état et les mesures de la réception FM et laissait croire que le DAB+ et le flux web sortent de l'émetteur FM. Pas de flèche entre les réceptions (FM, DAB+, flux web), arrivées en parallèle.
@@ -17,6 +22,7 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 - **Chaîne** : au-delà de 24 h, la durée d'un état s'affiche en jours et heures (« 13 j 4 h ») au lieu d'un compteur d'heures ; la date exacte reste au survol et dans le détail.
 - **Pige** : après une coupure de la source, les 2 à 5 s que ffmpeg met à se reconnecter sont comblées par du silence, comme le reste de la coupure : plus de petits trous dans la pige (vus sur la pige DAB+ le 26/10), ni d'extrait signalé incomplet pour si peu.
 - **Pige** : la lecture ne saute plus d'une ou deux secondes au changement de segment (11:49:58 puis 11:50:00). ffmpeg coupe parfois un segment une fraction de seconde avant l'heure ronde et son nom, tronqué à la seconde, reculait d'une seconde : le début est recalé sur l'heure ronde. Aucun son n'était perdu.
+- **Chaîne** : la sonde « Flux audio » attend jusqu'à 10 s la page d'état du serveur Icecast (38 points de montage à la Frap), au lieu du délai de l'appareil (3 s) : le nombre d'auditeurs ne disparaît plus quand le serveur est lent.
 - **Chaîne** : descriptions des sondes plus claires dans l'ajout d'un appareil : « Icecast » lit la page d'état du serveur sans écouter, « Flux audio » écoute le flux.
 - **README** : décodage DAB+ conseillé, réglage du gain de la clé (14,4 dB sur une NESDR SMArTee), filtre coupe-bande FM en option.
 

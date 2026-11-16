@@ -124,7 +124,9 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 | Câble | USB de **données** | Un câble « charge seule » ne laisse pas passer le port série |
 | DAB+ (option) | Clé RTL-SDR + antenne bande III | NooElec NESDR SMArTee ou SMArt (tuner R820T2) conseillée pour un usage 24 h/24 (le RTL-SDR Blog V4 a montré des instabilités USB). Voir [Réglage de la clé DAB+](#réglage-de-la-clé-dab) |
 
-Le tuner apparaît sous Linux comme un port série (`/dev/ttyACM0`, protocole XDR) et une carte son (`hw:Tuner`). Il est reconnu par son identifiant USB `1209:6687`.
+Le tuner apparaît sous Linux comme un port série (`/dev/ttyACM0`, protocole XDR) et une carte son (`hw:Tuner`). Il est reconnu par son identifiant USB `1209:6687` : si `/dev/ttyACM0` désigne un autre appareil (dongle DAB+ branché à côté), BL-RMO ouvre le port stable du TEF (`/dev/serial/by-id/...`).
+
+**En essai** : dongle DAB+ Si468X Headless (puce Skyworks Si4684, contrôle série et carte son USB `hw:DAB`, identifiant `1209:468f`). Pour l'instant, il sert au balayage de la bande III depuis la page DAB+ (bloc Récepteurs), à côté de la clé RTL-SDR qui reste le récepteur de surveillance.
 
 ---
 
@@ -232,6 +234,8 @@ bl-rmo/
 ├── monitor.py          # Moteur de réception (tuner, RDS, alertes)
 ├── tef_driver.py       # Pilote du tuner TEF668X (protocole XDR)
 ├── tef_audio_analyzer.py # Analyse audio (niveaux, spectre, S/B)
+├── usb_receivers.py    # Récepteurs USB branchés (TEF, dongle Si468x, clés RTL-SDR)
+├── si468x.py           # Dongle DAB+ Si468x : balayage de la bande III (essai)
 ├── chain_probe.py      # Supervision de la chaîne (SNMP, sondes, événements)
 ├── park.py             # Parc : PC Windows, NAS Synology, sites web
 ├── audio_defects.py    # Défauts audio : micro-coupures, clics, craquements

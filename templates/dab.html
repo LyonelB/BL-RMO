@@ -241,6 +241,30 @@
       </div>
     </div>
 
+    <!-- ── Récepteurs et balayage (administrateur) ────────────── -->
+    <div class="section need-admin" id="recepteurs" style="scroll-margin-top:80px">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
+        Récepteurs
+        <button onclick="detectReceivers()" id="rx-detect" class="ml-auto text-[11px] font-medium normal-case tracking-normal border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1">Détecter les récepteurs</button>
+      </div>
+      <div id="rx-list" class="text-xs text-gray-400">Cliquer sur « Détecter les récepteurs » : clé RTL-SDR, dongle Si468x et TEF branchés, avec leur port et leur carte son. Aucun port n'est ouvert.</div>
+
+      <div class="mt-5 pt-4 border-t border-gray-100">
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="text-xs font-semibold text-gray-700">Balayage de la bande III (dongle Si468x, essai)</div>
+          <button onclick="startScan()" id="scan-btn" class="ml-auto text-[11px] font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1">Lancer le balayage</button>
+        </div>
+        <p class="text-[11px] text-gray-400 mt-1">Les 38 canaux de 5A à 13F, environ 1 min 30. Le dongle n'est utilisé que pendant le balayage : la clé RTL-SDR et welle-cli continuent la surveillance.</p>
+        <div id="scan-progress" class="hidden mt-3">
+          <div class="flex items-center gap-2 text-xs text-gray-500"><span id="scan-label"></span></div>
+          <div class="h-1.5 rounded bg-gray-100 mt-1 overflow-hidden"><div id="scan-bar" class="h-full bg-blue-500" style="width:0"></div></div>
+        </div>
+        <div id="scan-msg" class="text-xs mt-2"></div>
+        <div id="scan-results" class="mt-3"></div>
+      </div>
+    </div>
+
     <!-- ── Réglages (administrateur) ────────────────────────── -->
     <div class="section need-admin" id="reglages" style="scroll-margin-top:80px">
       <div class="section-title">
@@ -777,6 +801,95 @@
     $('sidebar').classList.toggle('-translate-x-full');
     $('sidebar-overlay').classList.toggle('hidden');
   }
+  // ── Récepteurs et balayage ─────────────────────────────
+  const RX_KIND = { tef: 'TEF (FM)', si468x: 'Dongle Si468x (DAB+)', rtlsdr: 'Clé RTL-SDR' };
+  async function detectReceivers() {
+    $('rx-list').className = 'text-xs text-gray-500'; $('rx-list').textContent = 'Détection…';
+    try {
+      const r = await fetch('/api/dab/receivers', { credentials: 'include' });
+      const d = await r.json();
+      if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
+      if (!d.receivers.length) { $('rx-list').textContent = 'Aucun récepteur reconnu (TEF, dongle Si468x ou clé RTL-SDR).'; return; }
+      const role = x => x.kind === 'rtlsdr' ? (d.dab_enabled ? 'Réception DAB+ (welle-cli)' : 'DAB+ désactivé')
+                    : x.kind === 'si468x' ? 'Essai : balayage' : 'Réception FM';
+      $('rx-list').className = 'overflow-x-auto';
+      $('rx-list').innerHTML = `<table class="w-full text-xs"><thead><tr class="text-left text-gray-400 border-b border-gray-100">
+        <th class="py-1.5 pr-3 font-medium">Récepteur</th><th class="py-1.5 pr-3 font-medium">Appareil</th><th class="py-1.5 pr-3 font-medium">USB</th>
+        <th class="py-1.5 pr-3 font-medium">Port série</th><th class="py-1.5 pr-3 font-medium">Carte son</th><th class="py-1.5 font-medium">Rôle</th></tr></thead><tbody>` +
+        d.receivers.map(x => `<tr class="border-b border-gray-50">
+          <td class="py-1.5 pr-3 font-medium text-gray-800">${esc(RX_KIND[x.kind])}</td>
+          <td class="py-1.5 pr-3 text-gray-600">${esc([x.manufacturer, x.product].filter(Boolean).join(' '))}</td>
+          <td class="py-1.5 pr-3 font-mono text-gray-500">${esc(x.vidpid)}</td>
+          <td class="py-1.5 pr-3 font-mono text-gray-500" title="${esc(x.port || '')}">${x.port ? esc(x.tty) + ' <span class="text-gray-400">(' + esc(x.port.split('/').pop()) + ')</span>' : '-'}</td>
+          <td class="py-1.5 pr-3 font-mono text-gray-500">${esc(x.card || '-')}</td>
+          <td class="py-1.5 text-gray-600">${esc(role(x))}</td></tr>`).join('') + '</tbody></table>';
+    } catch (e) { $('rx-list').className = 'text-xs text-red-600'; $('rx-list').textContent = e.message; }
+  }
+
+  let scanTimer = null, scanShowAll = false;
+  async function startScan() {
+    $('scan-msg').className = 'text-xs text-gray-500'; $('scan-msg').textContent = '';
+    try {
+      const r = await fetch('/api/dab/scan', { method: 'POST', credentials: 'include', headers: { 'X-CSRFToken': csrf() } });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
+      renderScan(d); pollScan();
+    } catch (e) { $('scan-msg').className = 'text-xs text-red-600'; $('scan-msg').textContent = e.message; }
+  }
+  function pollScan() {
+    clearTimeout(scanTimer);
+    scanTimer = setTimeout(async () => {
+      try {
+        const d = await (await fetch('/api/dab/scan', { credentials: 'include' })).json();
+        renderScan(d);
+        if (d.running) pollScan();
+      } catch (e) { pollScan(); }
+    }, 1000);
+  }
+  async function loadScan() {
+    if (!isAdmin) return;
+    try {
+      const d = await (await fetch('/api/dab/scan', { credentials: 'include' })).json();
+      if (d.started) renderScan(d);
+      if (d.running) pollScan();
+    } catch (e) {}
+  }
+  const num = (v, unit) => v == null ? '-' : `${String(Math.round(v * 10) / 10).replace('.', ',')}${unit}`;
+  function renderScan(d) {
+    $('scan-btn').disabled = !!d.running;
+    $('scan-btn').textContent = d.running ? 'Balayage en cours…' : 'Lancer le balayage';
+    $('scan-progress').classList.toggle('hidden', !d.running);
+    if (d.running) {
+      $('scan-label').textContent = `Canal ${d.channel || '…'} (${d.progress + 1} sur ${d.total})` + (d.chip ? ` · puce Si${d.chip}` : '');
+      $('scan-bar').style.width = `${Math.round(100 * d.progress / d.total)}%`;
+    }
+    const res = d.results || [];
+    const found = res.filter(x => x.lock);
+    if (d.error) { $('scan-msg').className = 'text-xs text-red-600'; $('scan-msg').textContent = 'Balayage interrompu : ' + d.error; }
+    else if (!d.running && d.finished) {
+      const when = new Date(d.finished * 1000);
+      $('scan-msg').className = 'text-xs text-gray-500';
+      $('scan-msg').textContent = `${found.length} multiplex trouvé${found.length > 1 ? 's' : ''} sur ${res.length} canaux, le ${pad(when.getDate())}/${pad(when.getMonth() + 1)} à ${pad(when.getHours())}:${pad(when.getMinutes())}` + (d.chip ? ` · puce Si${d.chip}` : '');
+    }
+    if (!res.length) { $('scan-results').innerHTML = ''; return; }
+    const rows = scanShowAll ? res : found;
+    $('scan-results').innerHTML = (rows.length ? `<div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="text-left text-gray-400 border-b border-gray-100">
+        <th class="py-1.5 pr-3 font-medium">Canal</th><th class="py-1.5 pr-3 font-medium">Fréquence</th><th class="py-1.5 pr-3 font-medium">Multiplex</th>
+        <th class="py-1.5 pr-3 font-medium">EId · ECC</th><th class="py-1.5 pr-3 font-medium text-right">CNR</th><th class="py-1.5 pr-3 font-medium text-right">FIC</th>
+        <th class="py-1.5 font-medium">Services audio</th></tr></thead><tbody>` +
+      rows.map(x => `<tr class="border-b border-gray-50 align-top ${x.lock ? '' : 'text-gray-300'}">
+        <td class="py-1.5 pr-3 font-mono font-semibold ${x.lock ? 'text-gray-800' : ''}">${esc(x.channel)}</td>
+        <td class="py-1.5 pr-3 font-mono">${x.freq_mhz.toFixed(3).replace('.', ',')} MHz</td>
+        <td class="py-1.5 pr-3 ${x.lock ? 'font-medium text-gray-800' : ''}">${x.lock ? esc(x.ensemble || '(nom non reçu)') : 'rien'}</td>
+        <td class="py-1.5 pr-3 font-mono">${x.lock ? esc([x.eid, x.ecc].filter(Boolean).join(' · ')) : ''}</td>
+        <td class="py-1.5 pr-3 font-mono text-right">${x.lock ? num(x.cnr, ' dB') : ''}</td>
+        <td class="py-1.5 pr-3 font-mono text-right">${x.lock ? num(x.fic, ' %') : ''}</td>
+        <td class="py-1.5 text-gray-600">${x.lock ? `<details><summary class="cursor-pointer">${x.audio_count} service${x.audio_count > 1 ? 's' : ''}</summary>
+          <div class="mt-1 leading-relaxed">${x.services.map(s => `${esc(s.label || '(sans nom)')} <span class="text-gray-400">${esc(s.type_label)}</span>`).join('<br>')}</div></details>` : ''}</td>
+      </tr>`).join('') + '</tbody></table></div>' : '<div class="text-xs text-gray-400">Aucun multiplex trouvé pour le moment.</div>') +
+      (d.running ? '' : `<button onclick="scanShowAll=!scanShowAll;loadScan()" class="mt-2 text-[11px] text-blue-600 hover:text-blue-800">${scanShowAll ? 'Masquer les canaux vides' : 'Afficher les 38 canaux'}</button>`);
+  }
+
   function closeSidebar() {
     $('sidebar').classList.add('-translate-x-full');
     $('sidebar-overlay').classList.add('hidden');
@@ -787,6 +900,7 @@
   loadUptime().then(loadStatus);
   loadEvents();
   loadSettings();
+  loadScan();
   loadPigeDab().then(loadDls);
   setInterval(loadStatus, 2000);
   setInterval(loadEvents, 15000);
