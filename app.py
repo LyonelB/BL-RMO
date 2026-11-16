@@ -1568,6 +1568,7 @@ dab_band_scan = BandScan()
 
 @app.route('/api/dab/receivers')
 @auth.login_required
+@limiter.exempt
 def dab_receivers():
     """Récepteurs USB branchés (lecture de /sys, aucun port ouvert)."""
     from usb_receivers import list_receivers
@@ -1581,8 +1582,11 @@ def dab_receivers():
 
 @app.route('/api/dab/scan', methods=['GET', 'POST'])
 @auth.login_required
+@limiter.exempt
 def dab_scan():
-    """Balayage de la bande III avec le dongle Si468x (environ 1 min 30)."""
+    """Balayage de la bande III avec le dongle Si468x (environ 1 min 30). La page interroge
+    l'avancement chaque seconde : hors limite de débit (50 requêtes par heure par défaut,
+    atteinte vers le canal 10C). Un seul balayage à la fois, réservé à l'administrateur."""
     if request.method == 'POST':
         from usb_receivers import list_receivers
         dongles = [r for r in list_receivers() if r['kind'] == 'si468x']

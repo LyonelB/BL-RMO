@@ -840,10 +840,15 @@
     clearTimeout(scanTimer);
     scanTimer = setTimeout(async () => {
       try {
-        const d = await (await fetch('/api/dab/scan', { credentials: 'include' })).json();
+        const r = await fetch('/api/dab/scan', { credentials: 'include' });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
         renderScan(d);
         if (d.running) pollScan();
-      } catch (e) { pollScan(); }
+      } catch (e) {
+        $('scan-msg').className = 'text-xs text-amber-700'; $('scan-msg').textContent = `Avancement indisponible (${e.message}), nouvel essai…`;
+        pollScan();
+      }
     }, 1000);
   }
   async function loadScan() {
