@@ -69,6 +69,10 @@ server {
 
 server {
     listen 443 ssl;
+    # HTTP/2 : toutes les requêtes d'un navigateur passent par une seule connexion.
+    # En HTTP/1.1, le navigateur ouvre au plus 6 connexions par site : les flux
+    # longs (écoute, SSE) de plusieurs onglets les occupaient et bloquaient le reste.
+    http2 on;
     server_name __MDNS_HOSTNAME__.local;
 
     ssl_certificate     /etc/nginx/ssl/bl-rmo.crt;
