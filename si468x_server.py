@@ -77,7 +77,8 @@ class Dongle:
         self.lock = threading.Lock()
         self.wlock = threading.Lock()
         self.chip = ''
-        self.rf = {'lock': False, 'cnr': 0.0, 'fic': 0.0, 'signal': 0.0, 'fiberr': 0, 'at': 0.0}
+        self.rf = {'lock': False, 'cnr': 0.0, 'fic': 0.0, 'signal': 0.0, 'snr': 0.0, 'fiberr': 0,
+                   'cu': None, 'alvl': None, 'at': 0.0}
         self.lock_since = None
         self.unlock_since = time.time()
         self.ens = {'eid': '', 'label': '', 'ecc': ''}
@@ -94,6 +95,8 @@ class Dongle:
         self.tuning = False                 # entre TUNE= et son accusé *TUNE= : $L et $S périmés ignorés
         # Service demandé (numéro dans $L). Le ID de $I n'est pas ce numéro (SERVICE=2 répond
         # ID=3, SERVICE=12 répond ID=18) : le $I qui suit SERVICE= décrit le service demandé.
+        self.s_fiberr = False               # FIBERR présent dans $S (firmware récent)
+        self.sids_line = False              # SID reçus par $SIDS= (firmware récent)
         self.selected_id = None
         self.selected_ack = True            # $I d'avant l'accusé *SERVICE= : service précédent, ignoré
         self.recent = []                    # dernières lignes de contrôle (diagnostic)
@@ -136,16 +139,28 @@ class Dongle:
             if line[9:] == self.selected_id:
                 self.selected_ack = True
             return
-        if self.tuning and (line.startswith('$S=') or line.startswith('$L=')):
+        if self.tuning and line.startswith(('$S=', '$L=', '$SIDS=')):
             return
         if line.startswith('$S='):
             kv = parse_kv(line[3:])
             locked = kv.get('LOCK') == '1'
             with self.lock:
                 self.rf.update(lock=locked, at=now)
-                for k, key in (('cnr', 'CNR'), ('fic', 'FIC'), ('signal', 'SIGNAL')):
+                for k, key in (('cnr', 'CNR'), ('fic', 'FIC'), ('signal', 'SIGNAL'), ('snr', 'SNR')):
                     try:
                         self.rf[k] = float(kv.get(key, 0))
+                    except ValueError:
+                        pass
+                # Firmware de novembre 2026 : FIBERR (cumulé depuis le réglage), CU, ALVL
+                if 'FIBERR' in kv:
+                    try:
+                        self.rf['fiberr'] = int(kv['FIBERR'])
+                        self.s_fiberr = True
+                    except ValueError:
+                        pass
+                for k in ('CU', 'ALVL'):
+                    try:
+                        self.rf[k.lower()] = int(kv[k]) if k in kv else None
                     except ValueError:
                         pass
             if locked:
@@ -156,11 +171,24 @@ class Dongle:
                 self.lock_since = None
         elif line.startswith('$DBG'):
             kv = parse_kv(line.replace(' ', ','))
-            try:
+            if not self.s_fiberr and 'FIBERR' in kv:        # firmware sans FIBERR dans $S
+                try:
+                    with self.lock:
+                        self.rf['fiberr'] = int(kv['FIBERR'])     # cumulé depuis le réglage
+                except ValueError:
+                    pass
+        elif line.startswith('$SIDS='):
+            # Firmware de novembre 2026 : SID de chaque service, après $L (index:SID)
+            got = {}
+            for part in line[6:].split(';'):
+                i, _, sid = part.partition(':')
+                if i.strip().isdigit() and sid.strip():
+                    got[i.strip()] = norm_sid(sid)
+            if got:
                 with self.lock:
-                    self.rf['fiberr'] += int(kv.get('FIBERR', 0))
-            except ValueError:
-                pass
+                    self.sid_of.update(got)
+                    self.sids_line = True
+                self.events.put(('sids', len(got)))
         elif line.startswith('$L='):
             ens, services = parse_list(line)
             with self.lock:
@@ -213,6 +241,7 @@ class Dongle:
             self.rf.update(lock=False, cnr=0.0, fic=0.0)
         self.unlock_since, self.lock_since = time.time(), None
         self.tuning = True
+        self.sids_line = False
         self.selected_id = None
         self._drain()
         self.send(f'TUNE={self.idx}', 0.4)
@@ -279,8 +308,16 @@ class Dongle:
     def learn_sids(self):
         """SID de chaque service audio : repris du cache si la liste n'a pas changé,
         sinon appris en sélectionnant chaque service (environ 1 s par service)."""
-        cached = self._cache.get(self._cache_key()) or {}
         audio = [s for s in self.services if s['type'] in AUDIO_TYPES]
+        # Firmware récent : $SIDS= suit $L, inutile de sélectionner chaque service
+        end = time.time() + 2
+        while time.time() < end and not all(s['id'] in self.sid_of for s in audio):
+            time.sleep(0.2)
+        if self.sids_line and all(s['id'] in self.sid_of for s in audio):
+            logger.info(f"SID des {len(audio)} services fournis par le dongle ($SIDS), sans changer de service")
+            self._save_cache()
+            return
+        cached = self._cache.get(self._cache_key()) or {}
         if cached.get('list') == self.list_raw and cached.get('sids'):
             with self.lock:
                 self.sid_of.update(cached['sids'])
@@ -327,7 +364,9 @@ class Dongle:
             'receiver': {'hardware': {'name': f"Si{self.chip or '468x'} (dongle USB)", 'gain': 0}},
             'demodulator': {'snr': 0 if lost else rf['cnr'], 'frequencycorrection': 0,
                             'fic': {'numcrcerrors': rf['fiberr']},
-                            'ficquality': 0 if lost else rf['fic'], 'signal': rf['signal']},
+                            'ficquality': 0 if lost else rf['fic'], 'signal': rf['signal'],
+                            # firmware récent : SNR signé de la puce, unités de capacité décodées
+                            'chip_snr': rf['snr'], 'cu': rf['cu']},
             'ensemble': {'id': '' if lost or not ens['eid'] else f"0x{ens['eid'].lower()}",
                          'label': {'label': '' if lost else ens['label']}, 'ecc': ens['ecc']},
             'current_carousel_sid': None,
@@ -365,6 +404,8 @@ class Dongle:
                 if audio['time']:
                     d['audiolevel'] = audio
                 d['mot'] = {'time': slide[2] if slide else 0}
+                if rf['alvl'] is not None:
+                    d['alvl'] = rf['alvl']        # niveau audio après soft mute, 0-100 (expérimental)
             out['services'].append(d)
         return out
 
