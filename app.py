@@ -2087,7 +2087,7 @@ def _dash_dab(now):
     rf = st.get('rf') or {}
     out.update({'receiver_up': bool(st.get('receiver_up')), 'ensemble_ok': bool(st.get('ensemble_ok')),
                 'channel': st.get('channel'), 'ensemble': rf.get('ensemble_label') or cfg.get('ensemble_name', ''),
-                'snr': rf.get('snr'), 'fic': rf.get('fic_quality')})
+                'snr': rf.get('snr'), 'fic': rf.get('fic_quality'), 'receiver': st.get('receiver') or 'rtlsdr'})
     services = st.get('services') or []
     sid = (cfg.get('dashboard_sid') or '').lower()
     if not sid:

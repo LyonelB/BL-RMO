@@ -26,7 +26,7 @@
       <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">RMO</div>
       <div>
         <div class="text-sm font-semibold text-gray-900">BL-RMO</div>
-        <div class="text-xs text-gray-400 font-mono" id="sidebar-frequency">— MHz</div>
+        <div class="text-xs text-gray-400 font-mono" id="sidebar-frequency">- MHz</div>
       </div>
     </div>
   </div>
@@ -107,11 +107,12 @@
         <div class="flex-1">
           <h2 class="text-base font-bold text-gray-900 mb-1 flex items-center gap-2">BL-RMO <span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs font-mono font-medium rounded">version {{ app_version }}</span></h2>
           <p class="text-xs text-gray-400 -mt-0.5 mb-2">Radio Monitoring · anciennement FM-Monitor</p>
-          <p class="text-sm text-gray-600 leading-relaxed">Outil open source de supervision d'une radio FM, conçu pour les radios associatives, les régies techniques et les prestataires broadcast. BL-RMO surveille deux choses : <b>la réception</b>, c'est-à-dire ce qui sort réellement de l'antenne, captée par un tuner Headless TEF Lite SE (TEF668X), ou à défaut un dongle RTL-SDR ; et <b>la diffusion</b>, c'est-à-dire chaque appareil de la chaîne, du studio à l'émetteur, par SNMP, sondes réseau, journaux et traps. Une pige audio de 24 heures, reliée aux alertes, permet de réécouter ce qui est parti à l'antenne.</p>
+          <p class="text-sm text-gray-600 leading-relaxed">Outil open source de supervision d'une radio, conçu pour les radios associatives, les régies techniques et les prestataires broadcast. BL-RMO surveille <b>la réception</b>, c'est-à-dire ce qui sort réellement de l'antenne : en FM avec un tuner Headless TEF Lite SE (TEF668X), en DAB+ avec une clé RTL-SDR et welle-cli ou un dongle Si468x. Il surveille aussi <b>la diffusion</b>, c'est-à-dire chaque appareil de la chaîne, du studio à l'émetteur, par SNMP, sondes réseau, journaux et traps, ainsi que <b>le parc</b> de la radio : PC, NAS et sites web. Une pige audio de 30 jours, reliée aux alertes, permet de réécouter ce qui est parti à l'antenne.</p>
           <div class="mt-3 flex flex-wrap gap-2">
             <span class="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">Open Source</span>
             <span class="px-2.5 py-0.5 bg-slate-100 text-slate-700 text-xs font-medium rounded-full">Mini-PC Linux</span>
-            <span class="px-2.5 py-0.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-full">TEF Lite SE / RTL-SDR</span>
+            <span class="px-2.5 py-0.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-full">FM · TEF Lite SE</span>
+            <span class="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-medium rounded-full">DAB+ · welle-cli / Si468x</span>
             <span class="px-2.5 py-0.5 bg-teal-50 text-teal-700 text-xs font-medium rounded-full">SNMP · syslog</span>
             <span class="px-2.5 py-0.5 bg-orange-50 text-orange-700 text-xs font-medium rounded-full">Python / Flask</span>
           </div>
@@ -129,7 +130,12 @@
         <div class="info-card">
           <div class="text-2xl mb-2">📡</div>
           <div class="font-semibold text-gray-800 text-xs mb-1">Réception FM</div>
-          <div class="text-xs text-gray-500">Le tuner Headless TEF Lite SE (ou, à défaut, un dongle RTL-SDR) capte l'antenne comme un auditeur : niveau du signal, modulation et RDS. C'est l'effet, tel qu'on l'entend.</div>
+          <div class="text-xs text-gray-500">Le tuner Headless TEF Lite SE capte l'antenne comme un auditeur : niveau du signal, modulation et RDS. C'est l'effet, tel qu'on l'entend.</div>
+        </div>
+        <div class="info-card">
+          <div class="text-2xl mb-2">📶</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">Réception DAB+</div>
+          <div class="text-xs text-gray-500">Une clé RTL-SDR avec welle-cli, ou un dongle Si468x, reçoit le multiplex : synchronisation, qualité du signal et de la FIC, présence des services, son, DLS et diaporama de la station suivie.</div>
         </div>
         <div class="info-card">
           <div class="text-2xl mb-2">🔗</div>
@@ -144,7 +150,17 @@
         <div class="info-card">
           <div class="text-2xl mb-2">🎙️</div>
           <div class="font-semibold text-gray-800 text-xs mb-1">Pige</div>
-          <div class="text-xs text-gray-500">L'antenne est enregistrée en continu sur 24 heures. Chaque alerte garde son extrait audio, de 30 s avant à 30 s après.</div>
+          <div class="text-xs text-gray-500">L'antenne FM est enregistrée en continu sur 30 jours, et une station DAB+ peut l'être aussi. Chaque alerte garde son extrait audio, de 30 s avant à 30 s après.</div>
+        </div>
+        <div class="info-card">
+          <div class="text-2xl mb-2">🖥️</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">Parc</div>
+          <div class="text-xs text-gray-500">Les PC du studio et le NAS sont suivis en SNMP (allumé, redémarré, processeur, mémoire, disques), et les sites web par HTTP.</div>
+        </div>
+        <div class="info-card">
+          <div class="text-2xl mb-2">🎧</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">Écoute</div>
+          <div class="text-xs text-gray-500">L'antenne FM, la station DAB+ et le flux web s'écoutent depuis n'importe quel navigateur, avec vumètre et spectre en tiers d'octave.</div>
         </div>
         <div class="info-card">
           <div class="text-2xl mb-2">🔔</div>
@@ -172,7 +188,7 @@
             <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>bl-rmo</code></td><td class="py-2 pr-4">Application web, réception FM, supervision de la chaîne</td><td class="py-2 font-mono">5000 (Nginx 80/443)</td></tr>
             <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>bl-rmo-pige</code></td><td class="py-2 pr-4">Enregistrement de la pige, indépendant de l'application</td><td class="py-2 font-mono">lit Icecast 8000</td></tr>
             <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>bl-rmo-syslog</code></td><td class="py-2 pr-4">Réception des journaux et des traps des appareils</td><td class="py-2 font-mono">UDP 514, UDP 162</td></tr>
-            <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>bl-rmo-dab</code></td><td class="py-2 pr-4">Réception DAB+ (clé RTL-SDR et welle-cli), en veille tant qu'elle n'est pas activée</td><td class="py-2 font-mono">welle-cli 7979, local</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>bl-rmo-dab</code></td><td class="py-2 pr-4">Réception DAB+ (clé RTL-SDR et welle-cli, ou dongle Si468x), en veille tant qu'elle n'est pas activée</td><td class="py-2 font-mono">7979 (interface welle-cli)</td></tr>
             <tr><td class="py-2 pr-4"><code>icecast2</code></td><td class="py-2 pr-4">Flux audio de l'antenne (écoute et pige)</td><td class="py-2 font-mono">8000</td></tr>
           </tbody>
         </table>
@@ -208,23 +224,23 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-        Le RDS — Radio Data System
+        Le RDS : Radio Data System
       </div>
       <p class="text-xs text-gray-600 mb-4">Norme <strong>IEC 62106</strong> permettant aux stations FM de transmettre des données numériques sur la sous-porteuse à <strong>57 kHz</strong>. Débit : 1187,5 bits/s, organisé en <em>groupes</em> de 104 bits.</p>
 
       <div class="grid grid-cols-3 gap-3 mb-4">
         <div class="info-card border-l-2 border-purple-400">
-          <div class="font-bold text-gray-800 text-xs mb-1">PS — Programme Service</div>
+          <div class="font-bold text-gray-800 text-xs mb-1">PS : Programme Service</div>
           <div class="text-xs text-gray-500 mb-2">Nom de la station (max <strong>8 caractères</strong>). Groupe 0A/0B. Reçu en ~1-2 s.</div>
           <div class="font-mono text-sm bg-white border border-gray-200 rounded px-2 py-1 text-center text-purple-700">GRAFFITI</div>
         </div>
         <div class="info-card border-l-2 border-blue-400">
-          <div class="font-bold text-gray-800 text-xs mb-1">RT — RadioText</div>
+          <div class="font-bold text-gray-800 text-xs mb-1">RT : RadioText</div>
           <div class="text-xs text-gray-500 mb-2">Texte libre jusqu'à <strong>64 caractères</strong>. Titre/artiste en cours. Groupe 2A/2B. ~20 s pour une trame complète.</div>
           <div class="font-mono text-xs bg-white border border-gray-200 rounded px-2 py-1 text-center text-blue-700 truncate">ERIK TRUFFAZ - Le compleme</div>
         </div>
         <div class="info-card border-l-2 border-green-400">
-          <div class="font-bold text-gray-800 text-xs mb-1">PI — Programme Identification</div>
+          <div class="font-bold text-gray-800 text-xs mb-1">PI : Programme Identification</div>
           <div class="text-xs text-gray-500 mb-2">Code hexadécimal <strong>unique</strong> 16 bits identifiant la station. Permet le suivi réseau.</div>
           <div class="font-mono text-sm bg-white border border-gray-200 rounded px-2 py-1 text-center text-green-700">0xFA41</div>
         </div>
@@ -257,7 +273,7 @@
             <li>Réception du code PI RDS (ex: FA41)</li>
             <li>Recherche dans rds-station-db par code PI</li>
             <li>Récupération du nom et du logo associé</li>
-            <li>Logo mis en cache — rechargement toutes les 24h</li>
+            <li>Logo mis en cache, rechargé toutes les 24 h</li>
           </ol>
         </div>
         <div class="info-card">
@@ -269,6 +285,35 @@
             Voir les logos disponibles
           </a>
           <p class="text-xs text-gray-400">tef.noobish.eu/logos</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DAB+ ──────────────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01"/></svg>
+        La radio numérique DAB+
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-600 leading-relaxed">
+        <div class="info-card">
+          <h3 class="text-xs font-semibold text-gray-700 mb-2">📦 Multiplex et services</h3>
+          <p>En DAB+, plusieurs radios partagent un même <strong>multiplex</strong> (ou ensemble), diffusé sur un canal de la bande III (174 à 240 MHz, par exemple 6C ou 9A) et large de 1,5 MHz. Chaque radio est un <strong>service</strong>, identifié par son <strong>SID</strong> (par exemple F201), avec un débit de 48 à 128 kb/s en AAC.</p>
+          <p class="mt-2">La <strong>FIC</strong> décrit le multiplex : nom de l'ensemble, liste des services, débits. Si la FIC est mal reçue, le récepteur ne sait plus ce que contient le multiplex.</p>
+        </div>
+        <div class="info-card">
+          <h3 class="text-xs font-semibold text-gray-700 mb-2">📝 DLS et diaporama</h3>
+          <p>Chaque service peut transmettre un texte défilant, le <strong>DLS</strong> (titre, émission, l'équivalent du RadioText), et des images, le <strong>diaporama</strong> (logo, pochette). BL-RMO en garde l'historique et affiche l'image du service suivi.</p>
+        </div>
+        <div class="info-card">
+          <h3 class="text-xs font-semibold text-gray-700 mb-2">📏 SNR, CNR (MER) et qualité FIC</h3>
+          <p>Le <strong>SNR</strong> (rapport signal sur bruit) et le <strong>CNR</strong> (rapport porteuse sur bruit) disent de combien le signal dépasse le bruit, en dB. Avec welle-cli, BL-RMO affiche le SNR estimé sur le spectre ; avec le dongle Si468x, le CNR calculé par le démodulateur, proche du <strong>MER</strong>, qui tient compte de tout ce qui gêne le décodage. Les deux ne se comparent pas entre eux.</p>
+          <p class="mt-2">Repères : moins de 5 dB, réception fragile ; 5 à 10 dB, correcte ; plus de 10 dB, confortable. La <strong>qualité FIC</strong> (et les erreurs FIC) mesure ce qui est réellement décodé.</p>
+        </div>
+        <div class="info-card">
+          <h3 class="text-xs font-semibold text-gray-700 mb-2">🔌 Deux récepteurs possibles</h3>
+          <p><strong>Clé RTL-SDR + welle-cli</strong> (fork welle-monitor) : décode plusieurs services du multiplex à la fois ; la clé doit être réglée pour ne pas saturer (gain).</p>
+          <p class="mt-2"><strong>Dongle Si468X Headless</strong> de mc_popa (puce Skyworks Si4684, contrôle série et carte son USB, comme le TEF) : un seul service décodé à la fois, presque aucune charge processeur. BL-RMO le pilote et le présente comme welle-cli, en essai. Il sait aussi balayer la bande III.</p>
         </div>
       </div>
     </div>
@@ -421,7 +466,7 @@ rtl_test -t</pre>
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
         Analyse du signal MPX
       </div>
-      <p class="text-xs text-gray-500 mb-4">Le signal FM broadcast n'est pas un simple signal audio — c'est un multiplex (MPX) complexe transportant plusieurs informations en parallèle sur différentes sous-porteuses.</p>
+      <p class="text-xs text-gray-500 mb-4">Le signal FM broadcast n'est pas un simple signal audio : c'est un multiplex (MPX) complexe transportant plusieurs informations en parallèle sur différentes sous-porteuses.</p>
 
       <!-- Schéma MPX -->
       <div class="mb-4 rounded-lg bg-gray-900 border border-gray-800 p-4">
@@ -468,18 +513,18 @@ rtl_test -t</pre>
         </div>
         <div class="info-card">
           <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">Signal stéréo L−R (38 kHz)</h3><span class="ml-auto text-xs font-mono text-gray-400">23–53 kHz</span></div>
-          <p class="text-xs text-gray-600 leading-relaxed">Transmis en <strong>DSB-SC</strong> centré à 38 kHz. Contient la différence Gauche−Droite. En combinant le signal mono (L+R) avec ce signal, on reconstitue L et R. La porteuse 38 kHz n'est pas transmise — elle est régénérée depuis le pilote 19 kHz.</p>
+          <p class="text-xs text-gray-600 leading-relaxed">Transmis en <strong>DSB-SC</strong> centré à 38 kHz. Contient la différence Gauche−Droite. En combinant le signal mono (L+R) avec ce signal, on reconstitue L et R. La porteuse 38 kHz n'est pas transmise : elle est régénérée depuis le pilote 19 kHz.</p>
         </div>
         <div class="info-card">
           <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-purple-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">Sous-porteuse RDS (57 kHz)</h3><span class="ml-auto text-xs font-mono text-gray-400">57 000 Hz</span></div>
-          <p class="text-xs text-gray-600 leading-relaxed">Le <strong>RDS</strong> (CEI 62106) transmet des données à <strong>1 187,5 bit/s</strong> sur une sous-porteuse à 57 kHz — le triple du pilote, en quadrature de phase. Transporte PS, RT, PI, PTY, CT et AF. Niveau typique : 2 à 5 % de la déviation totale.</p>
+          <p class="text-xs text-gray-600 leading-relaxed">Le <strong>RDS</strong> (CEI 62106) transmet des données à <strong>1 187,5 bit/s</strong> sur une sous-porteuse à 57 kHz, le triple du pilote, en quadrature de phase. Transporte PS, RT, PI, PTY, CT et AF. Niveau typique : 2 à 5 % de la déviation totale.</p>
         </div>
         <div class="info-card">
           <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-gray-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">Puissance MPX</h3><span class="ml-auto text-xs font-mono text-gray-400">dBFS</span></div>
           <p class="text-xs text-gray-600 leading-relaxed">Niveau RMS global du signal multiplex après démodulation FM, en <strong>dBFS</strong>. Représente l'énergie totale combinée : audio L+R, stéréo L−R, pilote et RDS. Indicateur global de présence et vigueur du signal.</p>
         </div>
         <div class="info-card">
-          <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-teal-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">SNR — Rapport signal/bruit</h3><span class="ml-auto text-xs font-mono text-gray-400">dB</span></div>
+          <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-teal-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">SNR : rapport signal/bruit</h3><span class="ml-auto text-xs font-mono text-gray-400">dB</span></div>
           <p class="text-xs text-gray-600 leading-relaxed mb-2">Rapport entre le niveau du signal audio utile (100 Hz–15 kHz) et le plancher de bruit (60–75 kHz). Un SNR faible trahit une réception dégradée ou une interférence.</p>
           <div class="flex gap-2 text-xs flex-wrap">
             <span class="px-2 py-0.5 bg-green-50 text-green-700 rounded-full">&gt;40 dB ✓</span>
@@ -506,7 +551,7 @@ rtl_test -t</pre>
         <a href="https://github.com/FFmpeg/FFmpeg" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-green-800 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">FFmpeg</div><div class="text-xs text-gray-400">Encodage audio MP3</div></div></a>
         <a href="https://github.com/AlbrechtL/welle.io" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">welle.io</div><div class="text-xs text-gray-400">Décodage DAB+ (fork welle-monitor)</div></div></a>
         <a href="https://gitlab.xiph.org/xiph/icecast-server" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-orange-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12M8.464 8.464a5 5 0 000 7.072"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Icecast2</div><div class="text-xs text-gray-400">Streaming audio</div></div></a>
-        <a href="https://tef.noobish.eu/logos/logo_preview.html" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Logos FM — Noobish</div><div class="text-xs text-gray-400">Communauté FM-DX</div></div></a>
+        <a href="https://tef.noobish.eu/logos/logo_preview.html" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Logos FM : Noobish</div><div class="text-xs text-gray-400">Communauté FM-DX</div></div></a>
         <a href="https://www.docker.com" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.186.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.186.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.186.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.186.186 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.09-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Docker</div><div class="text-xs text-gray-400">Conteneurisation</div></div></a>
         <a href="http://www.net-snmp.org" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-teal-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Net-SNMP</div><div class="text-xs text-gray-400">Interrogation SNMP des appareils</div></div></a>
         <a href="https://github.com/FMDX-org/Headless-TEF-lite-SE" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-rose-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Headless TEF Lite SE</div><div class="text-xs text-gray-400">Tuner USB FMDX.org, firmware FM-DX-Tuner</div></div></a>

@@ -8,16 +8,30 @@
 ![Platform](https://img.shields.io/badge/plateforme-mini--PC%20Linux-lightgrey.svg)
 ![Tuner](https://img.shields.io/badge/tuner-Headless%20TEF%20Lite%20SE-purple.svg)
 
-**Système open source de supervision d'une radio FM.** Un mini-PC, un tuner [Headless TEF Lite SE](https://github.com/FMDX-org/Headless-TEF-lite-SE) et une antenne suffisent pour :
+**Système open source de supervision d'une radio FM et DAB+.** Un mini-PC, un tuner [Headless TEF Lite SE](https://github.com/FMDX-org/Headless-TEF-lite-SE), un récepteur DAB+ et une antenne suffisent pour :
 
-- **surveiller la réception FM** : ce qui sort réellement de l'antenne (signal, modulation, RDS) ;
+- **surveiller la réception FM et DAB+** : ce qui sort réellement de l'antenne (signal, modulation, RDS, multiplex, services, DLS) ;
 - **surveiller la chaîne de diffusion** : chaque appareil, du studio à l'émetteur, par SNMP, sondes réseau, journaux syslog et traps ;
-- **écouter l'antenne** depuis n'importe quel navigateur (retour FM) ;
+- **surveiller le parc** de la radio : PC, NAS et sites web ;
+- **écouter l'antenne** depuis n'importe quel navigateur (FM, DAB+, flux web) ;
 - **garder une pige** de 30 jours, reliée aux alertes.
 
 Une alerte mail part à chaque panne et à chaque rétablissement, et chaque alerte garde son extrait audio.
 
-<img width="1920" height="919" alt="image" src="https://github.com/user-attachments/assets/1eca93e9-b2fb-4998-87d2-c6e5bf16cc30" />
+![Tableau de bord de BL-RMO](docs/captures/dashboard.png)
+
+<table>
+  <tr>
+    <td width="50%"><a href="docs/captures/fm.png"><img src="docs/captures/fm.png" alt="Réception FM"></a><br><b>Réception FM</b> : signal, modulation, RDS, spectre et historique RadioText</td>
+    <td width="50%"><a href="docs/captures/dab.png"><img src="docs/captures/dab.png" alt="Réception DAB+"></a><br><b>Réception DAB+</b> : multiplex, CNR et FIC, écoute, DLS, services</td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="docs/captures/chain.png"><img src="docs/captures/chain.png" alt="Chaîne de diffusion"></a><br><b>Chaîne de diffusion</b> : du studio à l'antenne, appareil par appareil</td>
+    <td width="50%"><a href="docs/captures/park.png"><img src="docs/captures/park.png" alt="Parc"></a><br><b>Parc</b> : PC, NAS et sites web de la radio</td>
+  </tr>
+</table>
+
+<sub>Captures réalisées sur une instance de démonstration : la station « Radio Exemple », ses appareils et ses adresses sont fictifs.</sub>
 
 ---
 
@@ -59,12 +73,13 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 - **Niveaux audio G/D** mesurés en continu, **stéréo ou mono** d'après l'indicateur de pilote du tuner
 - **RDS** décodé par le tuner : PS, RadioText, code PI ; logo de la station via [rds-station-db](https://github.com/LyonelB/rds-station-db)
 
-### 📶 Réception DAB+ (option, clé RTL-SDR)
+### 📶 Réception DAB+ (option, clé RTL-SDR ou dongle Si468x)
 - **Ensemble** : SNR, qualité FIC, gain, identifiant ; alerte quand l'ensemble se dégrade
 - **Services** : présence dans le multiplex, niveaux audio, DLS, débit, disponibilité sur 24 h ; alertes **service absent** et **silence**, sur tous les services ou seulement ceux cochés
 - **Écoute** d'un service depuis la page DAB+, diaporama (slideshow) affiché pendant l'écoute
 - Alertes DAB+ par mail et dans un onglet **Réception DAB+** de la page Journaux, avec lien vers la pige du service s'il en a une
 - Service indépendant `bl-rmo-dab` : un plantage de welle-cli ou de la clé ne touche ni l'interface, ni la FM
+- **Dongle Si468X Headless** (essai, puce Skyworks Si4684) à la place de la clé RTL-SDR et de welle-cli : même interface, CNR (MER) et qualité FIC donnés par la puce, un seul service décodé à la fois, presque aucune charge processeur ; balayage de la bande III depuis la page DAB+
 - **Décodage « Services surveillés seulement »** (conseillé) : seuls les services cochés sont décodés, en continu, pour la charge d'un seul décodeur ; l'ensemble et la présence de tous les services restent suivis. « Tous les services en continu » occupe plus de deux cœurs (welle-cli réencode chaque service en MP3) ; le carrousel n'écoute chaque service que 10 s par tour
 
 ### 🔊 Retour FM
@@ -333,6 +348,7 @@ MIT : libre d'utilisation, de modification et de distribution.
 
 - [Headless TEF Lite SE](https://github.com/FMDX-org/Headless-TEF-lite-SE) (FMDX.org) : tuner USB TEF668X, firmware [FM-DX-Tuner](https://github.com/kkonradpl/FM-DX-Tuner)
 - [welle.io](https://github.com/AlbrechtL/welle.io) (Albrecht Lohofener, Matthias P. Braendli) et son fork [welle-monitor](https://github.com/LyonelB/welle-monitor) : décodage DAB+
+- mc_popa : dongle DAB+ Si468X Headless (STM32, Si4684) et son firmware
 - [Icecast2](https://icecast.org) : serveur de streaming
 - [Net-SNMP](http://www.net-snmp.org) : outils SNMP
 - [Radio Browser](https://www.radio-browser.info) : base de données de stations

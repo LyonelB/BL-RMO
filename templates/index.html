@@ -526,7 +526,8 @@
     else setTile('dab-aud', svc.silence ? 'Silence' : 'Modulé', svc.silence ? WARN : OK, fresh && lvl > -100 ? `${lvl.toFixed(1).replace('.', ',')} dBFS` : 'niveau non rafraîchi');
     setTile('dab-st', svc.channels === 1 ? 'Mono' : svc.channels ? 'Stéréo' : '-', svc.channels === 1 ? WARN : svc.channels ? OK : MUTED,
             svc.samplerate ? `${svc.samplerate / 1000} kHz` : '-');
-    setTile('dab-snr', d.snr != null ? `SNR ${Math.round(d.snr)} dB` : '-', d.snr == null ? MUTED : d.ensemble_ok ? OK : BAD, d.fic != null ? `FIC ${Math.round(d.fic)} %` : '-');
+    const snrName = d.receiver === 'si468x' ? 'CNR' : 'SNR';     // dongle Si468x : CNR (MER) de la puce
+    setTile('dab-snr', d.snr != null ? `${snrName} ${Math.round(d.snr)} dB` : '-', d.snr == null ? MUTED : d.ensemble_ok ? OK : BAD, d.fic != null ? `FIC ${Math.round(d.fic)} %` : '-');
     const u = svc.uptime_pct;
     $('dab-upt').textContent = u == null ? '-' : `${u.toFixed(u >= 99.95 ? 0 : 1).replace('.', ',')} %`;
     lastAlert('dab', d.last_alert);
