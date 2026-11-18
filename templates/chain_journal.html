@@ -5,7 +5,7 @@
   {% include '_i18n.html' %}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>BL-RMO · Chaîne de diffusion · Journal</title>
+  <title>{{ _('BL-RMO · Chaîne de diffusion · Journal') }}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -39,8 +39,8 @@
   <header class="bg-white border-b border-gray-100 px-6 pt-4 sticky top-0 z-10">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">Chaîne de diffusion</h1></div>
-        <p class="text-xs text-gray-400 mt-0.5">Ce qui s'est passé sur la chaîne : alertes, changements d'état et messages des appareils</p>
+        <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">{{ _('Chaîne de diffusion') }}</h1></div>
+        <p class="text-xs text-gray-400 mt-0.5">{{ _("Ce qui s'est passé sur la chaîne : alertes, changements d'état et messages des appareils") }}</p>
       </div>
       <div id="rx-status" class="text-xs"></div>
     </div>
@@ -50,17 +50,17 @@
   <div class="p-4 md:p-6 max-w-7xl">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div class="section" style="margin-bottom:0">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="ch-state-label">État de la chaîne</div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="ch-state-label">{{ _('État de la chaîne') }}</div>
           <div class="text-2xl font-bold text-gray-900" id="ch-state">-</div>
           <div class="text-xs text-gray-400 mt-1" id="ch-state-sub"></div>
         </div>
         <div class="section" style="margin-bottom:0">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="ch-30d-label">Alertes, 30 derniers jours</div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="ch-30d-label">{{ _('Alertes, 30 derniers jours') }}</div>
           <div class="text-2xl font-bold font-mono text-gray-900" id="ch-30d">-</div>
           <div class="text-xs text-gray-400 mt-1" id="ch-30d-sub"></div>
         </div>
         <div class="section" style="margin-bottom:0">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="ch-ok-label">Tout est OK depuis</div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="ch-ok-label">{{ _('Tout est OK depuis') }}</div>
           <div class="text-2xl font-bold font-mono text-gray-900" id="ch-ok">-</div>
           <div class="text-xs text-gray-400 mt-1" id="ch-ok-sub"></div>
         </div>
@@ -73,46 +73,46 @@
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div class="section-title" style="margin-bottom:0">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-          Alertes et changements d'état
+          {{ _("Alertes et changements d'état") }}
         </div>
         <div class="flex flex-wrap gap-2">
           <select id="ca-dev" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="renderChainAlerts()">
-            <option value="">Tout</option>
+            <option value="">{{ _('Tout') }}</option>
           </select>
-          <span class="need-operateur flex items-center gap-1" title="Archive ZIP : changements d'état, mesures de chaque sondage, alertes et niveaux FM">
+          <span class="need-operateur flex items-center gap-1" title="{{ _("Archive ZIP : changements d'état, mesures de chaque sondage, alertes et niveaux FM") }}">
             <select id="export-hours" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
               <option value="1">1 h</option><option value="6">6 h</option><option value="24" selected>24 h</option>
-              <option value="72">3 jours</option><option value="168">7 jours</option>
+              <option value="72">{{ _('3 jours') }}</option><option value="168">{{ _('7 jours') }}</option>
             </select>
-            <button onclick="exportZip()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Archive</button>
+            <button onclick="exportZip()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> {{ _('Archive') }}</button>
           </span>
-          <button onclick="exportChainAlerts()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Alertes affichées (filtre compris), en CSV"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
+          <button onclick="exportChainAlerts()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="{{ _('Alertes affichées (filtre compris), en CSV') }}"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> {{ _('Exporter') }}</button>
         </div>
       </div>
-      <p class="text-xs text-gray-500 mb-3">Relevées par BL-RMO en sondant les appareils, les sondes réseau et les capteurs de site (seuils, appareil injoignable), et reçues des équipements tiers (netwatch MikroTik, scripts : badge « externe »). Les alertes qui démarrent ensemble sont signalées : une cause commune, en amont, est probable. « Écouter » ouvre la pige FM au moment de l'alerte.</p>
+      <p class="text-xs text-gray-500 mb-3">{{ _("Relevées par BL-RMO en sondant les appareils, les sondes réseau et les capteurs de site (seuils, appareil injoignable), et reçues des équipements tiers (netwatch MikroTik, scripts : badge « externe »). Les alertes qui démarrent ensemble sont signalées : une cause commune, en amont, est probable. « Écouter » ouvre la pige FM au moment de l'alerte.") }}</p>
       <div class="overflow-x-auto">
         <table class="w-full text-xs text-left">
           <thead>
             <tr class="text-gray-400 border-b border-gray-100">
-              <th class="font-medium py-2 pr-3 whitespace-nowrap">Date</th>
-              <th class="font-medium py-2 pr-3">Appareil</th>
-              <th class="font-medium py-2 pr-3">Alerte</th>
-              <th class="font-medium py-2 pr-3 whitespace-nowrap">Début → fin</th>
-              <th class="font-medium py-2 pr-3">Durée</th>
-              <th class="font-medium py-2 pr-3">État</th>
-              <th class="font-medium py-2 pr-3">Détail</th>
-              <th class="font-medium py-2 pr-3">Mails</th>
-              <th class="font-medium py-2">Pige</th>
+              <th class="font-medium py-2 pr-3 whitespace-nowrap">{{ _('Date') }}</th>
+              <th class="font-medium py-2 pr-3">{{ _('Appareil') }}</th>
+              <th class="font-medium py-2 pr-3">{{ _('Alerte') }}</th>
+              <th class="font-medium py-2 pr-3 whitespace-nowrap">{{ _('Début → fin') }}</th>
+              <th class="font-medium py-2 pr-3">{{ _('Durée') }}</th>
+              <th class="font-medium py-2 pr-3">{{ _('État') }}</th>
+              <th class="font-medium py-2 pr-3">{{ _('Détail') }}</th>
+              <th class="font-medium py-2 pr-3">{{ _('Mails') }}</th>
+              <th class="font-medium py-2">{{ _('Pige') }}</th>
             </tr>
           </thead>
           <tbody id="ca-body" class="divide-y divide-gray-50">
-            <tr><td colspan="9" class="py-8 text-center text-gray-400">Chargement...</td></tr>
+            <tr><td colspan="9" class="py-8 text-center text-gray-400">{{ _('Chargement...') }}</td></tr>
           </tbody>
         </table>
       </div>
       <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
         <span id="ca-count"></span>
-        <button id="ca-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="caLimit += 50; renderChainAlerts()">Afficher plus</button>
+        <button id="ca-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="caLimit += 50; renderChainAlerts()">{{ _('Afficher plus') }}</button>
       </div>
     </div>
 
@@ -120,35 +120,35 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h7"/></svg>
-        Messages des appareils (syslog et traps)
+        {{ _('Messages des appareils (syslog et traps)') }}
       </div>
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-3 pb-3 border-b border-gray-50">
-        <span class="text-xs font-semibold text-gray-500">Appareils</span>
+        <span class="text-xs font-semibold text-gray-500">{{ _('Appareils') }}</span>
         <div id="sources" class="flex flex-wrap items-center gap-x-4 gap-y-1.5"></div>
-        <button id="src-all" onclick="clearSources()" class="text-xs font-medium text-blue-600 hover:text-blue-800 hidden">Tous les appareils</button>
+        <button id="src-all" onclick="clearSources()" class="text-xs font-medium text-blue-600 hover:text-blue-800 hidden">{{ _('Tous les appareils') }}</button>
       </div>
       <div class="flex flex-wrap items-center gap-2 mb-4">
         <select id="f-sev" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
-          <option value="">Tous les niveaux</option>
-          <option value="4">Avertissement et plus grave</option>
-          <option value="3">Erreur et plus grave</option>
+          <option value="">{{ _('Tous les niveaux') }}</option>
+          <option value="4">{{ _('Avertissement et plus grave') }}</option>
+          <option value="3">{{ _('Erreur et plus grave') }}</option>
         </select>
         <select id="f-period" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
-          <option value="1">Dernière heure</option>
+          <option value="1">{{ _('Dernière heure') }}</option>
           <option value="24" selected>24 h</option>
-          <option value="168">7 jours</option>
-          <option value="720">30 jours</option>
-          <option value="">Tout</option>
+          <option value="168">{{ _('7 jours') }}</option>
+          <option value="720">{{ _('30 jours') }}</option>
+          <option value="">{{ _('Tout') }}</option>
         </select>
         <div class="relative flex-1 min-w-[10rem]">
           <svg class="w-3.5 h-3.5 absolute left-2.5 top-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/></svg>
-          <input id="f-q" type="search" placeholder="Rechercher (ex. link down, ether8, perdu)" class="w-full text-xs border border-gray-200 rounded-lg pr-2 py-1.5" style="padding-left:2rem">
+          <input id="f-q" type="search" placeholder="{{ _('Rechercher (ex. link down, ether8, perdu)') }}" class="w-full text-xs border border-gray-200 rounded-lg pr-2 py-1.5" style="padding-left:2rem">
         </div>
-        <label class="flex items-center gap-1.5 text-xs text-gray-600 select-none" title="Messages connus sans importance (règles dans l'onglet Configuration)"><input id="f-hidden" type="checkbox" class="rounded"> Afficher les messages masqués <span id="hidden-count" class="text-gray-400"></span></label>
-        <label class="flex items-center gap-1.5 text-xs text-gray-600 select-none"><input id="f-live" type="checkbox" checked class="rounded"> En direct</label>
+        <label class="flex items-center gap-1.5 text-xs text-gray-600 select-none" title="{{ _("Messages connus sans importance (règles dans l'onglet Configuration)") }}"><input id="f-hidden" type="checkbox" class="rounded"> {{ _('Afficher les messages masqués') }} <span id="hidden-count" class="text-gray-400"></span></label>
+        <label class="flex items-center gap-1.5 text-xs text-gray-600 select-none"><input id="f-live" type="checkbox" checked class="rounded"> {{ _('En direct') }}</label>
         <button onclick="exportCsv()" class="flex items-center gap-1.5 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          Exporter
+          {{ _('Exporter') }}
         </button>
       </div>
 
@@ -156,11 +156,11 @@
         <table class="w-full text-xs">
           <thead>
             <tr class="text-left text-gray-400 border-b border-gray-100">
-              <th class="font-medium py-2 pr-3 whitespace-nowrap">Date</th>
-              <th class="font-medium py-2 pr-3">Niveau</th>
-              <th class="font-medium py-2 pr-3">Appareil</th>
-              <th class="font-medium py-2 pr-3">Programme</th>
-              <th class="font-medium py-2 pr-3 w-full">Message</th>
+              <th class="font-medium py-2 pr-3 whitespace-nowrap">{{ _('Date') }}</th>
+              <th class="font-medium py-2 pr-3">{{ _('Niveau') }}</th>
+              <th class="font-medium py-2 pr-3">{{ _('Appareil') }}</th>
+              <th class="font-medium py-2 pr-3">{{ _('Programme') }}</th>
+              <th class="font-medium py-2 pr-3 w-full">{{ _('Message') }}</th>
               <th class="py-2"></th>
             </tr>
           </thead>
@@ -172,10 +172,10 @@
       <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
         <span id="log-count"></span>
         <div class="flex items-center gap-1">
-          <button id="pg-more" onclick="PAGE_SIZE = Math.min(1000, PAGE_SIZE + 50); offset = 0; loadLogs()" class="px-2.5 py-1 rounded-md border border-gray-200 mr-2">Afficher plus</button>
-          <button id="pg-prev" onclick="page(-1)" class="px-2.5 py-1 rounded-md border border-gray-200 disabled:opacity-40">Plus récents</button>
+          <button id="pg-more" onclick="PAGE_SIZE = Math.min(1000, PAGE_SIZE + 50); offset = 0; loadLogs()" class="px-2.5 py-1 rounded-md border border-gray-200 mr-2">{{ _('Afficher plus') }}</button>
+          <button id="pg-prev" onclick="page(-1)" class="px-2.5 py-1 rounded-md border border-gray-200 disabled:opacity-40">{{ _('Plus récents') }}</button>
           <span id="pg-info" class="px-2"></span>
-          <button id="pg-next" onclick="page(1)" class="px-2.5 py-1 rounded-md border border-gray-200 disabled:opacity-40">Plus anciens</button>
+          <button id="pg-next" onclick="page(1)" class="px-2.5 py-1 rounded-md border border-gray-200 disabled:opacity-40">{{ _('Plus anciens') }}</button>
         </div>
       </div>
     </div>
@@ -186,14 +186,14 @@
 <script>
 let PAGE_SIZE = 10;     // 10 lignes, puis « Afficher plus »
 const SEV = [
-  { label: 'Urgence',       cls: 'bg-red-600 text-white' },
-  { label: 'Alerte',        cls: 'bg-red-100 text-red-700' },
-  { label: 'Critique',      cls: 'bg-red-100 text-red-700' },
-  { label: 'Erreur',        cls: 'bg-red-50 text-red-700' },
-  { label: 'Avertissement', cls: 'bg-amber-50 text-amber-700' },
-  { label: 'Notice',        cls: 'bg-blue-50 text-blue-700' },
-  { label: 'Info',          cls: 'bg-slate-100 text-slate-600' },
-  { label: 'Debug',         cls: 'bg-slate-50 text-slate-400' },
+  { label: _t('Urgence'),       cls: 'bg-red-600 text-white' },
+  { label: _t('Alerte'),        cls: 'bg-red-100 text-red-700' },
+  { label: _t('Critique'),      cls: 'bg-red-100 text-red-700' },
+  { label: _t('Erreur'),        cls: 'bg-red-50 text-red-700' },
+  { label: _t('Avertissement'), cls: 'bg-amber-50 text-amber-700' },
+  { label: _t('Notice'),        cls: 'bg-blue-50 text-blue-700' },
+  { label: _t('Info'),          cls: 'bg-slate-100 text-slate-600' },
+  { label: _t('Debug'),         cls: 'bg-slate-50 text-slate-400' },
 ];
 
 let names = {};        // IP → nom dans la chaîne
@@ -207,19 +207,17 @@ function esc(s) {
 function csrf() { const m = document.querySelector('meta[name="csrf-token"]'); return m ? m.content : ''; }
 async function api(url) {
   const r = await fetch(url, { credentials: 'include' });
-  if (r.status === 401) { window.location = '/login?next=/chain/journal'; throw new Error('Session expirée'); }
+  if (r.status === 401) { window.location = '/login?next=/chain/journal'; throw new Error(_t('Session expirée')); }
   const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.message || `Erreur ${r.status}`);
+  if (!r.ok) throw new Error(data.message || `${_t('Erreur')} ${r.status}`);
   return data;
 }
-function ago(iso, nowIso) {
-  if (!iso) return 'jamais';
+function ago(iso, nowIso, bare) {
+  if (!iso) return _t('jamais');
   const now = nowIso ? new Date(nowIso).getTime() : Date.now();
   const s = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000));
-  if (s < 60) return `il y a ${s} s`;
-  if (s < 3600) return `il y a ${Math.floor(s / 60)} min`;
-  if (s < 86400) return `il y a ${Math.floor(s / 3600)} h`;
-  return `il y a ${Math.floor(s / 86400)} j`;
+  const n = s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : s < 86400 ? `${Math.floor(s / 3600)} h` : `${Math.floor(s / 86400)} ${_t('j')}`;
+  return bare ? n : _t('il y a {n}', { n });
 }
 function pad(n) { return String(n).padStart(2, '0'); }
 function localIso(d) {
@@ -243,23 +241,23 @@ async function loadSources() {
   rxAlive = alive; rxPort = m.port || '';
   if (changed) loadChainState();
   $('rx-status').innerHTML = alive
-    ? `<span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 rounded-full px-2.5 py-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Réception active · UDP ${esc(m.port)}</span>`
-    : `<span class="inline-flex items-center gap-1.5 bg-red-50 text-red-700 rounded-full px-2.5 py-1"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Réception arrêtée</span>`;
+    ? `<span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 rounded-full px-2.5 py-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>${_t('Réception active')} · UDP ${esc(m.port)}</span>`
+    : `<span class="inline-flex items-center gap-1.5 bg-red-50 text-red-700 rounded-full px-2.5 py-1"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>${_t('Réception arrêtée')}</span>`;
   $('rx-warning').classList.toggle('hidden', alive);
   if (!alive) {
     $('rx-warning').innerHTML = m.heartbeat
-      ? `Le service de réception ne répond plus depuis ${esc(ago(m.heartbeat, d.now).replace('il y a ', ''))}. Vérifier : <code>sudo systemctl status bl-rmo-syslog</code>`
-      : `Le service de réception n'est pas installé. Depuis le dossier de l'application : <code>sudo bash install/build/66-syslog.sh</code>`;
+      ? `${_t('Le service de réception ne répond plus depuis {d}.', { d: esc(ago(m.heartbeat, d.now, true)) })} ${_t('Vérifier :')} <code>sudo systemctl status bl-rmo-syslog</code>`
+      : `${_t("Le service de réception n'est pas installé. Depuis le dossier de l'application :")} <code>sudo bash install/build/66-syslog.sh</code>`;
   }
 
   const srcs = (d.sources || []).slice().sort((x, y) => displayName(x.src).localeCompare(displayName(y.src)));
   $('sources').innerHTML = srcs.length ? srcs.map(x => {
     const recent = (new Date(d.now) - new Date(x.last_seen)) / 1000 < 86400;
-    const tip = [x.src, x.host && x.host !== displayName(x.src) ? x.host : '', ago(x.last_seen, d.now), Number(x.count).toLocaleString('fr-FR') + ' msg'].filter(Boolean).join(' · ');
+    const tip = [x.src, x.host && x.host !== displayName(x.src) ? x.host : '', ago(x.last_seen, d.now), Number(x.count).toLocaleString(BLRMO_LOCALE) + ' msg'].filter(Boolean).join(' · ');
     return `<label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer select-none" title="${esc(tip)}">
       <input type="checkbox" class="rounded" value="${esc(x.src)}" ${selectedSrc.has(x.src) ? 'checked' : ''} onchange="toggleSource(this.value, this.checked)">
       <span class="w-1.5 h-1.5 rounded-full ${recent ? 'bg-emerald-500' : 'bg-slate-300'}"></span>${esc(displayName(x.src))}</label>`;
-  }).join('') : '<span class="text-xs text-gray-400">Aucun appareil n\'a encore envoyé de journal. Voir l\'aide en bas de page.</span>';
+  }).join('') : '<span class="text-xs text-gray-400">' + _t('Aucun appareil n\'a encore envoyé de journal. Voir l\'aide en bas de page.') + '</span>';
   $('src-all').classList.toggle('hidden', !selectedSrc.size);
 }
 // Appareils cochés : aucun coché = tous les appareils
@@ -299,7 +297,7 @@ async function loadLogs() {
     const d = await api('/api/syslog?' + p);
     total = d.total;
     capped = d.capped;
-    $('hidden-count').textContent = d.hidden ? `(${d.hidden >= 20000 ? '20 000+' : d.hidden.toLocaleString('fr-FR')})` : '';
+    $('hidden-count').textContent = d.hidden ? `(${d.hidden >= 20000 ? '20 000+' : d.hidden.toLocaleString(BLRMO_LOCALE)})` : '';
     render(d.rows);
   } catch (e) {
     $('log-body').innerHTML = '';
@@ -309,7 +307,7 @@ async function loadLogs() {
 }
 function render(rows) {   // SYSLOG_CLEAN_PATCH
   $('log-empty').classList.toggle('hidden', rows.length > 0);
-  if (!rows.length) $('log-empty').textContent = 'Aucun message pour ces critères.';
+  if (!rows.length) $('log-empty').textContent = _t('Aucun message pour ces critères.');
   lastRows = rows;
   $('log-body').innerHTML = rows.map((r, i) => {
     const sv = SEV[r.severity] || SEV[6];
@@ -318,23 +316,23 @@ function render(rows) {   // SYSLOG_CLEAN_PATCH
     const msg = r.summary
       ? `<details><summary class="cursor-pointer">${esc(r.summary)}</summary><div class="mt-1 text-gray-500" style="white-space:pre-wrap">${esc(r.message)}</div></details>`
       : `<div style="white-space:pre-wrap">${esc(r.message)}</div>`;
-    const masked = r.hidden_by ? `<span class="inline-block mt-0.5 rounded px-1.5 text-[10px] bg-slate-100 text-slate-500">masqué · ${esc(r.hidden_label || '')}</span>` : '';
+    const masked = r.hidden_by ? `<span class="inline-block mt-0.5 rounded px-1.5 text-[10px] bg-slate-100 text-slate-500">${_t('masqué')} · ${esc(r.hidden_label || '')}</span>` : '';
     return `<tr class="border-b border-gray-50 hover:bg-slate-50" style="vertical-align:top;${r.hidden_by ? 'opacity:.55' : ''}">
-      <td class="py-1.5 pr-3 font-mono text-gray-400 whitespace-nowrap" title="${r.device_ts ? 'Heure de l\'appareil : ' + esc(r.device_ts.replace('T', ' ')) : ''}">${pad(t.getDate())}/${pad(t.getMonth() + 1)} ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}</td>
+      <td class="py-1.5 pr-3 font-mono text-gray-400 whitespace-nowrap" title="${r.device_ts ? _t('Heure de l\'appareil : ') + esc(r.device_ts.replace('T', ' ')) : ''}">${pad(t.getDate())}/${pad(t.getMonth() + 1)} ${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}</td>
       <td class="py-1.5 pr-3"><span class="inline-block rounded px-1.5 py-0.5 text-[11px] whitespace-nowrap ${sv.cls}">${sv.label}</span></td>
       <td class="py-1.5 pr-3 whitespace-nowrap text-gray-800" title="${esc(r.src)}${r.host ? ' · ' + esc(r.host) : ''}">${esc(displayName(r.src))}</td>
       <td class="py-1.5 pr-3 whitespace-nowrap text-gray-500 font-mono">${esc(r.program)}</td>
       <td class="py-1.5 pr-3 text-gray-700" style="overflow-wrap:anywhere;min-width:16rem">${msg}${masked}</td>
-      <td class="py-1.5 whitespace-nowrap"><a href="/fm?t=${epoch}#pige" title="Écouter l'antenne FM à ce moment" class="text-blue-600 hover:text-blue-800 opacity-60 hover:opacity-100">
+      <td class="py-1.5 whitespace-nowrap"><a href="/fm?t=${epoch}#pige" title="${_t('Écouter l\'antenne FM à ce moment')}" class="text-blue-600 hover:text-blue-800 opacity-60 hover:opacity-100">
         <svg class="w-3.5 h-3.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></a>
-        ${r.hidden_by ? '' : `<button class="need-admin ml-1 text-gray-400 hover:text-gray-700 opacity-60 hover:opacity-100" title="Masquer les messages semblables" onclick="hideSimilar(${i})">
+        ${r.hidden_by ? '' : `<button class="need-admin ml-1 text-gray-400 hover:text-gray-700 opacity-60 hover:opacity-100" title="${_t('Masquer les messages semblables')}" onclick="hideSimilar(${i})">
         <svg class="w-3.5 h-3.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg></button>`}</td>
     </tr>`;
   }).join('');
   const first = total ? offset + 1 : 0, last = Math.min(offset + PAGE_SIZE, total);
-  const fmtTotal = capped ? `${total.toLocaleString('fr-FR')}+` : total.toLocaleString('fr-FR');
-  $('log-count').textContent = `${fmtTotal} message${total > 1 ? 's' : ''}`;
-  $('pg-info').textContent = total ? `${first.toLocaleString('fr-FR')}-${last.toLocaleString('fr-FR')}` : '';
+  const fmtTotal = capped ? `${total.toLocaleString(BLRMO_LOCALE)}+` : total.toLocaleString(BLRMO_LOCALE);
+  $('log-count').textContent = _t(total > 1 ? '{n} messages' : '{n} message', { n: fmtTotal });
+  $('pg-info').textContent = total ? `${first.toLocaleString(BLRMO_LOCALE)}-${last.toLocaleString(BLRMO_LOCALE)}` : '';
   $('pg-prev').disabled = offset === 0;
   $('pg-next').disabled = !capped && offset + PAGE_SIZE >= total;
   $('pg-more').classList.toggle('hidden', PAGE_SIZE >= 1000 || (!capped && PAGE_SIZE >= total));
@@ -346,7 +344,7 @@ async function apiSend(url, method, body) {
   const r = await fetch(url, { method, credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }, body: JSON.stringify(body || {}) });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(d.message || `Erreur ${r.status}`);
+  if (!r.ok) throw new Error(d.message || `${_t('Erreur')} ${r.status}`);
   return d;
 }
 async function hideSimilar(i) {
@@ -354,7 +352,7 @@ async function hideSimilar(i) {
   if (!r) return;
   const text = (r.message || '').split('\n')[0];
   const label = `${displayName(r.src)} : ${text.slice(0, 80)}`;
-  if (!confirm(`Masquer les messages semblables à celui-ci ?\n\n${label}\n\nLes chiffres variables sont pris en compte. Les messages restent enregistrés, et la règle peut être retirée dans l'onglet Configuration.`)) return;
+  if (!confirm(_t('Masquer les messages semblables à celui-ci ?') + `\n\n${label}\n\n` + _t("Les chiffres variables sont pris en compte. Les messages restent enregistrés, et la règle peut être retirée dans l'onglet Configuration."))) return;
   try { await apiSend('/api/syslog/rules', 'POST', { src: r.src, program: r.program, message: r.raw, label }); }
   catch (e) { alert(e.message); return; }
   loadLogs();
@@ -393,28 +391,28 @@ function fmtSince(sec) {
   sec = Math.max(0, Math.round(sec));
   if (sec < 3600) return `${Math.max(1, Math.floor(sec / 60))} min`;
   if (sec < 86400) return `${Math.floor(sec / 3600)} h ${pad(Math.floor(sec % 3600 / 60))} min`;
-  return `${Math.floor(sec / 86400)} j ${Math.floor(sec % 86400 / 3600)} h`;
+  return `${Math.floor(sec / 86400)} ${_t('j')} ${Math.floor(sec % 86400 / 3600)} h`;
 }
-function fmtStamp(t) { const d = new Date(t); return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function fmtStamp(t) { const d = new Date(t); return _t('{d} à {h}', { d: `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`, h: `${pad(d.getHours())}:${pad(d.getMinutes())}` }); }
 // alerts : [{ t0, t1 (null si en cours), emails }] ; seules comptent les alertes qui ont envoyé un mail
 function headerAlerts(pfx, alerts) {
   const now = Date.now(), mailed = alerts.filter(a => (a.emails || 0) > 0);
   const last30 = mailed.filter(a => now - a.t0 <= 30 * 86400e3);
   const mails = last30.reduce((n, a) => n + (a.emails || 0), 0);
   setTile(pfx + '-30d', String(last30.length), last30.length ? 'text-gray-900' : C_OK,
-          last30.length ? `${mails} mail${mails > 1 ? 's' : ''} envoyé${mails > 1 ? 's' : ''}` : 'aucune alerte avec mail');
+          last30.length ? _t(mails > 1 ? '{n} mails envoyés' : '{n} mail envoyé', { n: mails }) : _t('aucune alerte avec mail'));
   const ongoing = mailed.filter(a => !a.t1);
   if (ongoing.length) {
     const t0 = Math.min(...ongoing.map(a => a.t0));
-    $(pfx + '-ok-label').textContent = 'En alerte depuis';
-    setTile(pfx + '-ok', fmtSince((now - t0) / 1000), C_BAD, `depuis le ${fmtStamp(t0)}`);
+    $(pfx + '-ok-label').textContent = _t('En alerte depuis');
+    setTile(pfx + '-ok', fmtSince((now - t0) / 1000), C_BAD, _t('depuis le {t}', { t: fmtStamp(t0) }));
     return;
   }
-  $(pfx + '-ok-label').textContent = 'Tout est OK depuis';
+  $(pfx + '-ok-label').textContent = _t('Tout est OK depuis');
   const ends = mailed.map(a => a.t1).filter(Boolean);
-  if (!ends.length) { setTile(pfx + '-ok', 'Aucune alerte', C_OK, 'pas d\'alerte avec mail enregistrée'); return; }
+  if (!ends.length) { setTile(pfx + '-ok', _t('Aucune alerte'), C_OK, _t('pas d\'alerte avec mail enregistrée')); return; }
   const last = Math.max(...ends);
-  setTile(pfx + '-ok', fmtSince((now - last) / 1000), C_OK, `fin de la dernière alerte le ${fmtStamp(last)}`);
+  setTile(pfx + '-ok', fmtSince((now - last) / 1000), C_OK, _t('fin de la dernière alerte le {t}', { t: fmtStamp(last) }));
 }
 const tms = iso => iso ? new Date(String(iso).replace(' ', 'T')).getTime() : null;
 
@@ -426,15 +424,15 @@ async function loadChainState() {
   const on = devs.filter(d => d.enabled !== false);
   const down = on.filter(d => d.state === 'down'), warn = on.filter(d => d.state === 'warn' || d.state === 'unstable');
   const n = k => devs.filter(d => (d.kind || 'device') === k).length;
-  const parts = [[n('device'), 'appareil'], [n('probe'), 'sonde'], [n('sensor'), 'capteur']]
-    .filter(([c]) => c).map(([c, w]) => `${c} ${w}${c > 1 ? 's' : ''}`);
+  const parts = [[n('device'), '{n} appareil', '{n} appareils'], [n('probe'), '{n} sonde', '{n} sondes'], [n('sensor'), '{n} capteur', '{n} capteurs']]
+    .filter(([c]) => c).map(([c, one, many]) => _t(c > 1 ? many : one, { n: c }));
   const bad = down.concat(warn).map(d => esc(d.name));
-  const rx = rxAlive === null ? '' : rxAlive ? ` · <span class="text-green-700">syslog UDP ${esc(rxPort)} actif</span>`
-                                           : ' · <span class="text-red-600">réception syslog arrêtée</span>';
+  const rx = rxAlive === null ? '' : rxAlive ? ` · <span class="text-green-700">${_t('syslog UDP {p} actif', { p: esc(rxPort) })}</span>`
+                                           : ' · <span class="text-red-600">' + _t('réception syslog arrêtée') + '</span>';
   const sub = parts.join(' · ') + rx + (bad.length ? `<div class="mt-0.5 text-gray-600">${bad.join(', ')}</div>` : '');
-  if (down.length) setTile('ch-state', `${down.length} hors service`, C_BAD, sub);
-  else if (warn.length) setTile('ch-state', `${warn.length} en alerte`, C_WARN, sub);
-  else setTile('ch-state', on.length ? 'Tout est OK' : 'Aucun appareil', on.length ? C_OK : 'text-gray-900', sub);
+  if (down.length) setTile('ch-state', _t('{n} hors service', { n: down.length }), C_BAD, sub);
+  else if (warn.length) setTile('ch-state', _t('{n} en alerte', { n: warn.length }), C_WARN, sub);
+  else setTile('ch-state', on.length ? _t('Tout est OK') : _t('Aucun appareil'), on.length ? C_OK : 'text-gray-900', sub);
 }
 
 function fmtDur(s) {
@@ -457,9 +455,9 @@ function downloadCsv(name, header, rows) {
 // ══ Alertes de la chaîne (états relevés par BL-RMO) ══════════════════════
 let caAlerts = [], caLimit = 10, caPigeFrom = null, caCapped = false;
 const CA_STATES = {
-  down:     ['Hors service', 'bg-red-50 text-red-700'],
-  warn:     ['Alerte', 'bg-amber-50 text-amber-700'],
-  unstable: ['Instable', 'bg-amber-50 text-amber-700'],
+  down:     [_t('Hors service'), 'bg-red-50 text-red-700'],
+  warn:     [_t('Alerte'), 'bg-amber-50 text-amber-700'],
+  unstable: [_t('Instable'), 'bg-amber-50 text-amber-700'],
 };
 const CA_RANK = { unstable: 1, warn: 2, down: 3 };
 async function loadChainAlerts() {
@@ -506,42 +504,42 @@ async function loadChainAlerts() {
   headerAlerts('ch', caAlerts.map(a => ({ t0: a.t0, t1: a.t1, emails: a.emails || 0 })));
   const sel = $('ca-dev'), cur = sel.value;
   const devs = [...new Set(caAlerts.map(a => a.device))].sort();
-  sel.innerHTML = '<option value="">Tout</option>' + devs.map(d => `<option>${esc(d)}</option>`).join('');
+  sel.innerHTML = '<option value="">' + _t('Tout') + '</option>' + devs.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
   sel.value = devs.includes(cur) ? cur : '';
   renderChainAlerts();
 }
 function caPigeLinks(a) {
   const t0 = Math.floor(a.t0 / 1000);
-  if (!caPigeFrom || t0 - 30 < caPigeFrom) return '<span class="text-gray-300">hors pige</span>';
+  if (!caPigeFrom || t0 - 30 < caPigeFrom) return '<span class="text-gray-300">' + _t('hors pige') + '</span>';
   const t1 = a.t1 ? Math.floor(a.t1 / 1000) : t0 + 90;
   const s0 = t0 - 30, s1 = Math.min(t1 + 30, Math.floor(Date.now() / 1000));
-  return `<a href="/fm?t=${t0}${a.t1 ? '&e=' + Math.floor(a.t1 / 1000) : ''}#pige" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Écouter la pige FM pendant l'alerte">Écouter</a>`
-       + `<a href="/api/pige/export?p=fm&start=${s0}&end=${s1}" class="font-medium text-blue-600 hover:text-blue-800" title="Extrait MP3 de 30 s avant à 30 s après">MP3</a>`;
+  return `<a href="/fm?t=${t0}${a.t1 ? '&e=' + Math.floor(a.t1 / 1000) : ''}#pige" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="${_t('Écouter la pige FM pendant l\'alerte')}">${_t('Écouter')}</a>`
+       + `<a href="/api/pige/export?p=fm&start=${s0}&end=${s1}" class="font-medium text-blue-600 hover:text-blue-800" title="${_t('Extrait MP3 de 30 s avant à 30 s après')}">MP3</a>`;
 }
 function caList() { const dev = $('ca-dev').value; return caAlerts.filter(a => !dev || a.device === dev); }
 function renderChainAlerts() {
   const list = caList(), shown = list.slice(0, caLimit);
-  $('ca-count').textContent = `${list.length} alerte${list.length > 1 ? 's' : ''}` + (caCapped ? ' sur les 1 000 derniers changements d\'état' : '');
+  $('ca-count').textContent = _t(list.length > 1 ? '{n} alertes' : '{n} alerte', { n: list.length }) + (caCapped ? _t(' sur les 1 000 derniers changements d\'état') : '');
   $('ca-more').classList.toggle('hidden', list.length <= caLimit);
-  if (!shown.length) { $('ca-body').innerHTML = '<tr><td colspan="9" class="py-8 text-center text-gray-400">Aucune alerte relevée</td></tr>'; return; }
+  if (!shown.length) { $('ca-body').innerHTML = '<tr><td colspan="9" class="py-8 text-center text-gray-400">' + _t('Aucune alerte relevée') + '</td></tr>'; return; }
   const hms = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
   $('ca-body').innerHTML = shown.map(a => {
     const d0 = new Date(a.t0), [lab, col] = CA_STATES[a.state] || CA_STATES.warn;
-    const range = hms(a.t0) + ' → ' + (a.t1 ? hms(a.t1) : '<span class="text-red-600 font-medium">en cours</span>');
-    const state = a.t1 ? '<span class="px-2 py-0.5 rounded-full bg-green-50 text-green-700">Rétabli</span>'
-                       : '<span class="px-2 py-0.5 rounded-full bg-red-50 text-red-700">En cours</span>';
+    const range = hms(a.t0) + ' → ' + (a.t1 ? hms(a.t1) : '<span class="text-red-600 font-medium">' + _t('en cours') + '</span>');
+    const state = a.t1 ? '<span class="px-2 py-0.5 rounded-full bg-green-50 text-green-700">' + _t('Rétabli') + '</span>'
+                       : '<span class="px-2 py-0.5 rounded-full bg-red-50 text-red-700">' + _t('En cours') + '</span>';
     const msg = (a.message || '').replace(/^Valeur hors seuil : /, '');
-    const together = a.with.length ? `<div class="text-[11px] text-blue-700 mt-0.5">En même temps que ${esc(a.with.join(', '))}</div>` : '';
+    const together = a.with.length ? `<div class="text-[11px] text-blue-700 mt-0.5">${_t('En même temps que {l}', { l: esc(a.with.join(', ')) })}</div>` : '';
     return `<tr class="hover:bg-slate-50" style="vertical-align:top">
       <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${pad(d0.getDate())}-${pad(d0.getMonth() + 1)}-${d0.getFullYear()}</td>
-      <td class="py-2 pr-3 font-medium text-gray-800 whitespace-nowrap">${esc(a.device)}${a.ext ? ' <span class="ml-1 px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[10px] font-medium" title="Événement reçu d\'un équipement tiers' + (a.on ? ' pour ' + esc(a.on) : '') + '">externe</span>' : ''}</td>
-      <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${col}">${a.ext ? 'Dégradé' : lab}</span></td>
+      <td class="py-2 pr-3 font-medium text-gray-800 whitespace-nowrap">${esc(a.device)}${a.ext ? ' <span class="ml-1 px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[10px] font-medium" title="' + _t("Événement reçu d'un équipement tiers") + (a.on ? ' ' + _t('pour') + ' ' + esc(a.on) : '') + '">' + _t('externe') + '</span>' : ''}</td>
+      <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${col}">${a.ext ? _t('Dégradé') : lab}</span></td>
       <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${range}</td>
       <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.duration != null ? fmtDur(a.duration) : '-'}</td>
       <td class="py-2 pr-3 whitespace-nowrap">${state}</td>
       <td class="py-2 pr-3 text-gray-500" style="overflow-wrap:anywhere">${esc(msg)}${together}</td>
-      <td class="py-2 pr-3 text-gray-600" title="${a.emails == null ? 'Non enregistré pour les alertes antérieures' : ''}">${a.emails == null ? '<span class="text-gray-300">·</span>' : a.emails}</td>
-      <td class="py-2 whitespace-nowrap">${caPigeLinks(a)}<a href="${exportUrl(Math.floor(a.t0 / 1000) - 600, Math.floor((a.t1 || a.t0) / 1000) + 600)}" class="need-operateur ml-3 font-medium text-gray-500 hover:text-gray-800" title="Archive des journaux, 10 min avant et après">±10 min</a></td>
+      <td class="py-2 pr-3 text-gray-600" title="${a.emails == null ? _t('Non enregistré pour les alertes antérieures') : ''}">${a.emails == null ? '<span class="text-gray-300">·</span>' : a.emails}</td>
+      <td class="py-2 whitespace-nowrap">${caPigeLinks(a)}<a href="${exportUrl(Math.floor(a.t0 / 1000) - 600, Math.floor((a.t1 || a.t0) / 1000) + 600)}" class="need-operateur ml-3 font-medium text-gray-500 hover:text-gray-800" title="${_t('Archive des journaux, 10 min avant et après')}">${_t('±10 min')}</a></td>
     </tr>`;
   }).join('');
 }
@@ -549,8 +547,8 @@ function exportChainAlerts() {
   const st = t => { const d = new Date(t); return [`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`]; };
   downloadCsv('blrmo-alertes-chaine', ['date', 'debut', 'fin', 'appareil', 'alerte', 'duree_s', 'etat', 'mails', 'detail', 'en_meme_temps_que'],
     caList().map(a => { const [d, t0] = st(a.t0);
-      return [d, t0, a.t1 ? st(a.t1)[1] : '', a.device + (a.ext ? ' (externe)' : ''), a.ext ? 'Dégradé' : (CA_STATES[a.state] || CA_STATES.warn)[0], a.duration ?? '',
-              a.t1 ? 'rétabli' : 'en cours', a.emails ?? '', a.message || '', a.with.join(', ')]; }));
+      return [d, t0, a.t1 ? st(a.t1)[1] : '', a.device + (a.ext ? ` (${_t('externe')})` : ''), a.ext ? _t('Dégradé') : (CA_STATES[a.state] || CA_STATES.warn)[0], a.duration ?? '',
+              a.t1 ? _t('rétabli') : _t('en cours'), a.emails ?? '', a.message || '', a.with.join(', ')]; }));
 }
 
 

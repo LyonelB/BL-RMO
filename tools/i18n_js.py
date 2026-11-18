@@ -28,6 +28,8 @@ def wanted(body):
         return False
     if CSS.search(' ' + body):
         return False
+    if re.search(r'\d+px|#[0-9a-fA-F]{3,6}\b|rgba?\(|^https?://', body):
+        return False      # valeur CSS ou adresse
     if re.search(r'\{\w+\}', body) or re.fullmatch(r'[\w.-]+\.(py|json|sh|html|db|mp3|local)', body):
         return False      # déjà une clé à valeurs ({n}), ou un nom de fichier
     if ' ' in body.strip() or ACCENT.search(body):

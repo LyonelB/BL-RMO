@@ -5,7 +5,7 @@
   {% include '_i18n.html' %}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>BL-RMO · Chaîne de diffusion · Appareils</title>
+  <title>{{ _('BL-RMO · Chaîne de diffusion · Appareils') }}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -58,8 +58,8 @@
   <header class="bg-white border-b border-gray-100 px-6 pt-4 sticky top-0 z-10">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">Chaîne de diffusion</h1></div>
-        <p class="text-xs text-gray-400 mt-0.5">Ajouter, ordonner et régler les appareils, les sondes et les capteurs</p>
+        <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">{{ _('Chaîne de diffusion') }}</h1></div>
+        <p class="text-xs text-gray-400 mt-0.5">{{ _('Ajouter, ordonner et régler les appareils, les sondes et les capteurs') }}</p>
       </div>
     </div>
     {% set chain_tab = 'appareils' %}{% include '_chain_nav.html' %}
@@ -74,12 +74,12 @@
       <div class="mx-auto w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mb-3">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
       </div>
-      <h2 class="text-sm font-semibold text-gray-900">Aucun appareil dans la chaîne</h2>
-      <p class="text-xs text-gray-500 mt-1 max-w-md mx-auto">Ajoutez les appareils dans l'ordre du signal : codec studio, faisceau, codec côté émetteur, processeur, émetteur... Chacun est sondé par ping, port TCP, page web, SNMP ou Icecast.</p>
+      <h2 class="text-sm font-semibold text-gray-900">{{ _('Aucun appareil dans la chaîne') }}</h2>
+      <p class="text-xs text-gray-500 mt-1 max-w-md mx-auto">{{ _("Ajoutez les appareils dans l'ordre du signal : codec studio, faisceau, codec côté émetteur, processeur, émetteur... Chacun est sondé par ping, port TCP, page web, SNMP ou Icecast.") }}</p>
       <div class="mt-4 flex justify-center gap-2 flex-wrap">
-        <button onclick="openEditor(null, 'device')" class="text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5">Ajouter un appareil</button>
-        <button onclick="addFmLocal()" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">Ajouter la réception FM de ce BL-RMO</button>
-        <button onclick="addDabLocal()" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">Ajouter la réception DAB+</button>
+        <button onclick="openEditor(null, 'device')" class="text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5">{{ _('Ajouter un appareil') }}</button>
+        <button onclick="addFmLocal()" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">{{ _('Ajouter la réception FM de ce BL-RMO') }}</button>
+        <button onclick="addDabLocal()" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">{{ _('Ajouter la réception DAB+') }}</button>
       </div>
     </div>
 
@@ -88,20 +88,20 @@
       <div class="flex items-center justify-between gap-3 flex-wrap mb-3">
         <div class="section-title !mb-0">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-          Appareils de la chaîne
+          {{ _('Appareils de la chaîne') }}
           <span id="device-summary" style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8"></span>
         </div>
         <button onclick="openEditor(null, 'device')" class="flex items-center gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          Ajouter un appareil
+          {{ _('Ajouter un appareil') }}
         </button>
       </div>
-      <p class="text-xs text-gray-500 mb-2">Dans l'ordre du signal, du studio à l'émetteur. L'état en direct, les mesures et l'historique sont sur le <a href="/chain" class="text-blue-600 hover:text-blue-800">Synoptique</a>.</p>
+      <p class="text-xs text-gray-500 mb-2">{{ _("Dans l'ordre du signal, du studio à l'émetteur. L'état en direct, les mesures et l'historique sont sur le") }} <a href="/chain" class="text-blue-600 hover:text-blue-800">{{ _('Synoptique') }}</a>.</p>
       <div class="overflow-x-auto">
         <table class="w-full text-xs">
           <thead>
             <tr class="text-left text-gray-400 border-b border-gray-100">
-              <th class="py-2 pr-3 font-medium w-16">Ordre</th><th class="py-2 pr-3 font-medium">Nom</th><th class="py-2 pr-3 font-medium">Site</th><th class="py-2 pr-3 font-medium">Sonde</th><th class="py-2 pr-3 font-medium">Cible</th><th class="py-2 pr-3 font-medium text-right">Intervalle</th><th class="py-2 pr-3 font-medium text-center">Mail</th><th class="py-2 pr-3 font-medium text-right"></th>
+              <th class="py-2 pr-3 font-medium w-16">{{ _('Ordre') }}</th><th class="py-2 pr-3 font-medium">{{ _('Nom') }}</th><th class="py-2 pr-3 font-medium">{{ _('Site') }}</th><th class="py-2 pr-3 font-medium">{{ _('Sonde') }}</th><th class="py-2 pr-3 font-medium">{{ _('Cible') }}</th><th class="py-2 pr-3 font-medium text-right">{{ _('Intervalle') }}</th><th class="py-2 pr-3 font-medium text-center">{{ _('Mail') }}</th><th class="py-2 pr-3 font-medium text-right"></th>
             </tr>
           </thead>
           <tbody id="device-table"></tbody>
@@ -113,20 +113,20 @@
       <div class="flex items-center justify-between gap-3 flex-wrap mb-3">
         <div class="section-title !mb-0">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-          Sondes réseau
+          {{ _('Sondes réseau') }}
           <span id="probe-summary" style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8"></span>
         </div>
         <button onclick="openEditor(null, 'probe')" class="flex items-center gap-1.5 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          Ajouter une sonde
+          {{ _('Ajouter une sonde') }}
         </button>
       </div>
-      <p class="text-xs text-gray-500 mb-2">Une sonde mesure la qualité d'un lien (pertes, latence, gigue) sans faire partie de la chaîne, par exemple une rafale de pings vers le faisceau toutes les 10 s. Ses mesures s'affichent sur le lien, dans le Synoptique.</p>
+      <p class="text-xs text-gray-500 mb-2">{{ _("Une sonde mesure la qualité d'un lien (pertes, latence, gigue) sans faire partie de la chaîne, par exemple une rafale de pings vers le faisceau toutes les 10 s. Ses mesures s'affichent sur le lien, dans le Synoptique.") }}</p>
       <div class="overflow-x-auto">
         <table class="w-full text-xs">
           <thead>
             <tr class="text-left text-gray-400 border-b border-gray-100">
-              <th class="py-2 pr-3 font-medium w-16">Ordre</th><th class="py-2 pr-3 font-medium">Nom</th><th class="py-2 pr-3 font-medium">Sonde</th><th class="py-2 pr-3 font-medium">Cible</th><th class="py-2 pr-3 font-medium text-right">Intervalle</th><th class="py-2 pr-3 font-medium text-center">Mail</th><th class="py-2 pr-3 font-medium text-right"></th>
+              <th class="py-2 pr-3 font-medium w-16">{{ _('Ordre') }}</th><th class="py-2 pr-3 font-medium">{{ _('Nom') }}</th><th class="py-2 pr-3 font-medium">{{ _('Sonde') }}</th><th class="py-2 pr-3 font-medium">{{ _('Cible') }}</th><th class="py-2 pr-3 font-medium text-right">{{ _('Intervalle') }}</th><th class="py-2 pr-3 font-medium text-center">{{ _('Mail') }}</th><th class="py-2 pr-3 font-medium text-right"></th>
             </tr>
           </thead>
           <tbody id="probe-table"></tbody>
@@ -138,20 +138,20 @@
       <div class="flex items-center justify-between gap-3 flex-wrap mb-3">
         <div class="section-title !mb-0">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V5a3 3 0 116 0v12a4 4 0 11-6 0zm3 1V9"/></svg>
-          Capteurs de site
+          {{ _('Capteurs de site') }}
           <span id="sensor-summary" style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8"></span>
         </div>
         <button onclick="openEditor(null, 'sensor')" class="flex items-center gap-1.5 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          Ajouter un capteur
+          {{ _('Ajouter un capteur') }}
         </button>
       </div>
-      <p class="text-xs text-gray-500 mb-2">Un capteur surveille l'environnement d'un site sans faire partie du signal : température et humidité d'un shelter, ouverture de porte, tension secteur... Il s'affiche dans l'en-tête du site sur le Synoptique et le tableau de bord.</p>
+      <p class="text-xs text-gray-500 mb-2">{{ _("Un capteur surveille l'environnement d'un site sans faire partie du signal : température et humidité d'un shelter, ouverture de porte, tension secteur... Il s'affiche dans l'en-tête du site sur le Synoptique et le tableau de bord.") }}</p>
       <div class="overflow-x-auto">
         <table class="w-full text-xs">
           <thead>
             <tr class="text-left text-gray-400 border-b border-gray-100">
-              <th class="py-2 pr-3 font-medium w-16">Ordre</th><th class="py-2 pr-3 font-medium">Nom</th><th class="py-2 pr-3 font-medium">Site</th><th class="py-2 pr-3 font-medium">Sonde</th><th class="py-2 pr-3 font-medium">Cible</th><th class="py-2 pr-3 font-medium text-right">Intervalle</th><th class="py-2 pr-3 font-medium text-center">Mail</th><th class="py-2 pr-3 font-medium text-right"></th>
+              <th class="py-2 pr-3 font-medium w-16">{{ _('Ordre') }}</th><th class="py-2 pr-3 font-medium">{{ _('Nom') }}</th><th class="py-2 pr-3 font-medium">{{ _('Site') }}</th><th class="py-2 pr-3 font-medium">{{ _('Sonde') }}</th><th class="py-2 pr-3 font-medium">{{ _('Cible') }}</th><th class="py-2 pr-3 font-medium text-right">{{ _('Intervalle') }}</th><th class="py-2 pr-3 font-medium text-center">{{ _('Mail') }}</th><th class="py-2 pr-3 font-medium text-right"></th>
             </tr>
           </thead>
           <tbody id="sensor-table"></tbody>
@@ -165,34 +165,34 @@
 <div id="editor" class="hidden fixed inset-0 z-[60] bg-black/40 flex items-start sm:items-center justify-center p-0 sm:p-4" onclick="if(event.target===this) closeEditor()">
   <div class="bg-white w-full sm:max-w-2xl sm:rounded-xl shadow-xl flex flex-col max-h-screen sm:max-h-[92vh]">
     <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-      <h2 id="editor-title" class="text-sm font-semibold text-gray-900">Ajouter un appareil</h2>
+      <h2 id="editor-title" class="text-sm font-semibold text-gray-900">{{ _('Ajouter un appareil') }}</h2>
       <button onclick="closeEditor()" class="text-gray-400 hover:text-gray-700"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
 
     <div class="px-5 py-4 overflow-y-auto space-y-4 text-sm" id="editor-body">
-      <div class="kind-switch" role="radiogroup" aria-label="Catégorie">
-        <button type="button" data-kind="device" onclick="setKind('device')">Appareil de la chaîne<span>Un maillon du signal : codec, faisceau, émetteur...</span></button>
-        <button type="button" data-kind="probe" onclick="setKind('probe')">Sonde réseau<span>Une mesure de lien : pertes, latence, gigue</span></button>
-        <button type="button" data-kind="sensor" onclick="setKind('sensor')">Capteur de site<span>Hors du signal : température, porte, secteur...</span></button>
+      <div class="kind-switch" role="radiogroup" aria-label="{{ _('Catégorie') }}">
+        <button type="button" data-kind="device" onclick="setKind('device')">{{ _('Appareil de la chaîne') }}<span>{{ _('Un maillon du signal : codec, faisceau, émetteur...') }}</span></button>
+        <button type="button" data-kind="probe" onclick="setKind('probe')">{{ _('Sonde réseau') }}<span>{{ _('Une mesure de lien : pertes, latence, gigue') }}</span></button>
+        <button type="button" data-kind="sensor" onclick="setKind('sensor')">{{ _('Capteur de site') }}<span>{{ _('Hors du signal : température, porte, secteur...') }}</span></button>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <label class="field sm:col-span-1"><span>Nom</span><input id="f-name" type="text" maxlength="60" placeholder="DB91-RX"></label>
-        <label class="field" id="site-field"><span>Site</span><input id="f-site" type="text" maxlength="40" list="sites-list" placeholder="Studio"></label>
-        <label class="field"><span>Rôle</span><input id="f-role" type="text" maxlength="40" list="roles-list" placeholder="Codec audio"></label>
+        <label class="field sm:col-span-1"><span>{{ _('Nom') }}</span><input id="f-name" type="text" maxlength="60" placeholder="{{ _('DB91-RX') }}"></label>
+        <label class="field" id="site-field"><span>{{ _('Site') }}</span><input id="f-site" type="text" maxlength="40" list="sites-list" placeholder="{{ _('Studio') }}"></label>
+        <label class="field"><span>{{ _('Rôle') }}</span><input id="f-role" type="text" maxlength="40" list="roles-list" placeholder="{{ _('Codec audio') }}"></label>
       </div>
       <div id="synopt-dev" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <label class="field" id="out-label-field"><span>Liaison vers l'appareil suivant</span><input id="f-out-label" type="text" maxlength="40" list="links-list" placeholder="AES, MPX, Faisceau 5 GHz · 3 km"></label>
-        <label class="field"><span>Interface web <button type="button" onclick="fillWeb()" class="text-blue-600 hover:text-blue-800 font-normal ml-1">remplir</button></span><input id="f-web" type="text" maxlength="200" placeholder="http://192.168.1.62/ (vide : pas de lien)"></label>
+        <label class="field" id="out-label-field"><span>{{ _("Liaison vers l'appareil suivant") }}</span><input id="f-out-label" type="text" maxlength="40" list="links-list" placeholder="{{ _('AES, MPX, Faisceau 5 GHz · 3 km') }}"></label>
+        <label class="field"><span>{{ _('Interface web') }} <button type="button" onclick="fillWeb()" class="text-blue-600 hover:text-blue-800 font-normal ml-1">{{ _('remplir') }}</button></span><input id="f-web" type="text" maxlength="200" placeholder="{{ _('http://192.168.1.62/ (vide : pas de lien)') }}"></label>
       </div>
       <datalist id="links-list"><option value="LAN"><option value="AES"><option value="Analogique"><option value="MPX"><option value="RTP"><option value="Faisceau"></datalist>
       <div id="link-field">
-        <div class="text-xs font-medium text-gray-600 mb-1.5">Lien surveillé</div>
+        <div class="text-xs font-medium text-gray-600 mb-1.5">{{ _('Lien surveillé') }}</div>
         <div class="flex items-center gap-2">
           <select id="f-link-from" class="field-select flex-1 text-sm border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="linkFromChanged()"></select>
           <span class="text-gray-400">&rarr;</span>
           <select id="f-link-to" class="field-select flex-1 text-sm border border-gray-200 rounded-lg px-2 py-1.5 bg-white"></select>
         </div>
-        <p class="text-[11px] text-gray-400 mt-1">La sonde s'affiche sur la flèche entre ces deux appareils, dans le synoptique.</p>
+        <p class="text-[11px] text-gray-400 mt-1">{{ _("La sonde s'affiche sur la flèche entre ces deux appareils, dans le synoptique.") }}</p>
       </div>
       <datalist id="sites-list"></datalist>
       <datalist id="roles-list">
@@ -201,25 +201,25 @@
       </datalist>
 
       <div>
-        <div class="text-xs font-medium text-gray-600 mb-1.5">Type de sonde</div>
+        <div class="text-xs font-medium text-gray-600 mb-1.5">{{ _('Type de sonde') }}</div>
         <div id="probe-picker" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
       </div>
 
       <div id="probe-fields" class="space-y-3"></div>
 
       <details class="rounded-lg border border-gray-100 bg-slate-50 px-3 py-2" open>
-        <summary class="text-xs font-medium text-gray-600 cursor-pointer select-none">Fréquence et alertes</summary>
+        <summary class="text-xs font-medium text-gray-600 cursor-pointer select-none">{{ _('Fréquence et alertes') }}</summary>
         <div class="grid grid-cols-3 gap-3 mt-3">
-          <label class="field"><span>Intervalle (s)</span><input id="f-interval" type="number" min="1" max="3600" value="30"></label>
-          <label class="field"><span>Délai (s)</span><input id="f-timeout" type="number" min="1" max="30" step="0.5" value="3"></label>
-          <label class="field"><span>Échecs avant HS</span><input id="f-fails" type="number" min="1" max="20" value="3"></label>
+          <label class="field"><span>{{ _('Intervalle (s)') }}</span><input id="f-interval" type="number" min="1" max="3600" value="30"></label>
+          <label class="field"><span>{{ _('Délai (s)') }}</span><input id="f-timeout" type="number" min="1" max="30" step="0.5" value="3"></label>
+          <label class="field"><span>{{ _('Échecs avant HS') }}</span><input id="f-fails" type="number" min="1" max="20" value="3"></label>
         </div>
         <div class="flex flex-wrap gap-x-5 gap-y-2 mt-3 text-xs text-gray-700">
-          <label class="flex items-center gap-2"><input id="f-alert" type="checkbox" class="rounded" onchange="document.getElementById('f-alert-warn').disabled=!this.checked"> Alerte email (perte et rétablissement)</label>
-          <label class="flex items-center gap-2"><input id="f-alert-warn" type="checkbox" class="rounded"> aussi en cas d'alerte (dégradé)</label>
-          <label class="flex items-center gap-2"><input id="f-enabled" type="checkbox" class="rounded" checked> Sonde active</label>
+          <label class="flex items-center gap-2"><input id="f-alert" type="checkbox" class="rounded" onchange="document.getElementById('f-alert-warn').disabled=!this.checked"> {{ _('Alerte email (perte et rétablissement)') }}</label>
+          <label class="flex items-center gap-2"><input id="f-alert-warn" type="checkbox" class="rounded"> {{ _("aussi en cas d'alerte (dégradé)") }}</label>
+          <label class="flex items-center gap-2"><input id="f-enabled" type="checkbox" class="rounded" checked> {{ _('Sonde active') }}</label>
         </div>
-        <label class="field mt-3"><span>Notes</span><input id="f-notes" type="text" maxlength="300" placeholder="Emplacement, accès, contact..."></label>
+        <label class="field mt-3"><span>{{ _('Notes') }}</span><input id="f-notes" type="text" maxlength="300" placeholder="{{ _('Emplacement, accès, contact...') }}"></label>
       </details>
 
       <div id="test-result" class="hidden rounded-lg border px-3 py-2.5 text-xs"></div>
@@ -227,11 +227,11 @@
     </div>
 
     <div class="px-5 py-3 border-t border-gray-100 flex items-center gap-2">
-      <button id="btn-delete" onclick="deleteDevice()" class="hidden text-xs font-medium text-red-500 hover:text-red-700 mr-auto">Supprimer</button>
+      <button id="btn-delete" onclick="deleteDevice()" class="hidden text-xs font-medium text-red-500 hover:text-red-700 mr-auto">{{ _('Supprimer') }}</button>
       <div class="ml-auto flex gap-2">
-        <button onclick="testDevice()" id="btn-test" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">Tester</button>
-        <button onclick="closeEditor()" class="text-xs font-medium text-gray-500 hover:text-gray-800 px-3 py-1.5">Annuler</button>
-        <button onclick="saveDevice()" id="btn-save" class="text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5">Enregistrer</button>
+        <button onclick="testDevice()" id="btn-test" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">{{ _('Tester') }}</button>
+        <button onclick="closeEditor()" class="text-xs font-medium text-gray-500 hover:text-gray-800 px-3 py-1.5">{{ _('Annuler') }}</button>
+        <button onclick="saveDevice()" id="btn-save" class="text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5">{{ _('Enregistrer') }}</button>
       </div>
     </div>
   </div>
@@ -242,25 +242,25 @@
 //  Constantes
 // ═══════════════════════════════════════════════════════════════════════
 const PROBES = {
-  ping:     { label: 'Ping',        desc: 'Répond-il sur le réseau ?' },
-  burst:    { label: 'Ping qualité', desc: 'Rafale : pertes, pics, gigue' },
-  tcp:      { label: 'Port TCP',    desc: 'Un service écoute-t-il ?' },
-  http:     { label: 'Page web',    desc: 'Interface web, code, mot-clé' },
-  snmp:     { label: 'SNMP',        desc: 'Valeurs internes (OID)' },
-  icecast:  { label: 'Icecast',     desc: 'Page d\'état du serveur : auditeurs, sans écouter' },
-  stream:   { label: 'Flux audio',  desc: 'Écoute le flux : son, silence, titre, auditeurs' },
-  fm_local: { label: 'Réception FM', desc: 'Ce BL-RMO, en bout de chaîne' },
-  dab_local: { label: 'Réception DAB+', desc: 'Le service suivi par la clé DAB+' },
-  livebox:  { label: 'Livebox',     desc: 'Orange : redémarrage, Internet' },
+  ping:     { label: _t('Ping'),        desc: _t('Répond-il sur le réseau ?') },
+  burst:    { label: _t('Ping qualité'), desc: _t('Rafale : pertes, pics, gigue') },
+  tcp:      { label: _t('Port TCP'),    desc: _t('Un service écoute-t-il ?') },
+  http:     { label: _t('Page web'),    desc: _t('Interface web, code, mot-clé') },
+  snmp:     { label: 'SNMP',        desc: _t('Valeurs internes (OID)') },
+  icecast:  { label: _t('Icecast'),     desc: _t('Page d\'état du serveur : auditeurs, sans écouter') },
+  stream:   { label: _t('Flux audio'),  desc: _t('Écoute le flux : son, silence, titre, auditeurs') },
+  fm_local: { label: _t('Réception FM'), desc: _t('Ce BL-RMO, en bout de chaîne') },
+  dab_local: { label: _t('Réception DAB+'), desc: _t('Le service suivi par la clé DAB+') },
+  livebox:  { label: _t('Livebox'),     desc: _t('Orange : redémarrage, Internet') },
 };
 
 const STATES = {
-  up:       { label: 'En service',   dot: 'bg-emerald-500', text: 'text-emerald-700', pill: 'bg-emerald-50 text-emerald-700' },
-  warn:     { label: 'Alerte',       dot: 'bg-amber-500',     text: 'text-amber-700',   pill: 'bg-amber-50 text-amber-700' },
-  unstable: { label: 'Instable',     dot: 'bg-amber-400',     text: 'text-amber-700',   pill: 'bg-amber-50 text-amber-700' },
-  down:     { label: 'Hors service', dot: 'bg-red-500',         text: 'text-red-700',     pill: 'bg-red-50 text-red-700' },
-  unknown:  { label: 'En attente',   dot: 'bg-slate-300',     text: 'text-slate-500',   pill: 'bg-slate-100 text-slate-600' },
-  disabled: { label: 'Désactivé',    dot: 'bg-slate-200',     text: 'text-slate-400',   pill: 'bg-slate-100 text-slate-500' },
+  up:       { label: _t('En service'),   dot: 'bg-emerald-500', text: 'text-emerald-700', pill: 'bg-emerald-50 text-emerald-700' },
+  warn:     { label: _t('Alerte'),       dot: 'bg-amber-500',     text: 'text-amber-700',   pill: 'bg-amber-50 text-amber-700' },
+  unstable: { label: _t('Instable'),     dot: 'bg-amber-400',     text: 'text-amber-700',   pill: 'bg-amber-50 text-amber-700' },
+  down:     { label: _t('Hors service'), dot: 'bg-red-500',         text: 'text-red-700',     pill: 'bg-red-50 text-red-700' },
+  unknown:  { label: _t('En attente'),   dot: 'bg-slate-300',     text: 'text-slate-500',   pill: 'bg-slate-100 text-slate-600' },
+  disabled: { label: _t('Désactivé'),    dot: 'bg-slate-200',     text: 'text-slate-400',   pill: 'bg-slate-100 text-slate-500' },
 };
 
 // Modèles SNMP : points de départ, à vérifier avec le bouton Tester.
@@ -383,7 +383,7 @@ async function api(url, opts = {}, retried = false) {
   }
   if (o.method && o.method !== 'GET') o.headers['X-CSRFToken'] = csrfHeader();
   const r = await fetch(url, o);
-  if (r.status === 401) { window.location = '/login?next=/chain/appareils'; throw new Error('Session expirée'); }
+  if (r.status === 401) { window.location = '/login?next=/chain/appareils'; throw new Error(_t('Session expirée')); }
   let data = null;
   try { data = await r.clone().json(); } catch (e) {}
   // Jeton CSRF expiré (page ouverte longtemps) : on en reprend un et on rejoue une fois
@@ -393,27 +393,25 @@ async function api(url, opts = {}, retried = false) {
   }
   data = data || {};
   if (!r.ok) {
-    if (r.status === 400 && retried && !data.message) throw new Error('Session expirée : rechargez la page (F5)');
-    throw new Error(data.message || data.error || `Erreur ${r.status}`);
+    if (r.status === 400 && retried && !data.message) throw new Error(_t('Session expirée : rechargez la page (F5)'));
+    throw new Error(data.message || data.error || `${_t('Erreur')} ${r.status}`);
   }
   return data;
 }
 function ago(iso) {
-  if (!iso) return 'jamais';
+  if (!iso) return _t('jamais');
   const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
-  if (s < 60) return `il y a ${s} s`;
-  if (s < 3600) return `il y a ${Math.floor(s / 60)} min`;
-  if (s < 86400) return `il y a ${Math.floor(s / 3600)} h`;
-  return `il y a ${Math.floor(s / 86400)} j`;
+  const n = s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : s < 86400 ? `${Math.floor(s / 3600)} h` : `${Math.floor(s / 86400)} ${_t('j')}`;
+  return _t('il y a {n}', { n });
 }
 function fmtDate(iso) {
   if (!iso) return '';
   const d = new Date(iso);
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' +
-         d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return d.toLocaleDateString(BLRMO_LOCALE, { day: '2-digit', month: '2-digit' }) + ' ' +
+         d.toLocaleTimeString(BLRMO_LOCALE, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 function stateLabel(d) {
-  if (d.state === 'unstable') return `Instable (${d.fails}/${d.fail_threshold})`;
+  if (d.state === 'unstable') return `${_t('Instable')} (${d.fails}/${d.fail_threshold})`;
   return (STATES[d.state] || STATES.unknown).label;
 }
 
@@ -436,9 +434,9 @@ function renderToolsWarning() {
   const el = document.getElementById('tools-warning');
   const msgs = [];
   if (!tools.snmpget && devices.some(d => d.probe === 'snmp'))
-    msgs.push("La commande <code>snmpget</code> est absente : installez-la avec <code>sudo apt install snmp</code>.");
+    msgs.push(_t('La commande {c} est absente : installez-la avec {i}.', { c: '<code>snmpget</code>', i: '<code>sudo apt install snmp</code>' }));
   if (!tools.ping && devices.some(d => d.probe === 'ping'))
-    msgs.push("La commande <code>ping</code> est absente : installez-la avec <code>sudo apt install iputils-ping</code>.");
+    msgs.push(_t('La commande {c} est absente : installez-la avec {i}.', { c: '<code>ping</code>', i: '<code>sudo apt install iputils-ping</code>' }));
   el.innerHTML = msgs.join('<br>');
   el.classList.toggle('hidden', !msgs.length);
 }
@@ -457,9 +455,9 @@ async function probeNow(id) {
 //  Tableau de gestion
 // ═══════════════════════════════════════════════════════════════════════
 function renderTable() {
-  renderMgmt('device', chainDevs(), true, 'Aucun appareil.');
-  renderMgmt('probe', probeDevs(), false, 'Aucune sonde.');
-  renderMgmt('sensor', sensorDevs(), true, 'Aucun capteur.');
+  renderMgmt('device', chainDevs(), true, _t('Aucun appareil.'));
+  renderMgmt('probe', probeDevs(), false, _t('Aucune sonde.'));
+  renderMgmt('sensor', sensorDevs(), true, _t('Aucun capteur.'));
 }
 
 const ICON_UP = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>';
@@ -469,25 +467,25 @@ function renderMgmt(kind, list, withSite, emptyText) {
   const tb = document.getElementById(kind + '-table');
   const cols = withSite ? 8 : 7;
   const bad = list.filter(d => ['down', 'warn', 'unstable'].includes(d.state)).length;
-  document.getElementById(kind + '-summary').textContent = list.length ? `${list.length}${bad ? ' · ' + bad + ' en alerte' : ''}` : '';
+  document.getElementById(kind + '-summary').textContent = list.length ? `${list.length}${bad ? ' · ' + bad + _t(' en alerte') : ''}` : '';
   if (!list.length) { tb.innerHTML = `<tr><td colspan="${cols}" class="py-4 text-center text-gray-400">${emptyText}</td></tr>`; return; }
   tb.innerHTML = list.map((d, i) => {
     const st = STATES[d.state] || STATES.unknown;
     return `
     <tr class="border-b border-gray-50 hover:bg-slate-50 ${d.enabled ? '' : 'opacity-50'}">
       <td class="py-1.5 pr-2 whitespace-nowrap">
-        <button class="icon-btn" ${i === 0 ? 'disabled' : ''} onclick="move('${kind}', ${i}, -1)" title="Monter">${ICON_UP}</button>
-        <button class="icon-btn" ${i === list.length - 1 ? 'disabled' : ''} onclick="move('${kind}', ${i}, 1)" title="Descendre">${ICON_DOWN}</button>
+        <button class="icon-btn" ${i === 0 ? 'disabled' : ''} onclick="move('${kind}', ${i}, -1)" title="${_t('Monter')}">${ICON_UP}</button>
+        <button class="icon-btn" ${i === list.length - 1 ? 'disabled' : ''} onclick="move('${kind}', ${i}, 1)" title="${_t('Descendre')}">${ICON_DOWN}</button>
       </td>
-      <td class="py-1.5 pr-3" title="${esc(d.enabled ? stateLabel(d) + (d.message ? ' : ' + d.message : '') : 'Désactivé')}"><span class="inline-block w-2 h-2 rounded-full mr-1.5 ${st.dot}"></span><span class="font-medium text-gray-800">${esc(d.name)}</span>${d.role ? ' <span class="text-gray-400">' + esc(d.role) + '</span>' : ''}${d.enabled ? '' : ' <span class="text-gray-400">(désactivé)</span>'}</td>
+      <td class="py-1.5 pr-3" title="${esc(d.enabled ? stateLabel(d) + (d.message ? ' : ' + d.message : '') : _t('Désactivé'))}"><span class="inline-block w-2 h-2 rounded-full mr-1.5 ${st.dot}"></span><span class="font-medium text-gray-800">${esc(d.name)}</span>${d.role ? ' <span class="text-gray-400">' + esc(d.role) + '</span>' : ''}${d.enabled ? '' : ' <span class="text-gray-400">' + _t('(désactivé)') + '</span>'}</td>
       ${withSite ? `<td class="py-1.5 pr-3 text-gray-600">${esc(d.site)}</td>` : ''}
       <td class="py-1.5 pr-3 text-gray-600">${esc(PROBES[d.probe]?.label || d.probe)}</td>
       <td class="py-1.5 pr-3 font-mono text-gray-500 truncate max-w-[14rem]">${esc(d.target)}</td>
       <td class="py-1.5 pr-3 text-right text-gray-600">${d.interval} s</td>
       <td class="py-1.5 pr-3 text-center">${d.alert_email ? '✓' : ''}</td>
       <td class="py-1.5 text-right whitespace-nowrap">
-        <button class="icon-btn" title="Sonder maintenant" onclick="probeNow(${d.id})">${ICON_NOW}</button>
-        <button class="text-blue-600 hover:text-blue-800 font-medium ml-1" onclick="openEditor(${d.id})">Modifier</button>
+        <button class="icon-btn" title="${_t('Sonder maintenant')}" onclick="probeNow(${d.id})">${ICON_NOW}</button>
+        <button class="text-blue-600 hover:text-blue-800 font-medium ml-1" onclick="openEditor(${d.id})">${_t('Modifier')}</button>
       </td>
     </tr>`;
   }).join('');
@@ -511,7 +509,7 @@ function renderFilterOptions() {
   const cur = sel.value;
   const grp = (label, list) => list.length ? `<optgroup label="${label}">` +
     list.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('') + '</optgroup>' : '';
-  const opts = '<option value="">Tout</option>' + grp('Appareils', chainDevs()) + grp('Sondes', probeDevs()) + grp('Capteurs de site', sensorDevs());
+  const opts = '<option value="">' + _t('Tout') + '</option>' + grp(_t('Appareils'), chainDevs()) + grp(_t('Sondes'), probeDevs()) + grp(_t('Capteurs de site'), sensorDevs());
   if (sel.dataset.sig !== opts) { sel.innerHTML = opts; sel.value = cur; sel.dataset.sig = opts; }
 }
 
@@ -553,8 +551,8 @@ function val(id) { const el = document.getElementById(id); return el ? el.value 
 
 function renderProbeFields(cfg = {}) {
   const f = document.getElementById('probe-fields');
-  const hostField = `<label class="field"><span>Adresse IP ou nom</span><input id="c-host" type="text" value="${esc(cfg.host || '')}" placeholder="192.168.1.64"></label>`;
-  const warnField = (label = 'Alerte si latence > (ms)') => `<label class="field"><span>${label}</span><input id="c-warn_ms" type="number" min="1" value="${cfg.warn_ms ?? ''}" placeholder="facultatif"></label>`;
+  const hostField = `<label class="field"><span>${_t('Adresse IP ou nom')}</span><input id="c-host" type="text" value="${esc(cfg.host || '')}" placeholder="192.168.1.64"></label>`;
+  const warnField = (label = _t('Alerte si latence > (ms)')) => `<label class="field"><span>${label}</span><input id="c-warn_ms" type="number" min="1" value="${cfg.warn_ms ?? ''}" placeholder="${_t('facultatif')}"></label>`;
 
   if (currentProbe === 'ping') {
     f.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${hostField}${warnField()}</div>`;
@@ -562,75 +560,75 @@ function renderProbeFields(cfg = {}) {
     f.innerHTML = `
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div class="sm:col-span-1">${hostField}</div>
-        <label class="field"><span>Nombre de pings</span><input id="c-count" type="number" min="2" max="100" value="${cfg.count ?? 20}"></label>
-        <label class="field"><span>Espacement (ms)</span><input id="c-spacing_ms" type="number" min="10" max="1000" value="${cfg.spacing_ms ?? 50}"></label>
+        <label class="field"><span>${_t('Nombre de pings')}</span><input id="c-count" type="number" min="2" max="100" value="${cfg.count ?? 20}"></label>
+        <label class="field"><span>${_t('Espacement (ms)')}</span><input id="c-spacing_ms" type="number" min="10" max="1000" value="${cfg.spacing_ms ?? 50}"></label>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <label class="field"><span>Dégradé si pertes > (%)</span><input id="c-loss_pct" type="number" min="0" max="100" step="any" value="${cfg.loss_pct ?? 5}"></label>
-        <label class="field"><span>ou un ping > (ms)</span><input id="c-max_ms" type="number" min="1" step="any" value="${cfg.max_ms ?? 150}"></label>
-        <label class="field"><span>ou gigue > (ms)</span><input id="c-jitter_ms" type="number" min="0.1" step="any" value="${cfg.jitter_ms ?? ''}" placeholder="facultatif"></label>
+        <label class="field"><span>${_t('Dégradé si pertes > (%)')}</span><input id="c-loss_pct" type="number" min="0" max="100" step="any" value="${cfg.loss_pct ?? 5}"></label>
+        <label class="field"><span>${_t('ou un ping > (ms)')}</span><input id="c-max_ms" type="number" min="1" step="any" value="${cfg.max_ms ?? 150}"></label>
+        <label class="field"><span>${_t('ou gigue > (ms)')}</span><input id="c-jitter_ms" type="number" min="0.1" step="any" value="${cfg.jitter_ms ?? ''}" placeholder="${_t('facultatif')}"></label>
       </div>
-      <p class="hint">Équivalent d'une sonde netwatch MikroTik de type <code>icmp</code> : à chaque intervalle, une rafale de pings rapprochés mesure les pertes, la latence et la gigue. Détecte les micro-coupures qu'un ping isolé laisse passer. Réglages du CRS : 20 pings, 50 ms, 5 %, 150 ms, intervalle 10 s.</p>`;
+      <p class="hint">${_t('Équivalent d\'une sonde netwatch MikroTik de type')} <code>icmp</code> ${_t(': à chaque intervalle, une rafale de pings rapprochés mesure les pertes, la latence et la gigue. Détecte les micro-coupures qu\'un ping isolé laisse passer. Réglages du CRS : 20 pings, 50 ms, 5 %, 150 ms, intervalle 10 s.')}</p>`;
   } else if (currentProbe === 'tcp') {
     f.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">${hostField}
-      <label class="field"><span>Port</span><input id="c-port" type="number" min="1" max="65535" value="${cfg.port ?? ''}" placeholder="80"></label>
+      <label class="field"><span>${_t('Port')}</span><input id="c-port" type="number" min="1" max="65535" value="${cfg.port ?? ''}" placeholder="80"></label>
       ${warnField('Latence max (ms)')}</div>
-      <p class="hint">Utile quand le ping est filtré, ou pour vérifier qu'un service précis tourne (flux audio TCP d'un codec, port web, SSH...).</p>`;
+      <p class="hint">${_t('Utile quand le ping est filtré, ou pour vérifier qu\'un service précis tourne (flux audio TCP d\'un codec, port web, SSH...).')}</p>`;
   } else if (currentProbe === 'http') {
     f.innerHTML = `
-      <label class="field"><span>URL</span><input id="c-url" type="text" value="${esc(cfg.url || '')}" placeholder="http://192.168.1.64/"></label>
+      <label class="field"><span>${_t('URL')}</span><input id="c-url" type="text" value="${esc(cfg.url || '')}" placeholder="${_t('http://192.168.1.64/')}"></label>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <label class="field"><span>Code attendu</span><input id="c-expect_status" type="text" value="${esc(cfg.expect_status || '<400')}" placeholder="<400, 200 ou 200,401"></label>
-        <label class="field sm:col-span-2"><span>Mot-clé attendu dans la page</span><input id="c-keyword" type="text" value="${esc(cfg.keyword || '')}" placeholder="facultatif"></label>
+        <label class="field"><span>${_t('Code attendu')}</span><input id="c-expect_status" type="text" value="${esc(cfg.expect_status || '<400')}" placeholder="${_t('<400, 200 ou 200,401')}"></label>
+        <label class="field sm:col-span-2"><span>${_t('Mot-clé attendu dans la page')}</span><input id="c-keyword" type="text" value="${esc(cfg.keyword || '')}" placeholder="${_t('facultatif')}"></label>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <label class="field"><span>Utilisateur (Basic)</span><input id="c-username" type="text" autocomplete="off" value="${esc(cfg.username || '')}" placeholder="facultatif"></label>
-        <label class="field"><span>Mot de passe</span><input id="c-password" type="password" autocomplete="new-password" value="${esc(cfg.password || '')}"></label>
+        <label class="field"><span>${_t('Utilisateur (Basic)')}</span><input id="c-username" type="text" autocomplete="off" value="${esc(cfg.username || '')}" placeholder="${_t('facultatif')}"></label>
+        <label class="field"><span>${_t('Mot de passe')}</span><input id="c-password" type="password" autocomplete="new-password" value="${esc(cfg.password || '')}"></label>
         ${warnField('Latence max (ms)')}
       </div>
-      <label class="flex items-center gap-2 text-xs text-gray-700"><input id="c-verify_tls" type="checkbox" class="rounded" ${cfg.verify_tls ? 'checked' : ''}> Vérifier le certificat HTTPS (décocher pour les certificats auto-signés)</label>
-      <p class="hint">Une page de connexion qui renvoie 401 prouve déjà que l'interface répond : mettez <code>200,401</code> comme code attendu.</p>`;
+      <label class="flex items-center gap-2 text-xs text-gray-700"><input id="c-verify_tls" type="checkbox" class="rounded" ${cfg.verify_tls ? 'checked' : ''}> ${_t('Vérifier le certificat HTTPS (décocher pour les certificats auto-signés)')}</label>
+      <p class="hint">${_t('Une page de connexion qui renvoie 401 prouve déjà que l\'interface répond : mettez')} <code>200,401</code> ${_t('comme code attendu.')}</p>`;
   } else if (currentProbe === 'snmp') {
     f.innerHTML = `
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div class="col-span-2">${hostField}</div>
-        <label class="field" id="community-field"><span>Communauté</span><input id="c-community" type="text" value="${esc(cfg.community || 'public')}"></label>
+        <label class="field" id="community-field"><span>${_t('Communauté')}</span><input id="c-community" type="text" value="${esc(cfg.community || 'public')}"></label>
         <div class="grid grid-cols-2 gap-2">
-          <label class="field"><span>Version</span><select id="c-version" onchange="snmpVersionChanged()">
+          <label class="field"><span>${_t('Version')}</span><select id="c-version" onchange="snmpVersionChanged()">
             <option value="2c" ${!['1', '3'].includes(cfg.version) ? 'selected' : ''}>v2c</option>
             <option value="1" ${cfg.version === '1' ? 'selected' : ''}>v1</option>
             <option value="3" ${cfg.version === '3' ? 'selected' : ''}>v3</option></select></label>
-          <label class="field"><span>Port</span><input id="c-port" type="number" value="${cfg.port ?? 161}"></label>
+          <label class="field"><span>${_t('Port')}</span><input id="c-port" type="number" value="${cfg.port ?? 161}"></label>
         </div>
       </div>
       <div id="snmp3-fields" class="grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-lg border border-gray-100 bg-slate-50 p-3">
-        <label class="field"><span>Utilisateur</span><input id="c-user" type="text" maxlength="32" autocomplete="off" value="${esc(cfg.user || '')}"></label>
-        <label class="field sm:col-span-2"><span>Sécurité</span><select id="c-level" onchange="snmpVersionChanged()">
-          <option value="authPriv" ${(cfg.level || 'authPriv') === 'authPriv' ? 'selected' : ''}>Authentification et chiffrement (authPriv)</option>
-          <option value="authNoPriv" ${cfg.level === 'authNoPriv' ? 'selected' : ''}>Authentification seule (authNoPriv)</option>
-          <option value="noAuthNoPriv" ${cfg.level === 'noAuthNoPriv' ? 'selected' : ''}>Aucune (noAuthNoPriv)</option></select></label>
-        <label class="field snmp3-auth"><span>Authentification</span><select id="c-auth_proto">
+        <label class="field"><span>${_t('Utilisateur')}</span><input id="c-user" type="text" maxlength="32" autocomplete="off" value="${esc(cfg.user || '')}"></label>
+        <label class="field sm:col-span-2"><span>${_t('Sécurité')}</span><select id="c-level" onchange="snmpVersionChanged()">
+          <option value="authPriv" ${(cfg.level || 'authPriv') === 'authPriv' ? 'selected' : ''}>${_t('Authentification et chiffrement (authPriv)')}</option>
+          <option value="authNoPriv" ${cfg.level === 'authNoPriv' ? 'selected' : ''}>${_t('Authentification seule (authNoPriv)')}</option>
+          <option value="noAuthNoPriv" ${cfg.level === 'noAuthNoPriv' ? 'selected' : ''}>${_t('Aucune (noAuthNoPriv)')}</option></select></label>
+        <label class="field snmp3-auth"><span>${_t('Authentification')}</span><select id="c-auth_proto">
           ${['SHA', 'SHA-256', 'SHA-512', 'SHA-224', 'SHA-384', 'MD5'].map(a => `<option ${(cfg.auth_proto || 'SHA') === a ? 'selected' : ''}>${a}</option>`).join('')}</select></label>
-        <label class="field snmp3-auth sm:col-span-2"><span>Mot de passe d'authentification</span><input id="c-auth_pass" type="password" autocomplete="new-password" value="${esc(cfg.auth_pass || '')}" placeholder="8 caractères minimum"></label>
-        <label class="field snmp3-priv"><span>Chiffrement</span><select id="c-priv_proto">
+        <label class="field snmp3-auth sm:col-span-2"><span>${_t('Mot de passe d\'authentification')}</span><input id="c-auth_pass" type="password" autocomplete="new-password" value="${esc(cfg.auth_pass || '')}" placeholder="${_t('8 caractères minimum')}"></label>
+        <label class="field snmp3-priv"><span>${_t('Chiffrement')}</span><select id="c-priv_proto">
           ${['AES', 'AES256', 'AES192', 'DES'].map(a => `<option ${(cfg.priv_proto || 'AES') === a ? 'selected' : ''}>${a}</option>`).join('')}</select></label>
-        <label class="field snmp3-priv sm:col-span-2"><span>Mot de passe de chiffrement</span><input id="c-priv_pass" type="password" autocomplete="new-password" value="${esc(cfg.priv_pass || '')}" placeholder="8 caractères minimum"></label>
-        <p class="hint col-span-2 sm:col-span-3">Mêmes réglages que dans l'interface de l'appareil (utilisateur SNMPv3 en lecture seule). Les mots de passe restent sur BL-RMO et ne sont plus affichés ensuite.</p>
+        <label class="field snmp3-priv sm:col-span-2"><span>${_t('Mot de passe de chiffrement')}</span><input id="c-priv_pass" type="password" autocomplete="new-password" value="${esc(cfg.priv_pass || '')}" placeholder="${_t('8 caractères minimum')}"></label>
+        <p class="hint col-span-2 sm:col-span-3">${_t('Mêmes réglages que dans l\'interface de l\'appareil (utilisateur SNMPv3 en lecture seule). Les mots de passe restent sur BL-RMO et ne sont plus affichés ensuite.')}</p>
       </div>
       <div>
         <div class="flex items-center justify-between mb-1.5 gap-2 flex-wrap">
-          <div class="text-xs font-medium text-gray-600">Valeurs lues</div>
+          <div class="text-xs font-medium text-gray-600">${_t('Valeurs lues')}</div>
           <div class="flex gap-2">
             <select id="snmp-preset" onchange="applyPreset(this.value)" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white">
-              <option value="">Charger un modèle...</option>
-              ${Object.entries(SNMP_PRESETS).map(([k, p]) => `<option value="${k}">${esc(p.label)}</option>`).join('')}
+              <option value="">${_t('Charger un modèle...')}</option>
+              ${Object.entries(SNMP_PRESETS).map(([k, p]) => `<option value="${k}">${esc(_t(p.label))}</option>`).join('')}
             </select>
-            <button type="button" onclick="addMetric()" class="text-xs font-medium text-blue-600 hover:text-blue-800">+ OID</button>
+            <button type="button" onclick="addMetric()" class="text-xs font-medium text-blue-600 hover:text-blue-800">${_t('+ OID')}</button>
           </div>
         </div>
         <div id="snmp-metrics" class="space-y-1.5"></div>
-        <p class="hint mt-2">Les modèles sont des points de départ : les OID varient selon le firmware, vérifiez-les avec <b>Tester</b>. Échelle : 0.1 pour une valeur en dixièmes. Une valeur hors min/max passe l'appareil en alerte.</p>
-        ${tools.snmpget === false ? '<p class="hint !text-amber-700">snmpget est absent de ce BL-RMO : <code>sudo apt install snmp</code></p>' : ''}
+        <p class="hint mt-2">${_t('Les modèles sont des points de départ : les OID varient selon le firmware, vérifiez-les avec')} <b>${_t('Tester')}</b>${_t('. Échelle : 0.1 pour une valeur en dixièmes. Une valeur hors min/max passe l\'appareil en alerte.')}</p>
+        ${tools.snmpget === false ? '<p class="hint !text-amber-700">' + _t('snmpget est absent de ce BL-RMO :') + ' <code>sudo apt install snmp</code></p>' : ''}
       </div>`;
     snmpMetrics = (cfg.metrics && cfg.metrics.length) ? cfg.metrics.map(m => ({ ...m })) : SNMP_PRESETS.system.metrics.map(m => ({ ...m }));
     renderMetrics();
@@ -638,38 +636,38 @@ function renderProbeFields(cfg = {}) {
   } else if (currentProbe === 'livebox') {
     f.innerHTML = `
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">${hostField}
-        <label class="field"><span>Utilisateur</span><input id="c-username" type="text" autocomplete="off" value="${esc(cfg.username || 'admin')}"></label>
-        <label class="field"><span>Mot de passe administrateur</span><input id="c-password" type="password" autocomplete="new-password" value="${esc(cfg.password || '')}"></label>
+        <label class="field"><span>${_t('Utilisateur')}</span><input id="c-username" type="text" autocomplete="off" value="${esc(cfg.username || 'admin')}"></label>
+        <label class="field"><span>${_t('Mot de passe administrateur')}</span><input id="c-password" type="password" autocomplete="new-password" value="${esc(cfg.password || '')}"></label>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <label class="field"><span>Alerte après un redémarrage (min)</span><input id="c-reboot_warn_min" type="number" min="1" max="1440" value="${cfg.reboot_warn_min ?? 15}"></label>
+        <label class="field"><span>${_t('Alerte après un redémarrage (min)')}</span><input id="c-reboot_warn_min" type="number" min="1" max="1440" value="${cfg.reboot_warn_min ?? 15}"></label>
       </div>
-      <p class="hint">Lit l'interface locale de la Livebox, comme son tableau de bord : temps de fonctionnement, nombre de redémarrages, état de la connexion Internet et du lien (fibre, ADSL), IP publique. Un redémarrage met l'appareil en alerte pendant la durée choisie ; une connexion Internet coupée aussi. Cochez « aussi en cas d'alerte (dégradé) » pour recevoir un mail.</p>`;
+      <p class="hint">${_t('Lit l\'interface locale de la Livebox, comme son tableau de bord : temps de fonctionnement, nombre de redémarrages, état de la connexion Internet et du lien (fibre, ADSL), IP publique. Un redémarrage met l\'appareil en alerte pendant la durée choisie ; une connexion Internet coupée aussi. Cochez « aussi en cas d\'alerte (dégradé) » pour recevoir un mail.')}</p>`;
   } else if (currentProbe === 'icecast') {
     f.innerHTML = `
-      <label class="field"><span>URL du serveur Icecast</span><input id="c-url" type="text" value="${esc(cfg.url || '')}" placeholder="http://192.168.1.30:8000"></label>
+      <label class="field"><span>${_t('URL du serveur Icecast')}</span><input id="c-url" type="text" value="${esc(cfg.url || '')}" placeholder="${_t('http://192.168.1.30:8000')}"></label>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <label class="field"><span>Point de montage</span><input id="c-mount" type="text" value="${esc(cfg.mount || '')}" placeholder="/live.mp3 (facultatif)"></label>
-        <label class="field"><span>Auditeurs minimum</span><input id="c-min_listeners" type="number" min="0" value="${cfg.min_listeners ?? ''}" placeholder="facultatif"></label>
+        <label class="field"><span>${_t('Point de montage')}</span><input id="c-mount" type="text" value="${esc(cfg.mount || '')}" placeholder="${_t('/live.mp3 (facultatif)')}"></label>
+        <label class="field"><span>${_t('Auditeurs minimum')}</span><input id="c-min_listeners" type="number" min="0" value="${cfg.min_listeners ?? ''}" placeholder="${_t('facultatif')}"></label>
       </div>
-      <label class="flex items-center gap-2 text-xs text-gray-700"><input id="c-verify_tls" type="checkbox" class="rounded" ${cfg.verify_tls ? 'checked' : ''}> Vérifier le certificat HTTPS</label>
-      <p class="hint">Lit <code>status-json.xsl</code>. Le point de montage absent signifie que la source (encodeur, processeur) n'alimente plus le serveur.</p>`;
+      <label class="flex items-center gap-2 text-xs text-gray-700"><input id="c-verify_tls" type="checkbox" class="rounded" ${cfg.verify_tls ? 'checked' : ''}> ${_t('Vérifier le certificat HTTPS')}</label>
+      <p class="hint">${_t('Lit')} <code>${_t('status-json.xsl')}</code>${_t('. Le point de montage absent signifie que la source (encodeur, processeur) n\'alimente plus le serveur.')}</p>`;
   } else if (currentProbe === 'stream') {
     f.innerHTML = `
-      <label class="field"><span>Adresse du flux</span><input id="c-url" type="text" value="${esc(cfg.url || '')}" placeholder="https://diffusion.lafrap.fr/graffiti.mp3"></label>
+      <label class="field"><span>${_t('Adresse du flux')}</span><input id="c-url" type="text" value="${esc(cfg.url || '')}" placeholder="${_t('https://diffusion.lafrap.fr/graffiti.mp3')}"></label>
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-        <label class="field"><span>Écoute (s)</span><input id="c-listen_s" type="number" min="2" max="20" value="${cfg.listen_s ?? 5}"></label>
-        <label class="field"><span>Silence sous (dBFS)</span><input id="c-silence_db" type="number" min="-90" max="-10" step="1" value="${cfg.silence_db ?? -50}"></label>
-        <label class="field"><span>Silence pendant (s)</span><input id="c-silence_s" type="number" min="10" max="3600" value="${cfg.silence_s ?? 60}"></label>
-        <label class="field"><span>Auditeurs minimum</span><input id="c-min_listeners" type="number" min="0" value="${cfg.min_listeners ?? ''}" placeholder="facultatif"></label>
+        <label class="field"><span>${_t('Écoute (s)')}</span><input id="c-listen_s" type="number" min="2" max="20" value="${cfg.listen_s ?? 5}"></label>
+        <label class="field"><span>${_t('Silence sous (dBFS)')}</span><input id="c-silence_db" type="number" min="-90" max="-10" step="1" value="${cfg.silence_db ?? -50}"></label>
+        <label class="field"><span>${_t('Silence pendant (s)')}</span><input id="c-silence_s" type="number" min="10" max="3600" value="${cfg.silence_s ?? 60}"></label>
+        <label class="field"><span>${_t('Auditeurs minimum')}</span><input id="c-min_listeners" type="number" min="0" value="${cfg.min_listeners ?? ''}" placeholder="${_t('facultatif')}"></label>
       </div>
-      <label class="flex items-center gap-2 text-xs text-gray-700"><input id="c-verify_tls" type="checkbox" class="rounded" ${cfg.verify_tls === false ? '' : 'checked'}> Vérifier le certificat HTTPS</label>
-      <p class="hint">À chaque relevé, BL-RMO écoute le flux quelques secondes, comme un auditeur : le son arrive-t-il, à quel niveau, quel titre ? Un silence plus long que la durée choisie met le flux en alerte (cochez « aussi en cas d'alerte (dégradé) » pour le mail). Les auditeurs et le débit viennent de la page d'état du serveur Icecast quand elle est publique. Intervalle conseillé : 30 à 60 s. À placer sur le site Réception, à côté de la FM et du DAB+.</p>`;
+      <label class="flex items-center gap-2 text-xs text-gray-700"><input id="c-verify_tls" type="checkbox" class="rounded" ${cfg.verify_tls === false ? '' : 'checked'}> ${_t('Vérifier le certificat HTTPS')}</label>
+      <p class="hint">${_t('À chaque relevé, BL-RMO écoute le flux quelques secondes, comme un auditeur : le son arrive-t-il, à quel niveau, quel titre ? Un silence plus long que la durée choisie met le flux en alerte (cochez « aussi en cas d\'alerte (dégradé) » pour le mail). Les auditeurs et le débit viennent de la page d\'état du serveur Icecast quand elle est publique. Intervalle conseillé : 30 à 60 s. À placer sur le site Réception, à côté de la FM et du DAB+.')}</p>`;
   } else if (currentProbe === 'fm_local') {
-    f.innerHTML = `<p class="hint">Reprend l'état de réception de ce BL-RMO (signal, modulation, RDS, stéréo). À placer en dernier : c'est ce qui sort réellement de l'antenne.</p>`;  } else if (currentProbe === 'dab_local') {
+    f.innerHTML = `<p class="hint">${_t('Reprend l\'état de réception de ce BL-RMO (signal, modulation, RDS, stéréo). À placer en dernier : c\'est ce qui sort réellement de l\'antenne.')}</p>`;  } else if (currentProbe === 'dab_local') {
     f.innerHTML = `
-      <label class="field"><span>Service DAB+ (SId)</span><input id="c-sid" type="text" value="${esc(cfg.sid || '')}" placeholder="vide : le service suivi par le tableau de bord"></label>
-      <p class="hint">Reprend ce que mesure déjà la clé DAB+ pour ce service : présence, son (silence, son figé), SNR et qualité FIC, titre en cours. Silence et ensemble dégradé comptent une fois l'alerte DAB+ déclenchée, après leur délai. Les mails DAB+ partent déjà depuis la page DAB+ : laissez l'alerte email de cet appareil décochée pour ne pas les recevoir en double. À placer à côté de la réception FM, sur le même site.</p>`;
+      <label class="field"><span>${_t('Service DAB+ (SId)')}</span><input id="c-sid" type="text" value="${esc(cfg.sid || '')}" placeholder="${_t('vide : le service suivi par le tableau de bord')}"></label>
+      <p class="hint">${_t('Reprend ce que mesure déjà la clé DAB+ pour ce service : présence, son (silence, son figé), SNR et qualité FIC, titre en cours. Silence et ensemble dégradé comptent une fois l\'alerte DAB+ déclenchée, après leur délai. Les mails DAB+ partent déjà depuis la page DAB+ : laissez l\'alerte email de cet appareil décochée pour ne pas les recevoir en double. À placer à côté de la réception FM, sur le même site.')}</p>`;
   }
 }
 
@@ -678,26 +676,26 @@ function renderMetrics() {
   if (!el) return;
   el.innerHTML = `
     <div class="hidden sm:grid metric-row text-[10px] uppercase tracking-wide text-gray-400 px-0.5">
-      <span>Libellé</span><span>OID</span><span>Format</span><span>Échelle</span><span>Unité</span><span>Min</span><span>Max</span><span></span>
+      <span>${_t('Libellé')}</span><span>${_t('OID')}</span><span>${_t('Format')}</span><span>${_t('Échelle')}</span><span>${_t('Unité')}</span><span>${_t('Min')}</span><span>${_t('Max')}</span><span></span>
     </div>` + snmpMetrics.map((m, i) => `
     <div class="metric-row">
-      <input value="${esc(m.label || '')}" placeholder="Libellé" oninput="snmpMetrics[${i}].label=this.value">
+      <input value="${esc(m.label || '')}" placeholder="${_t('Libellé')}" oninput="snmpMetrics[${i}].label=this.value">
       <input class="font-mono" value="${esc(m.oid || '')}" placeholder=".1.3.6.1..." oninput="snmpMetrics[${i}].oid=this.value">
       <select onchange="snmpMetrics[${i}].format=this.value; renderMetrics()">
-        <option value="number" ${m.format === 'number' || !m.format ? 'selected' : ''}>Nombre</option>
-        <option value="uptime" ${m.format === 'uptime' ? 'selected' : ''}>Durée</option>
-        <option value="text" ${m.format === 'text' ? 'selected' : ''}>Texte</option>
-        <option value="enum" ${m.format === 'enum' ? 'selected' : ''}>Liste</option>
+        <option value="number" ${m.format === 'number' || !m.format ? 'selected' : ''}>${_t('Nombre')}</option>
+        <option value="uptime" ${m.format === 'uptime' ? 'selected' : ''}>${_t('Durée')}</option>
+        <option value="text" ${m.format === 'text' ? 'selected' : ''}>${_t('Texte')}</option>
+        <option value="enum" ${m.format === 'enum' ? 'selected' : ''}>${_t('Liste')}</option>
       </select>
       ${m.format === 'enum'
-        ? `<input class="col-span-2" value="${esc(m.labels || '')}" placeholder="1=Non,2=Oui" title="Correspondance code=libellé, séparée par des virgules" oninput="snmpMetrics[${i}].labels=this.value">`
-        : `<input type="number" step="any" value="${m.scale ?? 1}" ${m.format && m.format !== 'number' ? 'disabled' : ''} oninput="snmpMetrics[${i}].scale=this.value" title="Échelle">
-      <input value="${esc(m.unit || '')}" placeholder="unité" oninput="snmpMetrics[${i}].unit=this.value">`}
+        ? `<input class="col-span-2" value="${esc(m.labels || '')}" placeholder="${_t('1=Non,2=Oui')}" title="${_t('Correspondance code=libellé, séparée par des virgules')}" oninput="snmpMetrics[${i}].labels=this.value">`
+        : `<input type="number" step="any" value="${m.scale ?? 1}" ${m.format && m.format !== 'number' ? 'disabled' : ''} oninput="snmpMetrics[${i}].scale=this.value" title="${_t('Échelle')}">
+      <input value="${esc(m.unit || '')}" placeholder="${_t('unité')}" oninput="snmpMetrics[${i}].unit=this.value">`}
       ${m.format === 'text' || m.format === 'enum'
-        ? `<input class="col-span-2" value="${esc(m.expect || '')}" placeholder="${m.format === 'enum' ? 'attendu (code ou libellé)' : 'attendu (ex. Locked)'}" title="Valeur attendue ; plusieurs possibles séparées par |" oninput="snmpMetrics[${i}].expect=this.value">`
+        ? `<input class="col-span-2" value="${esc(m.expect || '')}" placeholder="${m.format === 'enum' ? _t('attendu (code ou libellé)') : _t('attendu (ex. Locked)')}" title="${_t('Valeur attendue ; plusieurs possibles séparées par |')}" oninput="snmpMetrics[${i}].expect=this.value">`
         : `<input type="number" step="any" value="${m.min ?? ''}" ${m.format === 'uptime' ? 'disabled' : ''} placeholder="min" oninput="snmpMetrics[${i}].min=this.value">
       <input type="number" step="any" value="${m.max ?? ''}" ${m.format === 'uptime' ? 'disabled' : ''} placeholder="max" oninput="snmpMetrics[${i}].max=this.value">`}
-      <button type="button" class="icon-btn" title="Retirer" onclick="snmpMetrics.splice(${i},1); renderMetrics()"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      <button type="button" class="icon-btn" title="${_t('Retirer')}" onclick="snmpMetrics.splice(${i},1); renderMetrics()"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>`).join('');
 }
 function addMetric() { snmpMetrics.push({ label: '', oid: '', format: 'number', scale: 1 }); renderMetrics(); }
@@ -719,9 +717,9 @@ function setKind(kind) {
   document.getElementById('out-label-field').style.display = kind === 'device' ? '' : 'none';
   document.getElementById('link-field').style.display = kind === 'probe' ? '' : 'none';
   if (editing == null) {
-    document.getElementById('editor-title').textContent = { probe: 'Ajouter une sonde', sensor: 'Ajouter un capteur de site' }[kind] || 'Ajouter un appareil';
-    document.getElementById('f-name').placeholder = { probe: 'faisceau-60', sensor: 'Shelter' }[kind] || 'DB91-RX';
-    document.getElementById('f-role').placeholder = { probe: 'Faisceau vers le pylône', sensor: 'Température et humidité' }[kind] || 'Codec audio';
+    document.getElementById('editor-title').textContent = { probe: _t('Ajouter une sonde'), sensor: _t('Ajouter un capteur de site') }[kind] || _t('Ajouter un appareil');
+    document.getElementById('f-name').placeholder = { probe: 'faisceau-60', sensor: _t('Shelter') }[kind] || 'DB91-RX';
+    document.getElementById('f-role').placeholder = { probe: _t('Faisceau vers le pylône'), sensor: _t('Température et humidité') }[kind] || _t('Codec audio');
   }
 }
 
@@ -758,7 +756,7 @@ async function openEditor(id = null, kind = 'device') {
   document.getElementById('f-out-label').value = dev.out_label || '';
   document.getElementById('f-web').value = dev.web || '';
   fillLinkSelects(dev.link_from, dev.link_to);
-  const sites = [...new Set(['Studio', 'Pylône', ...chainDevs().concat(sensorDevs()).map(d => d.site).filter(Boolean)])];
+  const sites = [...new Set(['Studio', _t('Pylône'), ...chainDevs().concat(sensorDevs()).map(d => d.site).filter(Boolean)])];
   document.getElementById('sites-list').innerHTML = sites.map(s => `<option value="${esc(s)}">`).join('');
   currentProbe = dev.probe;
   renderProbePicker();
@@ -782,7 +780,7 @@ function snmpVersionChanged() {
 }
 
 function fillLinkSelects(from, to) {
-  const opts = '<option value="">(aucun lien)</option>' + chainDevs().map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
+  const opts = '<option value="">' + _t('(aucun lien)') + '</option>' + chainDevs().map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
   document.getElementById('f-link-from').innerHTML = opts;
   document.getElementById('f-link-to').innerHTML = opts;
   document.getElementById('f-link-from').value = from ?? '';
@@ -856,7 +854,7 @@ function showError(msg) {
 async function testDevice() {
   hideMsg();
   const btn = document.getElementById('btn-test');
-  btn.disabled = true; btn.textContent = 'Test...';
+  btn.disabled = true; btn.textContent = _t('Test...');
   try {
     const r = await api('/api/chain/test', { method: 'POST', body: collect() });
     const st = !r.ok ? STATES.down : (r.warn ? STATES.warn : STATES.up);
@@ -864,15 +862,15 @@ async function testDevice() {
     el.className = `rounded-lg border px-3 py-2.5 text-xs ${r.ok ? (r.warn ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50') : 'border-red-200 bg-red-50'}`;
     el.innerHTML = `
       <div class="flex items-center gap-2 font-semibold ${st.text}">
-        <span class="w-2 h-2 rounded-full ${st.dot}"></span>${r.ok ? (r.warn ? 'Répond, avec une alerte' : 'Succès') : 'Échec'}
+        <span class="w-2 h-2 rounded-full ${st.dot}"></span>${r.ok ? (r.warn ? _t('Répond, avec une alerte') : _t('Succès')) : _t('Échec')}
         ${r.latency_ms != null ? `<span class="font-mono font-normal text-gray-500">${r.latency_ms} ms</span>` : ''}
       </div>
-      <div class="text-gray-700 mt-0.5">${esc(r.message)}</div>
+      <div class="text-gray-700 mt-0.5">${esc(_t(r.message))}</div>
       ${(r.metrics || []).length ? '<div class="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-0.5">' + r.metrics.map(m =>
-        `<div class="flex justify-between gap-2"><span class="text-gray-500">${esc(m.label)}</span><span class="font-mono ${m.state === 'warn' ? 'text-amber-700 font-semibold' : 'text-gray-800'}">${esc(m.display)} ${esc(m.unit || '')}</span></div>`).join('') + '</div>' : ''}`;
+        `<div class="flex justify-between gap-2"><span class="text-gray-500">${esc(_t(m.label))}</span><span class="font-mono ${m.state === 'warn' ? 'text-amber-700 font-semibold' : 'text-gray-800'}">${esc(m.display)} ${esc(m.unit || '')}</span></div>`).join('') + '</div>' : ''}`;
     el.classList.remove('hidden');
   } catch (e) { showError(e.message); }
-  finally { btn.disabled = false; btn.textContent = 'Tester'; }
+  finally { btn.disabled = false; btn.textContent = _t('Tester'); }
 }
 
 async function saveDevice() {
@@ -893,7 +891,7 @@ async function saveDevice() {
 async function deleteDevice() {
   if (editing == null) return;
   const name = document.getElementById('f-name').value;
-  if (!confirm(`Supprimer « ${name} » de la chaîne ?`)) return;
+  if (!confirm(_t('Supprimer « {n} » de la chaîne ?', { n: name }))) return;
   try {
     await api(`/api/chain/devices/${editing}`, { method: 'DELETE' });
     closeEditor();
@@ -904,7 +902,7 @@ async function deleteDevice() {
 async function addFmLocal() {
   try {
     await api('/api/chain/devices', { method: 'POST', body: {
-      name: 'Réception FM', site: 'Antenne', role: 'Réception FM', probe: 'fm_local',
+      name: _t('Réception FM'), site: _t('Antenne'), role: _t('Réception FM'), probe: 'fm_local',
       interval: 10, timeout: 3, fail_threshold: 3, alert_email: false, enabled: true, config: {} } });
     refresh(); setTimeout(refresh, 2000);
   } catch (e) { alert(e.message); }
@@ -913,7 +911,7 @@ async function addFmLocal() {
 async function addDabLocal() {
   try {
     await api('/api/chain/devices', { method: 'POST', body: {
-      name: 'Réception DAB+', site: 'Réception', role: 'Réception DAB+', probe: 'dab_local',
+      name: _t('Réception DAB+'), site: _t('Réception'), role: _t('Réception DAB+'), probe: 'dab_local',
       interval: 10, timeout: 3, fail_threshold: 3, alert_email: false, enabled: true, config: {} } });
     refresh(); setTimeout(refresh, 2000);
   } catch (e) { alert(e.message); }

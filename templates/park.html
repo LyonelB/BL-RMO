@@ -5,7 +5,7 @@
   {% include '_i18n.html' %}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>BL-RMO · Parc</title>
+  <title>{{ _('BL-RMO · Parc') }}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -34,13 +34,13 @@
       <button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
-      <h1 class="text-base font-semibold text-gray-900">Parc</h1>
+      <h1 class="text-base font-semibold text-gray-900">{{ _('Parc') }}</h1>
     </div>
-    <p class="text-xs text-gray-400 mt-0.5">PC de production, NAS et sites web · relevé toutes les minutes</p>
-    <nav class="flex gap-5 mt-3 text-sm overflow-x-auto" role="tablist" aria-label="Parc">
-      <a href="#etat" data-tab="etat" role="tab" class="tab">État</a>
-      <a href="#journal" data-tab="journal" role="tab" class="tab">Journal</a>
-      <a href="#appareils" data-tab="appareils" role="tab" class="tab need-admin">Appareils</a>
+    <p class="text-xs text-gray-400 mt-0.5">{{ _('PC de production, NAS et sites web · relevé toutes les minutes') }}</p>
+    <nav class="flex gap-5 mt-3 text-sm overflow-x-auto" role="tablist" aria-label="{{ _('Parc') }}">
+      <a href="#etat" data-tab="etat" role="tab" class="tab">{{ _('État') }}</a>
+      <a href="#journal" data-tab="journal" role="tab" class="tab">{{ _('Journal') }}</a>
+      <a href="#appareils" data-tab="appareils" role="tab" class="tab need-admin">{{ _('Appareils') }}</a>
     </nav>
   </header>
 
@@ -56,7 +56,7 @@
     <!-- ── Synthèse ── -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
       <div class="section" style="margin-bottom:0">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">PC 24 h/24</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('PC 24 h/24') }}</div>
         <div class="flex items-center gap-2"><span id="t-pc-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
           <span class="text-base font-semibold text-gray-900" id="t-pc">-</span></div>
         <div class="text-xs text-gray-400 mt-1 truncate" id="t-pc-sub">&nbsp;</div>
@@ -68,13 +68,13 @@
         <div class="text-xs text-gray-400 mt-1 truncate" id="t-nas-sub">&nbsp;</div>
       </div>
       <div class="section" style="margin-bottom:0">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Sites web</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('Sites web') }}</div>
         <div class="flex items-center gap-2"><span id="t-site-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
           <span class="text-base font-semibold text-gray-900" id="t-site">-</span></div>
         <div class="text-xs text-gray-400 mt-1 truncate" id="t-site-sub">&nbsp;</div>
       </div>
       <div class="section" style="margin-bottom:0">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Alertes en cours</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('Alertes en cours') }}</div>
         <div class="text-base font-semibold text-gray-900" id="t-alerts">-</div>
         <div class="text-xs text-gray-400 mt-1 truncate" id="t-alerts-sub">&nbsp;</div>
       </div>
@@ -84,18 +84,18 @@
     <div class="section" id="pc-section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        PC de production
-        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400">SNMP (HOST-RESOURCES-MIB)</span>
+        {{ _('PC de production') }}
+        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400">{{ _('SNMP (HOST-RESOURCES-MIB)') }}</span>
       </div>
       <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead><tr class="text-[11px] text-gray-400 uppercase tracking-wide text-left border-b border-gray-100">
-          <th class="py-2 pr-3 font-semibold">PC</th><th class="py-2 pr-3 font-semibold">État</th>
-          <th class="py-2 pr-3 font-semibold w-44">Processeur</th><th class="py-2 pr-3 font-semibold w-60">Disques</th></tr></thead>
+          <th class="py-2 pr-3 font-semibold">{{ _('PC') }}</th><th class="py-2 pr-3 font-semibold">{{ _('État') }}</th>
+          <th class="py-2 pr-3 font-semibold w-44">{{ _('Processeur') }}</th><th class="py-2 pr-3 font-semibold w-60">{{ _('Disques') }}</th></tr></thead>
         <tbody id="pc-body"></tbody>
       </table>
       </div>
-      <div class="text-[11px] text-gray-400 mt-3">« 24 h/24 » : éteint ou injoignable = alerte. Les autres PC peuvent être éteints : simple information. Processeur : valeur actuelle et maximum depuis l'allumage.</div>
+      <div class="text-[11px] text-gray-400 mt-3">{{ _("« 24 h/24 » : éteint ou injoignable = alerte. Les autres PC peuvent être éteints : simple information. Processeur : valeur actuelle et maximum depuis l'allumage.") }}</div>
     </div>
 
     <!-- ── NAS ── -->
@@ -105,18 +105,18 @@
     <div class="section" id="site-section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-        Sites web
-        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400">HTTPS et texte attendu</span>
+        {{ _('Sites web') }}
+        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400">{{ _('HTTPS et texte attendu') }}</span>
       </div>
       <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead><tr class="text-[11px] text-gray-400 uppercase tracking-wide text-left border-b border-gray-100">
-          <th class="py-2 pr-3 font-semibold">Site</th><th class="py-2 pr-3 font-semibold">État</th><th class="py-2 pr-3 font-semibold">Réponse</th>
-          <th class="py-2 pr-3 font-semibold">Disponibilité 24 h</th></tr></thead>
+          <th class="py-2 pr-3 font-semibold">{{ _('Site') }}</th><th class="py-2 pr-3 font-semibold">{{ _('État') }}</th><th class="py-2 pr-3 font-semibold">{{ _('Réponse') }}</th>
+          <th class="py-2 pr-3 font-semibold">{{ _('Disponibilité 24 h') }}</th></tr></thead>
         <tbody id="site-body" class="text-xs"></tbody>
       </table>
       </div>
-      <div class="text-[11px] text-gray-400 mt-3">Alertes : site injoignable ou en erreur (2 relevés de suite), texte attendu absent, réponse lente.</div>
+      <div class="text-[11px] text-gray-400 mt-3">{{ _('Alertes : site injoignable ou en erreur (2 relevés de suite), texte attendu absent, réponse lente.') }}</div>
     </div>
 
     </div>
@@ -127,37 +127,37 @@
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div class="section-title" style="margin-bottom:0">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Événements du parc
+            {{ _('Événements du parc') }}
           </div>
           <div class="flex flex-wrap gap-2">
             <select id="ev-dev" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="evLimit = 20; renderJournal()">
-              <option value="">Tous les appareils</option>
+              <option value="">{{ _('Tous les appareils') }}</option>
             </select>
             <select id="ev-level" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="evLimit = 20; renderJournal()">
-              <option value="">Tous les événements</option>
-              <option value="alert">Alertes et rétablissements</option>
+              <option value="">{{ _('Tous les événements') }}</option>
+              <option value="alert">{{ _('Alertes et rétablissements') }}</option>
             </select>
-            <button onclick="exportJournal()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Événements affichés (filtres compris), en CSV"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
+            <button onclick="exportJournal()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="{{ _('Événements affichés (filtres compris), en CSV') }}"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> {{ _('Exporter') }}</button>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-3">Allumages, extinctions, redémarrages, alertes (injoignable, disque, processeur, site lent) et leurs rétablissements. Les événements sont gardés 90 jours.</p>
+        <p class="text-xs text-gray-500 mb-3">{{ _('Allumages, extinctions, redémarrages, alertes (injoignable, disque, processeur, site lent) et leurs rétablissements. Les événements sont gardés 90 jours.') }}</p>
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left">
             <thead>
               <tr class="text-gray-400 border-b border-gray-100">
-                <th class="font-medium py-2 pr-3 whitespace-nowrap">Date</th>
-                <th class="font-medium py-2 pr-3">Événement</th>
-                <th class="font-medium py-2 pr-3">Appareil</th>
-                <th class="font-medium py-2 pr-3">Détail</th>
-                <th class="font-medium py-2">Mail</th>
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">{{ _('Date') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('Événement') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('Appareil') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('Détail') }}</th>
+                <th class="font-medium py-2">{{ _('Mail') }}</th>
               </tr>
             </thead>
-            <tbody id="ev-body" class="divide-y divide-gray-50"><tr><td colspan="5" class="py-8 text-center text-gray-400">Chargement…</td></tr></tbody>
+            <tbody id="ev-body" class="divide-y divide-gray-50"><tr><td colspan="5" class="py-8 text-center text-gray-400">{{ _('Chargement…') }}</td></tr></tbody>
           </table>
         </div>
         <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
           <span id="ev-count"></span>
-          <button id="ev-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="evLimit += 50; renderJournal()">Afficher plus</button>
+          <button id="ev-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="evLimit += 50; renderJournal()">{{ _('Afficher plus') }}</button>
         </div>
       </div>
     </div>
@@ -168,50 +168,50 @@
     <div class="section need-admin" id="manage">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
-        Appareils et sites surveillés
-        <button type="button" onclick="editDevice(null)" class="ml-auto text-[11px] font-medium normal-case tracking-normal text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-3 py-1">Ajouter</button>
+        {{ _('Appareils et sites surveillés') }}
+        <button type="button" onclick="editDevice(null)" class="ml-auto text-[11px] font-medium normal-case tracking-normal text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-3 py-1">{{ _('Ajouter') }}</button>
       </div>
       <table class="w-full text-sm mb-2">
         <tbody id="dev-list"></tbody>
       </table>
 
       <form id="dev-form" class="hidden border-t border-gray-100 pt-4 mt-2" onsubmit="saveDevice(event)">
-        <div class="text-sm font-semibold text-gray-800 mb-3" id="f-title">Nouvel appareil</div>
+        <div class="text-sm font-semibold text-gray-800 mb-3" id="f-title">{{ _('Nouvel appareil') }}</div>
         <div class="grid md:grid-cols-3 gap-4 text-sm">
-          <label class="block"><span class="text-xs text-gray-500">Type</span>
+          <label class="block"><span class="text-xs text-gray-500">{{ _('Type') }}</span>
             <select id="f-kind" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="kindChanged()">
-              <option value="pc">PC Windows (SNMP)</option><option value="nas">NAS Synology (SNMP)</option><option value="site">Site web</option></select></label>
-          <label class="block"><span class="text-xs text-gray-500">Nom</span><input id="f-name" required maxlength="40" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
-          <label class="block k-snmp"><span class="text-xs text-gray-500">Adresse IP</span><input id="f-host" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 font-mono" placeholder="192.168.1.x"></label>
-          <label class="block k-site md:col-span-2"><span class="text-xs text-gray-500">Adresse du site</span><input id="f-url" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 font-mono" placeholder="https://www.graffitiradio.fr"></label>
-          <label class="block k-site"><span class="text-xs text-gray-500">Texte attendu (facultatif)</span><input id="f-keyword" maxlength="100" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="ex. Graffiti"></label>
-          <label class="block k-site"><span class="text-xs text-gray-500">Réponse lente au-delà de (ms)</span><input id="f-slow_ms" type="number" min="200" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="5000"></label>
-          <label class="block k-pc"><span class="text-xs text-gray-500">Usage</span>
-            <select id="f-always_on" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"><option value="0">Peut être éteint : simple information</option><option value="1">24 h/24 : éteint = alerte</option></select></label>
-          <label class="block k-snmp"><span class="text-xs text-gray-500" title="Un relevé manqué n'alerte pas : l'alerte part si l'appareil reste sans réponse pendant ce délai">Alerte après (minutes sans réponse)</span><input id="f-down_minutes" type="number" min="1" max="60" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="3"></label>
-          <label class="block k-pc"><span class="text-xs text-gray-500">Système (affichage)</span><input id="f-os" maxlength="30" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="Windows 11"></label>
-          <label class="block k-snmp"><span class="text-xs text-gray-500">Port SNMP</span><input id="f-port" type="number" min="1" max="65535" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="161"></label>
-          <label class="block k-snmp"><span class="text-xs text-gray-500">Seuil disque (%)</span><input id="f-disk_pct" type="number" min="50" max="100" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="90"></label>
-          <label class="block k-pc"><span class="text-xs text-gray-500">Seuil processeur (%)</span><input id="f-cpu_pct" type="number" min="10" max="100" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="90"></label>
-          <label class="block k-pc"><span class="text-xs text-gray-500">pendant (minutes)</span><input id="f-cpu_minutes" type="number" min="1" max="240" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="10"></label>
-          <label class="block k-nas"><span class="text-xs text-gray-500">Température max (°C)</span><input id="f-temp_max" type="number" min="30" max="90" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="60"></label>
-          <label class="block k-snmp"><span class="text-xs text-gray-500">Version SNMP</span>
+              <option value="pc">{{ _('PC Windows (SNMP)') }}</option><option value="nas">{{ _('NAS Synology (SNMP)') }}</option><option value="site">{{ _('Site web') }}</option></select></label>
+          <label class="block"><span class="text-xs text-gray-500">{{ _('Nom') }}</span><input id="f-name" required maxlength="40" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+          <label class="block k-snmp"><span class="text-xs text-gray-500">{{ _('Adresse IP') }}</span><input id="f-host" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 font-mono" placeholder="192.168.1.x"></label>
+          <label class="block k-site md:col-span-2"><span class="text-xs text-gray-500">{{ _('Adresse du site') }}</span><input id="f-url" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 font-mono" placeholder="{{ _('https://www.graffitiradio.fr') }}"></label>
+          <label class="block k-site"><span class="text-xs text-gray-500">{{ _('Texte attendu (facultatif)') }}</span><input id="f-keyword" maxlength="100" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="{{ _('ex. Graffiti') }}"></label>
+          <label class="block k-site"><span class="text-xs text-gray-500">{{ _('Réponse lente au-delà de (ms)') }}</span><input id="f-slow_ms" type="number" min="200" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="5000"></label>
+          <label class="block k-pc"><span class="text-xs text-gray-500">{{ _('Usage') }}</span>
+            <select id="f-always_on" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"><option value="0">{{ _('Peut être éteint : simple information') }}</option><option value="1">{{ _('24 h/24 : éteint = alerte') }}</option></select></label>
+          <label class="block k-snmp"><span class="text-xs text-gray-500" title="{{ _("Un relevé manqué n'alerte pas : l'alerte part si l'appareil reste sans réponse pendant ce délai") }}">{{ _('Alerte après (minutes sans réponse)') }}</span><input id="f-down_minutes" type="number" min="1" max="60" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="3"></label>
+          <label class="block k-pc"><span class="text-xs text-gray-500">{{ _('Système (affichage)') }}</span><input id="f-os" maxlength="30" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="{{ _('Windows 11') }}"></label>
+          <label class="block k-snmp"><span class="text-xs text-gray-500">{{ _('Port SNMP') }}</span><input id="f-port" type="number" min="1" max="65535" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="161"></label>
+          <label class="block k-snmp"><span class="text-xs text-gray-500">{{ _('Seuil disque (%)') }}</span><input id="f-disk_pct" type="number" min="50" max="100" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="90"></label>
+          <label class="block k-pc"><span class="text-xs text-gray-500">{{ _('Seuil processeur (%)') }}</span><input id="f-cpu_pct" type="number" min="10" max="100" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="90"></label>
+          <label class="block k-pc"><span class="text-xs text-gray-500">{{ _('pendant (minutes)') }}</span><input id="f-cpu_minutes" type="number" min="1" max="240" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="10"></label>
+          <label class="block k-nas"><span class="text-xs text-gray-500">{{ _('Température max (°C)') }}</span><input id="f-temp_max" type="number" min="30" max="90" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="60"></label>
+          <label class="block k-snmp"><span class="text-xs text-gray-500">{{ _('Version SNMP') }}</span>
             <select id="f-version" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="kindChanged()"><option value="2c">v2c</option><option value="1">v1</option><option value="3">v3</option></select></label>
-          <label class="block k-snmp k-v12"><span class="text-xs text-gray-500">Communauté</span><input id="f-community" type="password" autocomplete="new-password" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
-          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">Utilisateur SNMPv3</span><input id="f-user" autocomplete="off" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
-          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">Authentification</span>
+          <label class="block k-snmp k-v12"><span class="text-xs text-gray-500">{{ _('Communauté') }}</span><input id="f-community" type="password" autocomplete="new-password" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">{{ _('Utilisateur SNMPv3') }}</span><input id="f-user" autocomplete="off" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">{{ _('Authentification') }}</span>
             <select id="f-auth_proto" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"><option>SHA</option><option>MD5</option><option>SHA-224</option><option>SHA-256</option><option>SHA-384</option><option>SHA-512</option></select></label>
-          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">Mot de passe d'authentification</span><input id="f-auth_pass" type="password" autocomplete="new-password" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
-          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">Chiffrement</span>
+          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">{{ _("Mot de passe d'authentification") }}</span><input id="f-auth_pass" type="password" autocomplete="new-password" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">{{ _('Chiffrement') }}</span>
             <select id="f-priv_proto" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"><option>AES</option><option>DES</option><option>AES192</option><option>AES256</option></select></label>
-          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">Mot de passe de chiffrement</span><input id="f-priv_pass" type="password" autocomplete="new-password" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
-          <label class="flex items-center gap-2 mt-6"><input type="checkbox" id="f-alert_email" class="w-4 h-4" checked> Mails pour cet appareil</label>
-          <label class="flex items-center gap-2 mt-6"><input type="checkbox" id="f-enabled" class="w-4 h-4" checked> Surveillé</label>
+          <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">{{ _('Mot de passe de chiffrement') }}</span><input id="f-priv_pass" type="password" autocomplete="new-password" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+          <label class="flex items-center gap-2 mt-6"><input type="checkbox" id="f-alert_email" class="w-4 h-4" checked> {{ _('Mails pour cet appareil') }}</label>
+          <label class="flex items-center gap-2 mt-6"><input type="checkbox" id="f-enabled" class="w-4 h-4" checked> {{ _('Surveillé') }}</label>
         </div>
         <div class="mt-4 flex flex-wrap items-center gap-2">
-          <button type="button" onclick="testDevice()" class="text-sm border border-gray-200 rounded-lg px-4 py-2 font-medium text-gray-700 hover:bg-gray-50">Tester</button>
-          <button type="submit" class="text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-medium">Enregistrer</button>
-          <button type="button" onclick="closeForm()" class="text-sm text-gray-500 px-3 py-2">Annuler</button>
+          <button type="button" onclick="testDevice()" class="text-sm border border-gray-200 rounded-lg px-4 py-2 font-medium text-gray-700 hover:bg-gray-50">{{ _('Tester') }}</button>
+          <button type="submit" class="text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-medium">{{ _('Enregistrer') }}</button>
+          <button type="button" onclick="closeForm()" class="text-sm text-gray-500 px-3 py-2">{{ _('Annuler') }}</button>
           <span id="f-msg" class="text-xs text-gray-500"></span>
         </div>
         <pre id="f-test" class="hidden mt-3 text-[11px] bg-slate-50 border border-gray-100 rounded-lg p-3 whitespace-pre-wrap"></pre>
@@ -229,7 +229,7 @@
   const isAdmin = document.documentElement.dataset.role === 'admin';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const pad = n => String(n).padStart(2, '0');
-  const DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+  const DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'].map(d => _t(d));
   let st = null, devices = [], editing = null;
 
   function when(ts) {
@@ -237,18 +237,18 @@
     const d = new Date(ts * 1000), now = new Date(), hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
     const day0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     if (d.getTime() >= day0) return hm;
-    if (d.getTime() >= day0 - 86400000) return `hier ${hm}`;
+    if (d.getTime() >= day0 - 86400000) return `${_t('hier')} ${hm}`;
     if (d.getTime() >= day0 - 6 * 86400000) return `${DAYS[d.getDay()]} ${hm}`;
-    return `le ${pad(d.getDate())}/${pad(d.getMonth() + 1)} à ${hm}`;
+    return _t('le {d} à {h}', { d: `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`, h: hm });
   }
   function size(b) {
     if (b == null) return '-';
-    for (const [u, div] of [['To', 1e12], ['Go', 1e9], ['Mo', 1e6]]) if (b >= div) { const v = b / div; return (v < 10 ? v.toFixed(1).replace('.', ',').replace(',0', '') : Math.round(v)) + ' ' + u; }
-    return b + ' o';
+    for (const [u, div] of [[_t('To'), 1e12], [_t('Go'), 1e9], [_t('Mo'), 1e6]]) if (b >= div) { const v = b / div; return (v < 10 ? v.toFixed(1).replace('.', _DEC).replace(_DEC + '0', '') : Math.round(v)) + ' ' + u; }
+    return b + ' ' + _t('o');
   }
   const bar = (pct, cls) => `<div class="flex-1 h-1.5 rounded bg-gray-100 overflow-hidden"><div class="h-full ${cls}" style="width:${Math.max(0, Math.min(100, pct || 0))}%"></div></div>`;
   const fmtPct = v => v == null ? '-' : `${Math.round(v)} %`;
-  const badge24 = '<span class="ml-2 align-middle text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">24 h/24</span>';
+  const badge24 = '<span class="ml-2 align-middle text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">' + _t('24 h/24') + '</span>';
 
   // ── Synthèse ──
   function renderSummary() {
@@ -256,26 +256,26 @@
     const pcs = dev.filter(d => d.kind === 'pc' && d.always_on);
     const downPc = pcs.filter(d => d.state === 'off');
     const mutePc = pcs.filter(d => d.state === 'snmp');
-    $('t-pc').textContent = pcs.length ? `${s.pc24_on} en ligne sur ${s.pc24_total}` : 'Aucun';
+    $('t-pc').textContent = pcs.length ? _t('{a} en ligne sur {b}', { a: s.pc24_on, b: s.pc24_total }) : _t('Aucun');
     $('t-pc-dot').className = 'w-2.5 h-2.5 rounded-full ' + (!pcs.length ? 'bg-gray-300' : downPc.length ? 'bg-red-500' : mutePc.length ? 'bg-amber-500' : 'bg-green-500');
-    $('t-pc-sub').innerHTML = downPc.length ? `<span class="text-red-600">${esc(downPc.map(d => d.name).join(', '))} injoignable${downPc.length > 1 ? 's' : ''} depuis ${when(downPc[0].since)}</span>`
-      : mutePc.length ? `<span class="text-amber-700">${esc(mutePc.map(d => d.name).join(', '))} : SNMP muet</span>` : (pcs.length ? esc(pcs.map(d => d.name).join(' · ')) : '&nbsp;');
+    $('t-pc-sub').innerHTML = downPc.length ? `<span class="text-red-600">${_t(downPc.length > 1 ? '{n} injoignables depuis {t}' : '{n} injoignable depuis {t}', { n: esc(downPc.map(d => d.name).join(', ')), t: when(downPc[0].since) })}</span>`
+      : mutePc.length ? `<span class="text-amber-700">${esc(mutePc.map(d => d.name).join(', '))} : ${_t('SNMP muet')}</span>` : (pcs.length ? esc(pcs.map(d => d.name).join(' · ')) : '&nbsp;');
     const nas = dev.filter(d => d.kind === 'nas');
-    if (!nas.length) { $('t-nas').textContent = 'Aucun'; $('t-nas-dot').className = 'w-2.5 h-2.5 rounded-full bg-gray-300'; $('t-nas-sub').innerHTML = '&nbsp;'; }
+    if (!nas.length) { $('t-nas').textContent = _t('Aucun'); $('t-nas-dot').className = 'w-2.5 h-2.5 rounded-full bg-gray-300'; $('t-nas-sub').innerHTML = '&nbsp;'; }
     else {
       const n = nas[0], bad = Object.keys(n.alerts || {}).length, off = n.state === 'off';
-      $('t-nas').textContent = off ? 'Injoignable' : n.state === 'snmp' ? 'SNMP muet' : bad ? `${bad} alerte${bad > 1 ? 's' : ''}` : n.state === 'on' ? 'Normal' : 'En attente';
+      $('t-nas').textContent = off ? _t('Injoignable') : n.state === 'snmp' ? _t('SNMP muet') : bad ? _t(bad > 1 ? '{n} alertes' : '{n} alerte', { n: bad }) : n.state === 'on' ? _t('Normal') : _t('En attente');
       $('t-nas-dot').className = 'w-2.5 h-2.5 rounded-full ' + (off ? 'bg-red-500' : bad ? 'bg-amber-500' : n.state === 'on' ? 'bg-green-500' : 'bg-gray-300');
       const v = (n.nas && n.nas.volumes || [])[0];
-      $('t-nas-sub').textContent = [n.name, v && v.pct != null ? `volume ${Math.round(v.pct)} %` : '', n.nas && n.nas.temp != null ? `${n.nas.temp} °C` : ''].filter(Boolean).join(' · ');
+      $('t-nas-sub').textContent = [n.name, v && v.pct != null ? `${_t('volume')} ${Math.round(v.pct)} %` : '', n.nas && n.nas.temp != null ? `${n.nas.temp} °C` : ''].filter(Boolean).join(' · ');
     }
     const sites = dev.filter(d => d.kind === 'site'), sdown = sites.filter(d => d.state === 'down');
-    $('t-site').textContent = sites.length ? `${s.sites_up} en ligne sur ${s.sites_total}` : 'Aucun';
+    $('t-site').textContent = sites.length ? _t('{a} en ligne sur {b}', { a: s.sites_up, b: s.sites_total }) : _t('Aucun');
     $('t-site-dot').className = 'w-2.5 h-2.5 rounded-full ' + (!sites.length ? 'bg-gray-300' : sdown.length ? 'bg-red-500' : sites.some(d => d.alerts && d.alerts.slow) ? 'bg-amber-500' : 'bg-green-500');
     const ms = sites.map(d => d.result && d.result.ms).filter(v => v != null);
-    $('t-site-sub').innerHTML = sdown.length ? `<span class="text-red-600">${esc(sdown.map(d => d.name).join(', '))}</span>` : (ms.length ? `réponse moyenne ${Math.round(ms.reduce((a, b) => a + b, 0) / ms.length)} ms` : '&nbsp;');
+    $('t-site-sub').innerHTML = sdown.length ? `<span class="text-red-600">${esc(sdown.map(d => d.name).join(', '))}</span>` : (ms.length ? _t('réponse moyenne {n} ms', { n: Math.round(ms.reduce((a, b) => a + b, 0) / ms.length) }) : '&nbsp;');
     $('t-alerts').textContent = s.alerts.length;
-    $('t-alerts-sub').textContent = s.alerts.length ? s.alerts.slice(0, 3).map(a => a.device).filter((v, i, a) => a.indexOf(v) === i).join(' · ') : 'aucune';
+    $('t-alerts-sub').textContent = s.alerts.length ? s.alerts.slice(0, 3).map(a => a.device).filter((v, i, a) => a.indexOf(v) === i).join(' · ') : _t('aucune');
   }
 
   // ── PC ──
@@ -287,27 +287,27 @@
     $('pc-body').innerHTML = pcs.map(d => {
       const off = d.state === 'off', alarm = off && d.always_on;
       let state;
-      if (d.state === 'on') state = `<span class="text-green-600 font-medium">Allumé</span><div class="text-[11px] text-gray-500">depuis ${when(d.boot || d.since)}${d.rebooted_at && Date.now() / 1000 - d.rebooted_at < 86400 ? ' <span class="text-blue-700">(redémarré)</span>' : ''}</div>`;
-      else if (d.state === 'snmp') state = `<span class="text-amber-700 font-semibold">SNMP ne répond plus</span><div class="text-[11px] text-gray-500">depuis ${when(d.since)} · le PC répond sur le réseau</div>`;
-      else if (alarm) state = `<span class="text-red-600 font-semibold">Injoignable</span><div class="text-[11px] text-gray-500">depuis ${when(d.since)}</div>`;
-      else if (off) state = `<span class="text-gray-500 font-medium">Éteint</span><div class="text-[11px] text-gray-500">depuis ${when(d.since)}</div>`;
-      else state = `<span class="text-gray-400">En attente du premier relevé</span>${d.error ? `<div class="text-[11px] text-gray-400">${esc(d.error)}</div>` : ''}`;
+      if (d.state === 'on') state = `<span class="text-green-600 font-medium">${_t('Allumé')}</span><div class="text-[11px] text-gray-500">${_t('depuis')} ${when(d.boot || d.since)}${d.rebooted_at && Date.now() / 1000 - d.rebooted_at < 86400 ? ' <span class="text-blue-700">' + _t('(redémarré)') + '</span>' : ''}</div>`;
+      else if (d.state === 'snmp') state = `<span class="text-amber-700 font-semibold">${_t('SNMP ne répond plus')}</span><div class="text-[11px] text-gray-500">${_t('depuis')} ${when(d.since)} · ${_t('le PC répond sur le réseau')}</div>`;
+      else if (alarm) state = `<span class="text-red-600 font-semibold">${_t('Injoignable')}</span><div class="text-[11px] text-gray-500">${_t('depuis')} ${when(d.since)}</div>`;
+      else if (off) state = `<span class="text-gray-500 font-medium">${_t('Éteint')}</span><div class="text-[11px] text-gray-500">${_t('depuis')} ${when(d.since)}</div>`;
+      else state = `<span class="text-gray-400">${_t('En attente du premier relevé')}</span>${d.error ? `<div class="text-[11px] text-gray-400">${esc(d.error)}</div>` : ''}`;
       const cpuWarn = d.alerts && d.alerts.cpu;
       const cpu = d.state === 'on' && d.cpu != null
         ? `<div class="flex items-center gap-2">${bar(d.cpu, cpuWarn ? 'bg-amber-500' : d.cpu >= (d.cpu_pct || 90) ? 'bg-amber-500' : 'bg-green-500')}<span class="text-xs font-mono text-gray-600 w-9 text-right">${Math.round(d.cpu)} %</span></div>`
-          + (d.cpu_max != null ? `<div class="text-[11px] text-gray-400 mt-0.5">max ${Math.round(d.cpu_max)} % à ${when(d.cpu_max_at)}</div>` : '')
+          + (d.cpu_max != null ? `<div class="text-[11px] text-gray-400 mt-0.5">${_t('max {n} % à {t}', { n: Math.round(d.cpu_max), t: when(d.cpu_max_at) })}</div>` : '')
         : '<span class="text-xs text-gray-300">-</span>';
       const disks = (d.disks || []);
       let dk;
       if (!disks.length) dk = '<span class="text-xs text-gray-300">-</span>';
-      else if (d.state !== 'on') dk = `<span class="text-[11px] text-gray-400">${disks.map(x => `${esc(x.label)} ${Math.round(x.pct)} %`).join(' · ')} au dernier relevé</span>`;
+      else if (d.state !== 'on') dk = `<span class="text-[11px] text-gray-400">${disks.map(x => `${esc(x.label)} ${Math.round(x.pct)} %`).join(' · ')} ${_t('au dernier relevé')}</span>`;
       else dk = disks.map(x => {
         const w = x.pct >= (d.disk_pct || 90);
         return `<div class="flex items-center gap-2"><span class="text-[11px] font-mono text-gray-400 w-6">${esc(x.label)}</span>${bar(x.pct, w ? 'bg-amber-500' : 'bg-green-500')}<span class="text-[11px] font-mono ${w ? 'text-amber-700 font-semibold' : 'text-gray-600'} w-24 text-right whitespace-nowrap">${Math.round(x.pct)} % · ${size(x.size)}</span></div>`;
       }).join('');
       return `<tr class="border-b border-gray-50 ${alarm ? 'bg-red-50/50' : ''}">
         <td class="py-2.5 pr-3"><div class="font-medium text-gray-900">${esc(d.name)}${d.always_on ? badge24 : ''}</div>
-          <div class="text-[11px] text-gray-400 font-mono">${esc(d.host)}${d.os ? ' · ' + esc(d.os) : ''}${/windows 10/i.test(d.os) ? ' <span class="text-amber-700">· sans mises à jour de sécurité</span>' : ''}</div></td>
+          <div class="text-[11px] text-gray-400 font-mono">${esc(d.host)}${d.os ? ' · ' + esc(d.os) : ''}${/windows 10/i.test(d.os) ? ' <span class="text-amber-700">' + _t('· sans mises à jour de sécurité') + '</span>' : ''}</div></td>
         <td class="py-2.5 pr-3 text-xs">${state}</td>
         <td class="py-2.5 pr-3">${cpu}</td>
         <td class="py-2.5 pr-3 space-y-1">${dk}</td></tr>`;
@@ -315,7 +315,7 @@
   }
 
   // ── NAS ──
-  const ok = (v, good = 1) => v == null ? '<span class="text-gray-400">-</span>' : v === good ? '<span class="text-green-600 font-medium">Normal</span>' : '<span class="text-red-600 font-semibold">En panne</span>';
+  const ok = (v, good = 1) => v == null ? '<span class="text-gray-400">-</span>' : v === good ? '<span class="text-green-600 font-medium">' + _t('Normal') + '</span>' : '<span class="text-red-600 font-semibold">' + _t('En panne') + '</span>';
   function renderNas() {
     const list = st.devices.filter(d => d.kind === 'nas' && d.enabled);
     $('nas-list').innerHTML = list.map(d => {
@@ -323,45 +323,45 @@
       const row = (k, v) => `<div class="flex justify-between gap-2"><span class="text-gray-500">${k}</span><span class="text-right">${v}</span></div>`;
       const vols = (n.volumes || []).map(v => {
         const cls = v.level === 'ok' ? (v.pct >= (d.disk_pct || 90) ? 'bg-amber-500' : 'bg-green-500') : v.level === 'down' ? 'bg-red-500' : 'bg-amber-500';
-        const lab = v.level === 'ok' ? '<span class="text-green-600 font-medium">Normal</span>' : `<span class="${v.level === 'down' ? 'text-red-600' : 'text-amber-700'} font-semibold">${esc(v.status_label)}</span>`;
+        const lab = v.level === 'ok' ? '<span class="text-green-600 font-medium">' + _t('Normal') + '</span>' : `<span class="${v.level === 'down' ? 'text-red-600' : 'text-amber-700'} font-semibold">${esc(_t(v.status_label))}</span>`;
         return `<div class="text-xs mb-1 flex justify-between"><span>${esc(v.name)} · ${lab}</span><span class="font-mono text-gray-600">${size(v.used)} / ${size(v.total)}</span></div>
           <div class="h-2 rounded bg-gray-100 overflow-hidden"><div class="h-full ${cls}" style="width:${v.pct || 0}%"></div></div>
           <div class="text-[11px] text-gray-400 mt-1 mb-3">${v.pct != null ? Math.round(v.pct) + ' %' : ''}</div>`;
       }).join('') || '<div class="text-xs text-gray-400 mb-3">-</div>';
       const disks = (n.disks || []).map(x => `<div class="border ${x.ok ? 'border-gray-100' : 'border-red-200 bg-red-50/40'} rounded-lg p-2"><div class="font-medium text-gray-700">${esc(x.name)}</div>
-          <div class="${x.ok ? 'text-green-600' : 'text-red-600 font-semibold'}">${esc(x.ok ? 'Normal' : (x.health_label && x.health !== 1 ? x.health_label : x.status_label))}</div>
+          <div class="${x.ok ? 'text-green-600' : 'text-red-600 font-semibold'}">${esc(x.ok ? _t('Normal') : _t(x.health_label && x.health !== 1 ? x.health_label : x.status_label))}</div>
           <div class="text-gray-400 font-mono">${x.temp != null ? x.temp + ' °C' : ''}</div><div class="text-gray-400 truncate" title="${esc(x.model)}">${esc(x.model)}</div></div>`).join('');
       const tmax = d.temp_max || 60;
       return `<div class="section">
         <div class="section-title"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
-          NAS <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400">SNMP (SYNOLOGY-MIB)</span></div>
+          ${_t('NAS')} <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400">${_t('SNMP (SYNOLOGY-MIB)')}</span></div>
         <div class="grid md:grid-cols-4 gap-4 ${off || mute ? 'opacity-60' : ''}">
           <div>
             <div class="font-medium text-gray-900">${esc(d.name)}</div>
             <div class="text-[11px] text-gray-400 font-mono">${esc(d.host)}${n.model ? ' · ' + esc(n.model) : ''}${n.version ? ' · ' + esc(n.version) : ''}</div>
             <div class="mt-2 text-xs space-y-1">
-              ${off ? row('État', `<span class="text-red-600 font-semibold">Injoignable</span> <span class="text-gray-400">depuis ${when(d.since)}</span>`) : ''}
-              ${mute ? row('État', `<span class="text-amber-700 font-semibold">SNMP muet</span> <span class="text-gray-400">depuis ${when(d.since)}, répond sur le réseau</span>`) : ''}
-              ${row('Système', ok(n.status))}
-              ${row('Température', n.temp == null ? '-' : `<span class="font-mono ${n.temp >= tmax ? 'text-red-600 font-semibold' : 'text-gray-700'}">${n.temp} °C</span>`)}
-              ${row('Ventilateurs', n.fan == null ? '-' : ok(n.fan === 1 && (n.cpu_fan == null || n.cpu_fan === 1) ? 1 : 2))}
-              ${row('Alimentation', ok(n.power))}
-              ${row('Démarré', d.boot ? when(d.boot) : '-')}
-              ${row('Mise à jour DSM', n.upgrade ? `<span class="${n.upgrade === 'disponible' ? 'text-blue-700' : 'text-gray-700'}">${esc(n.upgrade)}</span>` : '-')}
+              ${off ? row(_t('État'), `<span class="text-red-600 font-semibold">${_t('Injoignable')}</span> <span class="text-gray-400">${_t('depuis')} ${when(d.since)}</span>`) : ''}
+              ${mute ? row(_t('État'), `<span class="text-amber-700 font-semibold">${_t('SNMP muet')}</span> <span class="text-gray-400">${_t('depuis')} ${when(d.since)}, ${_t('répond sur le réseau')}</span>`) : ''}
+              ${row(_t('Système'), ok(n.status))}
+              ${row(_t('Température'), n.temp == null ? '-' : `<span class="font-mono ${n.temp >= tmax ? 'text-red-600 font-semibold' : 'text-gray-700'}">${n.temp} °C</span>`)}
+              ${row(_t('Ventilateurs'), n.fan == null ? '-' : ok(n.fan === 1 && (n.cpu_fan == null || n.cpu_fan === 1) ? 1 : 2))}
+              ${row(_t('Alimentation'), ok(n.power))}
+              ${row(_t('Démarré'), d.boot ? when(d.boot) : '-')}
+              ${row(_t('Mise à jour DSM'), n.upgrade ? `<span class="${n.upgrade === 'disponible' ? 'text-blue-700' : 'text-gray-700'}">${esc(_t(n.upgrade))}</span>` : '-')}
             </div>
           </div>
           <div class="md:col-span-2">
-            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Volumes</div>${vols}
-            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Disques</div>
+            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">${_t('Volumes')}</div>${vols}
+            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">${_t('Disques')}</div>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">${disks || '<span class="text-gray-400">-</span>'}</div>
           </div>
           <div>
-            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Charge</div>
-            <div class="text-xs flex justify-between"><span class="text-gray-500">Processeur</span><span class="font-mono">${fmtPct(d.cpu)}</span></div>
+            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">${_t('Charge')}</div>
+            <div class="text-xs flex justify-between"><span class="text-gray-500">${_t('Processeur')}</span><span class="font-mono">${fmtPct(d.cpu)}</span></div>
             <div class="h-1.5 rounded bg-gray-100 overflow-hidden mt-1 mb-2"><div class="h-full bg-green-500" style="width:${d.cpu || 0}%"></div></div>
-            <div class="text-xs flex justify-between"><span class="text-gray-500">Mémoire</span><span class="font-mono">${fmtPct(d.ram_pct)}</span></div>
+            <div class="text-xs flex justify-between"><span class="text-gray-500">${_t('Mémoire')}</span><span class="font-mono">${fmtPct(d.ram_pct)}</span></div>
             <div class="h-1.5 rounded bg-gray-100 overflow-hidden mt-1"><div class="h-full bg-green-500" style="width:${d.ram_pct || 0}%"></div></div>
-            <div class="text-[11px] text-gray-400 mt-3">Alertes : système, alimentation, ventilateur, disque, volume dégradé, volume plein (${d.disk_pct || 90} %), température (${tmax} °C), injoignable.</div>
+            <div class="text-[11px] text-gray-400 mt-3">${_t('Alertes : système, alimentation, ventilateur, disque, volume dégradé, volume plein ({p} %), température ({t} °C), injoignable.', { p: d.disk_pct || 90, t: tmax })}</div>
           </div>
         </div></div>`;
     }).join('');
@@ -374,14 +374,14 @@
     $('site-body').innerHTML = sites.map(d => {
       const r = d.result || {}, down = d.state === 'down';
       const label = d.url.replace(/^https?:\/\//, '').replace(/\/$/, '');
-      const state = down ? `<span class="text-red-600 font-semibold">Injoignable</span><div class="text-[11px] text-gray-500">depuis ${when(d.since)} · ${esc(r.message || '')}</div>`
-        : d.state === 'up' ? (d.alerts && d.alerts.slow ? '<span class="text-amber-700 font-semibold">Lent</span>' : '<span class="text-green-600 font-medium">En ligne</span>')
-        : !r.ok && r.message ? `<span class="text-amber-700">${esc(r.message)}</span>` : '<span class="text-gray-400">En attente</span>';
+      const state = down ? `<span class="text-red-600 font-semibold">${_t('Injoignable')}</span><div class="text-[11px] text-gray-500">${_t('depuis')} ${when(d.since)} · ${esc(r.message || '')}</div>`
+        : d.state === 'up' ? (d.alerts && d.alerts.slow ? '<span class="text-amber-700 font-semibold">' + _t('Lent') + '</span>' : '<span class="text-green-600 font-medium">' + _t('En ligne') + '</span>')
+        : !r.ok && r.message ? `<span class="text-amber-700">${esc(r.message)}</span>` : '<span class="text-gray-400">' + _t('En attente') + '</span>';
       return `<tr class="border-b border-gray-50 ${down ? 'bg-red-50/50' : ''}">
         <td class="py-2.5 pr-3"><a href="${esc(d.url)}" target="_blank" rel="noopener" class="font-medium text-gray-900 text-sm hover:text-blue-700">${esc(d.name || label)}</a>${d.name && d.name !== label ? `<div class="text-[11px] text-gray-400 font-mono">${esc(label)}</div>` : ''}</td>
         <td class="py-2.5 pr-3">${state}</td>
         <td class="py-2.5 pr-3 font-mono text-gray-600">${r.code ? r.code : '-'}${r.ms != null ? ' · ' + r.ms + ' ms' : ''}</td>
-        <td class="py-2.5 pr-3 font-mono text-gray-600">${d.availability != null ? String(d.availability).replace('.', ',') + ' %' : '-'}</td></tr>`;
+        <td class="py-2.5 pr-3 font-mono text-gray-600">${d.availability != null ? String(d.availability).replace('.', _DEC) + ' %' : '-'}</td></tr>`;
     }).join('');
   }
 
@@ -403,8 +403,8 @@
 
   // ═══ Journal : événements du parc ═══
   const EV_CLS = { alert: 'bg-red-50 text-red-700', restored: 'bg-green-50 text-green-700', info: 'bg-gray-100 text-gray-600' };
-  const EV_LBL = { down: 'Injoignable', on: 'Allumé', off: 'Éteint', reboot: 'Redémarrage', disk: 'Disque', cpu: 'Processeur', nas: 'NAS', slow: 'Lent', snmp: 'SNMP' };
-  const evLabel = e => e.level === 'restored' ? 'Rétabli' : e.kind === 'down' && e.level === 'alert' ? 'Injoignable' : EV_LBL[e.kind] || e.kind;
+  const EV_LBL = { down: _t('Injoignable'), on: _t('Allumé'), off: _t('Éteint'), reboot: _t('Redémarrage'), disk: _t('Disque'), cpu: _t('Processeur'), nas: 'NAS', slow: _t('Lent'), snmp: 'SNMP' };
+  const evLabel = e => e.level === 'restored' ? _t('Rétabli') : e.kind === 'down' && e.level === 'alert' ? _t('Injoignable') : EV_LBL[e.kind] || e.kind;
   function evTime(ts) { const d = new Date(String(ts).replace(' ', 'T')); return `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`; }
   const pad2 = n => String(n).padStart(2, '0');
   let evAll = [], evLimit = 20;
@@ -416,7 +416,7 @@
     } catch (e) { $('ev-body').innerHTML = `<tr><td colspan="5" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`; return; }
     const sel = $('ev-dev'), cur = sel.value;
     const devs = [...new Set(evAll.map(e => e.device_name).filter(Boolean))].sort();
-    sel.innerHTML = '<option value="">Tous les appareils</option>' + devs.map(d => `<option>${esc(d)}</option>`).join('');
+    sel.innerHTML = '<option value="">' + _t('Tous les appareils') + '</option>' + devs.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
     sel.value = devs.includes(cur) ? cur : '';
     renderJournal();
   }
@@ -426,15 +426,15 @@
   }
   function renderJournal() {
     const list = evList(), shown = list.slice(0, evLimit);
-    $('ev-count').textContent = `${list.length} événement${list.length > 1 ? 's' : ''}`;
+    $('ev-count').textContent = _t(list.length > 1 ? '{n} événements' : '{n} événement', { n: list.length });
     $('ev-more').classList.toggle('hidden', list.length <= evLimit);
     $('ev-body').innerHTML = shown.length ? shown.map(e => `<tr class="hover:bg-slate-50">
         <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${evTime(e.timestamp)}</td>
         <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${EV_CLS[e.level] || EV_CLS.info}">${esc(evLabel(e))}</span></td>
         <td class="py-2 pr-3 font-medium text-gray-800 whitespace-nowrap">${esc(e.device_name || '-')}</td>
         <td class="py-2 pr-3 text-gray-600" style="overflow-wrap:anywhere">${esc(e.message || '')}</td>
-        <td class="py-2 text-gray-600">${e.email_sent ? 'oui' : '<span class="text-gray-300">-</span>'}</td></tr>`).join('')
-      : '<tr><td colspan="5" class="py-8 text-center text-gray-400">Aucun événement pour le moment.</td></tr>';
+        <td class="py-2 text-gray-600">${e.email_sent ? _t('oui') : '<span class="text-gray-300">-</span>'}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="py-8 text-center text-gray-400">' + _t('Aucun événement pour le moment.') + '</td></tr>';
   }
   function exportJournal() {
     const cell = v => { const t = v == null ? '' : String(v); return /[;"\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
@@ -458,16 +458,16 @@
       st = await r.json();
       if (st.status === 'error') throw new Error(st.message);
       $('notice').classList.toggle('hidden', st.devices.length > 0);
-      $('notice-title').textContent = 'Aucun appareil surveillé';
-      $('notice-text').textContent = isAdmin ? 'Ajoutez les PC, le NAS et les sites web dans « Appareils et sites surveillés », en bas de page.' : "Un administrateur doit ajouter les appareils à surveiller.";
+      $('notice-title').textContent = _t('Aucun appareil surveillé');
+      $('notice-text').textContent = isAdmin ? _t('Ajoutez les PC, le NAS et les sites web dans « Appareils et sites surveillés », en bas de page.') : _t("Un administrateur doit ajouter les appareils à surveiller.");
       renderSummary(); renderPcs(); renderNas(); renderSites();
     } catch (e) {
-      $('notice').classList.remove('hidden'); $('notice-title').textContent = 'Surveillance du parc indisponible'; $('notice-text').textContent = e.message;
+      $('notice').classList.remove('hidden'); $('notice-title').textContent = _t('Surveillance du parc indisponible'); $('notice-text').textContent = e.message;
     }
   }
 
   // ── Réglages ──
-  const KIND_LBL = { pc: 'PC', nas: 'NAS', site: 'Site web' };
+  const KIND_LBL = { pc: 'PC', nas: 'NAS', site: _t('Site web') };
   async function loadDevices() {
     if (!isAdmin) return;
     const r = await fetch('/api/park/devices', { credentials: 'include' });
@@ -477,16 +477,16 @@
         <td class="py-2 pr-3"><span class="font-medium ${d.enabled ? 'text-gray-900' : 'text-gray-400 line-through'}">${esc(d.name)}</span>${d.always_on ? badge24 : ''}</td>
         <td class="py-2 pr-3 font-mono text-xs text-gray-500">${esc(d.config.host || d.config.url || '')}</td>
         <td class="py-2 text-right whitespace-nowrap text-xs">
-          <button type="button" class="text-gray-400 hover:text-gray-700 px-1" ${i ? '' : 'disabled'} onclick="move(${i}, -1)" title="Monter">↑</button>
-          <button type="button" class="text-gray-400 hover:text-gray-700 px-1" ${i < devices.length - 1 ? '' : 'disabled'} onclick="move(${i}, 1)" title="Descendre">↓</button>
-          <button type="button" class="text-blue-600 ml-2" onclick="editDevice(${d.id})">Modifier</button>
-          <button type="button" class="text-red-500 ml-2" onclick="delDevice(${d.id})">Supprimer</button></td></tr>`).join('')
-      || '<tr><td class="py-3 text-xs text-gray-400">Aucun appareil.</td></tr>';
+          <button type="button" class="text-gray-400 hover:text-gray-700 px-1" ${i ? '' : 'disabled'} onclick="move(${i}, -1)" title="${_t('Monter')}">↑</button>
+          <button type="button" class="text-gray-400 hover:text-gray-700 px-1" ${i < devices.length - 1 ? '' : 'disabled'} onclick="move(${i}, 1)" title="${_t('Descendre')}">↓</button>
+          <button type="button" class="text-blue-600 ml-2" onclick="editDevice(${d.id})">${_t('Modifier')}</button>
+          <button type="button" class="text-red-500 ml-2" onclick="delDevice(${d.id})">${_t('Supprimer')}</button></td></tr>`).join('')
+      || '<tr><td class="py-3 text-xs text-gray-400">' + _t('Aucun appareil.') + '</td></tr>';
   }
   async function api(url, method, body) {
     const r = await fetch(url, { method, credentials: 'include', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }, body: body ? JSON.stringify(body) : undefined });
     const d = await r.json().catch(() => ({}));
-    if (!r.ok || d.status === 'error') throw new Error(d.message || `Erreur ${r.status}`);
+    if (!r.ok || d.status === 'error') throw new Error(d.message || `${_t('Erreur')} ${r.status}`);
     return d;
   }
   async function move(i, dir) {
@@ -502,7 +502,7 @@
     if (delArm === id) { delArm = null; return true; }
     delArm = id;
     const btn = [...document.querySelectorAll('#dev-list button')].find(b => b.getAttribute('onclick') === `delDevice(${id})`);
-    if (btn) { btn.textContent = 'Confirmer ?'; setTimeout(() => { if (delArm === id) { delArm = null; btn.textContent = 'Supprimer'; } }, 4000); }
+    if (btn) { btn.textContent = _t('Confirmer ?'); setTimeout(() => { if (delArm === id) { delArm = null; btn.textContent = _t('Supprimer'); } }, 4000); }
     return false;
   }
   const FIELDS = ['name', 'host', 'port', 'url', 'keyword', 'slow_ms', 'os', 'disk_pct', 'cpu_pct', 'cpu_minutes', 'temp_max', 'version', 'community', 'user', 'auth_proto', 'auth_pass', 'priv_proto', 'priv_pass'];
@@ -519,7 +519,7 @@
   function editDevice(id) {
     const d = id ? devices.find(x => x.id === id) : null;
     editing = id;
-    $('f-title').textContent = d ? `Modifier : ${d.name}` : 'Nouvel appareil';
+    $('f-title').textContent = d ? `Modifier : ${d.name}` : _t('Nouvel appareil');
     $('f-kind').value = d ? d.kind : 'pc'; $('f-kind').disabled = !!d;
     const c = d ? d.config : {};
     const defaults = { port: 161, slow_ms: 5000, disk_pct: 90, cpu_pct: 90, cpu_minutes: 10, temp_max: 60, version: '2c', auth_proto: 'SHA', priv_proto: 'AES' };
@@ -542,15 +542,15 @@
     return body;
   }
   async function testDevice() {
-    $('f-msg').className = 'text-xs text-gray-500'; $('f-msg').textContent = 'Test en cours…';
+    $('f-msg').className = 'text-xs text-gray-500'; $('f-msg').textContent = _t('Test en cours…');
     try {
       const r = (await api('/api/park/test', 'POST', formData())).result;
       $('f-msg').className = 'text-xs ' + (r.ok ? 'text-green-600' : 'text-red-600');
-      $('f-msg').textContent = r.ok ? 'Répond.' : (r.message || 'Échec');
+      $('f-msg').textContent = r.ok ? _t('Répond.') : (r.message || _t('Échec'));
       const x = r.data;
       let txt = '';
-      if (x && x.disks && 'sysname' in x) txt = `Nom : ${x.sysname}\nProcesseur : ${x.cpu ?? '-'} % (${x.cores} cœurs)\nDisques : ${x.disks.map(d => `${d.label} ${Math.round(d.pct)} % de ${size(d.size)}`).join(', ') || '-'}`;
-      else if (x && x.volumes) txt = `Modèle : ${x.model} ${x.version}\nSystème : ${x.status === 1 ? 'normal' : x.status}\nTempérature : ${x.temp} °C\nDisques : ${x.disks.map(d => `${d.name} ${d.ok ? 'normal' : d.status_label}`).join(', ')}\nVolumes : ${x.volumes.map(v => `${v.name} ${v.status_label} ${v.pct != null ? Math.round(v.pct) + ' %' : ''}`).join(', ')}`;
+      if (x && x.disks && 'sysname' in x) txt = `${_t('Nom :')} ${x.sysname}\n${_t('Processeur :')} ${x.cpu ?? '-'} % (${_t('{n} cœurs', { n: x.cores })})\n${_t('Disques :')} ${x.disks.map(d => `${d.label} ${Math.round(d.pct)} % ${_t('de')} ${size(d.size)}`).join(', ') || '-'}`;
+      else if (x && x.volumes) txt = `${_t('Modèle :')} ${x.model} ${x.version}\n${_t('Système :')} ${x.status === 1 ? _t('normal') : x.status}\n${_t('Température :')} ${x.temp} °C\n${_t('Disques :')} ${x.disks.map(d => `${d.name} ${d.ok ? _t('normal') : _t(d.status_label)}`).join(', ')}\n${_t('Volumes :')} ${x.volumes.map(v => `${v.name} ${_t(v.status_label)} ${v.pct != null ? Math.round(v.pct) + ' %' : ''}`).join(', ')}`;
       else if (x && 'code' in x) txt = `${x.message}${x.code ? ` · HTTP ${x.code}` : ''}${x.ms != null ? ` · ${x.ms} ms` : ''}`;
       $('f-test').textContent = txt; $('f-test').classList.toggle('hidden', !txt);
     } catch (e) { $('f-msg').className = 'text-xs text-red-600'; $('f-msg').textContent = e.message; }

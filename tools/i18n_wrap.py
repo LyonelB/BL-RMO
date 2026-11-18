@@ -14,7 +14,7 @@ import re
 import sys
 
 SKIP_BLOCKS = re.compile(r'(<script\b.*?</script>|<style\b.*?</style>|<!--.*?-->|\{#.*?#\}|<pre\b.*?</pre>|<code\b.*?</code>)', re.S | re.I)
-TEXT = re.compile(r'>([^<>]+)<')
+TEXT = re.compile(r'(?:^|(?<=>))([^<>]+)(?=<|$)')   # aussi le texte collé à un bloc <code> ou <pre> écarté
 ATTR = re.compile(r'\b(placeholder|title|aria-label|alt)="([^"{}<>]*)"')
 LETTERS = re.compile(r'[A-Za-zÀ-ÿ]{2,}')
 
@@ -29,7 +29,8 @@ def wanted(txt):
         return False
     if re.fullmatch(r'[\w.-]+\.(py|json|sh|html|db|mp3|local)', t):
         return False
-    if t in ('BL-RMO', 'RMO', 'GitHub', 'FM', 'DAB+', 'RDS', 'SNMP', 'MHz', 'dBf', 'dBFS', 'kb/s', 'CSV', 'MP3', 'ZIP', 'OK', 'EId', 'PI', 'PS'):
+    if t in ('BL-RMO', 'RMO', 'GitHub', 'FM', 'DAB+', 'RDS', 'SNMP', 'MHz', 'dBf', 'dBFS', 'kb/s', 'CSV', 'MP3', 'ZIP', 'OK', 'EId', 'PI', 'PS', 'NAS',
+             'AES', 'AES192', 'AES256', 'DES', 'MD5', 'SHA', 'SHA-224', 'SHA-256', 'SHA-384', 'SHA-512'):
         return False
     return True
 
@@ -62,7 +63,7 @@ def _wrap_part(part, keys):
         trail = raw[len(raw.rstrip()):]
         t = ' '.join(raw.split())
         keys.add(t)
-        return '>' + lead + jinja(t) + trail + '<'
+        return lead + jinja(t) + trail
 
     def attr(m):
         if not wanted(m.group(2)):

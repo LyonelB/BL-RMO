@@ -6,6 +6,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Traduction anglaise, étape 3 : Chaîne et Parc
+- **Chaîne de diffusion traduite**, ses quatre onglets : Synoptique (panneau de détail, courbes, réglages), Journal (alertes, messages syslog et traps), Appareils (formulaires de chaque type de sonde) et Configuration (règles de masquage, aide syslog, événements externes).
+- **Parc traduit** : État (PC, NAS, sites web), Journal et Appareils.
+- **Valeurs venues des appareils** (libellés de mesures, messages de sonde, états du NAS) traduites à l'affichage quand elles sont connues. Les modèles SNMP gardent leurs libellés d'origine, enregistrés tels quels avec l'appareil.
+- **Outils** : `tools/i18n_wrap.py` traduit aussi le texte collé à un bloc `<code>` ; `tools/i18n_js.py` laisse de côté les valeurs CSS et les adresses.
+
 ### Traduction anglaise, étape 2 : pages FM et DAB+
 - **Pages FM et DAB+ traduites**, tous onglets : Direct, Journal, Pige et Configuration, avec les messages affichés par le JavaScript (états, tuiles, journal, pige, détection des récepteurs, balayage de la bande III).
 - **Libellés des alertes** (Signal perdu, Absence modulation, Silence audio...) et mode de décodage DAB+ traduits à l'affichage ; les filtres du journal gardent leur valeur d'origine.

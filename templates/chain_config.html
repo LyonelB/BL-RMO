@@ -5,7 +5,7 @@
   {% include '_i18n.html' %}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>BL-RMO · Chaîne de diffusion · Configuration</title>
+  <title>{{ _('BL-RMO · Chaîne de diffusion · Configuration') }}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -39,8 +39,8 @@
   <header class="bg-white border-b border-gray-100 px-6 pt-4 sticky top-0 z-10">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">Chaîne de diffusion</h1></div>
-        <p class="text-xs text-gray-400 mt-0.5">Messages masqués, envoi des journaux et événements des équipements tiers</p>
+        <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">{{ _('Chaîne de diffusion') }}</h1></div>
+        <p class="text-xs text-gray-400 mt-0.5">{{ _('Messages masqués, envoi des journaux et événements des équipements tiers') }}</p>
       </div>
       <div id="rx-status" class="text-xs"></div>
     </div>
@@ -54,30 +54,29 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
-        Messages masqués <span id="rules-count" class="text-gray-400 normal-case font-normal tracking-normal"></span>
+        {{ _('Messages masqués') }} <span id="rules-count" class="text-gray-400 normal-case font-normal tracking-normal"></span>
       </div>
-      <p class="text-xs text-gray-500">Ces messages restent enregistrés : ils sont seulement cachés du journal, de l'export et du synoptique. Dans l'onglet <a href="/chain/journal" class="text-blue-600 hover:text-blue-800">Journal</a>, cochez « Afficher les messages masqués » pour les revoir, et utilisez l'icône <b>œil barré</b> au bout d'une ligne pour en masquer d'autres.</p>
-      <div id="rules-list" class="mt-3 divide-y divide-gray-50 text-xs"><div class="py-3 text-gray-400">Chargement…</div></div>
+      <p class="text-xs text-gray-500">{{ _("Ces messages restent enregistrés : ils sont seulement cachés du journal, de l'export et du synoptique. Dans l'onglet") }} <a href="/chain/journal" class="text-blue-600 hover:text-blue-800">{{ _('Journal') }}</a>{{ _(", cochez « Afficher les messages masqués » pour les revoir, et utilisez l'icône") }} <b>{{ _('œil barré') }}</b> {{ _("au bout d'une ligne pour en masquer d'autres.") }}</p>
+      <div id="rules-list" class="mt-3 divide-y divide-gray-50 text-xs"><div class="py-3 text-gray-400">{{ _('Chargement…') }}</div></div>
     </div>
 
     <!-- ── Envoyer les journaux d'un appareil ─────────────────── -->
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        Envoyer les journaux d'un appareil vers BL-RMO
+        {{ _("Envoyer les journaux d'un appareil vers BL-RMO") }}
       </div>
       <div class="space-y-3 text-xs text-gray-600 leading-relaxed">
-        <p>Dans les réglages de l'appareil, cherchez « Syslog », « Remote log » ou « Journal distant » et indiquez :
-          serveur <code id="h-ip"></code>, port <code id="h-port">514</code>, protocole <code>UDP</code>.</p>
-        <p class="font-medium text-gray-700">MikroTik RouterOS</p>
-        <p>Repérer l'action d'envoi existante, puis la diriger vers BL-RMO :</p>
+        <p>{{ _("Dans les réglages de l'appareil, cherchez « Syslog », « Remote log » ou « Journal distant » et indiquez : serveur") }} <code id="h-ip"></code>{{ _(', port') }} <code id="h-port">514</code>{{ _(', protocole') }} <code>UDP</code>.</p>
+        <p class="font-medium text-gray-700">{{ _('MikroTik RouterOS') }}</p>
+        <p>{{ _("Repérer l'action d'envoi existante, puis la diriger vers BL-RMO :") }}</p>
         <pre class="bg-slate-50 border border-slate-100 rounded-lg p-3 overflow-x-auto"><code style="background:none;padding:0">/system logging action print where target=remote
 /system logging action set [find target=remote] remote=<span class="h-ip-txt"></span> remote-port=514</code></pre>
-        <p class="font-medium text-gray-700">Ubiquiti airOS</p>
-        <p>Onglet <b>Services</b>, section <b>System Log</b> : cocher <i>Remote Log</i>, adresse <code class="h-ip-txt"></code>, port 514.</p>
-        <p class="text-gray-500">Le nom affiché vient de la chaîne de diffusion : un appareil dont l'adresse IP figure dans l'onglet Appareils prend son nom. Sinon, BL-RMO affiche le nom d'hôte envoyé par l'appareil ou son adresse.</p>
-        <p class="font-medium text-gray-700">Traps SNMP</p>
-        <p>Les traps sont reçus sur le port <code>UDP 162</code> de la même adresse : chacun devient une ligne du journal (programme « trap ») et déclenche un relevé immédiat de l'appareil. Régler l'envoi des traps en SNMP v1 ou v2c ; les traps v3 (chiffrés) ne sont pas décodés.</p>
+        <p class="font-medium text-gray-700">{{ _('Ubiquiti airOS') }}</p>
+        <p>{{ _('Onglet') }} <b>{{ _('Services') }}</b>{{ _(', section') }} <b>{{ _('System Log') }}</b> {{ _(': cocher') }} <i>{{ _('Remote Log') }}</i>{{ _(', adresse') }} <code class="h-ip-txt"></code>{{ _(', port 514.') }}</p>
+        <p class="text-gray-500">{{ _("Le nom affiché vient de la chaîne de diffusion : un appareil dont l'adresse IP figure dans l'onglet Appareils prend son nom. Sinon, BL-RMO affiche le nom d'hôte envoyé par l'appareil ou son adresse.") }}</p>
+        <p class="font-medium text-gray-700">{{ _('Traps SNMP') }}</p>
+        <p>{{ _('Les traps sont reçus sur le port') }} <code>UDP 162</code> {{ _("de la même adresse : chacun devient une ligne du journal (programme « trap ») et déclenche un relevé immédiat de l'appareil. Régler l'envoi des traps en SNMP v1 ou v2c ; les traps v3 (chiffrés) ne sont pas décodés.") }}</p>
       </div>
     </div>
 
@@ -85,23 +84,23 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Événements externes (netwatch MikroTik, scripts...)
+        {{ _('Événements externes (netwatch MikroTik, scripts...)') }}
       </div>
       <div class="space-y-3 text-xs text-gray-600">
-        <p>Un équipement tiers peut signaler ses propres sondes à BL-RMO par une requête HTTP. L'événement apparaît dans l'onglet <a href="/chain/journal" class="text-blue-600 hover:text-blue-800">Journal</a> (badge « externe ») et sur la carte de l'appareil qui a la même adresse IP.</p>
+        <p>{{ _("Un équipement tiers peut signaler ses propres sondes à BL-RMO par une requête HTTP. L'événement apparaît dans l'onglet") }} <a href="/chain/journal" class="text-blue-600 hover:text-blue-800">{{ _('Journal') }}</a> {{ _("(badge « externe ») et sur la carte de l'appareil qui a la même adresse IP.") }}</p>
         <div class="grid grid-cols-1 sm:grid-cols-[7rem_1fr_auto] gap-2 items-center">
-          <span class="font-medium text-gray-700">URL</span>
+          <span class="font-medium text-gray-700">{{ _('URL') }}</span>
           <code id="hook-url" class="!text-xs break-all"></code><span></span>
-          <span class="font-medium text-gray-700">Jeton</span>
+          <span class="font-medium text-gray-700">{{ _('Jeton') }}</span>
           <code id="hook-token" class="!text-xs break-all">...</code>
-          <button onclick="regenToken()" class="text-xs text-red-500 hover:text-red-700 justify-self-start">Régénérer</button>
+          <button onclick="regenToken()" class="text-xs text-red-500 hover:text-red-700 justify-self-start">{{ _('Régénérer') }}</button>
         </div>
         <div>
-          <div class="font-medium text-gray-700 mb-1">Paramètres (GET ou POST)</div>
-          <p><code>token</code>, <code>source</code> (ex. CRS-Studio), <code>probe</code> (nom de la sonde), <code>host</code> (IP surveillée), <code>state</code> (<code>up</code> ou <code>down</code>), <code>text</code> (facultatif).</p>
+          <div class="font-medium text-gray-700 mb-1">{{ _('Paramètres (GET ou POST)') }}</div>
+          <p><code>token</code>, <code>source</code> {{ _('(ex. CRS-Studio),') }} <code>probe</code> {{ _('(nom de la sonde),') }} <code>host</code> {{ _('(IP surveillée),') }} <code>state</code> (<code>up</code> {{ _('ou') }} <code>down</code>), <code>text</code> {{ _('(facultatif).') }}</p>
         </div>
         <div>
-          <div class="font-medium text-gray-700 mb-1">Exemple RouterOS (à ajouter dans le down-script d'une sonde netwatch)</div>
+          <div class="font-medium text-gray-700 mb-1">{{ _("Exemple RouterOS (à ajouter dans le down-script d'une sonde netwatch)") }}</div>
           <pre id="hook-example" class="bg-slate-900 text-slate-100 rounded-lg p-3 overflow-x-auto text-[11px] leading-relaxed whitespace-pre"></pre>
         </div>
       </div>
@@ -119,18 +118,16 @@ async function api(url, method, body) {
   const o = { credentials: 'include' };
   if (method) { o.method = method; o.headers = { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }; o.body = JSON.stringify(body || {}); }
   const r = await fetch(url, o);
-  if (r.status === 401) { window.location = '/login?next=/chain/configuration'; throw new Error('Session expirée'); }
+  if (r.status === 401) { window.location = '/login?next=/chain/configuration'; throw new Error(_t('Session expirée')); }
   const d = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(d.message || `Erreur ${r.status}`);
+  if (!r.ok) throw new Error(d.message || `${_t('Erreur')} ${r.status}`);
   return d;
 }
-function ago(iso, nowIso) {
-  if (!iso) return 'jamais';
+function ago(iso, nowIso, bare) {
+  if (!iso) return _t('jamais');
   const s = Math.max(0, Math.round(((nowIso ? new Date(nowIso).getTime() : Date.now()) - new Date(iso).getTime()) / 1000));
-  if (s < 60) return `il y a ${s} s`;
-  if (s < 3600) return `il y a ${Math.floor(s / 60)} min`;
-  if (s < 86400) return `il y a ${Math.floor(s / 3600)} h`;
-  return `il y a ${Math.floor(s / 86400)} j`;
+  const n = s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : s < 86400 ? `${Math.floor(s / 3600)} h` : `${Math.floor(s / 86400)} ${_t('j')}`;
+  return bare ? n : _t('il y a {n}', { n });
 }
 
 // ── Réception syslog : état, adresse et port à donner aux appareils ──
@@ -151,13 +148,13 @@ async function loadSources() {
   const age = m.heartbeat ? (new Date(d.now) - new Date(m.heartbeat)) / 1000 : null;
   const alive = age !== null && age < 60;
   $('rx-status').innerHTML = alive
-    ? `<span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 rounded-full px-2.5 py-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Réception active · UDP ${esc(m.port)}</span>`
-    : `<span class="inline-flex items-center gap-1.5 bg-red-50 text-red-700 rounded-full px-2.5 py-1"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Réception arrêtée</span>`;
+    ? `<span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 rounded-full px-2.5 py-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>${_t('Réception active')} · UDP ${esc(m.port)}</span>`
+    : `<span class="inline-flex items-center gap-1.5 bg-red-50 text-red-700 rounded-full px-2.5 py-1"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>${_t('Réception arrêtée')}</span>`;
   $('rx-warning').classList.toggle('hidden', alive);
   if (!alive) {
     $('rx-warning').innerHTML = m.heartbeat
-      ? `Le service de réception ne répond plus depuis ${esc(ago(m.heartbeat, d.now).replace('il y a ', ''))}. Vérifier : <code>sudo systemctl status bl-rmo-syslog</code>`
-      : `Le service de réception n'est pas installé. Depuis le dossier de l'application : <code>sudo bash install/build/66-syslog.sh</code>`;
+      ? `${_t('Le service de réception ne répond plus depuis {d}.', { d: esc(ago(m.heartbeat, d.now, true)) })} ${_t('Vérifier :')} <code>sudo systemctl status bl-rmo-syslog</code>`
+      : `${_t("Le service de réception n'est pas installé. Depuis le dossier de l'application :")} <code>sudo bash install/build/66-syslog.sh</code>`;
   }
   if (m.port && $('h-port')) $('h-port').textContent = m.port;
   if (m.ip) setHelpIp(m.ip);
@@ -168,23 +165,23 @@ async function loadRules() {
   let d;
   try { d = await api('/api/syslog/rules'); } catch (e) { $('rules-list').innerHTML = `<div class="py-3 text-red-600">${esc(e.message)}</div>`; return; }
   const on = d.rules.filter(r => r.enabled).length;
-  $('rules-count').textContent = `${on} règle${on > 1 ? 's' : ''} active${on > 1 ? 's' : ''}`;
+  $('rules-count').textContent = _t(on > 1 ? '{n} règles actives' : '{n} règle active', { n: on });
   $('rules-list').innerHTML = d.rules.length ? d.rules.map(r => {
-    const scope = [r.src ? displayName(r.src) : 'tous les appareils', r.program ? `programme ${r.program}` : ''].filter(Boolean).join(' · ');
+    const scope = [r.src ? displayName(r.src) : _t('tous les appareils'), r.program ? `programme ${r.program}` : ''].filter(Boolean).join(' · ');
     return `<div class="flex items-center gap-3 py-2">
-      <input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="toggleRule('${esc(r.id)}', this.checked)" title="Activer ou désactiver">
+      <input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="toggleRule('${esc(r.id)}', this.checked)" title="${_t('Activer ou désactiver')}">
       <div class="flex-1 ${r.enabled ? 'text-gray-700' : 'text-gray-400'}">${esc(r.label)}
-        <div class="text-[11px] text-gray-400">${esc(scope)}${r.builtin ? ' · intégrée' : (r.created_by ? ' · ajoutée par ' + esc(r.created_by) : '')}</div></div>
-      ${r.builtin ? '' : `<button class="text-red-500 hover:text-red-700 font-medium" onclick="deleteRule('${esc(r.id)}')">Supprimer</button>`}
+        <div class="text-[11px] text-gray-400">${esc(scope)}${r.builtin ? _t(' · intégrée') : (r.created_by ? _t(' · ajoutée par ') + esc(r.created_by) : '')}</div></div>
+      ${r.builtin ? '' : `<button class="text-red-500 hover:text-red-700 font-medium" onclick="deleteRule('${esc(r.id)}')">${_t('Supprimer')}</button>`}
     </div>`;
-  }).join('') : '<div class="py-3 text-gray-400">Aucune règle.</div>';
+  }).join('') : '<div class="py-3 text-gray-400">' + _t('Aucune règle.') + '</div>';
 }
 async function toggleRule(id, enabled) {
   try { await api(`/api/syslog/rules/${encodeURIComponent(id)}`, 'PUT', { enabled }); } catch (e) { alert(e.message); }
   loadRules();
 }
 async function deleteRule(id) {
-  if (!confirm('Supprimer cette règle ? Les messages concernés réapparaîtront.')) return;
+  if (!confirm(_t('Supprimer cette règle ? Les messages concernés réapparaîtront.'))) return;
   try { await api(`/api/syslog/rules/${encodeURIComponent(id)}`, 'DELETE'); } catch (e) { alert(e.message); }
   loadRules();
 }
@@ -202,7 +199,7 @@ async function loadHookInfo() {
   } catch (e) { $('hook-token').textContent = e.message; }
 }
 async function regenToken() {
-  if (!confirm("Régénérer le jeton ? Les scripts qui utilisent l'ancien cesseront de fonctionner.")) return;
+  if (!confirm(_t("Régénérer le jeton ? Les scripts qui utilisent l'ancien cesseront de fonctionner."))) return;
   try { await api('/api/chain/hook/token', 'POST'); loadHookInfo(); } catch (e) { alert(e.message); }
 }
 
