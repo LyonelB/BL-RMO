@@ -403,15 +403,11 @@
         Réception et seuils d'alerte
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-        <label class="flex items-center gap-2 sm:col-span-2 lg:col-span-3">
-          <input type="checkbox" id="s-enabled" class="w-4 h-4">
-          <span class="font-medium text-gray-800">Activer la réception DAB+</span>
-          <span class="text-[11px] text-gray-400" id="s-enabled-help"></span>
-        </label>
         <label class="block"><span class="text-xs text-gray-500">Récepteur</span>
           <select id="s-receiver" onchange="receiverFields()" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
             <option value="rtlsdr">Clé RTL-SDR + welle-cli</option>
             <option value="si468x">Dongle Si468x (essai)</option>
+            <option value="none">Aucun : pas de réception DAB+</option>
           </select>
           <span class="text-[11px] text-gray-400" id="s-receiver-help"></span></label>
         <label class="block"><span class="text-xs text-gray-500">Canal</span>
@@ -428,10 +424,10 @@
           </select>
           <span class="text-[11px] text-gray-400">« Services surveillés » : seuls les services cochés sont décodés, en continu, pour une charge minimale. L'ensemble et la présence de tous les services restent suivis.</span></label>
         <label class="block"><span class="text-xs text-gray-500" title="Service affiché sur le tableau de bord et enregistré par la pige DAB+">Station suivie (tableau de bord et pige)</span>
-          <select id="s-dashboard_sid" onchange="stationFields()" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
+          <select id="s-dashboard_sid" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
             <option value="">Aucune station suivie (pas de pige)</option>
           </select>
-          <span class="text-[11px] text-gray-400">Choisir une station active la réception DAB+ et sa pige.</span></label>
+          <span class="text-[11px] text-gray-400">La station est surveillée et enregistrée par la pige DAB+.</span></label>
         <label class="block rtl-only"><span class="text-xs text-gray-500" title="Gain de la clé RTL-SDR (tuner R820T/R828D). L'automatique de welle-cli peut retarder la synchronisation de plusieurs minutes ; un gain fixe synchronise en quelques secondes.">Gain de la clé</span>
           <select id="s-gain" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
             <option value="-1">Automatique (welle-cli)</option>
@@ -574,7 +570,7 @@
       const rows2 = [
         [!!p.dongle, p.dongle ? `Dongle Si468x branché : ${esc(p.dongle)}` : 'Brancher le dongle Si468x et son antenne bande III'],
         [!!p.arecord, p.arecord ? 'arecord installé' : 'Installer arecord : <code>sudo apt install alsa-utils</code>'],
-        [false, 'Choisir la station suivie dans l\'onglet <a href="#reglages" class="underline">Réglages</a> (la réception DAB+ démarre avec elle)'],
+        [false, 'Choisir le récepteur, le canal et la station suivie dans l\'onglet <a href="#reglages" class="underline">Réglages</a>'],
       ];
       return '<ul class="space-y-1 mt-1">' + rows2.map(([d, t]) => `<li class="flex gap-2"><span>${d ? ok : todo}</span><span>${t}</span></li>`).join('') + '</ul>';
     }
@@ -584,7 +580,7 @@
       [!!p.dongle, p.dongle ? `Clé RTL-SDR branchée (${esc(p.dongle)})` : "Brancher une clé RTL-SDR dédiée au DAB+ et son antenne bande III"],
     ];
     if (p.dvb_driver_loaded) rows.push([false, "Pilote TNT du noyau chargé : redémarrer la machine (il est écarté par <code>67-dab.sh</code>)"]);
-    rows.push([false, 'Choisir la station suivie dans l\'onglet <a href="#reglages" class="underline">Réglages</a> (la réception DAB+ démarre avec elle)']);
+    rows.push([false, 'Choisir le récepteur, le canal et la station suivie dans l\'onglet <a href="#reglages" class="underline">Réglages</a>']);
     return '<ul class="space-y-1 mt-1">' + rows.map(([d, t]) => `<li class="flex gap-2"><span>${d ? ok : todo}</span><span>${t}</span></li>`).join('') + '</ul>';
   }
 
@@ -644,15 +640,6 @@
     const html = opts.join('');
     if (sel.dataset.html !== html) { sel.innerHTML = html; sel.dataset.html = html; }
     sel.value = want;
-    stationFields();
-  }
-  // Une station suivie impose la réception DAB+ ; sans station, la case reste libre
-  // (réception sans pige, par exemple pour découvrir les services d'un multiplex)
-  function stationFields() {
-    const on = !!$('s-dashboard_sid').value;
-    if (on) $('s-enabled').checked = true;
-    $('s-enabled').disabled = on;
-    $('s-enabled-help').textContent = on ? 'Active tant qu\'une station est suivie' : 'Sans station suivie : réception sans pige, pour découvrir les services';
   }
   function renderServices() {
     const svcs = (st && st.services) || [];
@@ -930,14 +917,13 @@
     const d = await r.json();
     settings = d.settings;
     $('s-channel').innerHTML = d.channels.map(c => `<option ${c === settings.channel ? 'selected' : ''}>${c}</option>`).join('');
-    $('s-enabled').checked = !!settings.enabled;
-    stationFields();
     FIELDS.forEach(f => { if (settings[f] != null) $('s-' + f).value = settings[f]; });
     if (!$('s-carousel_size').value) $('s-carousel_size').value = '2';   // ancien réglage « 1 à la fois »
     const ek = settings.email_kinds || {};
     EMAIL_KINDS.forEach(k => { $('e-' + k).checked = ek[k] !== false; });
     $('s-freq').textContent = `${Number(settings.frequency_mhz).toFixed(3).replace('.', ',')} MHz`;
-    if (!settings.receiver) $('s-receiver').value = 'rtlsdr';
+    // Comme en FM : un récepteur choisi, la réception DAB+ tourne ; « Aucun » l'arrête
+    $('s-receiver').value = settings.enabled ? (settings.receiver || 'rtlsdr') : 'none';
     receiverFields();
   }
   function receiverFields() {
@@ -945,6 +931,7 @@
     document.querySelectorAll('.rtl-only').forEach(el => el.classList.toggle('hidden', dongle));
     $('s-receiver-help').textContent = dongle
       ? "Un seul service décodé : la station suivie. Les autres services restent suivis (présence), sans son."
+      : $('s-receiver').value === 'none' ? 'Réception DAB+ arrêtée, ainsi que sa pige.'
       : 'Décodage par welle-cli : plusieurs services possibles.';
   }
   async function post(body) {
@@ -957,8 +944,10 @@
     return d;
   }
   async function saveSettings() {
-    const body = { enabled: $('s-enabled').checked, channel: $('s-channel').value };
+    const rx = $('s-receiver').value;
+    const body = { enabled: rx !== 'none', channel: $('s-channel').value };
     FIELDS.forEach(f => { body[f] = $('s-' + f).value; });
+    if (rx === 'none') delete body.receiver;                 // garde le dernier récepteur choisi
     body.email_kinds = Object.fromEntries(EMAIL_KINDS.map(k => [k, $('e-' + k).checked]));
     $('s-msg').className = 'text-xs text-gray-500'; $('s-msg').textContent = 'Enregistrement…';
     try {
@@ -1343,7 +1332,7 @@
     $('pg-none').classList.toggle('hidden', !none);
     $('pg-main').classList.toggle('hidden', none);
     $('pg-none').innerHTML = !pg || pg.blocked === 'reception'
-      ? 'La réception DAB+ est désactivée : la pige DAB+ démarre avec elle (onglet <a href="#reglages" class="text-blue-600">Réglages</a>).'
+      ? 'Pas de réception DAB+ : choisir un récepteur dans l\'onglet <a href="#reglages" class="text-blue-600">Réglages</a>, la pige démarre avec la réception.'
       : 'Aucune station DAB+ suivie, donc pas de pige : choisir la station dans l\'onglet <a href="#reglages" class="text-blue-600">Réglages</a> (« Station suivie »).';
     renderPigeCfg();
   }

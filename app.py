@@ -1527,11 +1527,9 @@ def dab_settings():
             dab['watched_sids'] = [str(x).lower() for x in (data['watched_sids'] or []) if str(x).strip()]
     except (TypeError, ValueError):
         return jsonify({'status': 'error', 'message': 'Valeur invalide'}), 400
-    # Station suivie choisie : la réception DAB+ est active et la station surveillée
-    # (décodée en continu, donc enregistrée par la pige DAB+)
+    # Station suivie : toujours surveillée (décodée en continu, donc enregistrée par la pige)
     station = str(dab.get('dashboard_sid') or '').lower()
     if 'dashboard_sid' in data and station:
-        dab['enabled'] = True
         watched = dab.get('watched_sids') or []
         if watched and station not in watched:
             dab['watched_sids'] = watched + [station]
