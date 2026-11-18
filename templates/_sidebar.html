@@ -57,7 +57,7 @@
       GitHub
     </a>
     {% if current_user %}
-    <div class="role-user"><b>{{ current_user.full_name or current_user.username }}</b><span>{{ current_user.role_label }}</span></div>
+    <div class="role-user"><b>{{ current_user.full_name or current_user.username }}</b><span>{{ _(current_user.role_label) }}</span></div>
     {% endif %}
     <a href="/logout" class="sidebar-link" style="color:#f87171" onmouseover="this.style.background='#fff1f2';this.style.color='#dc2626'" onmouseout="this.style.background='';this.style.color='#f87171'">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>

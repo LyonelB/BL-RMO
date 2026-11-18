@@ -1086,7 +1086,7 @@
         <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${range}</td>
         <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.status === 'complete' ? fmtDur(a.duration) : '-'}</td>
         <td class="py-2 pr-3 whitespace-nowrap">${state}</td>
-        <td class="py-2 pr-3 text-gray-500" style="overflow-wrap:anywhere">${esc(a.message || '')}</td>
+        <td class="py-2 pr-3 text-gray-500" style="overflow-wrap:anywhere">${esc(_t(a.message || ''))}</td>
         <td class="py-2 pr-3 text-gray-600">${a.emails}</td>
         <td class="py-2 whitespace-nowrap">${dbPigeLinks(a)}</td>
       </tr>`;

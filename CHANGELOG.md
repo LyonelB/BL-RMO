@@ -6,6 +6,14 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Traduction anglaise, étape 4 : Système, À propos, mails, messages du serveur et README anglais
+- **Pages traduites** : Système (Général, Comptes, Journal BL-RMO, Sauvegarde), À propos et l'assistant de configuration initiale ; le rôle du compte dans le menu.
+- **Mails d'alerte dans la langue de BL-RMO** : objet, cadre et type d'alerte, et les lignes de détail connues (FM, DAB+, chaîne, parc). La langue est lue au moment de l'envoi ; un mail en attente part dans la langue en vigueur.
+- **Messages du serveur traduits** : réponses de l'API (« Configuration enregistrée », erreurs de saisie...), messages des sondes, détails d'alerte et événements du parc affichés dans les journaux.
+- **Modèles de traduction** (section `_patterns` de `i18n/en.json`) : un texte composé avec des valeurs (« RDS absent depuis 120s », « Chaîne : DB91-RX injoignable ») est reconnu et traduit, côté serveur (`i18n.tr()`) comme dans le navigateur (`_t()`).
+- **README.en.md** : README en anglais, relié depuis le README français.
+- Textes : tirets cadratins retirés de l'assistant de configuration et d'un message de l'API.
+
 ### Traduction anglaise, étape 3 : Chaîne et Parc
 - **Chaîne de diffusion traduite**, ses quatre onglets : Synoptique (panneau de détail, courbes, réglages), Journal (alertes, messages syslog et traps), Appareils (formulaires de chaque type de sonde) et Configuration (règles de masquage, aide syslog, événements externes).
 - **Parc traduit** : État (PC, NAS, sites web), Journal et Appareils.

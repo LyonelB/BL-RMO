@@ -1,6 +1,6 @@
 # 📻 BL-RMO
 
-**Radio Monitoring**, anciennement FM-Monitor.
+**Radio Monitoring**, anciennement FM-Monitor. · 🇬🇧 [English version](README.en.md)
 
 ![Version](https://img.shields.io/badge/version-0.9.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
@@ -132,6 +132,7 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 - Configuration complète depuis le navigateur
 - **Responsive** : smartphone et tablette
 - **Accès local** via `https://bl-rmo.local` (Nginx + mDNS)
+- **Français ou anglais** : un réglage pour tout BL-RMO (Système › Général), les mails d'alerte suivent la même langue
 
 ---
 
@@ -268,6 +269,7 @@ bl-rmo/
 ├── syslog_clean.py     # Lecture nettoyée et messages masqués
 ├── auth.py             # Comptes, rôles, authentification
 ├── email_alert.py      # Alertes mail
+├── i18n.py             # Traduction : langue réglée, dictionnaire i18n/en.json
 ├── database.py         # Base SQLite (historique, alertes)
 ├── install.sh          # Installation complète
 ├── install/build/      # Étapes d'installation (pige, journaux...)
@@ -340,7 +342,7 @@ Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-RMO (pas `bl
 - [ ] Alerte audio figé (boucle bloquée, tonalité fixe) et RadioText inchangé depuis trop longtemps
 - [ ] Fermeture de BL-DMO ([dabplus-monitor](https://github.com/LyonelB/dabplus-monitor)) : annonce, archivage, puis suppression du dépôt
 - [ ] welle-monitor : reporter les changements de la prochaine version de welle.io
-- [ ] Version anglaise de l'interface
+- [x] Version anglaise de l'interface et des mails
 - [ ] Piste : sonde AES67 (sortie console Dante)
 - [ ] Surveillance Dante, libre et auto-hébergée, dans l'esprit de Dante Director : découverte des appareils (mDNS), état, horloge, abonnements audio, journal des changements et alertes. Piste : bibliothèque [netaudio](https://github.com/chris-ritsen/network-audio-controller)
 

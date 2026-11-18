@@ -537,7 +537,7 @@ function renderChainAlerts() {
       <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${range}</td>
       <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.duration != null ? fmtDur(a.duration) : '-'}</td>
       <td class="py-2 pr-3 whitespace-nowrap">${state}</td>
-      <td class="py-2 pr-3 text-gray-500" style="overflow-wrap:anywhere">${esc(msg)}${together}</td>
+      <td class="py-2 pr-3 text-gray-500" style="overflow-wrap:anywhere">${esc(_t(msg))}${together}</td>
       <td class="py-2 pr-3 text-gray-600" title="${a.emails == null ? _t('Non enregistré pour les alertes antérieures') : ''}">${a.emails == null ? '<span class="text-gray-300">·</span>' : a.emails}</td>
       <td class="py-2 whitespace-nowrap">${caPigeLinks(a)}<a href="${exportUrl(Math.floor(a.t0 / 1000) - 600, Math.floor((a.t1 || a.t0) / 1000) + 600)}" class="need-operateur ml-3 font-medium text-gray-500 hover:text-gray-800" title="${_t('Archive des journaux, 10 min avant et après')}">${_t('±10 min')}</a></td>
     </tr>`;

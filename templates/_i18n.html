@@ -1,13 +1,44 @@
 {# Traduction côté navigateur : _t('texte français') renvoie la traduction de la langue réglée
    (Système › Général), ou le texte français s'il n'est pas traduit. _t('Il y a {n} min', {n: 5}).
+   Un texte venu du serveur (message de sonde, détail d'alerte) est aussi cherché dans les
+   modèles de la section "_patterns" de i18n/en.json, comme i18n.tr() côté Python.
    BLRMO_LOCALE sert aux dates, _DEC au séparateur décimal. #}
 <script>
   window.BLRMO_LANG = {{ (lang or 'fr')|tojson }};
   window.BLRMO_LOCALE = window.BLRMO_LANG === 'en' ? 'en-GB' : 'fr-FR';
   window._DEC = window.BLRMO_LANG === 'en' ? '.' : ',';
   window.BLRMO_T = {{ (i18n_dict or {})|tojson }};
+  window.BLRMO_P = {{ (i18n_patterns or {})|tojson }};
+  let _tPats = null;
+  function _tPattern(s, depth) {
+    if (_tPats === null) {
+      _tPats = Object.keys(window.BLRMO_P).map(k => {
+        const names = [];
+        const rx = k.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace(/\\?\{(\w+)\\?\}/g, (m, n) => { names.push(n); return '(.+?)'; });
+        return { names, rx: new RegExp('^' + rx + '$', 's'), out: window.BLRMO_P[k], fixed: (f => [':', '·'].includes(f.trim()) ? 1000 : f.length + (k[0] !== '{' ? 2000 : 0))(k.replace(/\{\w+\}/g, '')) };
+      }).sort((a, b) => b.fixed - a.fixed);
+    }
+    const core = s.trim();
+    for (const p of _tPats) {
+      const m = core.match(p.rx);
+      if (!m) continue;
+      let o = p.out;
+      p.names.forEach((n, i) => { o = o.split('{' + n + '}').join(_tLine(m[i + 1], depth + 1)); });
+      return s.replace(core, o);
+    }
+    return s;
+  }
+  function _tLine(s, depth) {
+    const core = s.trim();
+    if (Object.prototype.hasOwnProperty.call(window.BLRMO_T, core)) return s.replace(core, window.BLRMO_T[core]);
+    return depth > 2 ? s : _tPattern(s, depth);
+  }
   function _t(s, v) {
-    let o = Object.prototype.hasOwnProperty.call(window.BLRMO_T, s) ? window.BLRMO_T[s] : s;
+    if (s == null) return s;
+    let o;
+    if (Object.prototype.hasOwnProperty.call(window.BLRMO_T, s)) o = window.BLRMO_T[s];
+    else if (!v && window.BLRMO_LANG !== 'fr') o = String(s).split('\n').map(l => _tLine(l, 0)).join('\n');
+    else o = s;
     if (v) o = o.replace(/\{(\w+)\}/g, (m, k) => (v[k] !== undefined ? v[k] : m));
     return o;
   }

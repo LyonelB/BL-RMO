@@ -432,7 +432,7 @@
         <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${evTime(e.timestamp)}</td>
         <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${EV_CLS[e.level] || EV_CLS.info}">${esc(evLabel(e))}</span></td>
         <td class="py-2 pr-3 font-medium text-gray-800 whitespace-nowrap">${esc(e.device_name || '-')}</td>
-        <td class="py-2 pr-3 text-gray-600" style="overflow-wrap:anywhere">${esc(e.message || '')}</td>
+        <td class="py-2 pr-3 text-gray-600" style="overflow-wrap:anywhere">${esc(_t(e.message || ''))}</td>
         <td class="py-2 text-gray-600">${e.email_sent ? _t('oui') : '<span class="text-gray-300">-</span>'}</td></tr>`).join('')
       : '<tr><td colspan="5" class="py-8 text-center text-gray-400">' + _t('Aucun événement pour le moment.') + '</td></tr>';
   }

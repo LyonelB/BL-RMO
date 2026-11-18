@@ -50,8 +50,27 @@ from markupsafe import Markup
 def inject_i18n():
     lang = i18n.language()
     # Les textes viennent des modèles eux-mêmes (entités HTML comprises) : pas d'échappement
-    return {'lang': lang, 'i18n_dict': i18n.dictionary(lang),
+    return {'lang': lang, 'i18n_dict': i18n.dictionary(lang), 'i18n_patterns': i18n.pattern_dict(lang),
             '_': lambda text, **v: Markup(i18n.t(text, lang, **v))}
+
+
+@app.after_request
+def translate_api_message(resp):
+    """Messages des réponses JSON de l'API (« Configuration enregistrée »...) dans la langue
+    de BL-RMO : seul le champ message (ou error) du premier niveau est traduit."""
+    try:
+        if (i18n.language() == i18n.DEFAULT or not request.path.startswith('/api/')
+                or resp.mimetype != 'application/json' or resp.direct_passthrough):
+            return resp
+        data = resp.get_json(silent=True)
+        if isinstance(data, dict) and any(isinstance(data.get(k), str) and data.get(k) for k in ('message', 'error')):
+            for k in ('message', 'error'):
+                if isinstance(data.get(k), str) and data[k]:
+                    data[k] = i18n.tr(data[k])
+            resp.set_data(json.dumps(data, ensure_ascii=False))
+    except Exception:
+        pass
+    return resp
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
@@ -660,7 +679,7 @@ def webhook_settings():
     }
     with open('config.json', 'w') as f:
         json.dump(cfg, f, indent=2)
-    return jsonify({'status': 'ok', 'message': 'Webhook sauvegardé — redémarrez le service pour appliquer'})
+    return jsonify({'status': 'ok', 'message': 'Webhook sauvegardé : redémarrez le service pour appliquer'})
 
 @app.route('/api/restart', methods=['POST'])
 @auth.login_required

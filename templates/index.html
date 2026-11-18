@@ -256,7 +256,7 @@
     if (!a) { $(prefix + '-last-t').textContent = ''; $(prefix + '-last-l').textContent = _t('Aucune alerte enregistrée'); return; }
     $(prefix + '-last-t').textContent = fmtStamp(a.start);
     const tail = a.status === 'ongoing' ? _t(', en cours') : a.duration != null ? _t(', rétabli après {d}', { d: fmtDur(a.duration) }) : '';
-    $(prefix + '-last-l').textContent = (a.label || '') + tail;
+    $(prefix + '-last-l').textContent = _t(a.label || '') + tail;
     $(prefix + '-last-l').style.color = a.status === 'ongoing' ? BAD : '';
   }
 

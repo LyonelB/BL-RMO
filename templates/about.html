@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   {% include '_i18n.html' %}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BL-RMO · À propos</title>
+  <title>{{ _('BL-RMO · À propos') }}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -29,13 +29,13 @@
 
   <header class="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10 flex items-center justify-between">
     <div>
-      <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">À propos de BL-RMO</h1></div>
-      <p class="text-xs text-gray-400 mt-0.5">Documentation technique</p>
+      <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">{{ _('À propos de BL-RMO') }}</h1></div>
+      <p class="text-xs text-gray-400 mt-0.5">{{ _('Documentation technique') }}</p>
     </div>
     <a href="https://github.com/LyonelB/BL-RMO" target="_blank"
        class="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-900 transition border border-gray-200 rounded-lg px-3 py-1.5 hover:border-gray-400">
       <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
-      github.com/LyonelB/BL-RMO
+      {{ _('github.com/LyonelB/BL-RMO') }}
     </a>
   </header>
 
@@ -47,15 +47,15 @@
         <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">RMO</div>
         <div class="flex-1">
           <h2 class="text-base font-bold text-gray-900 mb-1 flex items-center gap-2">BL-RMO <span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs font-mono font-medium rounded">version {{ app_version }}</span></h2>
-          <p class="text-xs text-gray-400 -mt-0.5 mb-2">Radio Monitoring · anciennement FM-Monitor</p>
-          <p class="text-sm text-gray-600 leading-relaxed">Outil open source de supervision d'une radio, conçu pour les radios associatives, les régies techniques et les prestataires broadcast. BL-RMO surveille <b>la réception</b>, c'est-à-dire ce qui sort réellement de l'antenne : en FM avec un tuner Headless TEF Lite SE (TEF668X), en DAB+ avec une clé RTL-SDR et welle-cli ou un dongle Si468x. Il surveille aussi <b>la diffusion</b>, c'est-à-dire chaque appareil de la chaîne, du studio à l'émetteur, par SNMP, sondes réseau, journaux et traps, ainsi que <b>le parc</b> de la radio : PC, NAS et sites web. Une pige audio de 30 jours, reliée aux alertes, permet de réécouter ce qui est parti à l'antenne.</p>
+          <p class="text-xs text-gray-400 -mt-0.5 mb-2">{{ _('Radio Monitoring · anciennement FM-Monitor') }}</p>
+          <p class="text-sm text-gray-600 leading-relaxed">{{ _("Outil open source de supervision d'une radio, conçu pour les radios associatives, les régies techniques et les prestataires broadcast. BL-RMO surveille") }} <b>{{ _('la réception') }}</b>{{ _(", c'est-à-dire ce qui sort réellement de l'antenne : en FM avec un tuner Headless TEF Lite SE (TEF668X), en DAB+ avec une clé RTL-SDR et welle-cli ou un dongle Si468x. Il surveille aussi") }} <b>{{ _('la diffusion') }}</b>{{ _(", c'est-à-dire chaque appareil de la chaîne, du studio à l'émetteur, par SNMP, sondes réseau, journaux et traps, ainsi que") }} <b>{{ _('le parc') }}</b> {{ _("de la radio : PC, NAS et sites web. Une pige audio de 30 jours, reliée aux alertes, permet de réécouter ce qui est parti à l'antenne.") }}</p>
           <div class="mt-3 flex flex-wrap gap-2">
-            <span class="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">Open Source</span>
-            <span class="px-2.5 py-0.5 bg-slate-100 text-slate-700 text-xs font-medium rounded-full">Mini-PC Linux</span>
-            <span class="px-2.5 py-0.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-full">FM · TEF Lite SE</span>
-            <span class="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-medium rounded-full">DAB+ · welle-cli / Si468x</span>
-            <span class="px-2.5 py-0.5 bg-teal-50 text-teal-700 text-xs font-medium rounded-full">SNMP · syslog</span>
-            <span class="px-2.5 py-0.5 bg-orange-50 text-orange-700 text-xs font-medium rounded-full">Python / Flask</span>
+            <span class="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">{{ _('Open Source') }}</span>
+            <span class="px-2.5 py-0.5 bg-slate-100 text-slate-700 text-xs font-medium rounded-full">{{ _('Mini-PC Linux') }}</span>
+            <span class="px-2.5 py-0.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-full">{{ _('FM · TEF Lite SE') }}</span>
+            <span class="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-medium rounded-full">{{ _('DAB+ · welle-cli / Si468x') }}</span>
+            <span class="px-2.5 py-0.5 bg-teal-50 text-teal-700 text-xs font-medium rounded-full">{{ _('SNMP · syslog') }}</span>
+            <span class="px-2.5 py-0.5 bg-orange-50 text-orange-700 text-xs font-medium rounded-full">{{ _('Python / Flask') }}</span>
           </div>
         </div>
       </div>
@@ -65,53 +65,53 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4m0 0h18"/></svg>
-        Comment fonctionne BL-RMO
+        {{ _('Comment fonctionne BL-RMO') }}
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         <div class="info-card">
           <div class="text-2xl mb-2">📡</div>
-          <div class="font-semibold text-gray-800 text-xs mb-1">Réception FM</div>
-          <div class="text-xs text-gray-500">Le tuner Headless TEF Lite SE capte l'antenne comme un auditeur : niveau du signal, modulation et RDS. C'est l'effet, tel qu'on l'entend.</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">{{ _('Réception FM') }}</div>
+          <div class="text-xs text-gray-500">{{ _("Le tuner Headless TEF Lite SE capte l'antenne comme un auditeur : niveau du signal, modulation et RDS. C'est l'effet, tel qu'on l'entend.") }}</div>
         </div>
         <div class="info-card">
           <div class="text-2xl mb-2">📶</div>
-          <div class="font-semibold text-gray-800 text-xs mb-1">Réception DAB+</div>
-          <div class="text-xs text-gray-500">Une clé RTL-SDR avec welle-cli, ou un dongle Si468x, reçoit le multiplex : synchronisation, qualité du signal et de la FIC, présence des services, son, DLS et diaporama de la station suivie.</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">{{ _('Réception DAB+') }}</div>
+          <div class="text-xs text-gray-500">{{ _('Une clé RTL-SDR avec welle-cli, ou un dongle Si468x, reçoit le multiplex : synchronisation, qualité du signal et de la FIC, présence des services, son, DLS et diaporama de la station suivie.') }}</div>
         </div>
         <div class="info-card">
           <div class="text-2xl mb-2">🔗</div>
-          <div class="font-semibold text-gray-800 text-xs mb-1">Diffusion</div>
-          <div class="text-xs text-gray-500">Chaque appareil de la chaîne est interrogé en SNMP ou sondé sur le réseau : codecs, faisceau, traitement, émetteur. Ce sont les causes possibles.</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">{{ _('Diffusion') }}</div>
+          <div class="text-xs text-gray-500">{{ _('Chaque appareil de la chaîne est interrogé en SNMP ou sondé sur le réseau : codecs, faisceau, traitement, émetteur. Ce sont les causes possibles.') }}</div>
         </div>
         <div class="info-card">
           <div class="text-2xl mb-2">📜</div>
-          <div class="font-semibold text-gray-800 text-xs mb-1">Journaux et traps</div>
-          <div class="text-xs text-gray-500">Les appareils envoient leurs journaux (syslog) et leurs alarmes (traps SNMP) à BL-RMO, qui les range, les traduit et les relie aux appareils.</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">{{ _('Journaux et traps') }}</div>
+          <div class="text-xs text-gray-500">{{ _('Les appareils envoient leurs journaux (syslog) et leurs alarmes (traps SNMP) à BL-RMO, qui les range, les traduit et les relie aux appareils.') }}</div>
         </div>
         <div class="info-card">
           <div class="text-2xl mb-2">🎙️</div>
-          <div class="font-semibold text-gray-800 text-xs mb-1">Pige</div>
-          <div class="text-xs text-gray-500">Une pige par réception : l'antenne FM et la station DAB+ suivie, enregistrées en continu. Chaque alerte FM garde son extrait audio, de 30 s avant à 30 s après.</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">{{ _('Pige') }}</div>
+          <div class="text-xs text-gray-500">{{ _("Une pige par réception : l'antenne FM et la station DAB+ suivie, enregistrées en continu. Chaque alerte FM garde son extrait audio, de 30 s avant à 30 s après.") }}</div>
         </div>
         <div class="info-card">
           <div class="text-2xl mb-2">🖥️</div>
-          <div class="font-semibold text-gray-800 text-xs mb-1">Parc</div>
-          <div class="text-xs text-gray-500">Les PC du studio et le NAS sont suivis en SNMP (allumé, redémarré, processeur, mémoire, disques), et les sites web par HTTP.</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">{{ _('Parc') }}</div>
+          <div class="text-xs text-gray-500">{{ _('Les PC du studio et le NAS sont suivis en SNMP (allumé, redémarré, processeur, mémoire, disques), et les sites web par HTTP.') }}</div>
         </div>
         <div class="info-card">
           <div class="text-2xl mb-2">🎧</div>
-          <div class="font-semibold text-gray-800 text-xs mb-1">Écoute</div>
-          <div class="text-xs text-gray-500">L'antenne FM, la station DAB+ et le flux web s'écoutent depuis n'importe quel navigateur, avec vumètre et spectre en tiers d'octave.</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">{{ _('Écoute') }}</div>
+          <div class="text-xs text-gray-500">{{ _("L'antenne FM, la station DAB+ et le flux web s'écoutent depuis n'importe quel navigateur, avec vumètre et spectre en tiers d'octave.") }}</div>
         </div>
         <div class="info-card">
           <div class="text-2xl mb-2">🔔</div>
-          <div class="font-semibold text-gray-800 text-xs mb-1">Alertes</div>
-          <div class="text-xs text-gray-500">Une panne de réception ou de diffusion déclenche un mail, puis un autre au rétablissement, avec les valeurs en défaut.</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">{{ _('Alertes') }}</div>
+          <div class="text-xs text-gray-500">{{ _('Une panne de réception ou de diffusion déclenche un mail, puis un autre au rétablissement, avec les valeurs en défaut.') }}</div>
         </div>
         <div class="info-card">
           <div class="text-2xl mb-2">👥</div>
-          <div class="font-semibold text-gray-800 text-xs mb-1">Comptes</div>
-          <div class="text-xs text-gray-500">Lecteur, Opérateur ou Administrateur : chacun voit et fait ce que son rôle permet, vérifié par le serveur.</div>
+          <div class="font-semibold text-gray-800 text-xs mb-1">{{ _('Comptes') }}</div>
+          <div class="text-xs text-gray-500">{{ _('Lecteur, Opérateur ou Administrateur : chacun voit et fait ce que son rôle permet, vérifié par le serveur.') }}</div>
         </div>
       </div>
     </div>
@@ -120,42 +120,42 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
-        Services et ports
+        {{ _('Services et ports') }}
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-xs">
-          <thead><tr class="text-left text-gray-400 border-b border-gray-100"><th class="font-medium py-2 pr-4">Service</th><th class="font-medium py-2 pr-4">Rôle</th><th class="font-medium py-2">Ports</th></tr></thead>
+          <thead><tr class="text-left text-gray-400 border-b border-gray-100"><th class="font-medium py-2 pr-4">{{ _('Service') }}</th><th class="font-medium py-2 pr-4">{{ _('Rôle') }}</th><th class="font-medium py-2">{{ _('Ports') }}</th></tr></thead>
           <tbody class="text-gray-700">
-            <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>bl-rmo</code></td><td class="py-2 pr-4">Application web, réception FM, supervision de la chaîne</td><td class="py-2 font-mono">5000 (Nginx 80/443)</td></tr>
-            <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>bl-rmo-pige</code></td><td class="py-2 pr-4">Enregistrement de la pige, indépendant de l'application</td><td class="py-2 font-mono">lit Icecast 8000</td></tr>
-            <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>bl-rmo-syslog</code></td><td class="py-2 pr-4">Réception des journaux et des traps des appareils</td><td class="py-2 font-mono">UDP 514, UDP 162</td></tr>
-            <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>bl-rmo-dab</code></td><td class="py-2 pr-4">Réception DAB+ (clé RTL-SDR et welle-cli, ou dongle Si468x), en veille tant qu'elle n'est pas activée</td><td class="py-2 font-mono">7979 (interface welle-cli)</td></tr>
-            <tr><td class="py-2 pr-4"><code>icecast2</code></td><td class="py-2 pr-4">Flux audio de l'antenne (écoute et pige)</td><td class="py-2 font-mono">8000</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>bl-rmo</code></td><td class="py-2 pr-4">{{ _('Application web, réception FM, supervision de la chaîne') }}</td><td class="py-2 font-mono">{{ _('5000 (Nginx 80/443)') }}</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>bl-rmo-pige</code></td><td class="py-2 pr-4">{{ _("Enregistrement de la pige, indépendant de l'application") }}</td><td class="py-2 font-mono">{{ _('lit Icecast 8000') }}</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>bl-rmo-syslog</code></td><td class="py-2 pr-4">{{ _('Réception des journaux et des traps des appareils') }}</td><td class="py-2 font-mono">{{ _('UDP 514, UDP 162') }}</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4"><code>bl-rmo-dab</code></td><td class="py-2 pr-4">{{ _("Réception DAB+ (clé RTL-SDR et welle-cli, ou dongle Si468x), en veille tant qu'elle n'est pas activée") }}</td><td class="py-2 font-mono">{{ _('7979 (interface welle-cli)') }}</td></tr>
+            <tr><td class="py-2 pr-4"><code>icecast2</code></td><td class="py-2 pr-4">{{ _("Flux audio de l'antenne (écoute et pige)") }}</td><td class="py-2 font-mono">8000</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="text-xs text-gray-500 mt-3">État d'un service : <code>sudo systemctl status bl-rmo-syslog</code> · journal : <code>sudo journalctl -u bl-rmo -n 50</code></p>
+      <p class="text-xs text-gray-500 mt-3">{{ _("État d'un service :") }} <code>sudo systemctl status bl-rmo-syslog</code> {{ _('· journal :') }} <code>sudo journalctl -u bl-rmo -n 50</code></p>
     </div>
 
     <!-- ── La diffusion FM ────────────────────────────────────── -->
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
-        La diffusion FM
+        {{ _('La diffusion FM') }}
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <h3 class="text-xs font-semibold text-gray-700 mb-2">📡 La porteuse RF</h3>
-          <p class="text-xs text-gray-600 leading-relaxed">La diffusion FM utilise une porteuse radio dans la bande <strong>87.5 – 108 MHz</strong>. L'information audio est encodée par <strong>modulation de fréquence</strong> : la fréquence de la porteuse varie proportionnellement à l'amplitude du signal audio. La déviation maximale est de ±75 kHz, ce qui donne à la FM sa largeur de canal de ~200 kHz.</p>
+          <h3 class="text-xs font-semibold text-gray-700 mb-2">{{ _('📡 La porteuse RF') }}</h3>
+          <p class="text-xs text-gray-600 leading-relaxed">{{ _('La diffusion FM utilise une porteuse radio dans la bande') }} <strong>{{ _('87.5 – 108 MHz') }}</strong>{{ _(". L'information audio est encodée par") }} <strong>{{ _('modulation de fréquence') }}</strong> {{ _(": la fréquence de la porteuse varie proportionnellement à l'amplitude du signal audio. La déviation maximale est de ±75 kHz, ce qui donne à la FM sa largeur de canal de ~200 kHz.") }}</p>
         </div>
         <div>
-          <h3 class="text-xs font-semibold text-gray-700 mb-2">〰️ Le signal MPX (Multiplex)</h3>
-          <p class="text-xs text-gray-600 leading-relaxed mb-2">Ce qui module la porteuse est un signal composite <strong>MPX</strong>, composé de plusieurs sous-porteuses :</p>
+          <h3 class="text-xs font-semibold text-gray-700 mb-2">{{ _('〰️ Le signal MPX (Multiplex)') }}</h3>
+          <p class="text-xs text-gray-600 leading-relaxed mb-2">{{ _('Ce qui module la porteuse est un signal composite') }} <strong>{{ _('MPX') }}</strong>{{ _(', composé de plusieurs sous-porteuses :') }}</p>
           <ul class="space-y-1 text-xs text-gray-600">
-            <li class="flex items-start gap-2"><span class="mt-1 w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0"></span><span><strong>0–15 kHz</strong> : audio mono (L+R)</span></li>
-            <li class="flex items-start gap-2"><span class="mt-1 w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></span><span><strong>19 kHz</strong> : pilote stéréo</span></li>
-            <li class="flex items-start gap-2"><span class="mt-1 w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0"></span><span><strong>23–53 kHz</strong> : signal stéréo (L–R) DSB-SC</span></li>
-            <li class="flex items-start gap-2"><span class="mt-1 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span><span><strong>57 kHz</strong> : sous-porteuse RDS</span></li>
+            <li class="flex items-start gap-2"><span class="mt-1 w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0"></span><span><strong>{{ _('0–15 kHz') }}</strong> {{ _(': audio mono (L+R)') }}</span></li>
+            <li class="flex items-start gap-2"><span class="mt-1 w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></span><span><strong>19 kHz</strong> {{ _(': pilote stéréo') }}</span></li>
+            <li class="flex items-start gap-2"><span class="mt-1 w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0"></span><span><strong>{{ _('23–53 kHz') }}</strong> {{ _(': signal stéréo (L–R) DSB-SC') }}</span></li>
+            <li class="flex items-start gap-2"><span class="mt-1 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span><span><strong>57 kHz</strong> {{ _(': sous-porteuse RDS') }}</span></li>
           </ul>
         </div>
       </div>
@@ -165,25 +165,25 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-        Le RDS : Radio Data System
+        {{ _('Le RDS : Radio Data System') }}
       </div>
-      <p class="text-xs text-gray-600 mb-4">Norme <strong>IEC 62106</strong> permettant aux stations FM de transmettre des données numériques sur la sous-porteuse à <strong>57 kHz</strong>. Débit : 1187,5 bits/s, organisé en <em>groupes</em> de 104 bits.</p>
+      <p class="text-xs text-gray-600 mb-4">{{ _('Norme') }} <strong>{{ _('IEC 62106') }}</strong> {{ _('permettant aux stations FM de transmettre des données numériques sur la sous-porteuse à') }} <strong>57 kHz</strong>{{ _('. Débit : 1187,5 bits/s, organisé en') }} <em>{{ _('groupes') }}</em> {{ _('de 104 bits.') }}</p>
 
       <div class="grid grid-cols-3 gap-3 mb-4">
         <div class="info-card border-l-2 border-purple-400">
-          <div class="font-bold text-gray-800 text-xs mb-1">PS : Programme Service</div>
-          <div class="text-xs text-gray-500 mb-2">Nom de la station (max <strong>8 caractères</strong>). Groupe 0A/0B. Reçu en ~1-2 s.</div>
-          <div class="font-mono text-sm bg-white border border-gray-200 rounded px-2 py-1 text-center text-purple-700">GRAFFITI</div>
+          <div class="font-bold text-gray-800 text-xs mb-1">{{ _('PS : Programme Service') }}</div>
+          <div class="text-xs text-gray-500 mb-2">{{ _('Nom de la station (max') }} <strong>{{ _('8 caractères') }}</strong>{{ _('). Groupe 0A/0B. Reçu en ~1-2 s.') }}</div>
+          <div class="font-mono text-sm bg-white border border-gray-200 rounded px-2 py-1 text-center text-purple-700">{{ _('GRAFFITI') }}</div>
         </div>
         <div class="info-card border-l-2 border-blue-400">
-          <div class="font-bold text-gray-800 text-xs mb-1">RT : RadioText</div>
-          <div class="text-xs text-gray-500 mb-2">Texte libre jusqu'à <strong>64 caractères</strong>. Titre/artiste en cours. Groupe 2A/2B. ~20 s pour une trame complète.</div>
-          <div class="font-mono text-xs bg-white border border-gray-200 rounded px-2 py-1 text-center text-blue-700 truncate">ERIK TRUFFAZ - Le compleme</div>
+          <div class="font-bold text-gray-800 text-xs mb-1">{{ _('RT : RadioText') }}</div>
+          <div class="text-xs text-gray-500 mb-2">{{ _("Texte libre jusqu'à") }} <strong>{{ _('64 caractères') }}</strong>{{ _('. Titre/artiste en cours. Groupe 2A/2B. ~20 s pour une trame complète.') }}</div>
+          <div class="font-mono text-xs bg-white border border-gray-200 rounded px-2 py-1 text-center text-blue-700 truncate">{{ _('ERIK TRUFFAZ - Le compleme') }}</div>
         </div>
         <div class="info-card border-l-2 border-green-400">
-          <div class="font-bold text-gray-800 text-xs mb-1">PI : Programme Identification</div>
-          <div class="text-xs text-gray-500 mb-2">Code hexadécimal <strong>unique</strong> 16 bits identifiant la station. Permet le suivi réseau.</div>
-          <div class="font-mono text-sm bg-white border border-gray-200 rounded px-2 py-1 text-center text-green-700">0xFA41</div>
+          <div class="font-bold text-gray-800 text-xs mb-1">{{ _('PI : Programme Identification') }}</div>
+          <div class="text-xs text-gray-500 mb-2">{{ _('Code hexadécimal') }} <strong>{{ _('unique') }}</strong> {{ _('16 bits identifiant la station. Permet le suivi réseau.') }}</div>
+          <div class="font-mono text-sm bg-white border border-gray-200 rounded px-2 py-1 text-center text-green-700">{{ _('0xFA41') }}</div>
         </div>
       </div>
 
@@ -191,8 +191,8 @@
         <div class="flex items-start gap-2">
           <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <div>
-            <div class="font-semibold text-amber-800 text-xs mb-1">Pourquoi le RadioText peut être partiel ?</div>
-            <p class="text-xs text-gray-600">Le RT est découpé en segments de 4 caractères transmis successivement. Si la réception démarre en cours de séquence, ou si l'encodeur RDS ne génère pas de trame conforme, seul un RT partiel est disponible. BL-RMO attend une séquence stable avant d'afficher le RadioText.</p>
+            <div class="font-semibold text-amber-800 text-xs mb-1">{{ _('Pourquoi le RadioText peut être partiel ?') }}</div>
+            <p class="text-xs text-gray-600">{{ _("Le RT est découpé en segments de 4 caractères transmis successivement. Si la réception démarre en cours de séquence, ou si l'encodeur RDS ne génère pas de trame conforme, seul un RT partiel est disponible. BL-RMO attend une séquence stable avant d'afficher le RadioText.") }}</p>
           </div>
         </div>
       </div>
@@ -202,30 +202,30 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11h6M9 15h4"/></svg>
-        rds-station-db
+        {{ _('rds-station-db') }}
       </div>
       <p class="text-xs text-gray-600 mb-3">
-        BL-RMO utilise <a href="https://github.com/LyonelB/rds-station-db" target="_blank" class="text-blue-500 hover:underline font-medium">rds-station-db</a>, une base de données de stations FM maintenue sur GitHub, pour identifier automatiquement la station captée et récupérer son <strong>logo</strong> à partir du code PI RDS.
+        {{ _('BL-RMO utilise') }} <a href="https://github.com/LyonelB/rds-station-db" target="_blank" class="text-blue-500 hover:underline font-medium">{{ _('rds-station-db') }}</a>{{ _(', une base de données de stations FM maintenue sur GitHub, pour identifier automatiquement la station captée et récupérer son') }} <strong>{{ _('logo') }}</strong> {{ _('à partir du code PI RDS.') }}
       </p>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div class="info-card">
-          <div class="font-semibold text-gray-700 text-xs mb-2">Comment BL-RMO identifie la station</div>
+          <div class="font-semibold text-gray-700 text-xs mb-2">{{ _('Comment BL-RMO identifie la station') }}</div>
           <ol class="space-y-0.5 text-xs text-gray-600 list-decimal list-inside">
-            <li>Réception du code PI RDS (ex: FA41)</li>
-            <li>Recherche dans rds-station-db par code PI</li>
-            <li>Récupération du nom et du logo associé</li>
-            <li>Logo mis en cache, rechargé toutes les 24 h</li>
+            <li>{{ _('Réception du code PI RDS (ex: FA41)') }}</li>
+            <li>{{ _('Recherche dans rds-station-db par code PI') }}</li>
+            <li>{{ _('Récupération du nom et du logo associé') }}</li>
+            <li>{{ _('Logo mis en cache, rechargé toutes les 24 h') }}</li>
           </ol>
         </div>
         <div class="info-card">
-          <div class="font-semibold text-gray-700 text-xs mb-2">Logos des stations</div>
-          <p class="text-xs text-gray-600 mb-2">Les logos proviennent du dépôt maintenu par <strong>Noobish</strong> de la communauté <span class="font-mono bg-gray-100 px-1 rounded">FM-DX</span> :</p>
+          <div class="font-semibold text-gray-700 text-xs mb-2">{{ _('Logos des stations') }}</div>
+          <p class="text-xs text-gray-600 mb-2">{{ _('Les logos proviennent du dépôt maintenu par') }} <strong>{{ _('Noobish') }}</strong> {{ _('de la communauté') }} <span class="font-mono bg-gray-100 px-1 rounded">{{ _('FM-DX') }}</span> :</p>
           <a href="https://tef.noobish.eu/logos/logo_preview.html" target="_blank"
              class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition mb-2">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-            Voir les logos disponibles
+            {{ _('Voir les logos disponibles') }}
           </a>
-          <p class="text-xs text-gray-400">tef.noobish.eu/logos</p>
+          <p class="text-xs text-gray-400">{{ _('tef.noobish.eu/logos') }}</p>
         </div>
       </div>
     </div>
@@ -234,27 +234,27 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01"/></svg>
-        La radio numérique DAB+
+        {{ _('La radio numérique DAB+') }}
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-600 leading-relaxed">
         <div class="info-card">
-          <h3 class="text-xs font-semibold text-gray-700 mb-2">📦 Multiplex et services</h3>
-          <p>En DAB+, plusieurs radios partagent un même <strong>multiplex</strong> (ou ensemble), diffusé sur un canal de la bande III (174 à 240 MHz, par exemple 6C ou 9A) et large de 1,5 MHz. Chaque radio est un <strong>service</strong>, identifié par son <strong>SID</strong> (par exemple F201), avec un débit de 48 à 128 kb/s en AAC.</p>
-          <p class="mt-2">La <strong>FIC</strong> décrit le multiplex : nom de l'ensemble, liste des services, débits. Si la FIC est mal reçue, le récepteur ne sait plus ce que contient le multiplex.</p>
+          <h3 class="text-xs font-semibold text-gray-700 mb-2">{{ _('📦 Multiplex et services') }}</h3>
+          <p>{{ _('En DAB+, plusieurs radios partagent un même') }} <strong>{{ _('multiplex') }}</strong> {{ _('(ou ensemble), diffusé sur un canal de la bande III (174 à 240 MHz, par exemple 6C ou 9A) et large de 1,5 MHz. Chaque radio est un') }} <strong>{{ _('service') }}</strong>{{ _(', identifié par son') }} <strong>{{ _('SID') }}</strong> {{ _('(par exemple F201), avec un débit de 48 à 128 kb/s en AAC.') }}</p>
+          <p class="mt-2">{{ _('La') }} <strong>{{ _('FIC') }}</strong> {{ _("décrit le multiplex : nom de l'ensemble, liste des services, débits. Si la FIC est mal reçue, le récepteur ne sait plus ce que contient le multiplex.") }}</p>
         </div>
         <div class="info-card">
-          <h3 class="text-xs font-semibold text-gray-700 mb-2">📝 DLS et diaporama</h3>
-          <p>Chaque service peut transmettre un texte défilant, le <strong>DLS</strong> (titre, émission, l'équivalent du RadioText), et des images, le <strong>diaporama</strong> (logo, pochette). BL-RMO en garde l'historique et affiche l'image du service suivi.</p>
+          <h3 class="text-xs font-semibold text-gray-700 mb-2">{{ _('📝 DLS et diaporama') }}</h3>
+          <p>{{ _('Chaque service peut transmettre un texte défilant, le') }} <strong>{{ _('DLS') }}</strong> {{ _("(titre, émission, l'équivalent du RadioText), et des images, le") }} <strong>{{ _('diaporama') }}</strong> {{ _("(logo, pochette). BL-RMO en garde l'historique et affiche l'image du service suivi.") }}</p>
         </div>
         <div class="info-card">
-          <h3 class="text-xs font-semibold text-gray-700 mb-2">📏 SNR, CNR (MER) et qualité FIC</h3>
-          <p>Le <strong>SNR</strong> (rapport signal sur bruit) et le <strong>CNR</strong> (rapport porteuse sur bruit) disent de combien le signal dépasse le bruit, en dB. Avec welle-cli, BL-RMO affiche le SNR estimé sur le spectre ; avec le dongle Si468x, le CNR calculé par le démodulateur, proche du <strong>MER</strong>, qui tient compte de tout ce qui gêne le décodage. Les deux ne se comparent pas entre eux.</p>
-          <p class="mt-2">Repères : moins de 5 dB, réception fragile ; 5 à 10 dB, correcte ; plus de 10 dB, confortable. La <strong>qualité FIC</strong> (et les erreurs FIC) mesure ce qui est réellement décodé.</p>
+          <h3 class="text-xs font-semibold text-gray-700 mb-2">{{ _('📏 SNR, CNR (MER) et qualité FIC') }}</h3>
+          <p>{{ _('Le') }} <strong>{{ _('SNR') }}</strong> {{ _('(rapport signal sur bruit) et le') }} <strong>{{ _('CNR') }}</strong> {{ _('(rapport porteuse sur bruit) disent de combien le signal dépasse le bruit, en dB. Avec welle-cli, BL-RMO affiche le SNR estimé sur le spectre ; avec le dongle Si468x, le CNR calculé par le démodulateur, proche du') }} <strong>{{ _('MER') }}</strong>{{ _(', qui tient compte de tout ce qui gêne le décodage. Les deux ne se comparent pas entre eux.') }}</p>
+          <p class="mt-2">{{ _('Repères : moins de 5 dB, réception fragile ; 5 à 10 dB, correcte ; plus de 10 dB, confortable. La') }} <strong>{{ _('qualité FIC') }}</strong> {{ _('(et les erreurs FIC) mesure ce qui est réellement décodé.') }}</p>
         </div>
         <div class="info-card">
-          <h3 class="text-xs font-semibold text-gray-700 mb-2">🔌 Deux récepteurs possibles</h3>
-          <p><strong>Clé RTL-SDR + welle-cli</strong> (fork welle-monitor) : décode plusieurs services du multiplex à la fois ; la clé doit être réglée pour ne pas saturer (gain).</p>
-          <p class="mt-2"><strong>Dongle Si468X Headless</strong> de mc_popa (puce Skyworks Si4684, contrôle série et carte son USB, comme le TEF) : un seul service décodé à la fois, presque aucune charge processeur. BL-RMO le pilote et le présente comme welle-cli, en essai. Il sait aussi balayer la bande III.</p>
+          <h3 class="text-xs font-semibold text-gray-700 mb-2">{{ _('🔌 Deux récepteurs possibles') }}</h3>
+          <p><strong>{{ _('Clé RTL-SDR + welle-cli') }}</strong> {{ _('(fork welle-monitor) : décode plusieurs services du multiplex à la fois ; la clé doit être réglée pour ne pas saturer (gain).') }}</p>
+          <p class="mt-2"><strong>{{ _('Dongle Si468X Headless') }}</strong> {{ _('de mc_popa (puce Skyworks Si4684, contrôle série et carte son USB, comme le TEF) : un seul service décodé à la fois, presque aucune charge processeur. BL-RMO le pilote et le présente comme welle-cli, en essai. Il sait aussi balayer la bande III.') }}</p>
         </div>
       </div>
     </div>
@@ -263,25 +263,25 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        Matériel de réception : Headless TEF Lite SE
+        {{ _('Matériel de réception : Headless TEF Lite SE') }}
       </div>
       <div class="flex flex-col md:flex-row gap-4">
         <div class="flex-1 text-sm text-gray-600 leading-relaxed space-y-3">
-          <p>BL-RMO écoute l'antenne de préférence avec le <b>Headless TEF Lite SE</b> de <a href="https://github.com/FMDX-org/Headless-TEF-lite-SE" target="_blank" class="text-blue-600 hover:text-blue-800">FMDX.org</a> : un tuner USB construit autour d'un récepteur NXP <b>TEF668X</b> (version V205, le TEF6687 étant recommandé) et d'un microcontrôleur STM32, avec une sortie audio numérique par USB. La version SE de ce tuner compact a des entrées antenne AM et FM séparées. Matériel libre (licence CERN-OHL-W v2.0), firmware <a href="https://github.com/kkonradpl/FM-DX-Tuner" target="_blank" class="text-blue-600 hover:text-blue-800">FM-DX-Tuner</a>.</p>
-          <p>Contrairement à un dongle SDR, le TEF fait lui-même la démodulation et le décodage RDS, comme un récepteur haut de gamme. BL-RMO reçoit donc des mesures RF natives, sans calcul sur le flux brut.</p>
+          <p>{{ _("BL-RMO écoute l'antenne de préférence avec le") }} <b>{{ _('Headless TEF Lite SE') }}</b> {{ _('de') }} <a href="https://github.com/FMDX-org/Headless-TEF-lite-SE" target="_blank" class="text-blue-600 hover:text-blue-800">{{ _('FMDX.org') }}</a> {{ _(": un tuner USB construit autour d'un récepteur NXP") }} <b>{{ _('TEF668X') }}</b> {{ _("(version V205, le TEF6687 étant recommandé) et d'un microcontrôleur STM32, avec une sortie audio numérique par USB. La version SE de ce tuner compact a des entrées antenne AM et FM séparées. Matériel libre (licence CERN-OHL-W v2.0), firmware") }} <a href="https://github.com/kkonradpl/FM-DX-Tuner" target="_blank" class="text-blue-600 hover:text-blue-800">{{ _('FM-DX-Tuner') }}</a>.</p>
+          <p>{{ _('Contrairement à un dongle SDR, le TEF fait lui-même la démodulation et le décodage RDS, comme un récepteur haut de gamme. BL-RMO reçoit donc des mesures RF natives, sans calcul sur le flux brut.') }}</p>
         </div>
         <div class="md:w-80 flex-shrink-0 space-y-2">
           <div class="info-card text-xs">
-            <div class="font-semibold text-gray-800 mb-1">Port série USB <code>/dev/ttyACM0</code></div>
-            <div class="text-gray-500">Protocole XDR : niveau du signal en dBf, rapport signal/bruit, trajets multiples, code PI et groupes RDS (PS, RadioText, stéréo).</div>
+            <div class="font-semibold text-gray-800 mb-1">{{ _('Port série USB') }} <code>/dev/ttyACM0</code></div>
+            <div class="text-gray-500">{{ _('Protocole XDR : niveau du signal en dBf, rapport signal/bruit, trajets multiples, code PI et groupes RDS (PS, RadioText, stéréo).') }}</div>
           </div>
           <div class="info-card text-xs">
-            <div class="font-semibold text-gray-800 mb-1">Carte son USB <code>hw:Tuner</code></div>
-            <div class="text-gray-500">Audio stéréo 48 kHz : analyse (modulation, niveaux G/D, spectre), écoute en direct par Icecast et pige.</div>
+            <div class="font-semibold text-gray-800 mb-1">{{ _('Carte son USB') }} <code>hw:Tuner</code></div>
+            <div class="text-gray-500">{{ _('Audio stéréo 48 kHz : analyse (modulation, niveaux G/D, spectre), écoute en direct par Icecast et pige.') }}</div>
           </div>
           <div class="info-card text-xs">
-            <div class="font-semibold text-gray-800 mb-1">Détection automatique</div>
-            <div class="text-gray-500">Reconnu par son identifiant USB <code>1209:6687</code> : page FM, onglet Configuration, bouton « Détecter les récepteurs ».</div>
+            <div class="font-semibold text-gray-800 mb-1">{{ _('Détection automatique') }}</div>
+            <div class="text-gray-500">{{ _('Reconnu par son identifiant USB') }} <code>1209:6687</code> {{ _(': page FM, onglet Configuration, bouton « Détecter les récepteurs ».') }}</div>
           </div>
         </div>
       </div>
@@ -290,24 +290,24 @@
         <table class="w-full text-xs">
           <thead>
             <tr class="border-b border-gray-100">
-              <th class="pb-2 pr-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Mesure</th>
-              <th class="pb-2 pr-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Headless TEF Lite SE</th>
-              <th class="pb-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Dongle RTL-SDR</th>
+              <th class="pb-2 pr-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ _('Mesure') }}</th>
+              <th class="pb-2 pr-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ _('Headless TEF Lite SE') }}</th>
+              <th class="pb-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ _('Dongle RTL-SDR') }}</th>
             </tr>
           </thead>
           <tbody class="text-gray-700">
-            <tr class="border-b border-gray-50"><td class="py-2 pr-4">Niveau du signal</td><td class="py-2 pr-4">dBf, mesure RF native</td><td class="py-2">dBFS, calculé sur l'audio</td></tr>
-            <tr class="border-b border-gray-50"><td class="py-2 pr-4">RDS</td><td class="py-2 pr-4">Décodé par le tuner</td><td class="py-2">Décodé par redsea sur le MPX</td></tr>
-            <tr class="border-b border-gray-50"><td class="py-2 pr-4">Niveaux G/D, modulation, S/B audio</td><td class="py-2 pr-4">Oui</td><td class="py-2">Oui</td></tr>
-            <tr class="border-b border-gray-50"><td class="py-2 pr-4">Stéréo / mono</td><td class="py-2 pr-4">Par le bit MS du RDS</td><td class="py-2">Par le pilote 19 kHz</td></tr>
-            <tr><td class="py-2 pr-4">Déviation, pilote, sous-porteuses (analyse MPX)</td><td class="py-2 pr-4">Non</td><td class="py-2">Oui</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4">{{ _('Niveau du signal') }}</td><td class="py-2 pr-4">{{ _('dBf, mesure RF native') }}</td><td class="py-2">{{ _("dBFS, calculé sur l'audio") }}</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4">RDS</td><td class="py-2 pr-4">{{ _('Décodé par le tuner') }}</td><td class="py-2">{{ _('Décodé par redsea sur le MPX') }}</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4">{{ _('Niveaux G/D, modulation, S/B audio') }}</td><td class="py-2 pr-4">{{ _('Oui') }}</td><td class="py-2">{{ _('Oui') }}</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2 pr-4">{{ _('Stéréo / mono') }}</td><td class="py-2 pr-4">{{ _('Par le bit MS du RDS') }}</td><td class="py-2">{{ _('Par le pilote 19 kHz') }}</td></tr>
+            <tr><td class="py-2 pr-4">{{ _('Déviation, pilote, sous-porteuses (analyse MPX)') }}</td><td class="py-2 pr-4">{{ _('Non') }}</td><td class="py-2">{{ _('Oui') }}</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="relative bg-gray-900 rounded-lg mt-4 overflow-hidden">
         <div class="flex items-center justify-between px-4 py-2 border-b border-gray-700">
-          <span class="text-gray-300 text-xs font-medium">Mise en service (Debian / Raspberry Pi OS)</span>
+          <span class="text-gray-300 text-xs font-medium">{{ _('Mise en service (Debian / Raspberry Pi OS)') }}</span>
         </div>
         <pre class="text-green-400 text-xs font-mono p-4 overflow-x-auto leading-relaxed"># Brancher le tuner avec un câble USB de données, puis vérifier :
 ls /dev/ttyACM0
@@ -318,50 +318,50 @@ sudo usermod -a -G dialout $USER
 
 # Puis : page FM, onglet Configuration, « Détecter les récepteurs », source TEF668X</pre>
       </div>
-      <p class="text-xs text-gray-400 mt-3">Headless TEF Lite SE : Konrad Kosmatka (architecture et firmware), Sjef Verhoeven PE5PVB (matériel), Marek Kraus, Marek Farkaš, Przemysław Korpas, Sebastian Białkowski.</p>
+      <p class="text-xs text-gray-400 mt-3">{{ _('Headless TEF Lite SE : Konrad Kosmatka (architecture et firmware), Sjef Verhoeven PE5PVB (matériel), Marek Kraus, Marek Farkaš, Przemysław Korpas, Sebastian Białkowski.') }}</p>
     </div>
 
     <!-- ── Dongles RTL-SDR ────────────────────────────────────── -->
     <details class="section">
       <summary class="section-title cursor-pointer select-none" style="margin-bottom:0">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        Alternative : dongles RTL-SDR
+        {{ _('Alternative : dongles RTL-SDR') }}
       </summary>
-      <p class="text-xs text-gray-500 mt-3 mb-4">Un dongle RTL-SDR reste possible, moins cher mais moins précis : BL-RMO démodule alors lui-même le signal (rtl_fm ou GNU Radio) et décode le RDS avec redsea. Il permet en plus l'analyse du signal MPX.</p>
+      <p class="text-xs text-gray-500 mt-3 mb-4">{{ _("Un dongle RTL-SDR reste possible, moins cher mais moins précis : BL-RMO démodule alors lui-même le signal (rtl_fm ou GNU Radio) et décode le RDS avec redsea. Il permet en plus l'analyse du signal MPX.") }}</p>
       <div class="overflow-x-auto mb-4">
         <table class="w-full text-xs">
           <thead>
             <tr class="border-b border-gray-100">
-              <th class="pb-2 pr-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Dongle</th>
-              <th class="pb-2 pr-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Puce</th>
-              <th class="pb-2 pr-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Drivers</th>
-              <th class="pb-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Notes</th>
+              <th class="pb-2 pr-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ _('Dongle') }}</th>
+              <th class="pb-2 pr-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ _('Puce') }}</th>
+              <th class="pb-2 pr-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ _('Drivers') }}</th>
+              <th class="pb-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ _('Notes') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
             <tr class="hover:bg-gray-50">
-              <td class="py-2.5 pr-4 font-medium text-gray-800">RTL-SDR Blog V3</td>
-              <td class="py-2.5 pr-4 font-mono text-gray-500">RTL2832U + R820T2</td>
-              <td class="py-2.5 pr-4"><span class="px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-full">rtl-sdr standard</span></td>
-              <td class="py-2.5 text-gray-500">Drivers inclus dans la plupart des distributions. Plug & play.</td>
+              <td class="py-2.5 pr-4 font-medium text-gray-800">{{ _('RTL-SDR Blog V3') }}</td>
+              <td class="py-2.5 pr-4 font-mono text-gray-500">{{ _('RTL2832U + R820T2') }}</td>
+              <td class="py-2.5 pr-4"><span class="px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-full">{{ _('rtl-sdr standard') }}</span></td>
+              <td class="py-2.5 text-gray-500">{{ _('Drivers inclus dans la plupart des distributions. Plug & play.') }}</td>
             </tr>
             <tr class="bg-blue-50/50 hover:bg-blue-50">
-              <td class="py-2.5 pr-4 font-medium text-gray-800">RTL-SDR Blog V4 <span class="ml-1 px-1.5 py-0.5 bg-blue-600 text-white text-xs rounded-full">Recommandé</span></td>
-              <td class="py-2.5 pr-4 font-mono text-gray-500">RTL2832U + R828D</td>
-              <td class="py-2.5 pr-4"><span class="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full">rtl-sdr-blog (fork)</span></td>
-              <td class="py-2.5 text-gray-500">Meilleure sensibilité FM, TCXO 1ppm. Nécessite le fork officiel et le blacklist du driver noyau.</td>
+              <td class="py-2.5 pr-4 font-medium text-gray-800">{{ _('RTL-SDR Blog V4') }} <span class="ml-1 px-1.5 py-0.5 bg-blue-600 text-white text-xs rounded-full">{{ _('Recommandé') }}</span></td>
+              <td class="py-2.5 pr-4 font-mono text-gray-500">{{ _('RTL2832U + R828D') }}</td>
+              <td class="py-2.5 pr-4"><span class="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full">{{ _('rtl-sdr-blog (fork)') }}</span></td>
+              <td class="py-2.5 text-gray-500">{{ _('Meilleure sensibilité FM, TCXO 1ppm. Nécessite le fork officiel et le blacklist du driver noyau.') }}</td>
             </tr>
             <tr class="hover:bg-gray-50">
-              <td class="py-2.5 pr-4 font-medium text-gray-800">Nooelec NESDR SMArt v5</td>
-              <td class="py-2.5 pr-4 font-mono text-gray-500">RTL2832U + R820T2</td>
-              <td class="py-2.5 pr-4"><span class="px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-full">rtl-sdr standard</span></td>
-              <td class="py-2.5 text-gray-500">Compatible standard. Boîtier aluminium anti-interférences.</td>
+              <td class="py-2.5 pr-4 font-medium text-gray-800">{{ _('Nooelec NESDR SMArt v5') }}</td>
+              <td class="py-2.5 pr-4 font-mono text-gray-500">{{ _('RTL2832U + R820T2') }}</td>
+              <td class="py-2.5 pr-4"><span class="px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-full">{{ _('rtl-sdr standard') }}</span></td>
+              <td class="py-2.5 text-gray-500">{{ _('Compatible standard. Boîtier aluminium anti-interférences.') }}</td>
             </tr>
             <tr class="hover:bg-gray-50">
-              <td class="py-2.5 pr-4 font-medium text-gray-800">Autres RTL2832U</td>
-              <td class="py-2.5 pr-4 font-mono text-gray-500">RTL2832U</td>
-              <td class="py-2.5 pr-4"><span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">rtl-sdr standard</span></td>
-              <td class="py-2.5 text-gray-500">Généralement compatibles. Résultats variables selon la qualité du tuner.</td>
+              <td class="py-2.5 pr-4 font-medium text-gray-800">{{ _('Autres RTL2832U') }}</td>
+              <td class="py-2.5 pr-4 font-mono text-gray-500">{{ _('RTL2832U') }}</td>
+              <td class="py-2.5 pr-4"><span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">{{ _('rtl-sdr standard') }}</span></td>
+              <td class="py-2.5 text-gray-500">{{ _('Généralement compatibles. Résultats variables selon la qualité du tuner.') }}</td>
             </tr>
           </tbody>
         </table>
@@ -371,7 +371,7 @@ sudo usermod -a -G dialout $USER
       <div class="border border-gray-200 rounded-lg overflow-hidden mb-3">
         <div class="bg-gray-900 px-4 py-2.5 flex items-center gap-2">
           <svg class="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span class="text-gray-300 text-xs font-medium">Installation RTL-SDR Blog V4 (Raspberry Pi / Debian / Ubuntu)</span>
+          <span class="text-gray-300 text-xs font-medium">{{ _('Installation RTL-SDR Blog V4 (Raspberry Pi / Debian / Ubuntu)') }}</span>
         </div>
         <div class="p-4 bg-gray-950 overflow-x-auto">
           <pre class="text-green-400 text-xs leading-relaxed"># 1. Bloquer le driver noyau générique
@@ -397,7 +397,7 @@ rtl_test -t</pre>
       </div>
 
       <div class="info-card bg-amber-50 border-amber-200 text-xs text-amber-800">
-        <strong>⚠️ Bias-T (V4) :</strong> Le RTL-SDR Blog V4 dispose d'une alimentation antenne (Bias-T) de 4,5 V désactivée par défaut. Ne l'activez que si votre antenne ou amplificateur le nécessite : <code>rtl_biast -b 1</code>
+        <strong>{{ _('⚠️ Bias-T (V4) :') }}</strong> {{ _("Le RTL-SDR Blog V4 dispose d'une alimentation antenne (Bias-T) de 4,5 V désactivée par défaut. Ne l'activez que si votre antenne ou amplificateur le nécessite :") }} <code>rtl_biast -b 1</code>
       </div>
     </details>
 
@@ -405,13 +405,13 @@ rtl_test -t</pre>
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        Analyse du signal MPX
+        {{ _('Analyse du signal MPX') }}
       </div>
-      <p class="text-xs text-gray-500 mb-4">Le signal FM broadcast n'est pas un simple signal audio : c'est un multiplex (MPX) complexe transportant plusieurs informations en parallèle sur différentes sous-porteuses.</p>
+      <p class="text-xs text-gray-500 mb-4">{{ _("Le signal FM broadcast n'est pas un simple signal audio : c'est un multiplex (MPX) complexe transportant plusieurs informations en parallèle sur différentes sous-porteuses.") }}</p>
 
       <!-- Schéma MPX -->
       <div class="mb-4 rounded-lg bg-gray-900 border border-gray-800 p-4">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Spectre MPX FM (0 – 75 kHz)</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{{ _('Spectre MPX FM (0 – 75 kHz)') }}</div>
         <div class="relative h-14 bg-gray-950 rounded overflow-hidden font-mono text-xs">
           <div class="absolute inset-0 flex">
             <div class="bg-green-900 opacity-50" style="width:20%"></div>
@@ -424,11 +424,11 @@ rtl_test -t</pre>
             <div class="bg-gray-800 opacity-60" style="flex:1"></div>
           </div>
           <div class="absolute inset-0 flex items-center px-2 gap-1 text-white">
-            <div class="text-center" style="width:20%"><div class="text-green-400 font-bold text-xs">L+R</div><div class="text-gray-500" style="font-size:9px">0–15 kHz</div></div>
+            <div class="text-center" style="width:20%"><div class="text-green-400 font-bold text-xs">L+R</div><div class="text-gray-500" style="font-size:9px">{{ _('0–15 kHz') }}</div></div>
             <div style="width:5.3%"></div>
             <div class="text-center" style="width:1.3%"><div class="text-yellow-300 font-bold" style="font-size:9px">♪</div></div>
             <div style="width:12%"></div>
-            <div class="text-center" style="width:26.7%"><div class="text-blue-300 font-bold text-xs">L−R</div><div class="text-gray-500" style="font-size:9px">23–53 kHz</div></div>
+            <div class="text-center" style="width:26.7%"><div class="text-blue-300 font-bold text-xs">L−R</div><div class="text-gray-500" style="font-size:9px">{{ _('23–53 kHz') }}</div></div>
             <div style="width:12%"></div>
             <div class="text-center" style="width:10.7%"><div class="text-purple-300 font-bold text-xs">RDS</div><div class="text-gray-500" style="font-size:9px">57 kHz</div></div>
           </div>
@@ -440,37 +440,37 @@ rtl_test -t</pre>
 
       <div class="grid grid-cols-2 gap-3">
         <div class="info-card">
-          <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-green-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">Déviation FM</h3><span class="ml-auto text-xs font-mono text-gray-400">0–75 kHz</span></div>
-          <p class="text-xs text-gray-600 leading-relaxed">Amplitude de la variation instantanée de la fréquence de la porteuse. Maximum autorisé : <strong>±75 kHz</strong>. Une sur-déviation dégrade la qualité et peut empiéter sur les canaux adjacents.</p>
+          <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-green-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">{{ _('Déviation FM') }}</h3><span class="ml-auto text-xs font-mono text-gray-400">{{ _('0–75 kHz') }}</span></div>
+          <p class="text-xs text-gray-600 leading-relaxed">{{ _('Amplitude de la variation instantanée de la fréquence de la porteuse. Maximum autorisé :') }} <strong>{{ _('±75 kHz') }}</strong>{{ _('. Une sur-déviation dégrade la qualité et peut empiéter sur les canaux adjacents.') }}</p>
           <div class="mt-2 flex gap-2 flex-wrap text-xs">
-            <span class="px-2 py-0.5 bg-green-50 text-green-700 rounded-full">0–60 kHz ✓</span>
-            <span class="px-2 py-0.5 bg-yellow-50 text-yellow-700 rounded-full">60–70 kHz ⚠</span>
-            <span class="px-2 py-0.5 bg-red-50 text-red-700 rounded-full">&gt;70 kHz ✗</span>
+            <span class="px-2 py-0.5 bg-green-50 text-green-700 rounded-full">{{ _('0–60 kHz ✓') }}</span>
+            <span class="px-2 py-0.5 bg-yellow-50 text-yellow-700 rounded-full">{{ _('60–70 kHz ⚠') }}</span>
+            <span class="px-2 py-0.5 bg-red-50 text-red-700 rounded-full">{{ _('&gt;70 kHz ✗') }}</span>
           </div>
         </div>
         <div class="info-card">
-          <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-yellow-400 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">Ton pilote 19 kHz</h3><span class="ml-auto text-xs font-mono text-gray-400">19 000 Hz</span></div>
-          <p class="text-xs text-gray-600 leading-relaxed">Sinusoïde pure à <strong>19 kHz</strong> signalant la présence d'un programme stéréo. Le récepteur l'utilise comme référence de phase pour régénérer la sous-porteuse à 38 kHz. Son absence indique une diffusion mono. Niveau : 8 à 10 % de la déviation totale.</p>
+          <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-yellow-400 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">{{ _('Ton pilote 19 kHz') }}</h3><span class="ml-auto text-xs font-mono text-gray-400">{{ _('19 000 Hz') }}</span></div>
+          <p class="text-xs text-gray-600 leading-relaxed">{{ _('Sinusoïde pure à') }} <strong>19 kHz</strong> {{ _("signalant la présence d'un programme stéréo. Le récepteur l'utilise comme référence de phase pour régénérer la sous-porteuse à 38 kHz. Son absence indique une diffusion mono. Niveau : 8 à 10 % de la déviation totale.") }}</p>
         </div>
         <div class="info-card">
-          <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">Signal stéréo L−R (38 kHz)</h3><span class="ml-auto text-xs font-mono text-gray-400">23–53 kHz</span></div>
-          <p class="text-xs text-gray-600 leading-relaxed">Transmis en <strong>DSB-SC</strong> centré à 38 kHz. Contient la différence Gauche−Droite. En combinant le signal mono (L+R) avec ce signal, on reconstitue L et R. La porteuse 38 kHz n'est pas transmise : elle est régénérée depuis le pilote 19 kHz.</p>
+          <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">{{ _('Signal stéréo L−R (38 kHz)') }}</h3><span class="ml-auto text-xs font-mono text-gray-400">{{ _('23–53 kHz') }}</span></div>
+          <p class="text-xs text-gray-600 leading-relaxed">{{ _('Transmis en') }} <strong>{{ _('DSB-SC') }}</strong> {{ _("centré à 38 kHz. Contient la différence Gauche−Droite. En combinant le signal mono (L+R) avec ce signal, on reconstitue L et R. La porteuse 38 kHz n'est pas transmise : elle est régénérée depuis le pilote 19 kHz.") }}</p>
         </div>
         <div class="info-card">
-          <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-purple-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">Sous-porteuse RDS (57 kHz)</h3><span class="ml-auto text-xs font-mono text-gray-400">57 000 Hz</span></div>
-          <p class="text-xs text-gray-600 leading-relaxed">Le <strong>RDS</strong> (CEI 62106) transmet des données à <strong>1 187,5 bit/s</strong> sur une sous-porteuse à 57 kHz, le triple du pilote, en quadrature de phase. Transporte PS, RT, PI, PTY, CT et AF. Niveau typique : 2 à 5 % de la déviation totale.</p>
+          <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-purple-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">{{ _('Sous-porteuse RDS (57 kHz)') }}</h3><span class="ml-auto text-xs font-mono text-gray-400">{{ _('57 000 Hz') }}</span></div>
+          <p class="text-xs text-gray-600 leading-relaxed">{{ _('Le') }} <strong>RDS</strong> {{ _('(CEI 62106) transmet des données à') }} <strong>{{ _('1 187,5 bit/s') }}</strong> {{ _('sur une sous-porteuse à 57 kHz, le triple du pilote, en quadrature de phase. Transporte PS, RT, PI, PTY, CT et AF. Niveau typique : 2 à 5 % de la déviation totale.') }}</p>
         </div>
         <div class="info-card">
-          <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-gray-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">Puissance MPX</h3><span class="ml-auto text-xs font-mono text-gray-400">dBFS</span></div>
-          <p class="text-xs text-gray-600 leading-relaxed">Niveau RMS global du signal multiplex après démodulation FM, en <strong>dBFS</strong>. Représente l'énergie totale combinée : audio L+R, stéréo L−R, pilote et RDS. Indicateur global de présence et vigueur du signal.</p>
+          <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-gray-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">{{ _('Puissance MPX') }}</h3><span class="ml-auto text-xs font-mono text-gray-400">dBFS</span></div>
+          <p class="text-xs text-gray-600 leading-relaxed">{{ _('Niveau RMS global du signal multiplex après démodulation FM, en') }} <strong>dBFS</strong>{{ _(". Représente l'énergie totale combinée : audio L+R, stéréo L−R, pilote et RDS. Indicateur global de présence et vigueur du signal.") }}</p>
         </div>
         <div class="info-card">
-          <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-teal-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">SNR : rapport signal/bruit</h3><span class="ml-auto text-xs font-mono text-gray-400">dB</span></div>
-          <p class="text-xs text-gray-600 leading-relaxed mb-2">Rapport entre le niveau du signal audio utile (100 Hz–15 kHz) et le plancher de bruit (60–75 kHz). Un SNR faible trahit une réception dégradée ou une interférence.</p>
+          <div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full bg-teal-500 flex-shrink-0"></div><h3 class="font-semibold text-gray-800 text-xs">{{ _('SNR : rapport signal/bruit') }}</h3><span class="ml-auto text-xs font-mono text-gray-400">{{ _('dB') }}</span></div>
+          <p class="text-xs text-gray-600 leading-relaxed mb-2">{{ _('Rapport entre le niveau du signal audio utile (100 Hz–15 kHz) et le plancher de bruit (60–75 kHz). Un SNR faible trahit une réception dégradée ou une interférence.') }}</p>
           <div class="flex gap-2 text-xs flex-wrap">
-            <span class="px-2 py-0.5 bg-green-50 text-green-700 rounded-full">&gt;40 dB ✓</span>
-            <span class="px-2 py-0.5 bg-yellow-50 text-yellow-700 rounded-full">25–40 dB ⚠</span>
-            <span class="px-2 py-0.5 bg-red-50 text-red-700 rounded-full">&lt;25 dB ✗</span>
+            <span class="px-2 py-0.5 bg-green-50 text-green-700 rounded-full">{{ _('&gt;40 dB ✓') }}</span>
+            <span class="px-2 py-0.5 bg-yellow-50 text-yellow-700 rounded-full">{{ _('25–40 dB ⚠') }}</span>
+            <span class="px-2 py-0.5 bg-red-50 text-red-700 rounded-full">{{ _('&lt;25 dB ✗') }}</span>
           </div>
         </div>
       </div>
@@ -480,23 +480,23 @@ rtl_test -t</pre>
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-        Solutions utilisées
+        {{ _('Solutions utilisées') }}
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <a href="https://github.com/LyonelB/BL-RMO" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">BL-RMO</div><div class="text-xs text-gray-400">Code source sur GitHub</div></div></a>
-        <a href="https://github.com/LyonelB/rds-station-db" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-green-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11h6M9 15h4"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">rds-station-db</div><div class="text-xs text-gray-400">Base de données stations FM</div></div></a>
-        <a href="https://github.com/windytan/redsea" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">redsea</div><div class="text-xs text-gray-400">Décodeur RDS</div></div></a>
-        <a href="https://github.com/gnuradio/gnuradio" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-green-700 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">GNU Radio</div><div class="text-xs text-gray-400">Démodulation WFM stéréo</div></div></a>
-        <a href="https://github.com/rtlsdrblog/rtl-sdr-blog" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">RTL-SDR Blog V4</div><div class="text-xs text-gray-400">Drivers & dongle RTL-SDR</div></div></a>
-        <a href="https://github.com/pallets/flask" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Flask</div><div class="text-xs text-gray-400">Framework web Python</div></div></a>
-        <a href="https://github.com/FFmpeg/FFmpeg" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-green-800 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">FFmpeg</div><div class="text-xs text-gray-400">Encodage audio MP3</div></div></a>
-        <a href="https://github.com/AlbrechtL/welle.io" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">welle.io</div><div class="text-xs text-gray-400">Décodage DAB+ (fork welle-monitor)</div></div></a>
-        <a href="https://gitlab.xiph.org/xiph/icecast-server" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-orange-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12M8.464 8.464a5 5 0 000 7.072"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Icecast2</div><div class="text-xs text-gray-400">Streaming audio</div></div></a>
-        <a href="https://tef.noobish.eu/logos/logo_preview.html" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Logos FM : Noobish</div><div class="text-xs text-gray-400">Communauté FM-DX</div></div></a>
-        <a href="https://www.docker.com" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.186.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.186.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.186.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.186.186 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.09-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Docker</div><div class="text-xs text-gray-400">Conteneurisation</div></div></a>
-        <a href="http://www.net-snmp.org" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-teal-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Net-SNMP</div><div class="text-xs text-gray-400">Interrogation SNMP des appareils</div></div></a>
-        <a href="https://github.com/FMDX-org/Headless-TEF-lite-SE" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-rose-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">Headless TEF Lite SE</div><div class="text-xs text-gray-400">Tuner USB FMDX.org, firmware FM-DX-Tuner</div></div></a>
-        <a href="https://www.sqlite.org" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-sky-700 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 3.6 4 8 4s8-2 8-4V7M4 7c0 2 3.6 4 8 4s8-2 8-4M4 7c0-2 3.6-4 8-4s8 2 8 4"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">SQLite</div><div class="text-xs text-gray-400">Historique, alertes, journaux</div></div></a>
+        <a href="https://github.com/LyonelB/BL-RMO" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">BL-RMO</div><div class="text-xs text-gray-400">{{ _('Code source sur GitHub') }}</div></div></a>
+        <a href="https://github.com/LyonelB/rds-station-db" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-green-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11h6M9 15h4"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">{{ _('rds-station-db') }}</div><div class="text-xs text-gray-400">{{ _('Base de données stations FM') }}</div></div></a>
+        <a href="https://github.com/windytan/redsea" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">{{ _('redsea') }}</div><div class="text-xs text-gray-400">{{ _('Décodeur RDS') }}</div></div></a>
+        <a href="https://github.com/gnuradio/gnuradio" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-green-700 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">{{ _('GNU Radio') }}</div><div class="text-xs text-gray-400">{{ _('Démodulation WFM stéréo') }}</div></div></a>
+        <a href="https://github.com/rtlsdrblog/rtl-sdr-blog" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">{{ _('RTL-SDR Blog V4') }}</div><div class="text-xs text-gray-400">{{ _('Drivers & dongle RTL-SDR') }}</div></div></a>
+        <a href="https://github.com/pallets/flask" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">{{ _('Flask') }}</div><div class="text-xs text-gray-400">{{ _('Framework web Python') }}</div></div></a>
+        <a href="https://github.com/FFmpeg/FFmpeg" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-green-800 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">{{ _('FFmpeg') }}</div><div class="text-xs text-gray-400">{{ _('Encodage audio MP3') }}</div></div></a>
+        <a href="https://github.com/AlbrechtL/welle.io" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">{{ _('welle.io') }}</div><div class="text-xs text-gray-400">{{ _('Décodage DAB+ (fork welle-monitor)') }}</div></div></a>
+        <a href="https://gitlab.xiph.org/xiph/icecast-server" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-orange-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12M8.464 8.464a5 5 0 000 7.072"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">{{ _('Icecast2') }}</div><div class="text-xs text-gray-400">{{ _('Streaming audio') }}</div></div></a>
+        <a href="https://tef.noobish.eu/logos/logo_preview.html" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">{{ _('Logos FM : Noobish') }}</div><div class="text-xs text-gray-400">{{ _('Communauté FM-DX') }}</div></div></a>
+        <a href="https://www.docker.com" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.186.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.186.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.186.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.186.186 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.09-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">{{ _('Docker') }}</div><div class="text-xs text-gray-400">{{ _('Conteneurisation') }}</div></div></a>
+        <a href="http://www.net-snmp.org" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-teal-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">{{ _('Net-SNMP') }}</div><div class="text-xs text-gray-400">{{ _('Interrogation SNMP des appareils') }}</div></div></a>
+        <a href="https://github.com/FMDX-org/Headless-TEF-lite-SE" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-rose-600 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">{{ _('Headless TEF Lite SE') }}</div><div class="text-xs text-gray-400">{{ _('Tuner USB FMDX.org, firmware FM-DX-Tuner') }}</div></div></a>
+        <a href="https://www.sqlite.org" target="_blank" class="info-card flex items-center gap-3 hover:border-gray-300 transition group"><div class="w-7 h-7 rounded-lg bg-sky-700 flex items-center justify-center flex-shrink-0 text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 3.6 4 8 4s8-2 8-4V7M4 7c0 2 3.6 4 8 4s8-2 8-4M4 7c0-2 3.6-4 8-4s8 2 8 4"/></svg></div><div><div class="font-semibold text-gray-800 text-xs group-hover:text-blue-600">{{ _('SQLite') }}</div><div class="text-xs text-gray-400">{{ _('Historique, alertes, journaux') }}</div></div></a>
       </div>
     </div>
 

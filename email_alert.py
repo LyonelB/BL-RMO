@@ -15,6 +15,8 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 import logging
 
+import i18n   # langue des mails : celle de BL-RMO (Système › Général)
+
 logger = logging.getLogger(__name__)
 
 
@@ -152,13 +154,20 @@ class EmailAlert:
     # ── Envoi ───────────────────────────────────────────────────────────
     def _deliver(self, item):
         """Construit et envoie le mail ; lève une exception si l'envoi échoue."""
-        alert_type, details = item['type'], item['details']
+        # Langue de BL-RMO au moment de l'envoi (Système › Général) : cadre du mail, type
+        # d'alerte et lignes de détail connues traduits ; « rétabli » se lit sur le texte source.
+        L = i18n.language()
+        _ = lambda text, **v: i18n.t(text, L, **v)
+        alert_src, details = item['type'], item['details']
+        alert_type = i18n.tr(alert_src, L)
+        details = i18n.tr(details, L)
         src_label, src_value = item.get('source') or ('Fréquence', self.frequency)
-        recovered = "rétabli" in alert_type.lower()
+        src_label = i18n.tr(src_label, L)
+        recovered = "rétabli" in alert_src.lower()
         station_name = item.get('station') or self.station_name
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = (f"✅ RÉTABLI - {station_name} - {alert_type}" if recovered
-                          else f"⚠️ ALERTE - {station_name} - {alert_type}")
+        msg['Subject'] = (_("✅ RÉTABLI - {s} - {a}", s=station_name, a=alert_type) if recovered
+                          else _("⚠️ ALERTE - {s} - {a}", s=station_name, a=alert_type))
         msg['From'] = self.config['sender_email']
         msg['To'] = ', '.join(self.config['recipient_emails'])
 
@@ -166,22 +175,24 @@ class EmailAlert:
         delay = time.time() - item['ts']
         late = ''
         if delay > 90:
-            late = (f"Envoi différé : mail retenu {int(delay // 60)} min, le réseau ou le serveur de mail "
-                    f"était indisponible au moment de l'événement.")
+            late = _("Envoi différé : mail retenu {n} min, le réseau ou le serveur de mail "
+                     "était indisponible au moment de l'événement.", n=int(delay // 60))
+        l_station, l_type, l_date, l_details = _('Station'), _("Type d'alerte"), _('Date et heure'), _('Détails')
+        footer = _('BL-RMO · Surveillance radio')
         text_content = f"""
-ALERTE DE SURVEILLANCE
+{_('ALERTE DE SURVEILLANCE')}
 ======================
 
-Station: {station_name}
+{l_station}: {station_name}
 {src_label}: {src_value}
-Type d'alerte: {alert_type}
-Date et heure: {timestamp}
+{l_type}: {alert_type}
+{l_date}: {timestamp}
 {late}
-Détails:
+{l_details}:
 {details}
 
 ---
-BL-RMO · Surveillance radio
+{footer}
             """
         late_html = f'<div class="info" style="color:#b45309"><b>{late}</b></div>' if late else ''
         details_html = html.escape(str(details)).replace('\n', '<br>')
@@ -206,14 +217,14 @@ BL-RMO · Surveillance radio
                 <div class="alert-box">
                     <div class="header">{"✅" if recovered else "⚠️"} {alert_type.upper()}</div>
                     <hr>
-                    <div class="info"><span class="label">Station:</span> {station_name}</div>
+                    <div class="info"><span class="label">{l_station}:</span> {station_name}</div>
                     <div class="info"><span class="label">{src_label}:</span> {src_value}</div>
-                    <div class="info"><span class="label">Type d'alerte:</span> {alert_type}</div>
-                    <div class="info"><span class="label">Date et heure:</span> {timestamp}</div>
+                    <div class="info"><span class="label">{l_type}:</span> {alert_type}</div>
+                    <div class="info"><span class="label">{l_date}:</span> {timestamp}</div>
                     {late_html}
                     <hr>
-                    <div class="info"><span class="label">Détails:</span><br>{details_html}</div>
-                    <div class="footer">BL-RMO · Surveillance radio</div>
+                    <div class="info"><span class="label">{l_details}:</span><br>{details_html}</div>
+                    <div class="footer">{footer}</div>
                 </div>
             </body>
             </html>
