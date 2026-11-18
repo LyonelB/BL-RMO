@@ -131,7 +131,7 @@ def decode_mode(cfg):
     return 'watched' if n < 0 else 'all' if n == 0 else 'carousel'
 
 
-MODE_LABELS = {'watched': 'services surveillés', 'all': 'complet', 'carousel': 'carrousel'}
+MODE_LABELS = {'watched': 'station suivie', 'all': 'complet', 'carousel': 'carrousel'}
 
 
 def is_real_service(label):

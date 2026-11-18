@@ -100,7 +100,7 @@
       <a href="#direct" data-tab="direct" role="tab" class="tab">Direct</a>
       <a href="#journal" data-tab="journal" role="tab" class="tab">Journal</a>
       <a href="#pige" data-tab="pige" role="tab" class="tab">Pige</a>
-      <a href="#reglages" data-tab="reglages" role="tab" class="tab need-admin">Réglages</a>
+      <a href="#configuration" data-tab="configuration" role="tab" class="tab need-admin">Configuration</a>
     </nav>
   </header>
 
@@ -219,13 +219,12 @@
       <div class="overflow-x-auto" id="svc-full">
         <table class="w-full text-sm table-fixed" style="min-width:640px">
           <colgroup>
-            <col><col style="width:84px"><col style="width:84px"><col style="width:96px">
+            <col><col style="width:84px"><col style="width:96px">
             <col style="width:140px"><col style="width:64px"><col style="width:84px">
           </colgroup>
           <thead>
             <tr class="text-left text-[11px] uppercase tracking-wide text-gray-400 border-b border-gray-100">
               <th class="py-2 pr-3 font-semibold">Service</th>
-              <th class="py-2 pr-3 font-semibold" title="Alertes silence et absence">Surveillé</th>
               <th class="py-2 pr-3 font-semibold">État</th>
               <th class="py-2 pr-3 font-semibold">Niveau</th>
               <th class="py-2 pr-3 font-semibold">Diffusion</th>
@@ -233,7 +232,7 @@
               <th class="py-2 font-semibold"></th>
             </tr>
           </thead>
-          <tbody id="svc-body"><tr><td colspan="7" class="py-6 text-center text-xs text-gray-400">Chargement…</td></tr></tbody>
+          <tbody id="svc-body"><tr><td colspan="6" class="py-6 text-center text-xs text-gray-400">Chargement…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -309,7 +308,7 @@
             <button onclick="exportDlsHistory()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Historique complet du service choisi (CSV)"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-3">Chaque nouveau texte DLS des services surveillés, avec l'heure de son premier affichage. Un texte qui revient en boucle (nom de la station, slogan) n'est repris qu'après 10 minutes.</p>
+        <p class="text-xs text-gray-500 mb-3">Chaque nouveau texte DLS de la station suivie, avec l'heure de son premier affichage. Un texte qui revient en boucle (nom de la station, slogan) n'est repris qu'après 10 minutes.</p>
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left">
             <thead>
@@ -381,7 +380,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
           Réglages de la pige DAB+
         </div>
-        <p class="text-xs text-gray-500 mb-3">La pige enregistre la station DAB+ suivie, choisie dans l'onglet <a href="#reglages" class="text-blue-600 hover:text-blue-800">Réglages</a> (« Station suivie »). Sans station suivie, pas de pige. Après un changement de station, les enregistrements déjà faits restent jusqu'à la fin de leur conservation.</p>
+        <p class="text-xs text-gray-500 mb-3">La pige enregistre la station DAB+ suivie, choisie dans l'onglet <a href="#configuration" class="text-blue-600 hover:text-blue-800">Configuration</a> (« Station suivie »). Sans station suivie, pas de pige. Après un changement de station, les enregistrements déjà faits restent jusqu'à la fin de leur conservation.</p>
         <div class="flex flex-wrap items-end gap-4 text-sm">
           <label class="block"><span class="text-xs text-gray-500">Conservation (jours)</span>
             <input type="number" id="pg-days" min="1" max="90" class="mt-1 block w-28 border border-gray-200 rounded-lg px-2 py-1.5"></label>
@@ -395,7 +394,7 @@
     </div>
 
     <!-- ═══════════════════════ RÉGLAGES (administrateur) ═══════════════════════ -->
-    <div id="tab-reglages" class="tab-pane hidden need-admin">
+    <div id="tab-configuration" class="tab-pane hidden need-admin">
     <!-- ── Réglages (administrateur) ────────────────────────── -->
     <div class="section">
       <div class="section-title">
@@ -417,12 +416,12 @@
           <input id="s-ensemble_name" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="ex. LA ROCHE SUR YON"></label>
         <label class="block rtl-only"><span class="text-xs text-gray-500">Décodage</span>
           <select id="s-carousel_size" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
-            <option value="-1">Services surveillés seulement (conseillé)</option>
+            <option value="-1">Station suivie seulement (conseillé)</option>
             <option value="0">Tous les services en continu</option>
             <option value="2">Carrousel, 2 services à la fois</option>
             <option value="4">Carrousel, 4 services à la fois</option>
           </select>
-          <span class="text-[11px] text-gray-400">« Services surveillés » : seuls les services cochés sont décodés, en continu, pour une charge minimale. L'ensemble et la présence de tous les services restent suivis.</span></label>
+          <span class="text-[11px] text-gray-400">« Station suivie seulement » : seule la station suivie est décodée, en continu, pour une charge minimale. L'ensemble et la présence de tous les services restent suivis.</span></label>
         <label class="block"><span class="text-xs text-gray-500" title="Service affiché sur le tableau de bord et enregistré par la pige DAB+">Station suivie (tableau de bord et pige)</span>
           <select id="s-dashboard_sid" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
             <option value="">Aucune station suivie (pas de pige)</option>
@@ -478,8 +477,8 @@
         <div class="text-xs font-semibold text-gray-700 mb-1">Mails d'alerte</div>
         <p class="text-[11px] text-gray-400 mb-2">Les alertes décochées restent enregistrées dans les journaux et sur le tableau de bord, sans mail.</p>
         <div class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-          <label class="flex items-center gap-2"><input id="e-silence" type="checkbox" class="w-4 h-4"> Silence audio d'un service surveillé</label>
-          <label class="flex items-center gap-2"><input id="e-absent" type="checkbox" class="w-4 h-4"> Service surveillé absent</label>
+          <label class="flex items-center gap-2"><input id="e-silence" type="checkbox" class="w-4 h-4"> Silence audio de la station suivie</label>
+          <label class="flex items-center gap-2"><input id="e-absent" type="checkbox" class="w-4 h-4"> Station suivie absente du multiplex</label>
           <label class="flex items-center gap-2"><input id="e-receiver" type="checkbox" class="w-4 h-4"> Récepteur DAB+ hors service</label>
           <label class="flex items-center gap-2"><input id="e-ensemble" type="checkbox" class="w-4 h-4"> Ensemble dégradé (réception du multiplex)</label>
         </div>
@@ -488,7 +487,7 @@
         <button onclick="saveSettings()" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Enregistrer</button>
         <span class="text-xs" id="s-msg"></span>
       </div>
-      <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">Les services à surveiller se cochent dans le tableau « Services du multiplex » de l'onglet Direct. Aucun coché : tous les services sont surveillés. Un changement de canal ou de décodage relance welle-cli.</p>
+      <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">Seule la station suivie est surveillée (silence, absence) ; les autres services du multiplex sont seulement listés dans l'onglet Direct. Un changement de canal ou de décodage relance la réception.</p>
     </div>
 
     <!-- ── Récepteurs et balayage (administrateur) ────────────── -->
@@ -570,7 +569,7 @@
       const rows2 = [
         [!!p.dongle, p.dongle ? `Dongle Si468x branché : ${esc(p.dongle)}` : 'Brancher le dongle Si468x et son antenne bande III'],
         [!!p.arecord, p.arecord ? 'arecord installé' : 'Installer arecord : <code>sudo apt install alsa-utils</code>'],
-        [false, 'Choisir le récepteur, le canal et la station suivie dans l\'onglet <a href="#reglages" class="underline">Réglages</a>'],
+        [false, 'Choisir le récepteur, le canal et la station suivie dans l\'onglet <a href="#configuration" class="underline">Configuration</a>'],
       ];
       return '<ul class="space-y-1 mt-1">' + rows2.map(([d, t]) => `<li class="flex gap-2"><span>${d ? ok : todo}</span><span>${t}</span></li>`).join('') + '</ul>';
     }
@@ -580,7 +579,7 @@
       [!!p.dongle, p.dongle ? `Clé RTL-SDR branchée (${esc(p.dongle)})` : "Brancher une clé RTL-SDR dédiée au DAB+ et son antenne bande III"],
     ];
     if (p.dvb_driver_loaded) rows.push([false, "Pilote TNT du noyau chargé : redémarrer la machine (il est écarté par <code>67-dab.sh</code>)"]);
-    rows.push([false, 'Choisir le récepteur, le canal et la station suivie dans l\'onglet <a href="#reglages" class="underline">Réglages</a>']);
+    rows.push([false, 'Choisir le récepteur, le canal et la station suivie dans l\'onglet <a href="#configuration" class="underline">Configuration</a>']);
     return '<ul class="space-y-1 mt-1">' + rows.map(([d, t]) => `<li class="flex gap-2"><span>${d ? ok : todo}</span><span>${t}</span></li>`).join('') + '</ul>';
   }
 
@@ -589,7 +588,7 @@
     const freq = Number(s.frequency_mhz).toFixed(3).replace('.', ',');
     $('subtitle').textContent = `Canal ${s.channel} · ${freq} MHz` + (s.ensemble_name ? ` · ${s.ensemble_name}` : '')
       + (s.mode ? ` · décodage ${s.mode}` : '')
-      + (s.mode === 'services surveillés' && s.receiver_up && !(s.held_sids || []).length ? ' (aucun service coché : cochez la radio à surveiller)' : '');
+      + (s.mode === 'station suivie' && s.receiver_up && !(s.held_sids || []).length ? ' (aucune station suivie : la choisir dans Configuration)' : '');
     // Bandeau
     const n = $('notice');
     if (!s.enabled) {
@@ -644,10 +643,10 @@
   function renderServices() {
     const svcs = (st && st.services) || [];
     fillDashboardSelect(svcs);
-    const watched = new Set(st.watched_sids || []);
-    $('svc-help').textContent = svcs.length ? `${svcs.length} services` + (watched.size ? ` · ${watched.size} surveillé(s)` : ' · tous surveillés') : '';
+    const station = (settings && settings.dashboard_sid) || st.default_sid || '';
+    $('svc-help').textContent = svcs.length ? `${svcs.length} services` : '';
     if (!svcs.length) {
-      $('svc-body').innerHTML = `<tr><td colspan="7" class="py-6 text-center text-xs text-gray-400">${st.enabled ? 'Aucun service reçu pour le moment.' : 'Aucun service : réception désactivée.'}</td></tr>`;
+      $('svc-body').innerHTML = `<tr><td colspan="6" class="py-6 text-center text-xs text-gray-400">${st.enabled ? 'Aucun service reçu pour le moment.' : 'Aucun service : pas de réception DAB+.'}</td></tr>`;
       return;
     }
     $('svc-body').innerHTML = svcs.map(v => {
@@ -656,20 +655,16 @@
       let state;
       if (v.present === null || v.present === undefined) state = '<span class="text-gray-400">-</span>';
       else if (!v.present) state = '<span class="text-red-600 font-medium">Absent</span>';
-      else if (st.mode === 'services surveillés' && !(st.held_sids || []).includes(v.sid))
-        state = '<span class="text-gray-400 font-medium" title="Présent dans le multiplex, mais pas décodé : seuls les services surveillés le sont">Non surveillé</span>';
+      else if (st.mode === 'station suivie' && !(st.held_sids || []).includes(v.sid))
+        state = '<span class="text-gray-500" title="Présent dans le multiplex, non décodé : seule la station suivie l\'est">Présent</span>';
       else if (v.silence) state = '<span class="text-amber-600 font-medium">Silence</span>';
       else state = '<span class="text-green-600 font-medium">Présent</span>';
       const u = uptime[v.sid];
       const upt = u && u.uptime_pct != null ? `${u.uptime_pct.toFixed(u.uptime_pct >= 99.95 ? 0 : 1)} %` : '-';
-      const box = isAdmin
-        ? `<input type="checkbox" class="w-4 h-4" ${watched.has(v.sid) ? 'checked' : ''} onchange="toggleWatch('${esc(v.sid)}', this.checked)">`
-        : (v.watched ? '<span class="text-xs text-gray-600">oui</span>' : '<span class="text-xs text-gray-300">non</span>');
       return `<tr class="border-b border-gray-50 align-top ${v.present === false ? 'bg-red-50/40' : ''}">
-        <td class="py-2 pr-3"><div class="font-medium text-gray-900 truncate">${esc(v.label)}</div>
+        <td class="py-2 pr-3"><div class="font-medium text-gray-900 truncate">${esc(v.label)}${v.sid === station ? ' <span class="ml-1 px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-medium align-middle">Station suivie</span>' : ''}</div>
           <div class="text-[11px] text-gray-400 font-mono truncate">${esc(v.sid)}${v.pty ? ' · ' + esc(v.pty) : ''}</div>
           <div class="text-[11px] text-gray-500 mt-0.5 truncate" title="${esc(v.dls || '')}">${v.dls ? esc(v.dls) : '&nbsp;'}</div></td>
-        <td class="py-2 pr-3">${box}</td>
         <td class="py-2 pr-3 text-xs whitespace-nowrap">${state}</td>
         <td class="py-2 pr-3 text-xs font-mono whitespace-nowrap ${fresh ? 'text-gray-700' : 'text-gray-300'}" style="font-variant-numeric:tabular-nums"
             title="${fresh ? 'Niveau relevé toutes les 2 s' : 'Niveau non rafraîchi : service non décodé en ce moment'}">${v.present && lvl > -100 ? lvl.toFixed(1) + ' dBFS' : '-'}</td>
@@ -956,15 +951,6 @@
       loadSettings(); setTimeout(loadStatus, 3000);
     } catch (e) { $('s-msg').className = 'text-xs text-red-600'; $('s-msg').textContent = e.message; }
   }
-  async function toggleWatch(sid, on) {
-    const set = new Set(st.watched_sids || []);
-    on ? set.add(sid) : set.delete(sid);
-    try {
-      await post({ watched_sids: [...set] });
-      st.watched_sids = [...set];
-      renderServices();
-    } catch (e) { alert(e.message); loadStatus(); }
-  }
 
   // ── Menu ───────────────────────────────────────────────
   async function updateSidebarFrequency() {
@@ -1079,12 +1065,13 @@
     $('sidebar-overlay').classList.add('hidden');
   }
 
-  // ═══ Onglets : #direct, #journal, #pige, #reglages ═══════════════════
-  const TABS = ['direct', 'journal', 'pige', 'reglages'];
+  // ═══ Onglets : #direct, #journal, #pige, #configuration ═══════════════════
+  const TABS = ['direct', 'journal', 'pige', 'configuration'];
   let curTab = null;
   const loaded = {};
   function showTab(t) {
-    if (!TABS.includes(t) || (t === 'reglages' && !isAdmin)) t = 'direct';
+    if (t === 'reglages') t = 'configuration';                     // ancien nom de l'onglet
+    if (!TABS.includes(t) || (t === 'configuration' && !isAdmin)) t = 'direct';
     const was = curTab;
     curTab = t;
     TABS.forEach(x => $('tab-' + x).classList.toggle('hidden', x !== t));
@@ -1332,8 +1319,8 @@
     $('pg-none').classList.toggle('hidden', !none);
     $('pg-main').classList.toggle('hidden', none);
     $('pg-none').innerHTML = !pg || pg.blocked === 'reception'
-      ? 'Pas de réception DAB+ : choisir un récepteur dans l\'onglet <a href="#reglages" class="text-blue-600">Réglages</a>, la pige démarre avec la réception.'
-      : 'Aucune station DAB+ suivie, donc pas de pige : choisir la station dans l\'onglet <a href="#reglages" class="text-blue-600">Réglages</a> (« Station suivie »).';
+      ? 'Pas de réception DAB+ : choisir un récepteur dans l\'onglet <a href="#configuration" class="text-blue-600">Configuration</a>, la pige démarre avec la réception.'
+      : 'Aucune station DAB+ suivie, donc pas de pige : choisir la station dans l\'onglet <a href="#configuration" class="text-blue-600">Configuration</a> (« Station suivie »).';
     renderPigeCfg();
   }
   function renderPigeCfg() {
@@ -1349,7 +1336,7 @@
     const mode = st ? (st.enabled ? st.mode : null) : null, w = $('pg-warn');
     const carousel = mode && /carrousel/i.test(mode);
     w.classList.toggle('hidden', !(pg.wanted && carousel));
-    w.textContent = 'Décodage en carrousel : la station n\'est décodée qu\'à tour de rôle et la pige aura des trous. Choisir « Services surveillés seulement » ou « Tous les services en continu » dans l\'onglet Réglages.';
+    w.textContent = 'Décodage en carrousel : la station n\'est décodée qu\'à tour de rôle et la pige aura des trous. Choisir « Station suivie seulement » ou « Tous les services en continu » dans l\'onglet Configuration.';
   }
   async function pgLoadStatus(center) {
     if (!pgId) return;

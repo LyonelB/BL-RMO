@@ -100,7 +100,7 @@
       <a href="#direct" data-tab="direct" role="tab" class="tab">Direct</a>
       <a href="#journal" data-tab="journal" role="tab" class="tab">Journal</a>
       <a href="#pige" data-tab="pige" role="tab" class="tab">Pige</a>
-      <a href="#reglages" data-tab="reglages" role="tab" class="tab need-admin">Réglages</a>
+      <a href="#configuration" data-tab="configuration" role="tab" class="tab need-admin">Configuration</a>
     </nav>
   </header>
 
@@ -347,7 +347,7 @@
     </div>
 
     <!-- ═══════════════════════ RÉGLAGES (administrateur) ═══════════════════════ -->
-    <div id="tab-reglages" class="tab-pane hidden need-admin">
+    <div id="tab-configuration" class="tab-pane hidden need-admin">
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
@@ -436,12 +436,13 @@
     if (sub !== undefined) $(id + '-sub').textContent = sub || ' ';
   }
 
-  // ═══ Onglets : #direct, #journal, #pige, #reglages ═══════════════════
-  const TABS = ['direct', 'journal', 'pige', 'reglages'];
+  // ═══ Onglets : #direct, #journal, #pige, #configuration ═══════════════════
+  const TABS = ['direct', 'journal', 'pige', 'configuration'];
   let curTab = null;
   const loaded = {};
   function showTab(t) {
-    if (!TABS.includes(t) || (t === 'reglages' && !isAdmin)) t = 'direct';
+    if (t === 'reglages') t = 'configuration';                     // ancien nom de l'onglet
+    if (!TABS.includes(t) || (t === 'configuration' && !isAdmin)) t = 'direct';
     curTab = t;
     TABS.forEach(x => $('tab-' + x).classList.toggle('hidden', x !== t));
     document.querySelectorAll('[data-tab]').forEach(a => {
@@ -451,7 +452,7 @@
     applySpectrum();                                   // spectre calculé seulement sur Direct
     if (t === 'journal') loadJournal();
     if (t === 'pige' && !loaded.pige) { loaded.pige = true; initPige(); }
-    if (t === 'reglages' && !loaded.reglages) { loaded.reglages = true; fillSettings(); }
+    if (t === 'configuration' && !loaded.reglages) { loaded.reglages = true; fillSettings(); }
   }
   window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
 

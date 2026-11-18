@@ -1527,12 +1527,11 @@ def dab_settings():
             dab['watched_sids'] = [str(x).lower() for x in (data['watched_sids'] or []) if str(x).strip()]
     except (TypeError, ValueError):
         return jsonify({'status': 'error', 'message': 'Valeur invalide'}), 400
-    # Station suivie : toujours surveillée (décodée en continu, donc enregistrée par la pige)
+    # Une seule station surveillée : la station suivie (décodée en continu, alertes
+    # silence et absence, pige DAB+). Les autres services sont seulement listés.
     station = str(dab.get('dashboard_sid') or '').lower()
-    if 'dashboard_sid' in data and station:
-        watched = dab.get('watched_sids') or []
-        if watched and station not in watched:
-            dab['watched_sids'] = watched + [station]
+    if 'dashboard_sid' in data:
+        dab['watched_sids'] = [station] if station else []
     if str(dab.get('channel', '9A')).upper() not in BAND_III:
         return jsonify({'status': 'error', 'message': 'Canal inconnu (bande III : 5A à 13F)'}), 400
     dab['channel'] = str(dab.get('channel', '9A')).upper()

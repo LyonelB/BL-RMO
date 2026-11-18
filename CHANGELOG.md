@@ -6,6 +6,11 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Une seule station DAB+ surveillée, onglet Configuration
+- **Plus de doublon avec la colonne « Surveillé »** : on surveille une seule station DAB+, celle choisie dans « Station suivie » (onglet Configuration). Les cases à cocher du tableau « Services du multiplex » disparaissent ; la station suivie y porte un badge, les autres services sont seulement listés (présence, niveau, diffusion, écoute). Enregistrer la configuration fait de la station suivie le seul service surveillé (alertes silence et absence, décodage continu, pige).
+- **Libellés** : décodage « Station suivie seulement (conseillé) », mails « Silence audio de la station suivie » et « Station suivie absente du multiplex ».
+- **Onglet « Réglages » renommé « Configuration »** sur les pages FM et DAB+ (`/fm#configuration`, `/dab#configuration`) ; les anciens liens `#reglages` mènent toujours au bon onglet.
+
 ### Logo de la station FM
 - **Écoute et spectre (page FM)** : le logo de la station s'affiche à côté du bouton de lecture, comme le diaporama en DAB+. C'est le logo déjà trouvé par le PI dans rds-station-db pour le tableau de bord ; il disparaît quand le signal est perdu ou qu'aucun logo n'est connu. Même cadre qu'en DAB+ (64 × 48 px, image entière sans recadrage), pour le logo FM comme pour le diaporama DAB+.
 

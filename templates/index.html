@@ -258,7 +258,7 @@
             <span class="text-xs text-blue-600 whitespace-nowrap">Journal ›</span>
           </a>
         </div>
-        <div class="text-xs text-gray-500">Service choisi dans <a href="/dab#reglages" class="text-blue-600 hover:text-blue-800">DAB+ › Réglages › Service du tableau de bord</a></div>
+        <div class="text-xs text-gray-500">Service choisi dans <a href="/dab#configuration" class="text-blue-600 hover:text-blue-800">DAB+ › Configuration › Service du tableau de bord</a></div>
       </section>
     </div>
 
@@ -497,7 +497,7 @@
     if (!svc) {
       off.classList.remove('hidden'); on.classList.add('hidden');
       off.innerHTML = d.selected_sid ? `Le service ${esc(d.selected_sid)} n'est pas reçu pour le moment.`
-        : 'Aucun service choisi : <a href="/dab#reglages" class="text-blue-600">DAB+ › Réglages</a>.';
+        : 'Aucun service choisi : <a href="/dab#configuration" class="text-blue-600">DAB+ › Configuration</a>.';
       $('pill-dab').style.background = d.receiver_up ? DOT.warn : DOT.bad; dabSid = null; return;
     }
     off.classList.add('hidden'); on.classList.remove('hidden');
