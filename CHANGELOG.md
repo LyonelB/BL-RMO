@@ -6,6 +6,14 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Navigation regroupée par domaine, étape 2 : la page DAB+
+- **Page DAB+ en quatre onglets**, chacun avec son adresse : Direct (`/dab#direct`), Journal (`/dab#journal`), Pige (`/dab#pige`) et Réglages (`/dab#reglages`, administrateur), sur le modèle de la page FM.
+- **Direct** : tuiles, écoute et spectre, les 5 derniers DLS du service suivi, services du multiplex. Le bloc « Derniers événements » est supprimé (doublon du Journal). L'écoute s'arrête automatiquement après 15 min, comme en FM (« En écoute (arrêt automatique après 15 min) »). Le spectre n'est calculé que sur l'onglet Direct, l'état du multiplex est relu toutes les 2 s sur Direct et toutes les 15 s ailleurs.
+- **Journal** : les alertes DAB+ (filtres par type et par service, export CSV, liens vers la pige) et tout l'historique du DLS par service, repris de la page Journaux ; alertes avec mail sur 30 jours et « Tout est OK depuis ». Un DLS encore dans la pige a son lien « Écouter ».
+- **Pige** : la même fenêtre simple qu'en FM (date, heure de début, heure de fin, Lecture, Télécharger, disponibilité sur une ligne), avec le choix du service quand plusieurs piges DAB+ existent. En dessous, les réglages des piges DAB+ (administrateur) : liste, conservation, suspendre, supprimer, créer la pige d'un service.
+- **Réglages** : réception et seuils d'alerte, mails d'alerte, puis récepteurs et balayage de la bande III.
+- **Liens** : « Écouter » sur une alerte DAB+ ouvre l'onglet Pige et lit tout le créneau de l'alerte (de 30 s avant à 30 s après le rétablissement). Les anciens liens `/pige?p=<pige DAB+>&t=` mènent à l'onglet Pige de la page DAB+ ; la dernière alerte DAB+ du tableau de bord mène au Journal DAB+.
+
 ### Navigation regroupée par domaine, étape 1 : la page FM
 - **Page FM en quatre onglets**, chacun avec son adresse : Direct (`/fm#direct`), Journal (`/fm#journal`), Pige (`/fm#pige`) et Réglages (`/fm#reglages`, administrateur). Tout ce qui concerne la FM est au même endroit.
 - **Direct** : tuiles, écoute et spectre, les 5 derniers RadioText ; « Tout l'historique » mène au Journal. Le bloc « Derniers événements » est supprimé (doublon du Journal). Le spectre n'est calculé que sur l'onglet Direct.

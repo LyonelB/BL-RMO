@@ -13,6 +13,9 @@
     .sidebar-link svg { width:18px; height:18px; flex-shrink:0; }
     .section { background:white; border:1px solid #f1f5f9; border-radius:12px; padding:20px; margin-bottom:16px; }
     .section-title { font-size:0.75rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .tab { padding-bottom:10px; border-bottom:2px solid transparent; color:#6b7280; white-space:nowrap; text-decoration:none; }
+    .tab:hover { color:#1f2937; }
+    .tab.on { color:#1d4ed8; border-color:#2563eb; font-weight:500; }
   </style>
 {% include '_roles.html' %}
 </head>
@@ -85,7 +88,7 @@
 <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
 <main class="flex-1 overflow-y-auto">
 
-  <header class="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10">
+  <header class="bg-white border-b border-gray-100 px-6 pt-4 sticky top-0 z-10">
     <div class="flex items-center gap-2">
       <button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -93,9 +96,15 @@
       <h1 class="text-base font-semibold text-gray-900">Réception DAB+</h1>
     </div>
     <p class="text-xs text-gray-400 mt-0.5" id="subtitle">Multiplex reçu par la clé RTL-SDR et welle-cli</p>
+    <nav class="flex gap-5 mt-3 text-sm overflow-x-auto" role="tablist" aria-label="Réception DAB+">
+      <a href="#direct" data-tab="direct" role="tab" class="tab">Direct</a>
+      <a href="#journal" data-tab="journal" role="tab" class="tab">Journal</a>
+      <a href="#pige" data-tab="pige" role="tab" class="tab">Pige</a>
+      <a href="#reglages" data-tab="reglages" role="tab" class="tab need-admin">Réglages</a>
+    </nav>
   </header>
 
-  <div class="p-6 max-w-6xl">
+  <div class="p-4 md:p-6 max-w-6xl">
 
     <!-- ── Désactivé / service arrêté ───────────────────────── -->
     <div id="notice" class="section hidden" style="border-color:#fde68a;background:#fffbeb">
@@ -103,6 +112,8 @@
       <div class="text-xs text-amber-700 mt-1 leading-relaxed" id="notice-text"></div>
     </div>
 
+    <!-- ═══════════════════════ DIRECT ═══════════════════════ -->
+    <div id="tab-direct" class="tab-pane hidden">
     <!-- ── État ─────────────────────────────────────────────── -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
       <div class="section" style="margin-bottom:0">
@@ -182,7 +193,7 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
         <span>Titres diffusés (DLS)</span>
         <span class="ml-auto flex items-center gap-3">
-          <a href="/logs#dab" class="text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">Tout l'historique &rarr;</a>
+          <a href="#journal" class="text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">Tout l'historique &rarr;</a>
           <button id="dls-toggle" class="flex items-center gap-1 text-[11px] font-medium normal-case tracking-normal text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1"></button>
         </span>
       </div>
@@ -193,20 +204,6 @@
           <tbody id="dls-body" class="divide-y divide-gray-50"><tr><td colspan="3" class="py-6 text-center text-gray-400">Chargement…</td></tr></tbody>
         </table>
       </div>
-    </div>
-
-    <!-- ── Événements ───────────────────────────────────────── -->
-    <div class="section">
-      <div class="section-title" id="events-title">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-        <span>Derniers événements</span>
-        <span class="ml-auto flex items-center gap-3">
-          <a href="/logs#dab" class="text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">Journal de réception &rarr;</a>
-          <button id="events-toggle" class="flex items-center gap-1 text-[11px] font-medium normal-case tracking-normal text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1"></button>
-        </span>
-      </div>
-      <div id="events-short" class="text-xs text-gray-500 truncate hidden"></div>
-      <div id="events" class="text-xs text-gray-400">Chargement…</div>
     </div>
 
     <!-- ── Services ─────────────────────────────────────────── -->
@@ -241,35 +238,188 @@
       </div>
     </div>
 
-    <!-- ── Récepteurs et balayage (administrateur) ────────────── -->
-    <div class="section need-admin" id="recepteurs" style="scroll-margin-top:80px">
-      <div class="section-title">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
-        Récepteurs
-        <button onclick="detectReceivers()" id="rx-detect" class="ml-auto text-[11px] font-medium normal-case tracking-normal border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1">Détecter les récepteurs</button>
-      </div>
-      <div id="rx-list" class="text-xs text-gray-400">Cliquer sur « Détecter les récepteurs » : clé RTL-SDR, dongle Si468x et TEF branchés, avec leur port et leur carte son. Aucun port n'est ouvert.</div>
+    </div>
 
-      <div class="mt-5 pt-4 border-t border-gray-100">
-        <div class="flex items-center gap-3 flex-wrap">
-          <div class="text-xs font-semibold text-gray-700">Balayage de la bande III (dongle Si468x, essai)</div>
-          <button onclick="startScan()" id="scan-btn" class="ml-auto text-[11px] font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1">Lancer le balayage</button>
+    <!-- ═══════════════════════ JOURNAL ═══════════════════════ -->
+    <div id="tab-journal" class="tab-pane hidden">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Alertes, 30 derniers jours</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="db-30d">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="db-30d-sub"></div>
         </div>
-        <p class="text-[11px] text-gray-400 mt-1">Les 38 canaux de 5A à 13F, environ 1 min 30. Possible quand le dongle n'assure pas la surveillance DAB+ (récepteur « Clé RTL-SDR » dans les réglages, ou réception désactivée).</p>
-        <div id="scan-progress" class="hidden mt-3">
-          <div class="flex items-center gap-2 text-xs text-gray-500"><span id="scan-label"></span></div>
-          <div class="h-1.5 rounded bg-gray-100 mt-1 overflow-hidden"><div id="scan-bar" class="h-full bg-blue-500" style="width:0"></div></div>
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="db-ok-label">Tout est OK depuis</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="db-ok">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="db-ok-sub"></div>
         </div>
-        <div id="scan-msg" class="text-xs mt-2"></div>
-        <div id="scan-results" class="mt-3"></div>
+      </div>
+
+      <div class="section">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="section-title" style="margin-bottom:0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            Alertes de la réception DAB+
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <select id="db-type" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="dbLimit = 10; renderDab()">
+              <option value="">Tous les types</option>
+            </select>
+            <select id="db-svc" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="dbLimit = 10; renderDab()">
+              <option value="">Tous les services</option>
+            </select>
+            <button onclick="exportDab()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Alertes affichées (filtres compris), en CSV"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mb-3">Mesurées sur le multiplex reçu. Un mail part à l'alerte, un second au rétablissement. « Écouter » ouvre l'onglet Pige au moment de l'alerte : la pige du service concerné, ou pour une alerte sur tout le multiplex, la première pige DAB+.</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead>
+              <tr class="text-gray-400 border-b border-gray-100">
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">Date</th>
+                <th class="font-medium py-2 pr-3">Alerte</th>
+                <th class="font-medium py-2 pr-3">Service</th>
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">Début → fin</th>
+                <th class="font-medium py-2 pr-3">Durée</th>
+                <th class="font-medium py-2 pr-3">État</th>
+                <th class="font-medium py-2 pr-3">Détail</th>
+                <th class="font-medium py-2 pr-3">Mails</th>
+                <th class="font-medium py-2">Pige</th>
+              </tr>
+            </thead>
+            <tbody id="db-body" class="divide-y divide-gray-50">
+              <tr><td colspan="9" class="py-8 text-center text-gray-400">Chargement…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
+          <span id="db-count"></span>
+          <button id="db-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="dbLimit += 50; renderDab()">Afficher plus</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="section-title" style="margin-bottom:0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+            Titres diffusés (DLS)
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <select id="dlh-svc" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="dlhLimit = 10; loadDlsHistory()"></select>
+            <button onclick="exportDlsHistory()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Historique complet du service choisi (CSV)"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mb-3">Chaque nouveau texte DLS des services surveillés, avec l'heure de son premier affichage. Un texte qui revient en boucle (nom de la station, slogan) n'est repris qu'après 10 minutes.</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead>
+              <tr class="text-gray-400 border-b border-gray-100">
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">Heure</th>
+                <th class="font-medium py-2 pr-3">DLS</th>
+                <th class="font-medium py-2"></th>
+              </tr>
+            </thead>
+            <tbody id="dlh-body" class="divide-y divide-gray-50">
+              <tr><td colspan="3" class="py-8 text-center text-gray-400">Chargement…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex justify-end mt-3 text-xs">
+          <button id="dlh-more" class="px-2.5 py-1 rounded-md border border-gray-200 text-gray-500 hidden" onclick="dlhLimit += 50; loadDlsHistory()">Afficher plus</button>
+        </div>
       </div>
     </div>
 
+    <!-- ═══════════════════════ PIGE ═══════════════════════ -->
+    <div id="tab-pige" class="tab-pane hidden">
+      <div class="section">
+        <div class="section-title">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
+          Écoute et extrait
+        </div>
+        <div id="pg-none" class="hidden text-sm text-gray-500">Aucune pige DAB+ pour le moment. <span class="need-admin">Créer la pige d'un service dans « Réglages de la pige DAB+ » ci-dessous.</span><span class="lecteur-hint">Un administrateur peut en créer une.</span></div>
+        <div id="pg-main">
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 mb-4">
+          <label class="flex items-center gap-2" id="pg-sel-box"><span class="text-xs text-gray-500">Service</span>
+            <select id="pg-sel" class="border border-gray-200 rounded-lg px-2 py-1.5 text-sm bg-white"></select></label>
+          <span class="flex items-center gap-2"><span id="pg-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300 flex-shrink-0"></span><span id="pg-avail">Chargement…</span></span>
+        </div>
+        <div class="flex flex-wrap items-end gap-3">
+          <label class="block"><span class="text-xs text-gray-500">Date</span>
+            <input type="date" id="pg-date" class="mt-1 block border border-gray-200 rounded-lg px-2 py-1.5 text-sm"></label>
+          <label class="block"><span class="text-xs text-gray-500">Heure de début</span>
+            <input type="time" step="1" id="pg-start" class="mt-1 block border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-mono"></label>
+          <label class="block"><span class="text-xs text-gray-500">Heure de fin</span>
+            <input type="time" step="1" id="pg-end" class="mt-1 block border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-mono"></label>
+          <button type="button" id="pg-play" onclick="pigePlayToggle()" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium">
+            <span id="pg-play-ic"></span><span id="pg-play-txt">Lecture</span></button>
+          <button type="button" id="pg-dl" onclick="pigeDownload()" class="need-operateur flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 hover:border-blue-500 hover:text-blue-700 text-gray-700 text-sm font-medium disabled:opacity-40">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Télécharger</button>
+        </div>
+        <div class="text-xs text-gray-500 mt-3" id="pg-summary">&nbsp;</div>
+
+        <div id="pg-player" class="hidden mt-4 p-3 rounded-lg bg-slate-50">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="font-mono text-lg font-semibold text-gray-900" id="pg-pos">--:--:--</div>
+            <div class="flex-1 min-w-[160px]">
+              <div id="pg-bar" class="relative h-2 rounded bg-slate-200 cursor-pointer" title="Clic : se placer à ce moment">
+                <div id="pg-bar-fill" class="absolute inset-y-0 left-0 rounded bg-blue-500" style="width:0"></div>
+              </div>
+              <div class="flex justify-between font-mono text-[10px] text-gray-400 mt-1"><span id="pg-bar-a"></span><span id="pg-bar-b"></span></div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+              <input type="range" id="pg-volume" min="0" max="100" value="80" class="w-16 h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-blue-500">
+            </div>
+          </div>
+          <div class="text-[11px] text-gray-400 mt-1" id="pg-state"></div>
+          <audio id="pg-audio" preload="auto"></audio>
+        </div>
+        </div>
+      </div>
+
+      <div class="section need-admin">
+        <div class="section-title">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+          Réglages de la pige DAB+
+        </div>
+        <p class="text-xs text-gray-500 mb-3">Chaque pige enregistre un service du multiplex, en continu. Le service doit être décodé en permanence : décodage « Services surveillés seulement » (service coché) ou « Tous les services en continu ».</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm" style="min-width:600px">
+            <thead><tr class="text-left text-[11px] text-gray-400 uppercase tracking-wide border-b border-gray-100">
+              <th class="py-2 pr-2 font-semibold">Nom</th><th class="py-2 px-2 font-semibold">Service</th><th class="py-2 px-2 font-semibold">Conservation</th>
+              <th class="py-2 px-2 font-semibold">Espace</th><th class="py-2 px-2 font-semibold">État</th><th class="py-2 font-semibold"></th></tr></thead>
+            <tbody id="cfg-body"></tbody>
+          </table>
+        </div>
+        <form id="cfg-form" class="mt-4 border border-dashed border-gray-300 rounded-lg p-4" onsubmit="saveForm(event)">
+          <div class="text-sm font-semibold text-gray-800 mb-3" id="cfg-form-title">Nouvelle pige DAB+</div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <label class="block"><span class="text-xs text-gray-500">Nom</span>
+              <input type="text" id="f-name" maxlength="60" placeholder="ex. Graffiti DAB+" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+            <label class="block"><span class="text-xs text-gray-500">Service</span>
+              <select id="f-sid" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"></select></label>
+            <label class="block"><span class="text-xs text-gray-500">Conservation (jours)</span>
+              <input type="number" id="f-days" min="1" max="90" value="7" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+          </div>
+          <div class="text-xs text-gray-500 mt-2" id="f-estimate"></div>
+          <div class="text-xs hidden mt-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800" id="f-warn"></div>
+          <div class="flex flex-wrap items-center gap-3 mt-3">
+            <button type="submit" id="f-submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Créer la pige</button>
+            <button type="button" id="f-cancel" class="hidden text-sm text-gray-500 hover:text-gray-800" onclick="resetForm()">Annuler</button>
+            <span class="text-xs" id="f-msg"></span>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════ RÉGLAGES (administrateur) ═══════════════════════ -->
+    <div id="tab-reglages" class="tab-pane hidden need-admin">
     <!-- ── Réglages (administrateur) ────────────────────────── -->
-    <div class="section need-admin" id="reglages" style="scroll-margin-top:80px">
+    <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-        Réglages
+        Réception et seuils d'alerte
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
         <label class="flex items-center gap-2 sm:col-span-2 lg:col-span-3">
@@ -359,9 +509,34 @@
         <button onclick="saveSettings()" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Enregistrer</button>
         <span class="text-xs" id="s-msg"></span>
       </div>
-      <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">Les services à surveiller se cochent dans le tableau ci-dessus. Aucun coché : tous les services sont surveillés. Un changement de canal ou de décodage relance welle-cli.</p>
+      <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">Les services à surveiller se cochent dans le tableau « Services du multiplex » de l'onglet Direct. Aucun coché : tous les services sont surveillés. Un changement de canal ou de décodage relance welle-cli.</p>
     </div>
 
+    <!-- ── Récepteurs et balayage (administrateur) ────────────── -->
+    <div class="section" id="recepteurs">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
+        Récepteurs
+        <button onclick="detectReceivers()" id="rx-detect" class="ml-auto text-[11px] font-medium normal-case tracking-normal border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1">Détecter les récepteurs</button>
+      </div>
+      <div id="rx-list" class="text-xs text-gray-400">Cliquer sur « Détecter les récepteurs » : clé RTL-SDR, dongle Si468x et TEF branchés, avec leur port et leur carte son. Aucun port n'est ouvert.</div>
+
+      <div class="mt-5 pt-4 border-t border-gray-100">
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="text-xs font-semibold text-gray-700">Balayage de la bande III (dongle Si468x, essai)</div>
+          <button onclick="startScan()" id="scan-btn" class="ml-auto text-[11px] font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1">Lancer le balayage</button>
+        </div>
+        <p class="text-[11px] text-gray-400 mt-1">Les 38 canaux de 5A à 13F, environ 1 min 30. Possible quand le dongle n'assure pas la surveillance DAB+ (récepteur « Clé RTL-SDR » dans les réglages, ou réception désactivée).</p>
+        <div id="scan-progress" class="hidden mt-3">
+          <div class="flex items-center gap-2 text-xs text-gray-500"><span id="scan-label"></span></div>
+          <div class="h-1.5 rounded bg-gray-100 mt-1 overflow-hidden"><div id="scan-bar" class="h-full bg-blue-500" style="width:0"></div></div>
+        </div>
+        <div id="scan-msg" class="text-xs mt-2"></div>
+        <div id="scan-results" class="mt-3"></div>
+      </div>
+    </div>
+
+    </div>
   </div>
 </main>
 
@@ -371,7 +546,15 @@
   const csrf = () => document.querySelector('meta[name="csrf-token"]').content;
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const pad = n => String(n).padStart(2, '0');
-  const isAdmin = document.documentElement.dataset.role === 'admin';
+  const role = document.documentElement.dataset.role;
+  const isAdmin = role === 'admin', canExport = role === 'admin' || role === 'operateur';
+  const tms = iso => iso ? new Date(String(iso).replace(' ', 'T')).getTime() : null;
+  async function api(url) {
+    const r = await fetch(url, { credentials: 'include' });
+    if (r.status === 401 || r.redirected) { location.href = '/login?timeout=1'; throw new Error('Session expirée'); }
+    if (!r.ok) throw new Error(`Erreur ${r.status}`);
+    return r.json();
+  }
   let st = null, uptime = {}, listening = null, settings = null;
 
   function fmtDur(s) {
@@ -406,7 +589,7 @@
       const rows2 = [
         [!!p.dongle, p.dongle ? `Dongle Si468x branché : ${esc(p.dongle)}` : 'Brancher le dongle Si468x et son antenne bande III'],
         [!!p.arecord, p.arecord ? 'arecord installé' : 'Installer arecord : <code>sudo apt install alsa-utils</code>'],
-        [false, 'Cocher « Activer la réception DAB+ » dans les réglages en bas de page'],
+        [false, 'Cocher « Activer la réception DAB+ » dans l\'onglet <a href="#reglages" class="underline">Réglages</a>'],
       ];
       return '<ul class="space-y-1 mt-1">' + rows2.map(([d, t]) => `<li class="flex gap-2"><span>${d ? ok : todo}</span><span>${t}</span></li>`).join('') + '</ul>';
     }
@@ -416,7 +599,7 @@
       [!!p.dongle, p.dongle ? `Clé RTL-SDR branchée (${esc(p.dongle)})` : "Brancher une clé RTL-SDR dédiée au DAB+ et son antenne bande III"],
     ];
     if (p.dvb_driver_loaded) rows.push([false, "Pilote TNT du noyau chargé : redémarrer la machine (il est écarté par <code>67-dab.sh</code>)"]);
-    rows.push([false, 'Cocher « Activer la réception DAB+ » dans les réglages en bas de page']);
+    rows.push([false, 'Cocher « Activer la réception DAB+ » dans l\'onglet <a href="#reglages" class="underline">Réglages</a>']);
     return '<ul class="space-y-1 mt-1">' + rows.map(([d, t]) => `<li class="flex gap-2"><span>${d ? ok : todo}</span><span>${t}</span></li>`).join('') + '</ul>';
   }
 
@@ -544,27 +727,6 @@
     } catch (e) { }
   }
 
-  async function loadEvents() {
-    let d;
-    try {
-      const r = await fetch('/api/dab/events?limit=15', { credentials: 'include' });
-      d = await r.json();
-    } catch (e) { return; }
-    if (!d.events || !d.events.length) { $('events').innerHTML = 'Aucun événement.'; $('events-short').textContent = 'Aucun événement.'; return; }
-    const e0 = d.events[0];
-    $('events-short').innerHTML = `Dernier : <span class="text-gray-800 font-medium">${esc(e0.label)}${e0.service ? ' : ' + esc(e0.service) : ''}</span> le ${fmtDate(e0.start)}`
-      + (e0.status === 'ongoing' ? ' · <span class="text-red-600 font-medium">en cours</span>' : e0.status === 'orphan' ? ' · fin inconnue' : ` · ${fmtDur(e0.duration)}`);
-    $('events').innerHTML = '<div class="divide-y divide-gray-100">' + d.events.map(e => {
-      const ongoing = e.status === 'ongoing';
-      return `<div class="flex flex-wrap items-baseline gap-x-4 gap-y-0.5 py-2">
-        <div class="font-mono text-gray-500" style="min-width:110px">${fmtDate(e.start)}</div>
-        <div class="flex-1 text-sm text-gray-800" style="min-width:200px">${esc(e.label)}${e.service ? ' : <b>' + esc(e.service) + '</b>' : ''}
-          <div class="text-xs text-gray-400">${esc(e.message || '')}</div></div>
-        <div class="whitespace-nowrap ${ongoing ? 'text-red-600 font-medium' : 'text-gray-500'}" ${e.status === 'orphan' ? 'title="Surveillance DAB+ redémarrée pendant l\'alerte"' : ''}>${ongoing ? 'En cours' : e.status === 'orphan' ? 'Fin inconnue' : 'Durée ' + fmtDur(e.duration)}</div>
-      </div>`;
-    }).join('') + '</div>';
-  }
-
   // ── Écoute et spectre (SPECTRUM_PATCH) ───────────────
   // Le lecteur reste affiché sur le service suivi (celui du tableau de bord) ;
   // « Écouter » dans le tableau le bascule sur un autre service. Spectre et
@@ -580,7 +742,7 @@
     $('spec-on').checked = specOn;
     $('spec-box').classList.toggle('hidden', !specOn);
     meters.clear();
-    if (!specOn || !shown) return;
+    if (!specOn || !shown || curTab !== 'direct') return;
     if (listening) { spectrum.clear('Spectre de l\'écoute…'); return; }   // calculé dans le navigateur
     spectrum.clear('Lecture de la pige du service…');
     specConn = BLRMO.connectSpectrum('dab', shown, d => {
@@ -619,10 +781,13 @@
     if (want) select(want);
     else { $('pl-name').textContent = 'Aucun service reçu pour le moment'; spectrum.clear('Aucun service reçu pour le moment'); }
   }
+  let stopTimer = null;
   function listen(sid) {
     select(sid);
     stopListen();
+    pigeStop();
     listening = sid;
+    stopTimer = setTimeout(stopListen, 15 * 60 * 1000);
     $('pl-help').textContent = 'Connexion…';
     playStream();
     renderServices();
@@ -692,7 +857,7 @@
       stopListen();
       $('pl-help').textContent = 'Écoute impossible : le service ne répond pas pour le moment. Réessayer dans quelques secondes.';
     };
-    a.onplaying = () => { $('pl-help').textContent = 'Écoute servie par la clé DAB+ : une seule à la fois, coupée automatiquement après quelques minutes.'; };
+    a.onplaying = () => { $('pl-help').textContent = 'En écoute (arrêt automatique après 15 min)'; };
     a.onended = () => { stopListen(); };   // écoute coupée par le serveur (durée maximale)
   }
   function togglePlay() {
@@ -704,6 +869,7 @@
     if (again) again.gain.value = v / 100; else $('pl-audio').volume = v / 100;
   }
   function stopListen() {
+    if (stopTimer) { clearTimeout(stopTimer); stopTimer = null; }
     playButton(false);
     const a = $('pl-audio');
     a.onerror = null;
@@ -715,8 +881,6 @@
   }
 
   // ── Fenêtres repliables (mémorisé dans ce navigateur) ──
-  BLRMO.collapsible('blrmo-dab-events', [[$('events'), true], [$('events-short'), false]], $('events-toggle'),
-    open => { $('events-title').style.marginBottom = open ? '' : '0'; });
   BLRMO.collapsible('blrmo-dab-services', [[$('svc-full'), true]], $('svc-toggle'),
     open => { $('svc-title').style.marginBottom = open ? '' : '0'; });
 
@@ -727,7 +891,7 @@
   async function loadDls() {
     if (!shown) return;
     let d;
-    try { d = await (await fetch(`/api/dab/dls_history?limit=10&sid=${encodeURIComponent(shown)}`, { credentials: 'include' })).json(); } catch (e) { return; }
+    try { d = await (await fetch(`/api/dab/dls_history?limit=5&sid=${encodeURIComponent(shown)}`, { credentials: 'include' })).json(); } catch (e) { return; }
     if (d.sid !== shown) return;
     const rows = d.data || [];
     const cur = String(d.current || '').split(/\s+/).join(' ').trim();
@@ -745,7 +909,7 @@
       const live = i === 0 && r.dls === cur;
       const t0 = isNaN(t) ? 0 : Math.floor(t.getTime() / 1000);
       const listenLink = pg && pg.oldest && t0 >= pg.oldest
-        ? `<a href="/pige?p=${encodeURIComponent(pg.id)}&t=${t0}" class="font-medium text-blue-600 hover:text-blue-800" title="Écouter la pige ${esc(pg.name)} à ce moment">Écouter</a>` : '';
+        ? `<a href="/dab?p=${encodeURIComponent(pg.id)}&t=${t0}#pige" class="font-medium text-blue-600 hover:text-blue-800" title="Écouter la pige ${esc(pg.name)} à ce moment">Écouter</a>` : '';
       return `<tr class="hover:bg-slate-50">
         <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${hm}</td>
         <td class="py-2 pr-3 truncate ${live ? 'font-semibold text-gray-900' : 'text-gray-700'}" title="${esc(r.dls)}">${esc(r.dls)}</td>
@@ -756,8 +920,9 @@
     $('dls-short').innerHTML = (first.dls === cur ? 'À l\'antenne : ' : 'Dernier titre : ')
       + `<span class="text-gray-800 font-medium">${esc(first.dls)}</span>` + (isNaN(t) ? '' : ` · depuis ${pad(t.getHours())}:${pad(t.getMinutes())}`);
   }
+  let freeBytes = null;
   async function loadPigeDab() {
-    try { pigeDab = ((await (await fetch('/api/pige/list', { credentials: 'include' })).json()).piges || []).filter(p => p.kind === 'dab' && p.sid); }
+    try { const d = await api('/api/pige/list'); pigeDab = (d.piges || []).filter(p => p.kind === 'dab' && p.sid); freeBytes = d.free_bytes; }
     catch (e) { pigeDab = []; }
   }
 
@@ -930,16 +1095,508 @@
     $('sidebar-overlay').classList.add('hidden');
   }
 
+  // ═══ Onglets : #direct, #journal, #pige, #reglages ═══════════════════
+  const TABS = ['direct', 'journal', 'pige', 'reglages'];
+  let curTab = null;
+  const loaded = {};
+  function showTab(t) {
+    if (!TABS.includes(t) || (t === 'reglages' && !isAdmin)) t = 'direct';
+    const was = curTab;
+    curTab = t;
+    TABS.forEach(x => $('tab-' + x).classList.toggle('hidden', x !== t));
+    document.querySelectorAll('[data-tab]').forEach(a => {
+      const on = a.dataset.tab === t;
+      a.classList.toggle('on', on); a.setAttribute('aria-selected', on);
+    });
+    if ((was === 'direct') !== (t === 'direct')) connectSpec();      // spectre calculé seulement sur Direct
+    if (t === 'direct' && was && was !== 'direct') { loadStatus(); loadDls(); }
+    if (t === 'journal') loadJournal();
+    if (t === 'pige' && !loaded.pige) { loaded.pige = true; initPige(); }
+  }
+  window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
+
+  // Liens « Écouter » (/dab?p=...&t=...#pige) : ouverture de la pige sans recharger la page
+  const urlArgs = href => { const q = new URL(href, location.href).searchParams, n = k => parseInt(q.get(k), 10) || null;
+                            return { p: q.get('p'), t: n('t'), e: n('e') }; };
+  document.addEventListener('click', ev => {
+    const a = ev.target.closest('a[href^="/dab?"]');
+    if (!a || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.button) return;
+    ev.preventDefault();
+    history.pushState(null, '', a.getAttribute('href'));
+    const args = urlArgs(a.href);
+    if (!loaded.pige) { loaded.pige = true; initPige(args, true); }
+    showTab('pige'); if (loaded.pigeReady) pigeOpenAt(args, true);
+  });
+  // Créneau d'une alerte : de 30 s avant à 30 s après le rétablissement (2 min sans fin connue), 4 h au plus
+  function alertRange(t0, t1) {
+    const now = Math.floor(Date.now() / 1000);
+    return [t0 - 30, Math.min(t1 ? t1 + 30 : t0 + 90, t0 - 30 + 4 * 3600, now)];
+  }
+
+  // ═══ JOURNAL : alertes DAB+ et historique du DLS ═══════════════════
+  const C_OK = 'text-green-600', C_BAD = 'text-red-600';
+  function setTile(id, text, color, sub) {
+    $(id).textContent = text;
+    $(id).className = $(id).className.replace(/\btext-(gray|green|amber|red)-\d+\b/g, '').trim() + ' ' + (color || 'text-gray-900');
+    if (sub !== undefined && $(id + '-sub')) $(id + '-sub').innerHTML = sub;
+  }
+  function fmtSince(sec) {
+    sec = Math.max(0, Math.round(sec));
+    if (sec < 3600) return `${Math.max(1, Math.floor(sec / 60))} min`;
+    if (sec < 86400) return `${Math.floor(sec / 3600)} h ${pad(Math.floor(sec % 3600 / 60))} min`;
+    return `${Math.floor(sec / 86400)} j ${Math.floor(sec % 86400 / 3600)} h`;
+  }
+  function fmtStamp(t) { const d = new Date(t); return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+  // Seules comptent les alertes qui ont envoyé un mail
+  function headerAlerts(alerts) {
+    const now = Date.now(), mailed = alerts.filter(a => (a.emails || 0) > 0);
+    const last30 = mailed.filter(a => now - a.t0 <= 30 * 86400e3);
+    const mails = last30.reduce((n, a) => n + (a.emails || 0), 0);
+    setTile('db-30d', String(last30.length), last30.length ? 'text-gray-900' : C_OK,
+            last30.length ? `${mails} mail${mails > 1 ? 's' : ''} envoyé${mails > 1 ? 's' : ''}` : 'aucune alerte avec mail');
+    const ongoing = mailed.filter(a => !a.t1);
+    if (ongoing.length) {
+      const t0 = Math.min(...ongoing.map(a => a.t0));
+      $('db-ok-label').textContent = 'En alerte depuis';
+      setTile('db-ok', fmtSince((now - t0) / 1000), C_BAD, `depuis le ${fmtStamp(t0)}`);
+      return;
+    }
+    $('db-ok-label').textContent = 'Tout est OK depuis';
+    const ends = mailed.map(a => a.t1).filter(Boolean);
+    if (!ends.length) { setTile('db-ok', 'Aucune alerte', C_OK, 'pas d\'alerte avec mail enregistrée'); return; }
+    const last = Math.max(...ends);
+    setTile('db-ok', fmtSince((now - last) / 1000), C_OK, `fin de la dernière alerte le ${fmtStamp(last)}`);
+  }
+  let dbEvents = [], dbLimit = 10, journalAt = 0;
+  const DB_COLORS = {
+    'Ensemble dégradé': 'bg-red-50 text-red-700',
+    'Service absent': 'bg-red-50 text-red-700',
+    'Silence audio': 'bg-orange-50 text-orange-700',
+    'Récepteur DAB+ hors service': 'bg-gray-100 text-gray-700',
+  };
+  function dbPigeLinks(a) {
+    // Pige du service de l'alerte ; alerte sur tout le multiplex : première pige DAB+
+    if (!pigeDab.length) return '<span class="text-gray-300" title="Aucune pige DAB+ (onglet Pige)">pas de pige</span>';
+    const pg = a.sid ? pigeDab.find(p => p.sid === a.sid) : pigeDab[0];
+    if (!pg) return '<span class="text-gray-300" title="Ce service n\'est pas enregistré">pas de pige</span>';
+    const t0 = Math.floor(tms(a.start) / 1000), t1 = a.status === 'complete' && a.end ? Math.floor(tms(a.end) / 1000) : null;
+    if (!pg.oldest || t0 < pg.oldest) return '<span class="text-gray-300">hors pige</span>';
+    const [s, e] = alertRange(t0, t1), q = encodeURIComponent(pg.id);
+    return `<a href="/dab?p=${q}&t=${t0}${t1 ? '&e=' + t1 : ''}#pige" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Écouter la pige ${esc(pg.name)} au moment de l'alerte">Écouter</a>`
+         + (canExport ? `<a href="/api/pige/export?p=${q}&start=${s}&end=${e}" class="font-medium text-blue-600 hover:text-blue-800" title="Extrait MP3 (${esc(pg.name)}) de 30 s avant à 30 s après">MP3</a>` : '');
+  }
+  async function loadJournal(force) {
+    if (!force && Date.now() - journalAt < 20000) return;
+    journalAt = Date.now();
+    loadDlsHistory();
+    await loadPigeDab();
+    try { dbEvents = (await api('/api/dab/events?limit=500')).events || []; }
+    catch (e) {
+      $('db-body').innerHTML = `<tr><td colspan="9" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`;
+      return;
+    }
+    headerAlerts(dbEvents.filter(a => a.status !== 'orphan').map(a => ({ t0: tms(a.start), t1: a.status === 'complete' ? tms(a.end) : null, emails: a.emails || 0 })));
+    const fill = (sel, vals, all) => {
+      const cur = sel.value;
+      sel.innerHTML = `<option value="">${all}</option>` + vals.map(v => `<option>${esc(v)}</option>`).join('');
+      sel.value = vals.includes(cur) ? cur : '';
+    };
+    fill($('db-type'), [...new Set(dbEvents.map(a => a.label))], 'Tous les types');
+    fill($('db-svc'), [...new Set(dbEvents.map(a => a.service).filter(Boolean))].sort(), 'Tous les services');
+    renderDab();
+  }
+  function renderDab() {
+    const type = $('db-type').value, svc = $('db-svc').value;
+    const list = dbEvents.filter(a => (!type || a.label === type) && (!svc || a.service === svc));
+    const shownList = list.slice(0, dbLimit);
+    const n = `${list.length} alerte${list.length > 1 ? 's' : ''}`;
+    $('db-count').textContent = dbEvents.length >= 500 ? `${n} parmi les 500 plus récentes` : n;
+    $('db-more').classList.toggle('hidden', list.length <= dbLimit);
+    if (!shownList.length) {
+      $('db-body').innerHTML = '<tr><td colspan="9" class="py-8 text-center text-gray-400">Aucune alerte enregistrée</td></tr>';
+      return;
+    }
+    const hms = d => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    $('db-body').innerHTML = shownList.map(a => {
+      const d0 = new Date(tms(a.start));
+      const day = `${pad(d0.getDate())}-${pad(d0.getMonth() + 1)}-${d0.getFullYear()}`;
+      let range = hms(d0), state;
+      if (a.status === 'complete') {
+        range += ' → ' + hms(new Date(tms(a.end)));
+        state = '<span class="px-2 py-0.5 rounded-full bg-green-50 text-green-700">Rétabli</span>';
+      } else if (a.status === 'orphan') {
+        range += ' → <span class="text-gray-400">?</span>';
+        state = '<span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600" title="Fin non enregistrée (surveillance DAB+ redémarrée pendant l\'alerte)">Fin inconnue</span>';
+      } else {
+        range += ' → <span class="text-red-600 font-medium">en cours</span>';
+        state = '<span class="px-2 py-0.5 rounded-full bg-red-50 text-red-700">En cours</span>';
+      }
+      return `<tr class="hover:bg-slate-50">
+        <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${day}</td>
+        <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${DB_COLORS[a.label] || 'bg-gray-100 text-gray-700'}">${esc(a.label)}</span></td>
+        <td class="py-2 pr-3 font-medium text-gray-800">${esc(a.service || '-')}</td>
+        <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${range}</td>
+        <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.status === 'complete' ? fmtDur(a.duration) : '-'}</td>
+        <td class="py-2 pr-3 whitespace-nowrap">${state}</td>
+        <td class="py-2 pr-3 text-gray-500" style="overflow-wrap:anywhere">${esc(a.message || '')}</td>
+        <td class="py-2 pr-3 text-gray-600">${a.emails}</td>
+        <td class="py-2 whitespace-nowrap">${dbPigeLinks(a)}</td>
+      </tr>`;
+    }).join('');
+  }
+  let dlhLimit = 10;
+  async function loadDlsHistory() {
+    const sel = $('dlh-svc');
+    let d;
+    try { d = await api(`/api/dab/dls_history?limit=${dlhLimit}` + (sel.value ? `&sid=${encodeURIComponent(sel.value)}` : '')); }
+    catch (e) { $('dlh-body').innerHTML = `<tr><td colspan="3" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`; return; }
+    const svcs = d.services || [];
+    if (!svcs.some(x => x.sid === d.sid) && d.sid) svcs.unshift({ sid: d.sid, label: d.label || d.sid, count: 0 });
+    const html = svcs.map(x => `<option value="${esc(x.sid)}">${esc(x.label || x.sid)}</option>`).join('');
+    if (sel.dataset.html !== html) { sel.innerHTML = html; sel.dataset.html = html; }
+    sel.value = d.sid || '';
+    sel.classList.toggle('hidden', svcs.length < 2);
+    const rows = d.data || [];
+    $('dlh-more').classList.toggle('hidden', rows.length < dlhLimit);
+    if (!rows.length) {
+      $('dlh-body').innerHTML = '<tr><td colspan="3" class="py-8 text-center text-gray-400">Aucun texte DLS enregistré pour le moment</td></tr>';
+      return;
+    }
+    const cur = String(d.current || '').split(/\s+/).join(' ').trim();
+    const pg = pigeDab.find(p => p.sid === d.sid);
+    const today = new Date(), yest = new Date(Date.now() - 86400e3);
+    const sameDay = (a, b) => a.toDateString() === b.toDateString();
+    $('dlh-body').innerHTML = rows.map((r, i) => {
+      const t = new Date(tms(r.timestamp));
+      const hm = isNaN(t) ? esc(r.timestamp) : `${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}`;
+      const day = isNaN(t) || sameDay(t, today) ? '' : sameDay(t, yest) ? 'hier' : `${pad(t.getDate())}-${pad(t.getMonth() + 1)}`;
+      const live = i === 0 && r.dls === cur;
+      const t0 = isNaN(t) ? 0 : Math.floor(t.getTime() / 1000);
+      const listenLink = pg && pg.oldest && t0 >= pg.oldest
+        ? `<a href="/dab?p=${encodeURIComponent(pg.id)}&t=${t0}#pige" class="font-medium text-blue-600 hover:text-blue-800" title="Écouter la pige ${esc(pg.name)} à ce moment">Écouter</a>` : '';
+      return `<tr class="hover:bg-slate-50">
+        <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${hm}${day ? ` <span class="text-gray-400">${day}</span>` : ''}</td>
+        <td class="py-2 pr-3 ${live ? 'font-semibold text-gray-900' : 'text-gray-700'}">${esc(r.dls)}</td>
+        <td class="py-2 whitespace-nowrap text-right">${live ? '<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 mr-3">À l\'antenne</span>' : ''}${listenLink}</td>
+      </tr>`;
+    }).join('');
+  }
+  // ── Exports CSV (séparateur point-virgule, UTF-8 avec BOM pour Excel) ──
+  function downloadCsv(name, header, rows) {
+    const cell = v => { const t = v == null ? '' : String(v); return /[;"\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+    const txt = '﻿' + [header, ...rows].map(r => r.map(cell).join(';')).join('\r\n') + '\r\n';
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([txt], { type: 'text/csv;charset=utf-8' }));
+    const n = new Date();
+    a.download = `${name}_${n.getFullYear()}${pad(n.getMonth() + 1)}${pad(n.getDate())}-${pad(n.getHours())}${pad(n.getMinutes())}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  }
+  function csvStamp(iso) {
+    if (!iso) return ['', ''];
+    const d = new Date(tms(iso));
+    if (isNaN(d)) return [String(iso), ''];
+    return [`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`];
+  }
+  function exportDab() {
+    const type = $('db-type').value, svc = $('db-svc').value;
+    const list = dbEvents.filter(a => (!type || a.label === type) && (!svc || a.service === svc));
+    const STATE = { complete: 'rétabli', ongoing: 'en cours', orphan: 'fin non enregistrée' };
+    downloadCsv('blrmo-alertes-dab', ['date', 'debut', 'fin', 'alerte', 'service', 'sid', 'canal', 'duree_s', 'etat', 'mails', 'detail'],
+      list.map(a => { const [d, t0] = csvStamp(a.start), t1 = csvStamp(a.end)[1];
+        return [d, t0, a.status === 'complete' ? t1 : '', a.label, a.service || '', a.sid || '', a.channel || '',
+                a.status === 'complete' ? a.duration : '', STATE[a.status] || a.status, a.emails, a.message || '']; }));
+  }
+  async function exportDlsHistory() {
+    const sid = $('dlh-svc').value;
+    let d;
+    try { d = await api('/api/dab/dls_history?limit=5000' + (sid ? `&sid=${encodeURIComponent(sid)}` : '')); } catch (e) { alert(e.message); return; }
+    downloadCsv('blrmo-dls', ['date', 'heure', 'service', 'sid', 'dls'],
+      (d.data || []).map(r => [...csvStamp(r.timestamp), r.label || '', r.sid || '', r.dls || '']));
+  }
+
+  // ═══ PIGE : service, date, heure de début, heure de fin, lecture, téléchargement ═══
+  const pAudio = $('pg-audio');
+  const fmtTime = ts => { const d = new Date(ts * 1000); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
+  const fmtDay = ts => new Date(ts * 1000).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const fmtBytes = b => b == null ? '?' : b >= 1e9 ? (b / 1e9).toFixed(1).replace('.', ',') + ' Go' : Math.round(b / 1e6) + ' Mo';
+  const isoDate = ts => { const d = new Date(ts * 1000); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+  const IC_PLAY_S = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+  let pgId = null, pgSt = null, pgWin = [0, 0], pgSeg = null, pgOffset = 0, pgInfo = null;
+  const pgCur = () => pigeDab.find(p => p.id === pgId);
+  function pgRange() {
+    // Instant de début et de fin d'après les champs ; une fin avant le début passe au lendemain
+    const d = $('pg-date').value, s = $('pg-start').value, e = $('pg-end').value;
+    if (!d || !s) return [null, null];
+    const [y, m, dd] = d.split('-').map(Number);
+    const at = hms => { const [h, mi, se] = hms.split(':').map(Number); return new Date(y, m - 1, dd, h, mi, se || 0).getTime() / 1000; };
+    const a = at(s);
+    let b = e ? at(e) : null;
+    if (b != null && b <= a) b += 86400;
+    return [a, b];
+  }
+  function pgSetRange(a, b) {
+    $('pg-date').value = isoDate(a);
+    $('pg-start').value = fmtTime(a);
+    $('pg-end').value = b != null ? fmtTime(b) : '';
+  }
+  function renderPigeSel() {
+    const none = !pigeDab.length;
+    $('pg-none').classList.toggle('hidden', !none);
+    $('pg-main').classList.toggle('hidden', none);
+    $('pg-none').textContent = isAdmin ? 'Aucune pige DAB+ pour le moment : créer la pige d\'un service dans « Réglages de la pige DAB+ » ci-dessous.'
+                                       : 'Aucune pige DAB+ pour le moment. Un administrateur peut en créer une.';
+    const html = pigeDab.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+    if ($('pg-sel').dataset.html !== html) { $('pg-sel').innerHTML = html; $('pg-sel').dataset.html = html; }
+    if (pgId) $('pg-sel').value = pgId;
+    $('pg-sel-box').classList.toggle('hidden', pigeDab.length < 2);
+  }
+  $('pg-sel').addEventListener('change', async () => {
+    pgReset(); pgId = $('pg-sel').value; pgSt = null;
+    try { localStorage.setItem('blrmo-dab-pige', pgId); } catch (e) {}
+    pgChanged(); await pgLoadStatus(pgRange()[0] ?? Date.now() / 1000);
+  });
+  async function pgLoadStatus(center) {
+    if (!pgId) return;
+    const a = Math.floor(center - 3600), b = Math.ceil(center + 7200);
+    try { pgSt = await api(`/api/pige/status?p=${encodeURIComponent(pgId)}&from=${a}&to=${b}`); pgWin = [a, b]; }
+    catch (e) { return; }
+    const on = pgSt.enabled !== false && pgSt.recording;
+    $('pg-dot').className = 'w-2.5 h-2.5 rounded-full flex-shrink-0 ' + (on ? 'bg-red-500' : 'bg-amber-500');
+    $('pg-avail').innerHTML = pgSt.oldest
+      ? `Disponible du <strong>${fmtDay(pgSt.oldest)} ${fmtTime(pgSt.oldest).slice(0, 5)}</strong> `
+        + (on || !pgSt.newest ? 'jusqu\'à maintenant' : `au <strong>${fmtDay(pgSt.newest)} ${fmtTime(pgSt.newest).slice(0, 5)}</strong>`)
+        + (on ? '' : ` · <span class="text-amber-700">${pgSt.enabled === false ? 'pige suspendue' : 'enregistrement arrêté'}</span>`)
+      : 'Aucun enregistrement pour le moment';
+  }
+  async function pgEnsure(ts) { if (!pgSt || ts < pgWin[0] + 600 || ts > pgWin[1] - 600) await pgLoadStatus(ts); }
+  function pgFind(ts) {
+    for (const s of (pgSt ? pgSt.segments : [])) {
+      if (ts < s.start) return { seg: s, offset: 0 };          // dans un trou : segment suivant
+      if (ts < s.end) return { seg: s, offset: ts - s.start };
+    }
+    return null;
+  }
+  const pgPos = () => pgSeg ? pgSeg.start + (pAudio.currentTime || pgOffset) : null;
+  function pgLoadSeg(seg, offset, autoplay = true) {
+    pgSeg = seg; pgOffset = offset;
+    pAudio.src = `/api/pige/segment/${encodeURIComponent(seg.name)}?p=${encodeURIComponent(pgId)}`;
+    pAudio.onloadedmetadata = () => {
+      pAudio.currentTime = Math.min(offset, Math.max(0, (pAudio.duration || offset) - 0.5));
+      if (autoplay) pAudio.play().catch(() => {});
+    };
+    $('pg-player').classList.remove('hidden');
+    pgUI();
+  }
+  async function pgPlayAt(ts) {
+    await pgEnsure(ts);
+    const f = pgFind(ts);
+    if (!f) { $('pg-summary').innerHTML = '<span class="text-red-600">Pas d\'enregistrement à ce moment</span>'; return; }
+    if (listening) stopListen();
+    pgLoadSeg(f.seg, f.offset);
+  }
+  function pigeStop() { if (pAudio && !pAudio.paused) pAudio.pause(); }
+  function pgReset() { pAudio.pause(); pAudio.removeAttribute('src'); pAudio.load(); pgSeg = null; $('pg-player').classList.add('hidden'); }
+  function pigePlayToggle() {
+    if (pgSeg && !pAudio.paused) { pAudio.pause(); return; }
+    const [a, b] = pgRange();
+    if (a == null) return;
+    const pos = pgPos();
+    // Reprise là où la lecture s'était arrêtée si elle est dans le créneau
+    if (pgSeg && pos != null && pos >= a && (b == null || pos < b - 1)) { if (listening) stopListen(); pAudio.play().catch(() => {}); return; }
+    pgPlayAt(a);
+  }
+  pAudio.addEventListener('ended', async () => {
+    if (!pgSeg) return;
+    const end = pgSeg.end;
+    await pgEnsure(end + 1);
+    const i = pgSt.segments.findIndex(s => s.start >= end - 1);
+    if (i >= 0) pgLoadSeg(pgSt.segments[i], 0); else pgUI();
+  });
+  pAudio.addEventListener('timeupdate', () => {
+    const [, b] = pgRange(), ts = pgPos();
+    if (b != null && ts != null && ts >= b) pAudio.pause();
+    pgUI();
+  });
+  pAudio.addEventListener('play', pgUI);
+  pAudio.addEventListener('pause', pgUI);
+  $('pg-volume').oninput = e => { pAudio.volume = e.target.value / 100; };
+  pAudio.volume = 0.8;
+  function pgUI() {
+    const playingNow = pgSeg && !pAudio.paused;
+    $('pg-play-ic').innerHTML = playingNow ? IC_PAUSE : IC_PLAY_S;
+    $('pg-play-txt').textContent = playingNow ? 'Pause' : 'Lecture';
+    const ts = pgPos(), [a, b] = pgRange();
+    $('pg-pos').textContent = ts != null ? fmtTime(ts) : '--:--:--';
+    $('pg-state').textContent = ts == null ? '' : fmtDay(ts) + (playingNow ? ' · en lecture' : ' · en pause');
+    const end = b ?? (a != null ? a + 3600 : null);
+    $('pg-bar-a').textContent = a != null ? fmtTime(a) : '';
+    $('pg-bar-b').textContent = b != null ? fmtTime(b) : '';
+    $('pg-bar-fill').style.width = (ts != null && a != null && end > a ? Math.max(0, Math.min(100, (ts - a) / (end - a) * 100)) : 0) + '%';
+  }
+  $('pg-bar').addEventListener('click', ev => {
+    const [a, b] = pgRange();
+    if (a == null) return;
+    const end = b ?? a + 3600, r = $('pg-bar').getBoundingClientRect();
+    const ts = a + (end - a) * Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width));
+    if (pgSeg && ts >= pgSeg.start && ts < pgSeg.end) { pAudio.currentTime = ts - pgSeg.start; if (pAudio.paused) pAudio.play().catch(() => {}); }
+    else pgPlayAt(ts);
+  });
+  let pgCheckT = null;
+  function pgChanged() {
+    $('pg-dl').disabled = true;
+    pgUI();
+    clearTimeout(pgCheckT); pgCheckT = setTimeout(pgCheck, 250);
+  }
+  ['pg-date', 'pg-start', 'pg-end'].forEach(id => $(id).addEventListener('change', pgChanged));
+  async function pgCheck() {
+    const [a, b] = pgRange(), box = $('pg-summary');
+    pgInfo = null;
+    if (!pgId) { box.textContent = ''; return; }
+    if (a == null) { box.textContent = 'Choisir une date et une heure de début.'; return; }
+    if (b == null) { box.textContent = 'Lecture à partir de l\'heure de début. Indiquer une heure de fin pour télécharger.'; return; }
+    const dur = `<span class="font-mono">${fmtTime(a)} → ${fmtTime(b)}</span> · <strong>${fmtDur(b - a)}</strong>`;
+    if (!canExport) { box.innerHTML = dur; return; }
+    try {
+      const d = await api(`/api/pige/export?check=1&p=${encodeURIComponent(pgId)}&start=${a}&end=${b}`);
+      if (d.status !== 'ok') { box.innerHTML = `${dur} · <span class="text-red-600">${esc(d.message || 'Créneau impossible')}</span>`; return; }
+      const gaps = d.gaps.length ? ` · <span class="text-amber-700">incomplet, ${fmtDur(d.duration - d.recorded)} manquantes</span>` : ' · complet';
+      box.innerHTML = `${dur} <span class="text-gray-400">· environ ${fmtBytes(d.recorded * ((pgCur() || {}).bitrate_kbps || 128) * 125)}</span>${gaps}`;
+      pgInfo = d; $('pg-dl').disabled = false;
+    } catch (e) { box.innerHTML = `${dur} · <span class="text-red-600">vérification impossible</span>`; }
+  }
+  function pigeDownload() {
+    const [a, b] = pgRange();
+    if (pgInfo && a != null && b != null) location.href = `/api/pige/export?p=${encodeURIComponent(pgId)}&start=${a}&end=${b}`;
+  }
+  // Ouvre un créneau : {p, t, e} pige, alerte ou titre (début, fin) ; play : lecture tout de suite
+  async function pigeOpenAt(args, play) {
+    const { p, t, e } = args || {};
+    pgReset();
+    if (p && pigeDab.some(x => x.id === p)) pgId = p;
+    renderPigeSel();
+    if (t) { const [a, b] = e ? alertRange(t, e) : [t - 30, Math.min(t + 90, Math.floor(Date.now() / 1000))]; pgSetRange(a, b); }
+    pgSt = null; pgChanged();
+    await pgLoadStatus(t || Date.now() / 1000);
+    if (play && t) pgPlayAt(pgRange()[0]);
+  }
+  async function initPige(args, play) {
+    args = args || urlArgs(location.href);
+    if (!pigeDab.length) await loadPigeDab();
+    // Pige choisie : celle du lien, sinon la dernière choisie, sinon celle du service affiché
+    let last = null;
+    try { last = localStorage.getItem('blrmo-dab-pige'); } catch (e) {}
+    const byShown = (pigeDab.find(p => p.sid === shown) || {}).id;
+    pgId = [args.p, last, byShown, (pigeDab[0] || {}).id].find(x => x && pigeDab.some(p => p.id === x)) || null;
+    if (!args.t) { const now = Math.floor(Date.now() / 1000); pgSetRange(now - 300, now - 60); }
+    await pigeOpenAt({ ...args, p: pgId }, play);
+    if (isAdmin) loadDabSources().then(renderConfig);
+    loaded.pigeReady = true;
+    setInterval(() => { if (curTab === 'pige' && !pgSeg) { pgLoadStatus(pgRange()[0] ?? Date.now() / 1000); } }, 60000);
+  }
+
+  // ── Réglages des piges DAB+ (administrateur) ─────────────────────────
+  let editId = null, delArm = null;
+  async function loadDabSources() { fillSources(); }
+  function fillSources() {
+    const sel = $('f-sid'), keep = sel.value;
+    const svcs = ((st && st.services) || []).filter(s => s.sid);
+    sel.innerHTML = svcs.length
+      ? svcs.map(s => `<option value="${esc(s.sid)}">${esc(s.label)} (${esc(s.sid)}${s.bitrate ? ', ' + s.bitrate + ' kb/s' : ''})</option>`).join('')
+      : '<option value="">Aucun service DAB+ reçu</option>';
+    if (keep) sel.value = keep;
+    formHints();
+  }
+  function renderConfig() {
+    if (!isAdmin) return;
+    const svcs = (st && st.services) || [];
+    $('cfg-body').innerHTML = pigeDab.length ? pigeDab.map(p => {
+      const label = (svcs.find(s => s.sid === p.sid) || {}).label || p.sid;
+      const state = !p.enabled ? '<span class="text-gray-500">Suspendue</span>' : p.recording ? '<span class="text-green-700">Enregistrement</span>' : '<span class="text-amber-700">Arrêtée</span>';
+      return `<tr class="border-b border-gray-50"><td class="py-2.5 pr-2 font-semibold">${esc(p.name)}</td>
+        <td class="py-2.5 px-2">${esc(label)} <span class="text-gray-400 font-mono text-xs">${esc(p.sid)}</span></td>
+        <td class="py-2.5 px-2">${Math.round(p.retention_hours / 24)} jours</td><td class="py-2.5 px-2 font-mono text-xs">${fmtBytes(p.used_bytes)}</td>
+        <td class="py-2.5 px-2">${state}</td><td class="py-2.5 text-right whitespace-nowrap text-xs">
+        <button type="button" class="text-blue-600" onclick="editPige('${esc(p.id)}')">Modifier</button>
+        · <button type="button" class="text-blue-600" onclick="togglePige('${esc(p.id)}', ${!p.enabled})">${p.enabled ? 'Suspendre' : 'Reprendre'}</button>
+        · <button type="button" class="text-red-700 ${delArm === p.id ? 'font-semibold' : ''}" onclick="deletePige('${esc(p.id)}')">${delArm === p.id ? 'Confirmer la suppression' : 'Supprimer'}</button></td></tr>`;
+    }).join('') : '<tr><td colspan="6" class="py-4 text-center text-xs text-gray-400">Aucune pige DAB+.</td></tr>';
+  }
+  function formHints() {
+    const days = Number($('f-days').value) || 0, kbps = editId ? ((pigeDab.find(p => p.id === editId) || {}).bitrate_kbps || 128) : 128;
+    const perDay = kbps * 125 * 86400;
+    $('f-estimate').innerHTML = days ? `Environ <strong>${fmtBytes(perDay)} par jour</strong>, soit ${fmtBytes(perDay * days)} pour ${days} jour${days > 1 ? 's' : ''} · ${fmtBytes(freeBytes)} libres.` : '';
+    const mode = st ? (st.enabled ? st.mode : 'désactivé') : null, w = $('f-warn');
+    if (mode === 'désactivé' || mode === 'carrousel') {
+      w.textContent = mode === 'désactivé' ? 'La réception DAB+ est désactivée : une pige DAB+ ne pourra rien enregistrer.'
+        : 'Une pige DAB+ demande que le service soit décodé en continu : choisir le décodage « Services surveillés seulement » ou « Tous les services en continu » dans l\'onglet Réglages.';
+      w.classList.remove('hidden');
+    } else w.classList.add('hidden');
+  }
+  $('f-days').addEventListener('input', formHints);
+  function editPige(id) {
+    const p = pigeDab.find(x => x.id === id); if (!p) return;
+    editId = id;
+    $('cfg-form-title').textContent = `Modifier : ${p.name}`;
+    $('f-name').value = p.name; $('f-days').value = Math.round(p.retention_hours / 24);
+    $('f-sid').value = p.sid; $('f-sid').disabled = true;
+    $('f-submit').textContent = 'Enregistrer'; $('f-cancel').classList.remove('hidden');
+    $('cfg-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    formHints();
+  }
+  function resetForm() {
+    editId = null; $('cfg-form-title').textContent = 'Nouvelle pige DAB+';
+    $('f-name').value = ''; $('f-days').value = 7; $('f-sid').disabled = false; fillSources();
+    $('f-submit').textContent = 'Créer la pige'; $('f-cancel').classList.add('hidden'); formHints();
+  }
+  async function postPige(body) {
+    const r = await fetch('/api/pige/config', { method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }, body: JSON.stringify(body) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
+    return d;
+  }
+  function fMsg(text, ok) { $('f-msg').className = 'text-xs ' + (ok ? 'text-green-600' : 'text-red-600'); $('f-msg').textContent = text; }
+  async function refreshPiges() { await loadPigeDab(); renderPigeSel(); renderConfig(); }
+  async function saveForm(ev) {
+    ev.preventDefault();
+    const body = editId ? { action: 'update', id: editId, name: $('f-name').value, retention_days: $('f-days').value }
+                        : { action: 'create', name: $('f-name').value, sid: $('f-sid').value, retention_days: $('f-days').value };
+    if (!editId && !body.sid) { fMsg('Choisir un service DAB+.'); return; }
+    try {
+      await postPige(body);
+      fMsg(editId ? 'Enregistré.' : 'Pige créée : l\'enregistrement démarre dans les 20 secondes.', true);
+      resetForm(); await refreshPiges();
+      if (!pgId && pigeDab.length) { pgId = pigeDab[0].id; renderPigeSel(); pgChanged(); pgLoadStatus(Date.now() / 1000); }
+    } catch (e) { fMsg(e.message); }
+  }
+  async function togglePige(id, enabled) {
+    try { await postPige({ action: 'update', id, enabled }); await refreshPiges(); } catch (e) { fMsg(e.message); }
+  }
+  async function deletePige(id) {
+    if (delArm !== id) { delArm = id; renderConfig(); setTimeout(() => { if (delArm === id) { delArm = null; renderConfig(); } }, 5000); return; }
+    delArm = null;
+    try {
+      await postPige({ action: 'delete', id });
+      fMsg('Pige supprimée, avec ses enregistrements.', true);
+      await refreshPiges();
+      if (pgId === id) { pgReset(); pgId = (pigeDab[0] || {}).id || null; renderPigeSel(); pgSt = null; pgChanged(); pgLoadStatus(Date.now() / 1000); }
+    } catch (e) { fMsg(e.message); }
+  }
+
+  // ── Démarrage ──────────────────────────────────────────
+  // /dab?p=<pige>&t=<horodatage> (lien d'une alerte) ouvre l'onglet Pige 30 s avant l'événement
   updateSidebarFrequency();
   playButton(false);
-  loadUptime().then(loadStatus);
-  loadEvents();
   loadSettings();
   loadScan();
-  loadPigeDab().then(loadDls);
-  setInterval(loadStatus, 2000);
-  setInterval(loadEvents, 15000);
-  setInterval(loadDls, 20000);
+  const startTab = location.hash.slice(1) || (new URLSearchParams(location.search).get('t') ? 'pige' : 'direct');
+  loadPigeDab().then(() => { showTab(startTab); loadDls(); });
+  loadUptime().then(loadStatus);
+  let statusT = 0;
+  setInterval(() => { if (curTab === 'direct' || Date.now() - statusT > 15000) { statusT = Date.now(); loadStatus(); } }, 2000);
+  setInterval(() => { if (curTab === 'direct') loadDls(); }, 20000);
+  setInterval(() => { if (curTab === 'journal') loadJournal(); }, 30000);
   setInterval(loadUptime, 60000);
 </script>
 </body>

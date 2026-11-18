@@ -1077,11 +1077,14 @@ pige_store = PigeStore()
 @app.route('/pige')
 @auth.login_required
 def pige_page():
-    """Page de la pige audio. Un lien ?t= sans ?p= (alertes FM, chaîne) ouvre
-    l'onglet Pige de la page FM, 30 s avant l'événement."""
-    t = request.args.get('t', '')
-    if t.isdigit() and not request.args.get('p'):
-        return redirect(f'/fm?t={t}#pige')
+    """Page de la pige audio. Un lien ?t= (alertes, chaîne) ouvre l'onglet Pige
+    de la page FM, ou de la page DAB+ pour une pige DAB+ (?p=), 30 s avant l'événement."""
+    t, p = request.args.get('t', ''), (request.args.get('p') or 'fm').lower()
+    if t.isdigit():
+        if p == 'fm':
+            return redirect(f'/fm?t={t}#pige')
+        if PIGE_ID_RE.match(p):
+            return redirect(f'/dab?p={p}&t={t}#pige')
     return render_template('pige.html')
 
 
