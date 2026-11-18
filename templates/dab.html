@@ -5,7 +5,7 @@
   {% include '_i18n.html' %}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>BL-RMO · DAB+</title>
+  <title>{{ _('BL-RMO · DAB+') }}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -34,14 +34,14 @@
       <button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
-      <h1 class="text-base font-semibold text-gray-900">Réception DAB+</h1>
+      <h1 class="text-base font-semibold text-gray-900">{{ _('Réception DAB+') }}</h1>
     </div>
-    <p class="text-xs text-gray-400 mt-0.5" id="subtitle">Multiplex reçu par la clé RTL-SDR et welle-cli</p>
-    <nav class="flex gap-5 mt-3 text-sm overflow-x-auto" role="tablist" aria-label="Réception DAB+">
-      <a href="#direct" data-tab="direct" role="tab" class="tab">Direct</a>
-      <a href="#journal" data-tab="journal" role="tab" class="tab">Journal</a>
-      <a href="#pige" data-tab="pige" role="tab" class="tab">Pige</a>
-      <a href="#configuration" data-tab="configuration" role="tab" class="tab need-admin">Configuration</a>
+    <p class="text-xs text-gray-400 mt-0.5" id="subtitle">{{ _('Multiplex reçu par la clé RTL-SDR et welle-cli') }}</p>
+    <nav class="flex gap-5 mt-3 text-sm overflow-x-auto" role="tablist" aria-label="{{ _('Réception DAB+') }}">
+      <a href="#direct" data-tab="direct" role="tab" class="tab">{{ _('Direct') }}</a>
+      <a href="#journal" data-tab="journal" role="tab" class="tab">{{ _('Journal') }}</a>
+      <a href="#pige" data-tab="pige" role="tab" class="tab">{{ _('Pige') }}</a>
+      <a href="#configuration" data-tab="configuration" role="tab" class="tab need-admin">{{ _('Configuration') }}</a>
     </nav>
   </header>
 
@@ -58,7 +58,7 @@
     <!-- ── État ─────────────────────────────────────────────── -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
       <div class="section" style="margin-bottom:0">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Récepteur</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('Récepteur') }}</div>
         <div class="flex items-center gap-2">
           <span id="rx-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
           <span class="text-base font-semibold text-gray-900" id="rx-state">…</span>
@@ -66,17 +66,17 @@
         <div class="text-xs text-gray-400 mt-1 truncate" id="rx-sub">&nbsp;</div>
       </div>
       <div class="section" style="margin-bottom:0">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Ensemble</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('Ensemble') }}</div>
         <div class="text-base font-semibold text-gray-900 truncate" id="ens-label">-</div>
         <div class="text-xs text-gray-400 mt-1 font-mono" id="ens-sub">&nbsp;</div>
       </div>
       <div class="section" style="margin-bottom:0">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="snr-title">SNR</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="snr-title">{{ _('SNR') }}</div>
         <div class="text-base font-semibold font-mono" id="snr">-</div>
         <div class="h-1.5 rounded bg-gray-100 mt-2 overflow-hidden"><div id="snr-bar" class="h-full bg-gray-300" style="width:0"></div></div>
       </div>
       <div class="section" style="margin-bottom:0">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Qualité FIC</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('Qualité FIC') }}</div>
         <div class="text-base font-semibold font-mono" id="fic">-</div>
         <div class="h-1.5 rounded bg-gray-100 mt-2 overflow-hidden"><div id="fic-bar" class="h-full bg-gray-300" style="width:0"></div></div>
       </div>
@@ -86,14 +86,14 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
-        <span>Écoute et spectre</span>
-        <label class="ml-auto order-last flex items-center gap-1.5 text-[11px] font-medium normal-case tracking-normal text-gray-600 cursor-pointer" title="Afficher l'analyseur de spectre (mémorisé dans ce navigateur)"><input type="checkbox" id="spec-on" class="w-3.5 h-3.5 accent-blue-600"> Spectre</label>
+        <span>{{ _('Écoute et spectre') }}</span>
+        <label class="ml-auto order-last flex items-center gap-1.5 text-[11px] font-medium normal-case tracking-normal text-gray-600 cursor-pointer" title="{{ _("Afficher l'analyseur de spectre (mémorisé dans ce navigateur)") }}"><input type="checkbox" id="spec-on" class="w-3.5 h-3.5 accent-blue-600"> {{ _('Spectre') }}</label>
       </div>
       <div id="player">
         <div class="flex flex-wrap items-center gap-3">
-          <button id="pl-play" onclick="togglePlay()" title="Lecture / pause"
+          <button id="pl-play" onclick="togglePlay()" title="{{ _('Lecture / pause') }}"
             class="w-9 h-9 rounded-full border-2 border-gray-200 bg-white hover:border-blue-500 hover:text-blue-600 transition flex items-center justify-center flex-shrink-0"></button>
-          <img id="pl-slide" class="w-16 h-12 object-contain rounded flex-shrink-0 hidden" alt="Diaporama de la station">
+          <img id="pl-slide" class="w-16 h-12 object-contain rounded flex-shrink-0 hidden" alt="{{ _('Diaporama de la station') }}">
           <div class="flex-1 min-w-0">
             <div class="text-sm font-semibold text-gray-900 truncate" id="pl-name"></div>
             <div class="text-xs text-gray-500 truncate" id="pl-dls"></div>
@@ -103,14 +103,14 @@
             <input type="range" id="pl-volume" min="0" max="100" value="50" class="w-16 h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-blue-500" oninput="setVolume(this.value)">
             <span id="pl-volume-value" class="text-xs text-gray-500 w-8">50%</span>
           </div>
-          <a id="pl-external" href="#" target="_blank" rel="noopener" class="text-xs font-medium text-blue-600 hover:text-blue-800" title="Ouvrir le flux MP3 dans un autre onglet ou un lecteur externe (une seule écoute DAB+ à la fois)">Externe</a>
+          <a id="pl-external" href="#" target="_blank" rel="noopener" class="text-xs font-medium text-blue-600 hover:text-blue-800" title="{{ _('Ouvrir le flux MP3 dans un autre onglet ou un lecteur externe (une seule écoute DAB+ à la fois)') }}">{{ _('Externe') }}</a>
           <audio id="pl-audio" preload="none"></audio>
         </div>
-        <div class="mt-2 space-y-1" aria-label="Niveau audio écouté">
-          <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3" title="Crête en dBFS, maintien 1,5 s">G</span>
+        <div class="mt-2 space-y-1" aria-label="{{ _('Niveau audio écouté') }}">
+          <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3" title="{{ _('Crête en dBFS, maintien 1,5 s') }}">{{ _('G') }}</span>
             <div class="relative flex-1 h-2 rounded bg-gray-100 overflow-hidden"><div id="vu-l" class="h-full bg-green-500" style="width:0"></div><div id="vu-lp" class="absolute top-0 h-full w-0.5 bg-green-700" style="left:0"></div></div>
             <span id="vu-ld" class="w-16 text-right" style="font-variant-numeric:tabular-nums">-</span></div>
-          <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3">D</span>
+          <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3">{{ _('D') }}</span>
             <div class="relative flex-1 h-2 rounded bg-gray-100 overflow-hidden"><div id="vu-r" class="h-full bg-green-500" style="width:0"></div><div id="vu-rp" class="absolute top-0 h-full w-0.5 bg-green-700" style="left:0"></div></div>
             <span id="vu-rd" class="w-16 text-right" style="font-variant-numeric:tabular-nums">-</span></div>
           <div class="flex justify-between text-[9px] text-gray-400 font-mono pl-5 pr-[4.5rem]"><span>-60</span><span>-40</span><span>-20</span><span>0</span></div>
@@ -118,10 +118,10 @@
         <div class="text-[11px] text-gray-400 mt-1" id="pl-help"></div>
         <div id="spec-box">
         <div class="mt-4 rounded-lg border border-gray-100 p-2">
-          <canvas id="spec" style="display:block;width:100%;height:220px" role="img" aria-label="Spectre audio en tiers d'octave"></canvas>
+          <canvas id="spec" style="display:block;width:100%;height:220px" role="img" aria-label="{{ _("Spectre audio en tiers d'octave") }}"></canvas>
         </div>
         <div class="flex justify-between gap-3 text-[11px] text-gray-400 mt-2">
-          <span>Spectre en tiers d'octave, 31 bandes · trait sombre : crête des 2 dernières secondes</span><span class="font-mono">dBFS</span>
+          <span>{{ _("Spectre en tiers d'octave, 31 bandes · trait sombre : crête des 2 dernières secondes") }}</span><span class="font-mono">dBFS</span>
         </div>
         </div>
       </div>
@@ -131,9 +131,9 @@
     <div class="section">
       <div class="section-title" id="dls-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
-        <span>Titres diffusés (DLS)</span>
+        <span>{{ _('Titres diffusés (DLS)') }}</span>
         <span class="ml-auto flex items-center gap-3">
-          <a href="#journal" class="text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">Tout l'historique &rarr;</a>
+          <a href="#journal" class="text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">{{ _("Tout l'historique &rarr;") }}</a>
           <button id="dls-toggle" class="flex items-center gap-1 text-[11px] font-medium normal-case tracking-normal text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1"></button>
         </span>
       </div>
@@ -141,7 +141,7 @@
       <div id="dls-full" class="overflow-x-auto">
         <table class="w-full text-xs text-left table-fixed">
           <colgroup><col style="width:110px"><col><col style="width:170px"></colgroup>
-          <tbody id="dls-body" class="divide-y divide-gray-50"><tr><td colspan="3" class="py-6 text-center text-gray-400">Chargement…</td></tr></tbody>
+          <tbody id="dls-body" class="divide-y divide-gray-50"><tr><td colspan="3" class="py-6 text-center text-gray-400">{{ _('Chargement…') }}</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -152,12 +152,12 @@
     <div id="tab-journal" class="tab-pane hidden">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div class="section" style="margin-bottom:0">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Alertes, 30 derniers jours</div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('Alertes, 30 derniers jours') }}</div>
           <div class="text-2xl font-bold font-mono text-gray-900" id="db-30d">-</div>
           <div class="text-xs text-gray-400 mt-1" id="db-30d-sub"></div>
         </div>
         <div class="section" style="margin-bottom:0">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="db-ok-label">Tout est OK depuis</div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="db-ok-label">{{ _('Tout est OK depuis') }}</div>
           <div class="text-2xl font-bold font-mono text-gray-900" id="db-ok">-</div>
           <div class="text-xs text-gray-400 mt-1" id="db-ok-sub"></div>
         </div>
@@ -167,42 +167,42 @@
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div class="section-title" style="margin-bottom:0">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-            Alertes de la réception DAB+
+            {{ _('Alertes de la réception DAB+') }}
           </div>
           <div class="flex flex-wrap gap-2">
             <select id="db-type" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="dbLimit = 10; renderDab()">
-              <option value="">Tous les types</option>
+              <option value="">{{ _('Tous les types') }}</option>
             </select>
             <select id="db-svc" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="dbLimit = 10; renderDab()">
-              <option value="">Tous les services</option>
+              <option value="">{{ _('Tous les services') }}</option>
             </select>
-            <button onclick="exportDab()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Alertes affichées (filtres compris), en CSV"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
+            <button onclick="exportDab()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="{{ _('Alertes affichées (filtres compris), en CSV') }}"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> {{ _('Exporter') }}</button>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-3">Mesurées sur le multiplex reçu. Un mail part à l'alerte, un second au rétablissement. « Écouter » ouvre l'onglet Pige au moment de l'alerte, pour la station suivie et les alertes sur tout le multiplex.</p>
+        <p class="text-xs text-gray-500 mb-3">{{ _("Mesurées sur le multiplex reçu. Un mail part à l'alerte, un second au rétablissement. « Écouter » ouvre l'onglet Pige au moment de l'alerte, pour la station suivie et les alertes sur tout le multiplex.") }}</p>
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left">
             <thead>
               <tr class="text-gray-400 border-b border-gray-100">
-                <th class="font-medium py-2 pr-3 whitespace-nowrap">Date</th>
-                <th class="font-medium py-2 pr-3">Alerte</th>
-                <th class="font-medium py-2 pr-3">Service</th>
-                <th class="font-medium py-2 pr-3 whitespace-nowrap">Début → fin</th>
-                <th class="font-medium py-2 pr-3">Durée</th>
-                <th class="font-medium py-2 pr-3">État</th>
-                <th class="font-medium py-2 pr-3">Détail</th>
-                <th class="font-medium py-2 pr-3">Mails</th>
-                <th class="font-medium py-2">Pige</th>
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">{{ _('Date') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('Alerte') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('Service') }}</th>
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">{{ _('Début → fin') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('Durée') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('État') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('Détail') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('Mails') }}</th>
+                <th class="font-medium py-2">{{ _('Pige') }}</th>
               </tr>
             </thead>
             <tbody id="db-body" class="divide-y divide-gray-50">
-              <tr><td colspan="9" class="py-8 text-center text-gray-400">Chargement…</td></tr>
+              <tr><td colspan="9" class="py-8 text-center text-gray-400">{{ _('Chargement…') }}</td></tr>
             </tbody>
           </table>
         </div>
         <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
           <span id="db-count"></span>
-          <button id="db-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="dbLimit += 50; renderDab()">Afficher plus</button>
+          <button id="db-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="dbLimit += 50; renderDab()">{{ _('Afficher plus') }}</button>
         </div>
       </div>
 
@@ -210,30 +210,30 @@
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div class="section-title" style="margin-bottom:0">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
-            Titres diffusés (DLS)
+            {{ _('Titres diffusés (DLS)') }}
           </div>
           <div class="flex flex-wrap gap-2">
             <select id="dlh-svc" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="dlhLimit = 10; loadDlsHistory()"></select>
-            <button onclick="exportDlsHistory()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Historique complet du service choisi (CSV)"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
+            <button onclick="exportDlsHistory()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="{{ _('Historique complet du service choisi (CSV)') }}"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> {{ _('Exporter') }}</button>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-3">Chaque nouveau texte DLS de la station suivie, avec l'heure de son premier affichage. Un texte qui revient en boucle (nom de la station, slogan) n'est repris qu'après 10 minutes.</p>
+        <p class="text-xs text-gray-500 mb-3">{{ _("Chaque nouveau texte DLS de la station suivie, avec l'heure de son premier affichage. Un texte qui revient en boucle (nom de la station, slogan) n'est repris qu'après 10 minutes.") }}</p>
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left">
             <thead>
               <tr class="text-gray-400 border-b border-gray-100">
-                <th class="font-medium py-2 pr-3 whitespace-nowrap">Heure</th>
-                <th class="font-medium py-2 pr-3">DLS</th>
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">{{ _('Heure') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('DLS') }}</th>
                 <th class="font-medium py-2"></th>
               </tr>
             </thead>
             <tbody id="dlh-body" class="divide-y divide-gray-50">
-              <tr><td colspan="3" class="py-8 text-center text-gray-400">Chargement…</td></tr>
+              <tr><td colspan="3" class="py-8 text-center text-gray-400">{{ _('Chargement…') }}</td></tr>
             </tbody>
           </table>
         </div>
         <div class="flex justify-end mt-3 text-xs">
-          <button id="dlh-more" class="px-2.5 py-1 rounded-md border border-gray-200 text-gray-500 hidden" onclick="dlhLimit += 50; loadDlsHistory()">Afficher plus</button>
+          <button id="dlh-more" class="px-2.5 py-1 rounded-md border border-gray-200 text-gray-500 hidden" onclick="dlhLimit += 50; loadDlsHistory()">{{ _('Afficher plus') }}</button>
         </div>
       </div>
     </div>
@@ -243,24 +243,24 @@
       <div class="section">
         <div class="section-title">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
-          Écoute et extrait
+          {{ _('Écoute et extrait') }}
         </div>
         <div id="pg-none" class="hidden text-sm text-gray-500"></div>
         <div id="pg-main">
         <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 mb-4">
-          <span class="flex items-center gap-2"><span id="pg-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300 flex-shrink-0"></span><span id="pg-avail">Chargement…</span></span>
+          <span class="flex items-center gap-2"><span id="pg-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300 flex-shrink-0"></span><span id="pg-avail">{{ _('Chargement…') }}</span></span>
         </div>
         <div class="flex flex-wrap items-end gap-3">
-          <label class="block"><span class="text-xs text-gray-500">Date</span>
+          <label class="block"><span class="text-xs text-gray-500">{{ _('Date') }}</span>
             <input type="date" id="pg-date" class="mt-1 block border border-gray-200 rounded-lg px-2 py-1.5 text-sm"></label>
-          <label class="block"><span class="text-xs text-gray-500">Heure de début</span>
+          <label class="block"><span class="text-xs text-gray-500">{{ _('Heure de début') }}</span>
             <input type="time" step="1" id="pg-start" class="mt-1 block border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-mono"></label>
-          <label class="block"><span class="text-xs text-gray-500">Heure de fin</span>
+          <label class="block"><span class="text-xs text-gray-500">{{ _('Heure de fin') }}</span>
             <input type="time" step="1" id="pg-end" class="mt-1 block border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-mono"></label>
           <button type="button" id="pg-play" onclick="pigePlayToggle()" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium">
-            <span id="pg-play-ic"></span><span id="pg-play-txt">Lecture</span></button>
+            <span id="pg-play-ic"></span><span id="pg-play-txt">{{ _('Lecture') }}</span></button>
           <button type="button" id="pg-dl" onclick="pigeDownload()" class="need-operateur flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 hover:border-blue-500 hover:text-blue-700 text-gray-700 text-sm font-medium disabled:opacity-40">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Télécharger</button>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>{{ _('Télécharger') }}</button>
         </div>
         <div class="text-xs text-gray-500 mt-3" id="pg-summary">&nbsp;</div>
 
@@ -268,7 +268,7 @@
           <div class="flex flex-wrap items-center gap-3">
             <div class="font-mono text-lg font-semibold text-gray-900" id="pg-pos">--:--:--</div>
             <div class="flex-1 min-w-[160px]">
-              <div id="pg-bar" class="relative h-2 rounded bg-slate-200 cursor-pointer" title="Clic : se placer à ce moment">
+              <div id="pg-bar" class="relative h-2 rounded bg-slate-200 cursor-pointer" title="{{ _('Clic : se placer à ce moment') }}">
                 <div id="pg-bar-fill" class="absolute inset-y-0 left-0 rounded bg-blue-500" style="width:0"></div>
               </div>
               <div class="flex justify-between font-mono text-[10px] text-gray-400 mt-1"><span id="pg-bar-a"></span><span id="pg-bar-b"></span></div>
@@ -287,13 +287,13 @@
       <div class="section need-admin">
         <div class="section-title">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-          Réglages de la pige DAB+
+          {{ _('Réglages de la pige DAB+') }}
         </div>
-        <p class="text-xs text-gray-500 mb-3">La pige enregistre la station DAB+ suivie, choisie dans l'onglet <a href="#configuration" class="text-blue-600 hover:text-blue-800">Configuration</a> (« Station suivie »). Sans station suivie, pas de pige. Après un changement de station, les enregistrements déjà faits restent jusqu'à la fin de leur conservation.</p>
+        <p class="text-xs text-gray-500 mb-3">{{ _("La pige enregistre la station DAB+ suivie, choisie dans l'onglet") }} <a href="#configuration" class="text-blue-600 hover:text-blue-800">{{ _('Configuration') }}</a> {{ _("(« Station suivie »). Sans station suivie, pas de pige. Après un changement de station, les enregistrements déjà faits restent jusqu'à la fin de leur conservation.") }}</p>
         <div class="flex flex-wrap items-end gap-4 text-sm">
-          <label class="block"><span class="text-xs text-gray-500">Conservation (jours)</span>
+          <label class="block"><span class="text-xs text-gray-500">{{ _('Conservation (jours)') }}</span>
             <input type="number" id="pg-days" min="1" max="90" class="mt-1 block w-28 border border-gray-200 rounded-lg px-2 py-1.5"></label>
-          <button onclick="savePigeDays()" id="pg-save" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Enregistrer</button>
+          <button onclick="savePigeDays()" id="pg-save" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">{{ _('Enregistrer') }}</button>
           <button onclick="togglePige()" id="pg-toggle" class="px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-400 text-gray-700 text-sm font-medium"></button>
           <span class="text-xs text-gray-500" id="pg-msg"></span>
         </div>
@@ -308,37 +308,37 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-        Réception et seuils d'alerte
+        {{ _("Réception et seuils d'alerte") }}
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-        <label class="block"><span class="text-xs text-gray-500">Récepteur</span>
+        <label class="block"><span class="text-xs text-gray-500">{{ _('Récepteur') }}</span>
           <select id="s-receiver" onchange="receiverFields()" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
-            <option value="rtlsdr">Clé RTL-SDR + welle-cli</option>
-            <option value="si468x">Dongle Si468x (essai)</option>
-            <option value="none">Aucun : pas de réception DAB+</option>
+            <option value="rtlsdr">{{ _('Clé RTL-SDR + welle-cli') }}</option>
+            <option value="si468x">{{ _('Dongle Si468x (essai)') }}</option>
+            <option value="none">{{ _('Aucun : pas de réception DAB+') }}</option>
           </select>
           <span class="text-[11px] text-gray-400" id="s-receiver-help"></span></label>
-        <label class="block"><span class="text-xs text-gray-500">Canal</span>
+        <label class="block"><span class="text-xs text-gray-500">{{ _('Canal') }}</span>
           <select id="s-channel" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"></select>
           <span class="text-[11px] text-gray-400 font-mono" id="s-freq"></span></label>
-        <label class="block"><span class="text-xs text-gray-500">Nom de l'ensemble (affichage)</span>
-          <input id="s-ensemble_name" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="ex. LA ROCHE SUR YON"></label>
-        <label class="block rtl-only"><span class="text-xs text-gray-500">Décodage</span>
+        <label class="block"><span class="text-xs text-gray-500">{{ _("Nom de l'ensemble (affichage)") }}</span>
+          <input id="s-ensemble_name" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="{{ _('ex. LA ROCHE SUR YON') }}"></label>
+        <label class="block rtl-only"><span class="text-xs text-gray-500">{{ _('Décodage') }}</span>
           <select id="s-carousel_size" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
-            <option value="-1">Station suivie seulement (conseillé)</option>
-            <option value="0">Tous les services en continu</option>
-            <option value="2">Carrousel, 2 services à la fois</option>
-            <option value="4">Carrousel, 4 services à la fois</option>
+            <option value="-1">{{ _('Station suivie seulement (conseillé)') }}</option>
+            <option value="0">{{ _('Tous les services en continu') }}</option>
+            <option value="2">{{ _('Carrousel, 2 services à la fois') }}</option>
+            <option value="4">{{ _('Carrousel, 4 services à la fois') }}</option>
           </select>
-          <span class="text-[11px] text-gray-400">« Station suivie seulement » : seule la station suivie est décodée, en continu, pour une charge minimale. L'ensemble et la présence de tous les services restent suivis.</span></label>
-        <label class="block"><span class="text-xs text-gray-500" title="Service affiché sur le tableau de bord et enregistré par la pige DAB+">Station suivie (tableau de bord et pige)</span>
+          <span class="text-[11px] text-gray-400">{{ _("« Station suivie seulement » : seule la station suivie est décodée, en continu, pour une charge minimale. L'ensemble et la présence de tous les services restent suivis.") }}</span></label>
+        <label class="block"><span class="text-xs text-gray-500" title="{{ _('Service affiché sur le tableau de bord et enregistré par la pige DAB+') }}">{{ _('Station suivie (tableau de bord et pige)') }}</span>
           <select id="s-dashboard_sid" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
-            <option value="">Aucune station suivie (pas de pige)</option>
+            <option value="">{{ _('Aucune station suivie (pas de pige)') }}</option>
           </select>
-          <span class="text-[11px] text-gray-400">La station est surveillée et enregistrée par la pige DAB+.</span></label>
-        <label class="block rtl-only"><span class="text-xs text-gray-500" title="Gain de la clé RTL-SDR (tuner R820T/R828D). L'automatique de welle-cli peut retarder la synchronisation de plusieurs minutes ; un gain fixe synchronise en quelques secondes.">Gain de la clé</span>
+          <span class="text-[11px] text-gray-400">{{ _('La station est surveillée et enregistrée par la pige DAB+.') }}</span></label>
+        <label class="block rtl-only"><span class="text-xs text-gray-500" title="{{ _("Gain de la clé RTL-SDR (tuner R820T/R828D). L'automatique de welle-cli peut retarder la synchronisation de plusieurs minutes ; un gain fixe synchronise en quelques secondes.") }}">{{ _('Gain de la clé') }}</span>
           <select id="s-gain" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
-            <option value="-1">Automatique (welle-cli)</option>
+            <option value="-1">{{ _('Automatique (welle-cli)') }}</option>
             <option value="0">0,0 dB</option>
             <option value="1">0,9 dB</option>
             <option value="2">1,4 dB</option>
@@ -369,51 +369,51 @@
             <option value="27">48,0 dB</option>
             <option value="28">49,6 dB</option>
           </select></label>
-        <label class="block"><span class="text-xs text-gray-500">Seuil SNR (dB)</span>
+        <label class="block"><span class="text-xs text-gray-500">{{ _('Seuil SNR (dB)') }}</span>
           <input id="s-snr_threshold" type="number" step="0.5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
-        <label class="block"><span class="text-xs text-gray-500">Seuil qualité FIC (%)</span>
+        <label class="block"><span class="text-xs text-gray-500">{{ _('Seuil qualité FIC (%)') }}</span>
           <input id="s-fic_quality_threshold" type="number" step="1" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
-        <label class="block"><span class="text-xs text-gray-500">Ensemble dégradé : alerte après (s)</span>
+        <label class="block"><span class="text-xs text-gray-500">{{ _('Ensemble dégradé : alerte après (s)') }}</span>
           <input id="s-ensemble_loss_duration" type="number" step="5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
-        <label class="block"><span class="text-xs text-gray-500">Seuil de silence (dBFS)</span>
+        <label class="block"><span class="text-xs text-gray-500">{{ _('Seuil de silence (dBFS)') }}</span>
           <input id="s-silence_threshold" type="number" step="1" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
-        <label class="block"><span class="text-xs text-gray-500">Silence : alerte après (s)</span>
+        <label class="block"><span class="text-xs text-gray-500">{{ _('Silence : alerte après (s)') }}</span>
           <input id="s-silence_duration" type="number" step="5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
-        <label class="block"><span class="text-xs text-gray-500">Service absent : alerte après (s)</span>
+        <label class="block"><span class="text-xs text-gray-500">{{ _('Service absent : alerte après (s)') }}</span>
           <input id="s-service_loss_duration" type="number" step="5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
       </div>
       <div class="mt-4 pt-4 border-t border-gray-100">
-        <div class="text-xs font-semibold text-gray-700 mb-1">Mails d'alerte</div>
-        <p class="text-[11px] text-gray-400 mb-2">Les alertes décochées restent enregistrées dans les journaux et sur le tableau de bord, sans mail.</p>
+        <div class="text-xs font-semibold text-gray-700 mb-1">{{ _("Mails d'alerte") }}</div>
+        <p class="text-[11px] text-gray-400 mb-2">{{ _('Les alertes décochées restent enregistrées dans les journaux et sur le tableau de bord, sans mail.') }}</p>
         <div class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-          <label class="flex items-center gap-2"><input id="e-silence" type="checkbox" class="w-4 h-4"> Silence audio de la station suivie</label>
-          <label class="flex items-center gap-2"><input id="e-absent" type="checkbox" class="w-4 h-4"> Station suivie absente du multiplex</label>
-          <label class="flex items-center gap-2"><input id="e-receiver" type="checkbox" class="w-4 h-4"> Récepteur DAB+ hors service</label>
-          <label class="flex items-center gap-2"><input id="e-ensemble" type="checkbox" class="w-4 h-4"> Ensemble dégradé (réception du multiplex)</label>
+          <label class="flex items-center gap-2"><input id="e-silence" type="checkbox" class="w-4 h-4"> {{ _('Silence audio de la station suivie') }}</label>
+          <label class="flex items-center gap-2"><input id="e-absent" type="checkbox" class="w-4 h-4"> {{ _('Station suivie absente du multiplex') }}</label>
+          <label class="flex items-center gap-2"><input id="e-receiver" type="checkbox" class="w-4 h-4"> {{ _('Récepteur DAB+ hors service') }}</label>
+          <label class="flex items-center gap-2"><input id="e-ensemble" type="checkbox" class="w-4 h-4"> {{ _('Ensemble dégradé (réception du multiplex)') }}</label>
         </div>
       </div>
       <div class="flex items-center gap-3 mt-4">
-        <button onclick="saveSettings()" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Enregistrer</button>
+        <button onclick="saveSettings()" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">{{ _('Enregistrer') }}</button>
         <span class="text-xs" id="s-msg"></span>
       </div>
-      <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">Seule la station suivie est surveillée (silence, absence). Un changement de canal ou de décodage relance la réception.</p>
+      <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">{{ _('Seule la station suivie est surveillée (silence, absence). Un changement de canal ou de décodage relance la réception.') }}</p>
     </div>
 
     <!-- ── Récepteurs et balayage (administrateur) ────────────── -->
     <div class="section" id="recepteurs">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
-        Récepteurs
-        <button onclick="detectReceivers()" id="rx-detect" class="ml-auto text-[11px] font-medium normal-case tracking-normal border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1">Détecter les récepteurs</button>
+        {{ _('Récepteurs') }}
+        <button onclick="detectReceivers()" id="rx-detect" class="ml-auto text-[11px] font-medium normal-case tracking-normal border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1">{{ _('Détecter les récepteurs') }}</button>
       </div>
-      <div id="rx-list" class="text-xs text-gray-400">Cliquer sur « Détecter les récepteurs » : clé RTL-SDR, dongle Si468x et TEF branchés, avec leur port et leur carte son. Aucun port n'est ouvert.</div>
+      <div id="rx-list" class="text-xs text-gray-400">{{ _("Cliquer sur « Détecter les récepteurs » : clé RTL-SDR, dongle Si468x et TEF branchés, avec leur port et leur carte son. Aucun port n'est ouvert.") }}</div>
 
       <div class="mt-5 pt-4 border-t border-gray-100">
         <div class="flex items-center gap-3 flex-wrap">
-          <div class="text-xs font-semibold text-gray-700">Balayage de la bande III (dongle Si468x, essai)</div>
-          <button onclick="startScan()" id="scan-btn" class="ml-auto text-[11px] font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1">Lancer le balayage</button>
+          <div class="text-xs font-semibold text-gray-700">{{ _('Balayage de la bande III (dongle Si468x, essai)') }}</div>
+          <button onclick="startScan()" id="scan-btn" class="ml-auto text-[11px] font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1">{{ _('Lancer le balayage') }}</button>
         </div>
-        <p class="text-[11px] text-gray-400 mt-1">Les 38 canaux de 5A à 13F, environ 1 min 30. Possible quand le dongle n'assure pas la surveillance DAB+ (récepteur « Clé RTL-SDR » dans les réglages, ou réception désactivée).</p>
+        <p class="text-[11px] text-gray-400 mt-1">{{ _("Les 38 canaux de 5A à 13F, environ 1 min 30. Possible quand le dongle n'assure pas la surveillance DAB+ (récepteur « Clé RTL-SDR » dans les réglages, ou réception désactivée).") }}</p>
         <div id="scan-progress" class="hidden mt-3">
           <div class="flex items-center gap-2 text-xs text-gray-500"><span id="scan-label"></span></div>
           <div class="h-1.5 rounded bg-gray-100 mt-1 overflow-hidden"><div id="scan-bar" class="h-full bg-blue-500" style="width:0"></div></div>
@@ -438,8 +438,8 @@
   const tms = iso => iso ? new Date(String(iso).replace(' ', 'T')).getTime() : null;
   async function api(url) {
     const r = await fetch(url, { credentials: 'include' });
-    if (r.status === 401 || r.redirected) { location.href = '/login?timeout=1'; throw new Error('Session expirée'); }
-    if (!r.ok) throw new Error(`Erreur ${r.status}`);
+    if (r.status === 401 || r.redirected) { location.href = '/login?timeout=1'; throw new Error(_t('Session expirée')); }
+    if (!r.ok) throw new Error(`${_t('Erreur')} ${r.status}`);
     return r.json();
   }
   let st = null, uptime = {}, listening = null, settings = null;
@@ -476,44 +476,44 @@
     const ok = '<span class="text-green-600 font-bold">✓</span>', todo = '<span class="text-amber-600 font-bold">○</span>';
     if (p.receiver === 'si468x') {
       const rows2 = [
-        [!!p.dongle, p.dongle ? `Dongle Si468x branché : ${esc(p.dongle)}` : 'Brancher le dongle Si468x et son antenne bande III'],
-        [!!p.arecord, p.arecord ? 'arecord installé' : 'Installer arecord : <code>sudo apt install alsa-utils</code>'],
-        [false, 'Choisir le récepteur, le canal et la station suivie dans l\'onglet <a href="#configuration" class="underline">Configuration</a>'],
+        [!!p.dongle, p.dongle ? _t('Dongle Si468x branché : {d}', { d: esc(p.dongle) }) : _t('Brancher le dongle Si468x et son antenne bande III')],
+        [!!p.arecord, p.arecord ? _t('arecord installé') : _t('Installer arecord :') + ' <code>sudo apt install alsa-utils</code>'],
+        [false, _t("Choisir le récepteur, le canal et la station suivie dans l'onglet") + ' <a href="#configuration" class="underline">' + _t('Configuration') + '</a>'],
       ];
       return '<ul class="space-y-1 mt-1">' + rows2.map(([d, t]) => `<li class="flex gap-2"><span>${d ? ok : todo}</span><span>${t}</span></li>`).join('') + '</ul>';
     }
     const rows = [
-      [!!p.welle_cli, p.welle_cli ? `welle-cli installé (<code>${esc(p.welle_cli)}</code>)`
-                                  : 'Installer welle-cli : <code>sudo BUILD_WELLE=1 bash install/build/67-dab.sh</code>'],
-      [!!p.dongle, p.dongle ? `Clé RTL-SDR branchée (${esc(p.dongle)})` : "Brancher une clé RTL-SDR dédiée au DAB+ et son antenne bande III"],
+      [!!p.welle_cli, p.welle_cli ? `${_t('welle-cli installé')} (<code>${esc(p.welle_cli)}</code>)`
+                                  : _t('Installer welle-cli :') + ' <code>sudo BUILD_WELLE=1 bash install/build/67-dab.sh</code>'],
+      [!!p.dongle, p.dongle ? `${_t('Clé RTL-SDR branchée')} (${esc(p.dongle)})` : _t("Brancher une clé RTL-SDR dédiée au DAB+ et son antenne bande III")],
     ];
-    if (p.dvb_driver_loaded) rows.push([false, "Pilote TNT du noyau chargé : redémarrer la machine (il est écarté par <code>67-dab.sh</code>)"]);
-    rows.push([false, 'Choisir le récepteur, le canal et la station suivie dans l\'onglet <a href="#configuration" class="underline">Configuration</a>']);
+    if (p.dvb_driver_loaded) rows.push([false, _t('Pilote TNT du noyau chargé : redémarrer la machine (il est écarté par {f})', { f: '<code>' + '67-dab.sh' + '</code>' })]);
+    rows.push([false, _t("Choisir le récepteur, le canal et la station suivie dans l'onglet") + ' <a href="#configuration" class="underline">' + _t('Configuration') + '</a>']);
     return '<ul class="space-y-1 mt-1">' + rows.map(([d, t]) => `<li class="flex gap-2"><span>${d ? ok : todo}</span><span>${t}</span></li>`).join('') + '</ul>';
   }
 
   function render() {
     const s = st, rf = s.rf || {};
-    const freq = Number(s.frequency_mhz).toFixed(3).replace('.', ',');
-    $('subtitle').textContent = `Canal ${s.channel} · ${freq} MHz` + (s.ensemble_name ? ` · ${s.ensemble_name}` : '')
-      + (s.mode ? ` · décodage ${s.mode}` : '')
-      + (s.mode === 'station suivie' && s.receiver_up && !(s.held_sids || []).length ? ' (aucune station suivie : la choisir dans Configuration)' : '');
+    const freq = Number(s.frequency_mhz).toFixed(3).replace('.', _DEC);
+    $('subtitle').textContent = `${_t('Canal')} ${s.channel} · ${freq} MHz` + (s.ensemble_name ? ` · ${s.ensemble_name}` : '')
+      + (s.mode ? ` · ${_t('décodage')} ${_t(s.mode)}` : '')
+      + (s.mode === 'station suivie' && s.receiver_up && !(s.held_sids || []).length ? _t(' (aucune station suivie : la choisir dans Configuration)') : '');
     // Bandeau
     const n = $('notice');
     if (!s.enabled) {
       n.classList.remove('hidden');
-      $('notice-title').textContent = 'Réception DAB+ désactivée';
-      $('notice-text').innerHTML = isAdmin ? prereqList(s.prereq || {}) : "Un administrateur doit l'activer.";
+      $('notice-title').textContent = _t('Réception DAB+ désactivée');
+      $('notice-text').innerHTML = isAdmin ? prereqList(s.prereq || {}) : _t("Un administrateur doit l'activer.");
     } else if (!s.service_running) {
       n.classList.remove('hidden');
-      $('notice-title').textContent = 'Le service de réception DAB+ ne répond pas';
-      $('notice-text').innerHTML = 'Vérifier : <code>sudo systemctl status bl-rmo-dab</code>';
+      $('notice-title').textContent = _t('Le service de réception DAB+ ne répond pas');
+      $('notice-text').innerHTML = _t('Vérifier :') + ' <code>sudo systemctl status bl-rmo-dab</code>';
     } else n.classList.add('hidden');
     // Récepteur
     const up = s.receiver_up;
     $('rx-dot').className = 'w-2.5 h-2.5 rounded-full ' + (!s.enabled ? 'bg-gray-300' : up ? 'bg-green-500' : 'bg-red-500');
-    $('rx-state').textContent = !s.enabled ? 'Désactivé' : !s.service_running ? 'Service arrêté' : up ? 'En réception' : 'Hors service';
-    $('rx-sub').textContent = up ? (rf.hardware || 'welle-cli') + (s.receiver_since ? ' · depuis ' + fmtDur(Date.now() / 1000 - s.receiver_since) : '')
+    $('rx-state').textContent = !s.enabled ? _t('Désactivé') : !s.service_running ? _t('Service arrêté') : up ? _t('En réception') : _t('Hors service');
+    $('rx-sub').textContent = up ? (rf.hardware || 'welle-cli') + (s.receiver_since ? _t(' · depuis ') + fmtDur(Date.now() / 1000 - s.receiver_since) : '')
       : (s.receiver_error || ' ');
     $('rx-sub').title = $('rx-sub').textContent;
     // Ensemble et RF
@@ -521,10 +521,10 @@
     const dongle = s.receiver === 'si468x';
     const nsvc = (s.services || []).length;
     $('ens-sub').textContent = rf.ensemble_id ? `EId ${rf.ensemble_id}` + (nsvc ? ` · ${nsvc} services` : '') + (dongle ? '' : ` · gain ${rf.gain} dB`) : ' ';
-    $('snr-title').textContent = dongle ? 'CNR (MER)' : 'SNR';
+    $('snr-title').textContent = dongle ? _t('CNR (MER)') : 'SNR';
     const th = s.thresholds || {};
     if (up && rf.snr != null) {
-      $('snr').textContent = `${rf.snr.toFixed(1)} dB`;
+      $('snr').textContent = `${rf.snr.toFixed(1).replace('.', _DEC)} dB`;
       $('snr').className = 'text-base font-semibold font-mono ' + (rf.snr >= th.snr ? 'text-gray-900' : 'text-red-600');
       bar($('snr-bar'), rf.snr / 25 * 100, rf.snr >= th.snr);
       $('fic').textContent = `${Math.round(rf.fic_quality)} %`;
@@ -543,9 +543,9 @@
     if (!sel || document.activeElement === sel) return;
     const want = (settings && settings.dashboard_sid) || sel.value || '';
     const known = new Set(svcs.map(v => v.sid));
-    const opts = ['<option value="">Aucune station suivie (pas de pige)</option>']
+    const opts = ['<option value="">' + _t('Aucune station suivie (pas de pige)') + '</option>']
       .concat(svcs.map(v => `<option value="${esc(v.sid)}">${esc(v.label)} (${esc(v.sid)})</option>`));
-    if (want && !known.has(want)) opts.push(`<option value="${esc(want)}">${esc(want)} (absent)</option>`);
+    if (want && !known.has(want)) opts.push(`<option value="${esc(want)}">${esc(want)} (${_t('absent')})</option>`);
     const html = opts.join('');
     if (sel.dataset.html !== html) { sel.innerHTML = html; sel.dataset.html = html; }
     sel.value = want;
@@ -598,11 +598,11 @@
     $('spec-box').classList.toggle('hidden', !specOn);
     meters.clear();
     if (!specOn || !shown || curTab !== 'direct') return;
-    if (listening) { spectrum.clear('Spectre de l\'écoute…'); return; }   // calculé dans le navigateur
-    spectrum.clear('Lecture de la pige du service…');
+    if (listening) { spectrum.clear(_t('Spectre de l\'écoute…')); return; }   // calculé dans le navigateur
+    spectrum.clear(_t('Lecture de la pige du service…'));
     specConn = BLRMO.connectSpectrum('dab', shown, d => {
       if (d.state === 'ok' && d.bands) { spectrum.update(d.bands); if (!listeningLive()) meters.set(d.peak[0], d.peak[1]); }
-      else { spectrum.clear(d.message || 'Lecture de la pige du service…'); if (!listeningLive()) meters.clear(); }
+      else { spectrum.clear(d.message || _t('Lecture de la pige du service…')); if (!listeningLive()) meters.clear(); }
     });
   }
   $('spec-on').onchange = e => {
@@ -625,7 +625,7 @@
   }
   function pickDefault() {
     const svcs = (st && st.services) || [];
-    if (!st || !st.enabled) { $('pl-name').textContent = 'Réception DAB+ désactivée'; spectrum.clear('Réception DAB+ désactivée'); return; }
+    if (!st || !st.enabled) { $('pl-name').textContent = _t('Réception DAB+ désactivée'); spectrum.clear(_t('Réception DAB+ désactivée')); return; }
     if (shown) {
       // Nom du service encore inconnu à la première sélection (liste pas encore reçue)
       const v = svcs.find(x => x.sid === shown);
@@ -634,7 +634,7 @@
     }
     const want = st.default_sid || (st.watched_sids || [])[0] || (svcs[0] && svcs[0].sid);
     if (want) select(want);
-    else { $('pl-name').textContent = 'Aucun service reçu pour le moment'; spectrum.clear('Aucun service reçu pour le moment'); }
+    else { $('pl-name').textContent = _t('Aucun service reçu pour le moment'); spectrum.clear(_t('Aucun service reçu pour le moment')); }
   }
   let stopTimer = null;
   function listen(sid) {
@@ -643,7 +643,7 @@
     pigeStop();
     listening = sid;
     stopTimer = setTimeout(stopListen, 15 * 60 * 1000);
-    $('pl-help').textContent = 'Connexion…';
+    $('pl-help').textContent = _t('Connexion…');
     playStream();
     renderServices();
   }
@@ -705,14 +705,14 @@
       if (!a.getAttribute('src') || listening !== sid) return;
       if (!retried) {                          // un service tout juste épinglé peut demander un instant
         retried = true;
-        $('pl-help').textContent = 'Démarrage du service…';
+        $('pl-help').textContent = _t('Démarrage du service…');
         setTimeout(() => { if (listening === sid) { a.src = `/api/dab/listen/${encodeURIComponent(sid)}?t=${Date.now()}`; a.play().catch(() => {}); } }, 2000);
         return;
       }
       stopListen();
-      $('pl-help').textContent = 'Écoute impossible : le service ne répond pas pour le moment. Réessayer dans quelques secondes.';
+      $('pl-help').textContent = _t('Écoute impossible : le service ne répond pas pour le moment. Réessayer dans quelques secondes.');
     };
-    a.onplaying = () => { $('pl-help').textContent = 'En écoute (arrêt automatique après 15 min)'; };
+    a.onplaying = () => { $('pl-help').textContent = _t('En écoute (arrêt automatique après 15 min)'); };
     a.onended = () => { stopListen(); };   // écoute coupée par le serveur (durée maximale)
   }
   function togglePlay() {
@@ -750,8 +750,8 @@
     const cur = String(d.current || '').split(/\s+/).join(' ').trim();
     const pg = pigeDab.find(p => p.sid === shown);
     if (!rows.length) {
-      $('dls-body').innerHTML = `<tr><td colspan="3" class="py-6 text-center text-gray-400">Aucun texte enregistré pour ${esc(d.label || shown)} pour le moment</td></tr>`;
-      $('dls-short').innerHTML = cur ? `À l'antenne : <span class="text-gray-800 font-medium">${esc(cur)}</span>` : 'Aucun texte enregistré pour le moment';
+      $('dls-body').innerHTML = `<tr><td colspan="3" class="py-6 text-center text-gray-400">${_t('Aucun texte enregistré pour {s} pour le moment', { s: esc(d.label || shown) })}</td></tr>`;
+      $('dls-short').innerHTML = cur ? `À l'antenne : <span class="text-gray-800 font-medium">${esc(cur)}</span>` : _t('Aucun texte enregistré pour le moment');
       return;
     }
     const today = new Date();
@@ -762,16 +762,16 @@
       const live = i === 0 && r.dls === cur;
       const t0 = isNaN(t) ? 0 : Math.floor(t.getTime() / 1000);
       const listenLink = pg && pg.oldest && t0 >= pg.oldest
-        ? `<a href="/dab?p=${encodeURIComponent(pg.id)}&t=${t0}#pige" class="font-medium text-blue-600 hover:text-blue-800" title="Écouter la pige ${esc(pg.name)} à ce moment">Écouter</a>` : '';
+        ? `<a href="/dab?p=${encodeURIComponent(pg.id)}&t=${t0}#pige" class="font-medium text-blue-600 hover:text-blue-800" title="${_t('Écouter la pige {p} à ce moment', { p: esc(pg.name) })}">${_t('Écouter')}</a>` : '';
       return `<tr class="hover:bg-slate-50">
         <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${hm}</td>
         <td class="py-2 pr-3 truncate ${live ? 'font-semibold text-gray-900' : 'text-gray-700'}" title="${esc(r.dls)}">${esc(r.dls)}</td>
-        <td class="py-2 text-right whitespace-nowrap">${live ? '<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 mr-3">À l\'antenne</span>' : ''}${listenLink}</td>
+        <td class="py-2 text-right whitespace-nowrap">${live ? '<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 mr-3">' + _t('À l\'antenne') + '</span>' : ''}${listenLink}</td>
       </tr>`;
     }).join('');
     const first = rows[0], t = new Date(first.timestamp);
-    $('dls-short').innerHTML = (first.dls === cur ? 'À l\'antenne : ' : 'Dernier titre : ')
-      + `<span class="text-gray-800 font-medium">${esc(first.dls)}</span>` + (isNaN(t) ? '' : ` · depuis ${pad(t.getHours())}:${pad(t.getMinutes())}`);
+    $('dls-short').innerHTML = (first.dls === cur ? _t('À l\'antenne : ') : _t('Dernier titre : '))
+      + `<span class="text-gray-800 font-medium">${esc(first.dls)}</span>` + (isNaN(t) ? '' : ` · ${_t('depuis')} ${pad(t.getHours())}:${pad(t.getMinutes())}`);
   }
   let freeBytes = null;
   async function loadPigeDab() {
@@ -793,7 +793,7 @@
     if (!$('s-carousel_size').value) $('s-carousel_size').value = '2';   // ancien réglage « 1 à la fois »
     const ek = settings.email_kinds || {};
     EMAIL_KINDS.forEach(k => { $('e-' + k).checked = ek[k] !== false; });
-    $('s-freq').textContent = `${Number(settings.frequency_mhz).toFixed(3).replace('.', ',')} MHz`;
+    $('s-freq').textContent = `${Number(settings.frequency_mhz).toFixed(3).replace('.', _DEC)} MHz`;
     // Comme en FM : un récepteur choisi, la réception DAB+ tourne ; « Aucun » l'arrête
     $('s-receiver').value = settings.enabled ? (settings.receiver || 'rtlsdr') : 'none';
     receiverFields();
@@ -802,9 +802,9 @@
     const dongle = $('s-receiver').value === 'si468x';
     document.querySelectorAll('.rtl-only').forEach(el => el.classList.toggle('hidden', dongle));
     $('s-receiver-help').textContent = dongle
-      ? "Un seul service décodé : la station suivie. Les autres services restent suivis (présence), sans son."
-      : $('s-receiver').value === 'none' ? 'Réception DAB+ arrêtée, ainsi que sa pige.'
-      : 'Décodage par welle-cli : plusieurs services possibles.';
+      ? _t("Un seul service décodé : la station suivie. Les autres services restent suivis (présence), sans son.")
+      : $('s-receiver').value === 'none' ? _t('Réception DAB+ arrêtée, ainsi que sa pige.')
+      : _t('Décodage par welle-cli : plusieurs services possibles.');
   }
   async function post(body) {
     const r = await fetch('/api/dab/settings', {
@@ -812,7 +812,7 @@
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }, body: JSON.stringify(body)
     });
     const d = await r.json().catch(() => ({}));
-    if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
+    if (!r.ok || d.status !== 'ok') throw new Error(d.message || `${_t('Erreur')} ${r.status}`);
     return d;
   }
   async function saveSettings() {
@@ -821,10 +821,10 @@
     FIELDS.forEach(f => { body[f] = $('s-' + f).value; });
     if (rx === 'none') delete body.receiver;                 // garde le dernier récepteur choisi
     body.email_kinds = Object.fromEntries(EMAIL_KINDS.map(k => [k, $('e-' + k).checked]));
-    $('s-msg').className = 'text-xs text-gray-500'; $('s-msg').textContent = 'Enregistrement…';
+    $('s-msg').className = 'text-xs text-gray-500'; $('s-msg').textContent = _t('Enregistrement…');
     try {
       await post(body);
-      $('s-msg').className = 'text-xs text-green-600'; $('s-msg').textContent = 'Enregistré. Le service DAB+ applique les réglages sous quelques secondes.';
+      $('s-msg').className = 'text-xs text-green-600'; $('s-msg').textContent = _t('Enregistré. Le service DAB+ applique les réglages sous quelques secondes.');
       loadSettings(); setTimeout(loadStatus, 3000);
     } catch (e) { $('s-msg').className = 'text-xs text-red-600'; $('s-msg').textContent = e.message; }
   }
@@ -843,21 +843,21 @@
     $('sidebar-overlay').classList.toggle('hidden');
   }
   // ── Récepteurs et balayage ─────────────────────────────
-  const RX_KIND = { tef: 'TEF (FM)', si468x: 'Dongle Si468x (DAB+)', rtlsdr: 'Clé RTL-SDR' };
+  const RX_KIND = { tef: _t('TEF (FM)'), si468x: _t('Dongle Si468x (DAB+)'), rtlsdr: _t('Clé RTL-SDR') };
   async function detectReceivers() {
-    $('rx-list').className = 'text-xs text-gray-500'; $('rx-list').textContent = 'Détection…';
+    $('rx-list').className = 'text-xs text-gray-500'; $('rx-list').textContent = _t('Détection…');
     try {
       const r = await fetch('/api/dab/receivers', { credentials: 'include' });
       const d = await r.json();
-      if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
-      if (!d.receivers.length) { $('rx-list').textContent = 'Aucun récepteur reconnu (TEF, dongle Si468x ou clé RTL-SDR).'; return; }
+      if (!r.ok || d.status !== 'ok') throw new Error(d.message || `${_t('Erreur')} ${r.status}`);
+      if (!d.receivers.length) { $('rx-list').textContent = _t('Aucun récepteur reconnu (TEF, dongle Si468x ou clé RTL-SDR).'); return; }
       const rx = d.dab_enabled ? d.dab_receiver : '';
-      const role = x => x.kind === 'rtlsdr' ? (rx === 'rtlsdr' ? 'Réception DAB+ (welle-cli)' : 'Inutilisée')
-                    : x.kind === 'si468x' ? (rx === 'si468x' ? 'Réception DAB+' : 'Balayage') : 'Réception FM';
+      const role = x => x.kind === 'rtlsdr' ? (rx === 'rtlsdr' ? _t('Réception DAB+ (welle-cli)') : _t('Inutilisée'))
+                    : x.kind === 'si468x' ? (rx === 'si468x' ? _t('Réception DAB+') : _t('Balayage')) : _t('Réception FM');
       $('rx-list').className = 'overflow-x-auto';
       $('rx-list').innerHTML = `<table class="w-full text-xs"><thead><tr class="text-left text-gray-400 border-b border-gray-100">
-        <th class="py-1.5 pr-3 font-medium">Récepteur</th><th class="py-1.5 pr-3 font-medium">Appareil</th><th class="py-1.5 pr-3 font-medium">USB</th>
-        <th class="py-1.5 pr-3 font-medium">Port série</th><th class="py-1.5 pr-3 font-medium">Carte son</th><th class="py-1.5 font-medium">Rôle</th></tr></thead><tbody>` +
+        <th class="py-1.5 pr-3 font-medium">${_t('Récepteur')}</th><th class="py-1.5 pr-3 font-medium">${_t('Appareil')}</th><th class="py-1.5 pr-3 font-medium">USB</th>
+        <th class="py-1.5 pr-3 font-medium">${_t('Port série')}</th><th class="py-1.5 pr-3 font-medium">${_t('Carte son')}</th><th class="py-1.5 font-medium">${_t('Rôle')}</th></tr></thead><tbody>` +
         d.receivers.map(x => `<tr class="border-b border-gray-50">
           <td class="py-1.5 pr-3 font-medium text-gray-800">${esc(RX_KIND[x.kind])}</td>
           <td class="py-1.5 pr-3 text-gray-600">${esc([x.manufacturer, x.product].filter(Boolean).join(' '))}</td>
@@ -874,7 +874,7 @@
     try {
       const r = await fetch('/api/dab/scan', { method: 'POST', credentials: 'include', headers: { 'X-CSRFToken': csrf() } });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
+      if (!r.ok || d.status !== 'ok') throw new Error(d.message || `${_t('Erreur')} ${r.status}`);
       renderScan(d); pollScan();
     } catch (e) { $('scan-msg').className = 'text-xs text-red-600'; $('scan-msg').textContent = e.message; }
   }
@@ -884,11 +884,11 @@
       try {
         const r = await fetch('/api/dab/scan', { credentials: 'include' });
         const d = await r.json().catch(() => ({}));
-        if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
+        if (!r.ok || d.status !== 'ok') throw new Error(d.message || `${_t('Erreur')} ${r.status}`);
         renderScan(d);
         if (d.running) pollScan();
       } catch (e) {
-        $('scan-msg').className = 'text-xs text-amber-700'; $('scan-msg').textContent = `Avancement indisponible (${e.message}), nouvel essai…`;
+        $('scan-msg').className = 'text-xs text-amber-700'; $('scan-msg').textContent = _t('Avancement indisponible ({e}), nouvel essai…', { e: e.message });
         pollScan();
       }
     }, 1000);
@@ -901,40 +901,40 @@
       if (d.running) pollScan();
     } catch (e) {}
   }
-  const num = (v, unit) => v == null ? '-' : `${String(Math.round(v * 10) / 10).replace('.', ',')}${unit}`;
+  const num = (v, unit) => v == null ? '-' : `${String(Math.round(v * 10) / 10).replace('.', _DEC)}${unit}`;
   function renderScan(d) {
     $('scan-btn').disabled = !!d.running;
-    $('scan-btn').textContent = d.running ? 'Balayage en cours…' : 'Lancer le balayage';
+    $('scan-btn').textContent = d.running ? _t('Balayage en cours…') : _t('Lancer le balayage');
     $('scan-progress').classList.toggle('hidden', !d.running);
     if (d.running) {
-      $('scan-label').textContent = `Canal ${d.channel || '…'} (${d.progress + 1} sur ${d.total})` + (d.chip ? ` · puce Si${d.chip}` : '');
+      $('scan-label').textContent = _t('Canal {c} ({i} sur {n})', { c: d.channel || '…', i: d.progress + 1, n: d.total }) + (d.chip ? ` · ${_t('puce')} Si${d.chip}` : '');
       $('scan-bar').style.width = `${Math.round(100 * d.progress / d.total)}%`;
     }
     const res = d.results || [];
     const found = res.filter(x => x.lock);
-    if (d.error) { $('scan-msg').className = 'text-xs text-red-600'; $('scan-msg').textContent = 'Balayage interrompu : ' + d.error; }
+    if (d.error) { $('scan-msg').className = 'text-xs text-red-600'; $('scan-msg').textContent = _t('Balayage interrompu : ') + d.error; }
     else if (!d.running && d.finished) {
       const when = new Date(d.finished * 1000);
       $('scan-msg').className = 'text-xs text-gray-500';
-      $('scan-msg').textContent = `${found.length} multiplex trouvé${found.length > 1 ? 's' : ''} sur ${res.length} canaux, le ${pad(when.getDate())}/${pad(when.getMonth() + 1)} à ${pad(when.getHours())}:${pad(when.getMinutes())}` + (d.chip ? ` · puce Si${d.chip}` : '');
+      $('scan-msg').textContent = _t(found.length > 1 ? '{n} multiplex trouvés sur {c} canaux, le {d} à {h}' : '{n} multiplex trouvé sur {c} canaux, le {d} à {h}', { n: found.length, c: res.length, d: `${pad(when.getDate())}/${pad(when.getMonth() + 1)}`, h: `${pad(when.getHours())}:${pad(when.getMinutes())}` }) + (d.chip ? ` · ${_t('puce')} Si${d.chip}` : '');
     }
     if (!res.length) { $('scan-results').innerHTML = ''; return; }
     const rows = scanShowAll ? res : found;
     $('scan-results').innerHTML = (rows.length ? `<div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="text-left text-gray-400 border-b border-gray-100">
-        <th class="py-1.5 pr-3 font-medium">Canal</th><th class="py-1.5 pr-3 font-medium">Fréquence</th><th class="py-1.5 pr-3 font-medium">Multiplex</th>
-        <th class="py-1.5 pr-3 font-medium">EId · ECC</th><th class="py-1.5 pr-3 font-medium text-right">CNR</th><th class="py-1.5 pr-3 font-medium text-right">FIC</th>
-        <th class="py-1.5 font-medium">Services audio</th></tr></thead><tbody>` +
+        <th class="py-1.5 pr-3 font-medium">${_t('Canal')}</th><th class="py-1.5 pr-3 font-medium">${_t('Fréquence')}</th><th class="py-1.5 pr-3 font-medium">${_t('Multiplex')}</th>
+        <th class="py-1.5 pr-3 font-medium">${_t('EId · ECC')}</th><th class="py-1.5 pr-3 font-medium text-right">${_t('CNR')}</th><th class="py-1.5 pr-3 font-medium text-right">${_t('FIC')}</th>
+        <th class="py-1.5 font-medium">${_t('Services audio')}</th></tr></thead><tbody>` +
       rows.map(x => `<tr class="border-b border-gray-50 align-top ${x.lock ? '' : 'text-gray-300'}">
         <td class="py-1.5 pr-3 font-mono font-semibold ${x.lock ? 'text-gray-800' : ''}">${esc(x.channel)}</td>
-        <td class="py-1.5 pr-3 font-mono">${x.freq_mhz.toFixed(3).replace('.', ',')} MHz</td>
-        <td class="py-1.5 pr-3 ${x.lock ? 'font-medium text-gray-800' : ''}">${x.lock ? esc(x.ensemble || '(nom non reçu)') : 'rien'}</td>
+        <td class="py-1.5 pr-3 font-mono">${x.freq_mhz.toFixed(3).replace('.', _DEC)} MHz</td>
+        <td class="py-1.5 pr-3 ${x.lock ? 'font-medium text-gray-800' : ''}">${x.lock ? esc(x.ensemble || _t('(nom non reçu)')) : _t('rien')}</td>
         <td class="py-1.5 pr-3 font-mono">${x.lock ? esc([x.eid, x.ecc].filter(Boolean).join(' · ')) : ''}</td>
         <td class="py-1.5 pr-3 font-mono text-right">${x.lock ? num(x.cnr, ' dB') : ''}</td>
         <td class="py-1.5 pr-3 font-mono text-right">${x.lock ? num(x.fic, ' %') : ''}</td>
-        <td class="py-1.5 text-gray-600">${x.lock ? `<details><summary class="cursor-pointer">${x.audio_count} service${x.audio_count > 1 ? 's' : ''}</summary>
-          <div class="mt-1 leading-relaxed">${x.services.map(s => `${esc(s.label || '(sans nom)')} <span class="text-gray-400">${esc(s.type_label)}</span>`).join('<br>')}</div></details>` : ''}</td>
-      </tr>`).join('') + '</tbody></table></div>' : '<div class="text-xs text-gray-400">Aucun multiplex trouvé pour le moment.</div>') +
-      (d.running ? '' : `<button onclick="scanShowAll=!scanShowAll;loadScan()" class="mt-2 text-[11px] text-blue-600 hover:text-blue-800">${scanShowAll ? 'Masquer les canaux vides' : 'Afficher les 38 canaux'}</button>`);
+        <td class="py-1.5 text-gray-600">${x.lock ? `<details><summary class="cursor-pointer">${_t(x.audio_count > 1 ? '{n} services' : '{n} service', { n: x.audio_count })}</summary>
+          <div class="mt-1 leading-relaxed">${x.services.map(s => `${esc(s.label || _t('(sans nom)'))} <span class="text-gray-400">${esc(s.type_label)}</span>`).join('<br>')}</div></details>` : ''}</td>
+      </tr>`).join('') + '</tbody></table></div>' : '<div class="text-xs text-gray-400">' + _t('Aucun multiplex trouvé pour le moment.') + '</div>') +
+      (d.running ? '' : `<button onclick="scanShowAll=!scanShowAll;loadScan()" class="mt-2 text-[11px] text-blue-600 hover:text-blue-800">${scanShowAll ? _t('Masquer les canaux vides') : _t('Afficher les 38 canaux')}</button>`);
   }
 
   function closeSidebar() {
@@ -992,28 +992,28 @@
     sec = Math.max(0, Math.round(sec));
     if (sec < 3600) return `${Math.max(1, Math.floor(sec / 60))} min`;
     if (sec < 86400) return `${Math.floor(sec / 3600)} h ${pad(Math.floor(sec % 3600 / 60))} min`;
-    return `${Math.floor(sec / 86400)} j ${Math.floor(sec % 86400 / 3600)} h`;
+    return `${Math.floor(sec / 86400)} ${_t('j')} ${Math.floor(sec % 86400 / 3600)} h`;
   }
-  function fmtStamp(t) { const d = new Date(t); return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+  function fmtStamp(t) { const d = new Date(t); return _t('{d} à {h}', { d: `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`, h: `${pad(d.getHours())}:${pad(d.getMinutes())}` }); }
   // Seules comptent les alertes qui ont envoyé un mail
   function headerAlerts(alerts) {
     const now = Date.now(), mailed = alerts.filter(a => (a.emails || 0) > 0);
     const last30 = mailed.filter(a => now - a.t0 <= 30 * 86400e3);
     const mails = last30.reduce((n, a) => n + (a.emails || 0), 0);
     setTile('db-30d', String(last30.length), last30.length ? 'text-gray-900' : C_OK,
-            last30.length ? `${mails} mail${mails > 1 ? 's' : ''} envoyé${mails > 1 ? 's' : ''}` : 'aucune alerte avec mail');
+            last30.length ? _t(mails > 1 ? '{n} mails envoyés' : '{n} mail envoyé', { n: mails }) : _t('aucune alerte avec mail'));
     const ongoing = mailed.filter(a => !a.t1);
     if (ongoing.length) {
       const t0 = Math.min(...ongoing.map(a => a.t0));
-      $('db-ok-label').textContent = 'En alerte depuis';
-      setTile('db-ok', fmtSince((now - t0) / 1000), C_BAD, `depuis le ${fmtStamp(t0)}`);
+      $('db-ok-label').textContent = _t('En alerte depuis');
+      setTile('db-ok', fmtSince((now - t0) / 1000), C_BAD, _t('depuis le {t}', { t: fmtStamp(t0) }));
       return;
     }
-    $('db-ok-label').textContent = 'Tout est OK depuis';
+    $('db-ok-label').textContent = _t('Tout est OK depuis');
     const ends = mailed.map(a => a.t1).filter(Boolean);
-    if (!ends.length) { setTile('db-ok', 'Aucune alerte', C_OK, 'pas d\'alerte avec mail enregistrée'); return; }
+    if (!ends.length) { setTile('db-ok', _t('Aucune alerte'), C_OK, _t('pas d\'alerte avec mail enregistrée')); return; }
     const last = Math.max(...ends);
-    setTile('db-ok', fmtSince((now - last) / 1000), C_OK, `fin de la dernière alerte le ${fmtStamp(last)}`);
+    setTile('db-ok', fmtSince((now - last) / 1000), C_OK, _t('fin de la dernière alerte le {t}', { t: fmtStamp(last) }));
   }
   let dbEvents = [], dbLimit = 10, journalAt = 0;
   const DB_COLORS = {
@@ -1025,13 +1025,13 @@
   function dbPigeLinks(a) {
     // La pige enregistre la station suivie : ses alertes et celles de tout le multiplex
     const pg = pigeDab[0];
-    if (!pg || !pg.oldest) return '<span class="text-gray-300" title="Pas d\'enregistrement DAB+ (onglet Pige)">pas de pige</span>';
-    if (a.sid && a.sid !== pg.sid) return '<span class="text-gray-300" title="La pige enregistre seulement la station suivie">pas de pige</span>';
+    if (!pg || !pg.oldest) return '<span class="text-gray-300" title="' + _t('Pas d\'enregistrement DAB+ (onglet Pige)') + '">' + _t('pas de pige') + '</span>';
+    if (a.sid && a.sid !== pg.sid) return '<span class="text-gray-300" title="' + _t('La pige enregistre seulement la station suivie') + '">' + _t('pas de pige') + '</span>';
     const t0 = Math.floor(tms(a.start) / 1000), t1 = a.status === 'complete' && a.end ? Math.floor(tms(a.end) / 1000) : null;
-    if (!pg.oldest || t0 < pg.oldest) return '<span class="text-gray-300">hors pige</span>';
+    if (!pg.oldest || t0 < pg.oldest) return '<span class="text-gray-300">' + _t('hors pige') + '</span>';
     const [s, e] = alertRange(t0, t1), q = encodeURIComponent(pg.id);
-    return `<a href="/dab?p=${q}&t=${t0}${t1 ? '&e=' + t1 : ''}#pige" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Écouter la pige ${esc(pg.name)} au moment de l'alerte">Écouter</a>`
-         + (canExport ? `<a href="/api/pige/export?p=${q}&start=${s}&end=${e}" class="font-medium text-blue-600 hover:text-blue-800" title="Extrait MP3 (${esc(pg.name)}) de 30 s avant à 30 s après">MP3</a>` : '');
+    return `<a href="/dab?p=${q}&t=${t0}${t1 ? '&e=' + t1 : ''}#pige" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="${_t("Écouter la pige {p} au moment de l'alerte", { p: esc(pg.name) })}">${_t('Écouter')}</a>`
+         + (canExport ? `<a href="/api/pige/export?p=${q}&start=${s}&end=${e}" class="font-medium text-blue-600 hover:text-blue-800" title="${_t('Extrait MP3 ({p}) de 30 s avant à 30 s après', { p: esc(pg.name) })}">MP3</a>` : '');
   }
   async function loadJournal(force) {
     if (!force && Date.now() - journalAt < 20000) return;
@@ -1046,22 +1046,22 @@
     headerAlerts(dbEvents.filter(a => a.status !== 'orphan').map(a => ({ t0: tms(a.start), t1: a.status === 'complete' ? tms(a.end) : null, emails: a.emails || 0 })));
     const fill = (sel, vals, all) => {
       const cur = sel.value;
-      sel.innerHTML = `<option value="">${all}</option>` + vals.map(v => `<option>${esc(v)}</option>`).join('');
+      sel.innerHTML = `<option value="">${all}</option>` + vals.map(v => `<option value="${esc(v)}">${esc(_t(v))}</option>`).join('');
       sel.value = vals.includes(cur) ? cur : '';
     };
-    fill($('db-type'), [...new Set(dbEvents.map(a => a.label))], 'Tous les types');
-    fill($('db-svc'), [...new Set(dbEvents.map(a => a.service).filter(Boolean))].sort(), 'Tous les services');
+    fill($('db-type'), [...new Set(dbEvents.map(a => a.label))], _t('Tous les types'));
+    fill($('db-svc'), [...new Set(dbEvents.map(a => a.service).filter(Boolean))].sort(), _t('Tous les services'));
     renderDab();
   }
   function renderDab() {
     const type = $('db-type').value, svc = $('db-svc').value;
     const list = dbEvents.filter(a => (!type || a.label === type) && (!svc || a.service === svc));
     const shownList = list.slice(0, dbLimit);
-    const n = `${list.length} alerte${list.length > 1 ? 's' : ''}`;
-    $('db-count').textContent = dbEvents.length >= 500 ? `${n} parmi les 500 plus récentes` : n;
+    const n = _t(list.length > 1 ? '{n} alertes' : '{n} alerte', { n: list.length });
+    $('db-count').textContent = dbEvents.length >= 500 ? _t('{n} parmi les 500 plus récentes', { n }) : n;
     $('db-more').classList.toggle('hidden', list.length <= dbLimit);
     if (!shownList.length) {
-      $('db-body').innerHTML = '<tr><td colspan="9" class="py-8 text-center text-gray-400">Aucune alerte enregistrée</td></tr>';
+      $('db-body').innerHTML = '<tr><td colspan="9" class="py-8 text-center text-gray-400">' + _t('Aucune alerte enregistrée') + '</td></tr>';
       return;
     }
     const hms = d => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
@@ -1071,17 +1071,17 @@
       let range = hms(d0), state;
       if (a.status === 'complete') {
         range += ' → ' + hms(new Date(tms(a.end)));
-        state = '<span class="px-2 py-0.5 rounded-full bg-green-50 text-green-700">Rétabli</span>';
+        state = '<span class="px-2 py-0.5 rounded-full bg-green-50 text-green-700">' + _t('Rétabli') + '</span>';
       } else if (a.status === 'orphan') {
         range += ' → <span class="text-gray-400">?</span>';
-        state = '<span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600" title="Fin non enregistrée (surveillance DAB+ redémarrée pendant l\'alerte)">Fin inconnue</span>';
+        state = '<span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600" title="' + _t('Fin non enregistrée (surveillance DAB+ redémarrée pendant l\'alerte)') + '">' + _t('Fin inconnue') + '</span>';
       } else {
-        range += ' → <span class="text-red-600 font-medium">en cours</span>';
-        state = '<span class="px-2 py-0.5 rounded-full bg-red-50 text-red-700">En cours</span>';
+        range += ' → <span class="text-red-600 font-medium">' + _t('en cours') + '</span>';
+        state = '<span class="px-2 py-0.5 rounded-full bg-red-50 text-red-700">' + _t('En cours') + '</span>';
       }
       return `<tr class="hover:bg-slate-50">
         <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${day}</td>
-        <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${DB_COLORS[a.label] || 'bg-gray-100 text-gray-700'}">${esc(a.label)}</span></td>
+        <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${DB_COLORS[a.label] || 'bg-gray-100 text-gray-700'}">${esc(_t(a.label))}</span></td>
         <td class="py-2 pr-3 font-medium text-gray-800">${esc(a.service || '-')}</td>
         <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${range}</td>
         <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.status === 'complete' ? fmtDur(a.duration) : '-'}</td>
@@ -1107,7 +1107,7 @@
     const rows = d.data || [];
     $('dlh-more').classList.toggle('hidden', rows.length < dlhLimit);
     if (!rows.length) {
-      $('dlh-body').innerHTML = '<tr><td colspan="3" class="py-8 text-center text-gray-400">Aucun texte DLS enregistré pour le moment</td></tr>';
+      $('dlh-body').innerHTML = '<tr><td colspan="3" class="py-8 text-center text-gray-400">' + _t('Aucun texte DLS enregistré pour le moment') + '</td></tr>';
       return;
     }
     const cur = String(d.current || '').split(/\s+/).join(' ').trim();
@@ -1117,15 +1117,15 @@
     $('dlh-body').innerHTML = rows.map((r, i) => {
       const t = new Date(tms(r.timestamp));
       const hm = isNaN(t) ? esc(r.timestamp) : `${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}`;
-      const day = isNaN(t) || sameDay(t, today) ? '' : sameDay(t, yest) ? 'hier' : `${pad(t.getDate())}-${pad(t.getMonth() + 1)}`;
+      const day = isNaN(t) || sameDay(t, today) ? '' : sameDay(t, yest) ? _t('hier') : `${pad(t.getDate())}-${pad(t.getMonth() + 1)}`;
       const live = i === 0 && r.dls === cur;
       const t0 = isNaN(t) ? 0 : Math.floor(t.getTime() / 1000);
       const listenLink = pg && pg.oldest && t0 >= pg.oldest
-        ? `<a href="/dab?p=${encodeURIComponent(pg.id)}&t=${t0}#pige" class="font-medium text-blue-600 hover:text-blue-800" title="Écouter la pige ${esc(pg.name)} à ce moment">Écouter</a>` : '';
+        ? `<a href="/dab?p=${encodeURIComponent(pg.id)}&t=${t0}#pige" class="font-medium text-blue-600 hover:text-blue-800" title="${_t('Écouter la pige {p} à ce moment', { p: esc(pg.name) })}">${_t('Écouter')}</a>` : '';
       return `<tr class="hover:bg-slate-50">
         <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${hm}${day ? ` <span class="text-gray-400">${day}</span>` : ''}</td>
         <td class="py-2 pr-3 ${live ? 'font-semibold text-gray-900' : 'text-gray-700'}">${esc(r.dls)}</td>
-        <td class="py-2 whitespace-nowrap text-right">${live ? '<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 mr-3">À l\'antenne</span>' : ''}${listenLink}</td>
+        <td class="py-2 whitespace-nowrap text-right">${live ? '<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 mr-3">' + _t('À l\'antenne') + '</span>' : ''}${listenLink}</td>
       </tr>`;
     }).join('');
   }
@@ -1149,7 +1149,7 @@
   function exportDab() {
     const type = $('db-type').value, svc = $('db-svc').value;
     const list = dbEvents.filter(a => (!type || a.label === type) && (!svc || a.service === svc));
-    const STATE = { complete: 'rétabli', ongoing: 'en cours', orphan: 'fin non enregistrée' };
+    const STATE = { complete: _t('rétabli'), ongoing: _t('en cours'), orphan: _t('fin non enregistrée') };
     downloadCsv('blrmo-alertes-dab', ['date', 'debut', 'fin', 'alerte', 'service', 'sid', 'canal', 'duree_s', 'etat', 'mails', 'detail'],
       list.map(a => { const [d, t0] = csvStamp(a.start), t1 = csvStamp(a.end)[1];
         return [d, t0, a.status === 'complete' ? t1 : '', a.label, a.service || '', a.sid || '', a.channel || '',
@@ -1166,8 +1166,8 @@
   // ═══ PIGE : service, date, heure de début, heure de fin, lecture, téléchargement ═══
   const pAudio = $('pg-audio');
   const fmtTime = ts => { const d = new Date(ts * 1000); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
-  const fmtDay = ts => new Date(ts * 1000).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-  const fmtBytes = b => b == null ? '?' : b >= 1e9 ? (b / 1e9).toFixed(1).replace('.', ',') + ' Go' : Math.round(b / 1e6) + ' Mo';
+  const fmtDay = ts => new Date(ts * 1000).toLocaleDateString(BLRMO_LOCALE, { weekday: 'long', day: 'numeric', month: 'long' });
+  const fmtBytes = b => b == null ? '?' : b >= 1e9 ? (b / 1e9).toFixed(1).replace('.', _DEC) + ' ' + _t('Go') : Math.round(b / 1e6) + ' ' + _t('Mo');
   const isoDate = ts => { const d = new Date(ts * 1000); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
   const IC_PLAY_S = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
   let pgId = null, pgSt = null, pgWin = [0, 0], pgSeg = null, pgOffset = 0, pgInfo = null;
@@ -1196,24 +1196,24 @@
     $('pg-none').classList.toggle('hidden', !none);
     $('pg-main').classList.toggle('hidden', none);
     $('pg-none').innerHTML = !pg || pg.blocked === 'reception'
-      ? 'Pas de réception DAB+ : choisir un récepteur dans l\'onglet <a href="#configuration" class="text-blue-600">Configuration</a>, la pige démarre avec la réception.'
-      : 'Aucune station DAB+ suivie, donc pas de pige : choisir la station dans l\'onglet <a href="#configuration" class="text-blue-600">Configuration</a> (« Station suivie »).';
+      ? _t("Pas de réception DAB+ : choisir un récepteur dans l'onglet {tab}, la pige démarre avec la réception.", { tab: '<a href="#configuration" class="text-blue-600">' + _t('Configuration') + '</a>' })
+      : _t("Aucune station DAB+ suivie, donc pas de pige : choisir la station dans l'onglet {tab} (« Station suivie »).", { tab: '<a href="#configuration" class="text-blue-600">' + _t('Configuration') + '</a>' });
     renderPigeCfg();
   }
   function renderPigeCfg() {
     const pg = pigeDab[0];
     if (!isAdmin) return;
     $('pg-days').disabled = $('pg-save').disabled = $('pg-toggle').disabled = !pg;
-    if (!pg) { $('pg-estimate').textContent = 'La pige DAB+ apparaît quand la réception DAB+ est activée.'; $('pg-toggle').textContent = 'Arrêter la pige'; return; }
+    if (!pg) { $('pg-estimate').textContent = _t('La pige DAB+ apparaît quand la réception DAB+ est activée.'); $('pg-toggle').textContent = _t('Arrêter la pige'); return; }
     if (!$('pg-days').value) $('pg-days').value = Math.round(pg.retention_hours / 24);
-    $('pg-toggle').textContent = pg.wanted ? 'Arrêter la pige' : 'Démarrer la pige';
+    $('pg-toggle').textContent = pg.wanted ? _t('Arrêter la pige') : _t('Démarrer la pige');
     const perDay = (pg.bitrate_kbps || 128) * 125 * 86400;
-    $('pg-estimate').innerHTML = (pg.sid ? `Station enregistrée : <strong>${esc(svcLabel(pg.sid))}</strong>` + (svcLabel(pg.sid) !== pg.sid ? ` <span class="font-mono text-gray-400">${esc(pg.sid)}</span>` : '') + ' · ' : '')
-      + `environ ${fmtBytes(perDay)} par jour · pige actuelle ${fmtBytes(pg.used_bytes)} · ${fmtBytes(freeBytes)} libres sur le disque.`;
+    $('pg-estimate').innerHTML = (pg.sid ? `${_t('Station enregistrée :')} <strong>${esc(svcLabel(pg.sid))}</strong>` + (svcLabel(pg.sid) !== pg.sid ? ` <span class="font-mono text-gray-400">${esc(pg.sid)}</span>` : '') + ' · ' : '')
+      + _t('environ {day} par jour · pige actuelle {used} · {free} libres sur le disque.', { day: fmtBytes(perDay), used: fmtBytes(pg.used_bytes), free: fmtBytes(freeBytes) });
     const mode = st ? (st.enabled ? st.mode : null) : null, w = $('pg-warn');
     const carousel = mode && /carrousel/i.test(mode);
     w.classList.toggle('hidden', !(pg.wanted && carousel));
-    w.textContent = 'Décodage en carrousel : la station n\'est décodée qu\'à tour de rôle et la pige aura des trous. Choisir « Station suivie seulement » ou « Tous les services en continu » dans l\'onglet Configuration.';
+    w.textContent = _t('Décodage en carrousel : la station n\'est décodée qu\'à tour de rôle et la pige aura des trous. Choisir « Station suivie seulement » ou « Tous les services en continu » dans l\'onglet Configuration.');
   }
   async function pgLoadStatus(center) {
     if (!pgId) return;
@@ -1223,10 +1223,10 @@
     const on = pgSt.enabled !== false && pgSt.recording, pg = pigeDab[0];
     $('pg-dot').className = 'w-2.5 h-2.5 rounded-full flex-shrink-0 ' + (on ? 'bg-red-500' : 'bg-amber-500');
     $('pg-avail').innerHTML = (pg && pg.sid ? `<strong>${esc(svcLabel(pg.sid))}</strong> · ` : '') + (pgSt.oldest
-      ? `Disponible du <strong>${fmtDay(pgSt.oldest)} ${fmtTime(pgSt.oldest).slice(0, 5)}</strong> `
-        + (on || !pgSt.newest ? 'jusqu\'à maintenant' : `au <strong>${fmtDay(pgSt.newest)} ${fmtTime(pgSt.newest).slice(0, 5)}</strong>`)
-        + (on ? '' : ` · <span class="text-amber-700">${pg && !pg.wanted ? 'pige arrêtée' : 'enregistrement interrompu'}</span>`)
-      : 'Aucun enregistrement pour le moment');
+      ? `${_t('Disponible du')} <strong>${fmtDay(pgSt.oldest)} ${fmtTime(pgSt.oldest).slice(0, 5)}</strong> `
+        + (on || !pgSt.newest ? _t('jusqu\'à maintenant') : `${_t('au')} <strong>${fmtDay(pgSt.newest)} ${fmtTime(pgSt.newest).slice(0, 5)}</strong>`)
+        + (on ? '' : ` · <span class="text-amber-700">${pg && !pg.wanted ? _t('pige arrêtée') : _t('enregistrement interrompu')}</span>`)
+      : _t('Aucun enregistrement pour le moment'));
   }
   async function pgEnsure(ts) { if (!pgSt || ts < pgWin[0] + 600 || ts > pgWin[1] - 600) await pgLoadStatus(ts); }
   function pgFind(ts) {
@@ -1250,7 +1250,7 @@
   async function pgPlayAt(ts) {
     await pgEnsure(ts);
     const f = pgFind(ts);
-    if (!f) { $('pg-summary').innerHTML = '<span class="text-red-600">Pas d\'enregistrement à ce moment</span>'; return; }
+    if (!f) { $('pg-summary').innerHTML = '<span class="text-red-600">' + _t('Pas d\'enregistrement à ce moment') + '</span>'; return; }
     if (listening) stopListen();
     pgLoadSeg(f.seg, f.offset);
   }
@@ -1284,10 +1284,10 @@
   function pgUI() {
     const playingNow = pgSeg && !pAudio.paused;
     $('pg-play-ic').innerHTML = playingNow ? IC_PAUSE : IC_PLAY_S;
-    $('pg-play-txt').textContent = playingNow ? 'Pause' : 'Lecture';
+    $('pg-play-txt').textContent = playingNow ? _t('Pause') : _t('Lecture');
     const ts = pgPos(), [a, b] = pgRange();
     $('pg-pos').textContent = ts != null ? fmtTime(ts) : '--:--:--';
-    $('pg-state').textContent = ts == null ? '' : fmtDay(ts) + (playingNow ? ' · en lecture' : ' · en pause');
+    $('pg-state').textContent = ts == null ? '' : fmtDay(ts) + (playingNow ? _t(' · en lecture') : _t(' · en pause'));
     const end = b ?? (a != null ? a + 3600 : null);
     $('pg-bar-a').textContent = a != null ? fmtTime(a) : '';
     $('pg-bar-b').textContent = b != null ? fmtTime(b) : '';
@@ -1312,17 +1312,17 @@
     const [a, b] = pgRange(), box = $('pg-summary');
     pgInfo = null;
     if (!pgId) { box.textContent = ''; return; }
-    if (a == null) { box.textContent = 'Choisir une date et une heure de début.'; return; }
-    if (b == null) { box.textContent = 'Lecture à partir de l\'heure de début. Indiquer une heure de fin pour télécharger.'; return; }
+    if (a == null) { box.textContent = _t('Choisir une date et une heure de début.'); return; }
+    if (b == null) { box.textContent = _t('Lecture à partir de l\'heure de début. Indiquer une heure de fin pour télécharger.'); return; }
     const dur = `<span class="font-mono">${fmtTime(a)} → ${fmtTime(b)}</span> · <strong>${fmtDur(b - a)}</strong>`;
     if (!canExport) { box.innerHTML = dur; return; }
     try {
       const d = await api(`/api/pige/export?check=1&p=${encodeURIComponent(pgId)}&start=${a}&end=${b}`);
-      if (d.status !== 'ok') { box.innerHTML = `${dur} · <span class="text-red-600">${esc(d.message || 'Créneau impossible')}</span>`; return; }
-      const gaps = d.gaps.length ? ` · <span class="text-amber-700">incomplet, ${fmtDur(d.duration - d.recorded)} manquantes</span>` : ' · complet';
-      box.innerHTML = `${dur} <span class="text-gray-400">· environ ${fmtBytes(d.recorded * ((pgCur() || {}).bitrate_kbps || 128) * 125)}</span>${gaps}`;
+      if (d.status !== 'ok') { box.innerHTML = `${dur} · <span class="text-red-600">${esc(d.message || _t('Créneau impossible'))}</span>`; return; }
+      const gaps = d.gaps.length ? ` · <span class="text-amber-700">${_t('incomplet, {d} manquantes', { d: fmtDur(d.duration - d.recorded) })}</span>` : _t(' · complet');
+      box.innerHTML = `${dur} <span class="text-gray-400">· ${_t('environ')} ${fmtBytes(d.recorded * ((pgCur() || {}).bitrate_kbps || 128) * 125)}</span>${gaps}`;
       pgInfo = d; $('pg-dl').disabled = false;
-    } catch (e) { box.innerHTML = `${dur} · <span class="text-red-600">vérification impossible</span>`; }
+    } catch (e) { box.innerHTML = `${dur} · <span class="text-red-600">${_t('vérification impossible')}</span>`; }
   }
   function pigeDownload() {
     const [a, b] = pgRange();
@@ -1352,15 +1352,15 @@
     const r = await fetch('/api/pige/config', { method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }, body: JSON.stringify(body) });
     const d = await r.json().catch(() => ({}));
-    if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
+    if (!r.ok || d.status !== 'ok') throw new Error(d.message || `${_t('Erreur')} ${r.status}`);
     return d;
   }
   function pgMsg(text, ok) { $('pg-msg').className = 'text-xs ' + (ok ? 'text-green-600' : 'text-red-600'); $('pg-msg').textContent = text; }
   async function savePigeDays() {
     const pg = pigeDab[0], days = parseInt($('pg-days').value, 10);
     if (!pg) return;
-    if (!(days >= 1 && days <= 90)) { pgMsg('De 1 à 90 jours'); return; }
-    try { await postPige({ action: 'update', id: pg.id, retention_days: days }); pgMsg('Enregistré.', true); await loadPigeDab(); renderPigeSel(); }
+    if (!(days >= 1 && days <= 90)) { pgMsg(_t('De 1 à 90 jours')); return; }
+    try { await postPige({ action: 'update', id: pg.id, retention_days: days }); pgMsg(_t('Enregistré.'), true); await loadPigeDab(); renderPigeSel(); }
     catch (e) { pgMsg(e.message); }
   }
   async function togglePige() {
@@ -1368,7 +1368,7 @@
     if (!pg) return;
     try {
       await postPige({ action: 'update', id: pg.id, enabled: !pg.wanted });
-      pgMsg(pg.wanted ? 'Pige arrêtée.' : 'Pige démarrée : l\'enregistrement reprend dans les 20 secondes.', true);
+      pgMsg(pg.wanted ? _t('Pige arrêtée.') : _t('Pige démarrée : l\'enregistrement reprend dans les 20 secondes.'), true);
       await loadPigeDab(); renderPigeSel(); pgLoadStatus(pgRange()[0] ?? Date.now() / 1000);
     } catch (e) { pgMsg(e.message); }
   }

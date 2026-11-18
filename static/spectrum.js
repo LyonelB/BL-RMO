@@ -5,6 +5,8 @@
  * tenue 2 s par bande, puis qui retombe.
  */
 (function () {
+  // Traduction (templates/_i18n.html) : _t() et séparateur décimal de la langue réglée
+  const T = s => (typeof window._t === 'function' ? window._t(s) : s), DEC = () => window._DEC || ',';
   const MIN = -96, HOLD_MS = 2000, BAR_FALL = 36, PEAK_FALL = 18;   // dB/s
   const LABELS = ['20','25','31.5','40','50','63','80','100','125','160','200','250','315','400','500','630','800',
                   '1k','1.25k','1.6k','2k','2.5k','3.15k','4k','5k','6.3k','8k','10k','12.5k','16k','20k'];
@@ -66,7 +68,7 @@
     requestAnimationFrame(draw);
     return {
       update(bands) { target = bands; message = ''; },
-      clear(msg) { target = null; message = msg || ''; },
+      clear(msg) { target = null; message = msg ? T(msg) : ''; },
     };
   }
 
@@ -86,7 +88,7 @@
         bar.style.width = pct(s.disp);
         bar.style.background = stale ? '#cbd5e1' : '#22c55e';
         if (pk) pk.style.left = pct(s.hold);
-        if (txt) txt.textContent = s.hold > -60 ? s.hold.toFixed(1).replace('.', ',') : '-';
+        if (txt) txt.textContent = s.hold > -60 ? s.hold.toFixed(1).replace('.', DEC()) : '-';
       });
       requestAnimationFrame(frame);
     }
@@ -123,7 +125,7 @@
     const DN = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
     function apply() {
       body.forEach(([el, whenOpen]) => el.classList.toggle('hidden', whenOpen !== open));
-      button.innerHTML = open ? `${UP} Réduire` : `${DN} Afficher`;
+      button.innerHTML = open ? `${UP} ${T('Réduire')}` : `${DN} ${T('Afficher')}`;
       button.setAttribute('aria-expanded', String(open));
       if (onChange) onChange(open);
     }

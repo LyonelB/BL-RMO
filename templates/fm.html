@@ -5,7 +5,7 @@
   {% include '_i18n.html' %}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>BL-RMO · FM</title>
+  <title>{{ _('BL-RMO · FM') }}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -34,14 +34,14 @@
       <button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
-      <h1 class="text-base font-semibold text-gray-900">Réception FM</h1>
+      <h1 class="text-base font-semibold text-gray-900">{{ _('Réception FM') }}</h1>
     </div>
-    <p class="text-xs text-gray-400 mt-0.5" id="subtitle">Antenne reçue par le tuner</p>
-    <nav class="flex gap-5 mt-3 text-sm overflow-x-auto" role="tablist" aria-label="Réception FM">
-      <a href="#direct" data-tab="direct" role="tab" class="tab">Direct</a>
-      <a href="#journal" data-tab="journal" role="tab" class="tab">Journal</a>
-      <a href="#pige" data-tab="pige" role="tab" class="tab">Pige</a>
-      <a href="#configuration" data-tab="configuration" role="tab" class="tab need-admin">Configuration</a>
+    <p class="text-xs text-gray-400 mt-0.5" id="subtitle">{{ _('Antenne reçue par le tuner') }}</p>
+    <nav class="flex gap-5 mt-3 text-sm overflow-x-auto" role="tablist" aria-label="{{ _('Réception FM') }}">
+      <a href="#direct" data-tab="direct" role="tab" class="tab">{{ _('Direct') }}</a>
+      <a href="#journal" data-tab="journal" role="tab" class="tab">{{ _('Journal') }}</a>
+      <a href="#pige" data-tab="pige" role="tab" class="tab">{{ _('Pige') }}</a>
+      <a href="#configuration" data-tab="configuration" role="tab" class="tab need-admin">{{ _('Configuration') }}</a>
     </nav>
   </header>
 
@@ -55,7 +55,7 @@
     <div id="tab-direct" class="tab-pane hidden">
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
       <div class="section" style="margin-bottom:0">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Signal</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('Signal') }}</div>
         <div class="flex items-center gap-2">
           <span id="sig-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
           <span class="text-base font-semibold text-gray-900" id="sig">-</span>
@@ -64,12 +64,12 @@
         <div class="text-xs text-gray-400 mt-1 font-mono truncate" id="sig-sub">&nbsp;</div>
       </div>
       <div class="section" style="margin-bottom:0">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Modulation</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('Modulation') }}</div>
         <div class="text-base font-semibold text-gray-900" id="mod">-</div>
         <div class="text-xs text-gray-400 mt-1 font-mono truncate" id="mod-sub">&nbsp;</div>
       </div>
       <div class="section" style="margin-bottom:0">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Mode</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('Mode') }}</div>
         <div class="text-base font-semibold text-gray-900" id="st">-</div>
         <div class="text-xs text-gray-400 mt-1 font-mono truncate" id="st-sub">&nbsp;</div>
       </div>
@@ -84,13 +84,13 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
-        <span>Écoute et spectre</span>
-        <label class="ml-auto order-last flex items-center gap-1.5 text-[11px] font-medium normal-case tracking-normal text-gray-600 cursor-pointer" title="Afficher l'analyseur de spectre (mémorisé dans ce navigateur)"><input type="checkbox" id="spec-on" class="w-3.5 h-3.5 accent-blue-600"> Spectre</label>
+        <span>{{ _('Écoute et spectre') }}</span>
+        <label class="ml-auto order-last flex items-center gap-1.5 text-[11px] font-medium normal-case tracking-normal text-gray-600 cursor-pointer" title="{{ _("Afficher l'analyseur de spectre (mémorisé dans ce navigateur)") }}"><input type="checkbox" id="spec-on" class="w-3.5 h-3.5 accent-blue-600"> {{ _('Spectre') }}</label>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <button id="pl-play" onclick="togglePlay()" title="Lecture / pause" aria-label="Écouter la FM"
+        <button id="pl-play" onclick="togglePlay()" title="{{ _('Lecture / pause') }}" aria-label="{{ _('Écouter la FM') }}"
           class="w-9 h-9 rounded-full border-2 border-gray-200 bg-white hover:border-blue-500 hover:text-blue-600 transition flex items-center justify-center flex-shrink-0"></button>
-        <img id="pl-logo" class="w-16 h-12 object-contain rounded flex-shrink-0 hidden" alt="Logo de la station">
+        <img id="pl-logo" class="w-16 h-12 object-contain rounded flex-shrink-0 hidden" alt="{{ _('Logo de la station') }}">
         <div class="flex-1 min-w-0">
           <div class="text-sm font-semibold text-gray-900 truncate" id="pl-name">&nbsp;</div>
           <div class="text-xs text-gray-500 truncate" id="pl-rt">&nbsp;</div>
@@ -100,25 +100,25 @@
           <input type="range" id="pl-volume" min="0" max="100" value="50" class="w-16 h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-blue-500" oninput="setVolume(this.value)">
           <span id="pl-volume-value" class="text-xs text-gray-500 w-8">50%</span>
         </div>
-        <a href="/stream.mp3" target="_blank" rel="noopener" class="text-xs font-medium text-blue-600 hover:text-blue-800" title="Ouvrir le flux dans un autre onglet ou un lecteur externe">Externe</a>
+        <a href="/stream.mp3" target="_blank" rel="noopener" class="text-xs font-medium text-blue-600 hover:text-blue-800" title="{{ _('Ouvrir le flux dans un autre onglet ou un lecteur externe') }}">{{ _('Externe') }}</a>
         <audio id="pl-audio" preload="none"></audio>
       </div>
       <div class="text-[11px] text-gray-400 mt-1" id="pl-help"></div>
-      <div class="mt-3 space-y-1" aria-label="Niveau reçu">
-        <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3" title="Crête en dBFS, maintien 1,5 s">G</span>
+      <div class="mt-3 space-y-1" aria-label="{{ _('Niveau reçu') }}">
+        <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3" title="{{ _('Crête en dBFS, maintien 1,5 s') }}">{{ _('G') }}</span>
           <div class="relative flex-1 h-2 rounded bg-gray-100 overflow-hidden"><div id="vu-l" class="h-full bg-green-500" style="width:0"></div><div id="vu-lp" class="absolute top-0 h-full w-0.5 bg-green-700" style="left:0"></div></div>
           <span id="vu-ld" class="w-16 text-right" style="font-variant-numeric:tabular-nums">-</span></div>
-        <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3">D</span>
+        <div class="flex items-center gap-2 text-[10px] font-mono text-gray-500"><span class="w-3">{{ _('D') }}</span>
           <div class="relative flex-1 h-2 rounded bg-gray-100 overflow-hidden"><div id="vu-r" class="h-full bg-green-500" style="width:0"></div><div id="vu-rp" class="absolute top-0 h-full w-0.5 bg-green-700" style="left:0"></div></div>
           <span id="vu-rd" class="w-16 text-right" style="font-variant-numeric:tabular-nums">-</span></div>
         <div class="flex justify-between text-[9px] text-gray-400 font-mono pl-5 pr-[4.5rem]"><span>-60</span><span>-40</span><span>-20</span><span>0</span></div>
       </div>
       <div id="spec-box">
       <div class="mt-4 rounded-lg border border-gray-100 p-2">
-        <canvas id="spec" style="display:block;width:100%;height:220px" role="img" aria-label="Spectre audio en tiers d'octave"></canvas>
+        <canvas id="spec" style="display:block;width:100%;height:220px" role="img" aria-label="{{ _("Spectre audio en tiers d'octave") }}"></canvas>
       </div>
       <div class="flex justify-between gap-3 text-[11px] text-gray-400 mt-2">
-        <span>Spectre en tiers d'octave, 31 bandes · trait sombre : crête des 2 dernières secondes</span><span class="font-mono">dBFS</span>
+        <span>{{ _("Spectre en tiers d'octave, 31 bandes · trait sombre : crête des 2 dernières secondes") }}</span><span class="font-mono">dBFS</span>
       </div>
       </div>
     </div>
@@ -127,9 +127,9 @@
     <div class="section">
       <div class="section-title" id="rt-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
-        <span>Titres diffusés (RadioText)</span>
+        <span>{{ _('Titres diffusés (RadioText)') }}</span>
         <span class="ml-auto flex items-center gap-3">
-          <a href="#journal" class="text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">Tout l'historique &rarr;</a>
+          <a href="#journal" class="text-[11px] font-medium normal-case tracking-normal text-blue-600 hover:text-blue-800">{{ _("Tout l'historique &rarr;") }}</a>
           <button id="rt-toggle" class="flex items-center gap-1 text-[11px] font-medium normal-case tracking-normal text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1"></button>
         </span>
       </div>
@@ -137,7 +137,7 @@
       <div id="rt-full" class="overflow-x-auto">
         <table class="w-full text-xs text-left table-fixed">
           <colgroup><col style="width:110px"><col><col style="width:170px"></colgroup>
-          <tbody id="rt-body" class="divide-y divide-gray-50"><tr><td colspan="3" class="py-6 text-center text-gray-400">Chargement…</td></tr></tbody>
+          <tbody id="rt-body" class="divide-y divide-gray-50"><tr><td colspan="3" class="py-6 text-center text-gray-400">{{ _('Chargement…') }}</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -147,12 +147,12 @@
     <div id="tab-journal" class="tab-pane hidden">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div class="section" style="margin-bottom:0">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Alertes, 30 derniers jours</div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('Alertes, 30 derniers jours') }}</div>
           <div class="text-2xl font-bold font-mono text-gray-900" id="rc-30d">-</div>
           <div class="text-xs text-gray-400 mt-1" id="rc-30d-sub"></div>
         </div>
         <div class="section" style="margin-bottom:0">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="rc-ok-label">Tout est OK depuis</div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1" id="rc-ok-label">{{ _('Tout est OK depuis') }}</div>
           <div class="text-2xl font-bold font-mono text-gray-900" id="rc-ok">-</div>
           <div class="text-xs text-gray-400 mt-1" id="rc-ok-sub"></div>
         </div>
@@ -162,37 +162,37 @@
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div class="section-title" style="margin-bottom:0">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-            Alertes de la réception FM
+            {{ _('Alertes de la réception FM') }}
           </div>
           <div class="flex flex-wrap gap-2">
             <select id="rc-type" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="rcLimit = 10; renderReception()">
-              <option value="">Tous les types</option>
+              <option value="">{{ _('Tous les types') }}</option>
             </select>
-            <button onclick="exportReception()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Alertes affichées (filtre compris), en CSV"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
+            <button onclick="exportReception()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="{{ _('Alertes affichées (filtre compris), en CSV') }}"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> {{ _('Exporter') }}</button>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-3">Mesurées par le tuner, comme un auditeur. Un premier mail part quand l'alerte est confirmée, un second au rétablissement. « Écouter » ouvre la pige au moment de l'alerte, ou son extrait archivé.</p>
+        <p class="text-xs text-gray-500 mb-3">{{ _("Mesurées par le tuner, comme un auditeur. Un premier mail part quand l'alerte est confirmée, un second au rétablissement. « Écouter » ouvre la pige au moment de l'alerte, ou son extrait archivé.") }}</p>
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left">
             <thead>
               <tr class="text-gray-400 border-b border-gray-100">
-                <th class="font-medium py-2 pr-3 whitespace-nowrap">Date</th>
-                <th class="font-medium py-2 pr-3">Alerte</th>
-                <th class="font-medium py-2 pr-3 whitespace-nowrap">Début → fin</th>
-                <th class="font-medium py-2 pr-3">Durée</th>
-                <th class="font-medium py-2 pr-3">État</th>
-                <th class="font-medium py-2 pr-3">Mails</th>
-                <th class="font-medium py-2">Pige</th>
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">{{ _('Date') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('Alerte') }}</th>
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">{{ _('Début → fin') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('Durée') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('État') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('Mails') }}</th>
+                <th class="font-medium py-2">{{ _('Pige') }}</th>
               </tr>
             </thead>
             <tbody id="rc-body" class="divide-y divide-gray-50">
-              <tr><td colspan="7" class="py-8 text-center text-gray-400">Chargement…</td></tr>
+              <tr><td colspan="7" class="py-8 text-center text-gray-400">{{ _('Chargement…') }}</td></tr>
             </tbody>
           </table>
         </div>
         <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
           <span id="rc-count"></span>
-          <button id="rc-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="rcLimit += 50; renderReception()">Afficher plus</button>
+          <button id="rc-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="rcLimit += 50; renderReception()">{{ _('Afficher plus') }}</button>
         </div>
       </div>
 
@@ -200,27 +200,27 @@
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div class="section-title" style="margin-bottom:0">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
-            Titres diffusés (RadioText)
+            {{ _('Titres diffusés (RadioText)') }}
           </div>
-          <button onclick="exportRtHistory()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Historique complet du RadioText (CSV)"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
+          <button onclick="exportRtHistory()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="{{ _('Historique complet du RadioText (CSV)') }}"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> {{ _('Exporter') }}</button>
         </div>
-        <p class="text-xs text-gray-500 mb-3">Chaque nouveau RadioText reçu par le tuner, avec l'heure de son premier affichage. Un texte qui revient en boucle (nom de la station, slogan) n'est repris qu'après 10 minutes.</p>
+        <p class="text-xs text-gray-500 mb-3">{{ _("Chaque nouveau RadioText reçu par le tuner, avec l'heure de son premier affichage. Un texte qui revient en boucle (nom de la station, slogan) n'est repris qu'après 10 minutes.") }}</p>
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left">
             <thead>
               <tr class="text-gray-400 border-b border-gray-100">
-                <th class="font-medium py-2 pr-3 whitespace-nowrap">Heure</th>
-                <th class="font-medium py-2 pr-3">RadioText</th>
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">{{ _('Heure') }}</th>
+                <th class="font-medium py-2 pr-3">{{ _('RadioText') }}</th>
                 <th class="font-medium py-2"></th>
               </tr>
             </thead>
             <tbody id="rth-body" class="divide-y divide-gray-50">
-              <tr><td colspan="3" class="py-8 text-center text-gray-400">Chargement…</td></tr>
+              <tr><td colspan="3" class="py-8 text-center text-gray-400">{{ _('Chargement…') }}</td></tr>
             </tbody>
           </table>
         </div>
         <div class="flex justify-end mt-3 text-xs">
-          <button id="rth-more" class="px-2.5 py-1 rounded-md border border-gray-200 text-gray-500 hidden" onclick="rthLimit += 50; loadRtHistory()">Afficher plus</button>
+          <button id="rth-more" class="px-2.5 py-1 rounded-md border border-gray-200 text-gray-500 hidden" onclick="rthLimit += 50; loadRtHistory()">{{ _('Afficher plus') }}</button>
         </div>
       </div>
     </div>
@@ -230,23 +230,23 @@
       <div class="section">
         <div class="section-title">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
-          Écoute et extrait
+          {{ _('Écoute et extrait') }}
         </div>
         <div class="flex items-center gap-2 text-sm text-gray-600 mb-4">
           <span id="pg-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300 flex-shrink-0"></span>
-          <span id="pg-avail">Chargement…</span>
+          <span id="pg-avail">{{ _('Chargement…') }}</span>
         </div>
         <div class="flex flex-wrap items-end gap-3">
-          <label class="block"><span class="text-xs text-gray-500">Date</span>
+          <label class="block"><span class="text-xs text-gray-500">{{ _('Date') }}</span>
             <input type="date" id="pg-date" class="mt-1 block border border-gray-200 rounded-lg px-2 py-1.5 text-sm"></label>
-          <label class="block"><span class="text-xs text-gray-500">Heure de début</span>
+          <label class="block"><span class="text-xs text-gray-500">{{ _('Heure de début') }}</span>
             <input type="time" step="1" id="pg-start" class="mt-1 block border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-mono"></label>
-          <label class="block"><span class="text-xs text-gray-500">Heure de fin</span>
+          <label class="block"><span class="text-xs text-gray-500">{{ _('Heure de fin') }}</span>
             <input type="time" step="1" id="pg-end" class="mt-1 block border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-mono"></label>
           <button type="button" id="pg-play" onclick="pigePlayToggle()" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium">
-            <span id="pg-play-ic"></span><span id="pg-play-txt">Lecture</span></button>
+            <span id="pg-play-ic"></span><span id="pg-play-txt">{{ _('Lecture') }}</span></button>
           <button type="button" id="pg-dl" onclick="pigeDownload()" class="need-operateur flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 hover:border-blue-500 hover:text-blue-700 text-gray-700 text-sm font-medium disabled:opacity-40">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Télécharger</button>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>{{ _('Télécharger') }}</button>
         </div>
         <div class="text-xs text-gray-500 mt-3" id="pg-summary">&nbsp;</div>
         <div class="hidden mt-3 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800" id="pg-arc-note"></div>
@@ -255,7 +255,7 @@
           <div class="flex flex-wrap items-center gap-3">
             <div class="font-mono text-lg font-semibold text-gray-900" id="pg-pos">--:--:--</div>
             <div class="flex-1 min-w-[160px]">
-              <div id="pg-bar" class="relative h-2 rounded bg-slate-200 cursor-pointer" title="Clic : se placer à ce moment">
+              <div id="pg-bar" class="relative h-2 rounded bg-slate-200 cursor-pointer" title="{{ _('Clic : se placer à ce moment') }}">
                 <div id="pg-bar-fill" class="absolute inset-y-0 left-0 rounded bg-blue-500" style="width:0"></div>
               </div>
               <div class="flex justify-between font-mono text-[10px] text-gray-400 mt-1"><span id="pg-bar-a"></span><span id="pg-bar-b"></span></div>
@@ -273,13 +273,13 @@
       <div class="section need-admin">
         <div class="section-title">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-          Réglages de la pige FM
+          {{ _('Réglages de la pige FM') }}
         </div>
         <div class="flex flex-wrap items-end gap-4 text-sm">
-          <label class="block"><span class="text-xs text-gray-500">Conservation (jours)</span>
+          <label class="block"><span class="text-xs text-gray-500">{{ _('Conservation (jours)') }}</span>
             <input type="number" id="pg-days" min="1" max="90" class="mt-1 block w-28 border border-gray-200 rounded-lg px-2 py-1.5"></label>
-          <button onclick="savePigeDays()" id="pg-save" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Enregistrer</button>
-          <button onclick="togglePige()" id="pg-toggle" class="px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-400 text-gray-700 text-sm font-medium">Arrêter la pige</button>
+          <button onclick="savePigeDays()" id="pg-save" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">{{ _('Enregistrer') }}</button>
+          <button onclick="togglePige()" id="pg-toggle" class="px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-400 text-gray-700 text-sm font-medium">{{ _('Arrêter la pige') }}</button>
           <span class="text-xs text-gray-500" id="pg-msg"></span>
         </div>
         <div class="text-xs text-gray-500 mt-3" id="pg-estimate"></div>
@@ -291,57 +291,57 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-        Réception et seuils d'alerte
+        {{ _("Réception et seuils d'alerte") }}
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-        <label class="block"><span class="text-xs text-gray-500">Fréquence</span>
+        <label class="block"><span class="text-xs text-gray-500">{{ _('Fréquence') }}</span>
           <input id="f-frequency" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="88.6M">
-          <span class="text-[11px] text-gray-400">Format : 88.6M, 107.5M</span></label>
-        <label class="block tef-only"><span class="text-xs text-gray-500">Seuil absence de modulation (dBFS)</span>
+          <span class="text-[11px] text-gray-400">{{ _('Format : 88.6M, 107.5M') }}</span></label>
+        <label class="block tef-only"><span class="text-xs text-gray-500">{{ _('Seuil absence de modulation (dBFS)') }}</span>
           <input id="f-mod-threshold" type="number" step="1" min="-90" max="-10" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="-40">
-          <span class="text-[11px] text-gray-400">Niveau reçu sous lequel la modulation est absente</span></label>
-        <label class="block rtl-only"><span class="text-xs text-gray-500">Gain RTL-SDR (dB)</span>
+          <span class="text-[11px] text-gray-400">{{ _('Niveau reçu sous lequel la modulation est absente') }}</span></label>
+        <label class="block rtl-only"><span class="text-xs text-gray-500">{{ _('Gain RTL-SDR (dB)') }}</span>
           <input id="f-gain" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="40" maxlength="5">
-          <span class="text-[11px] text-gray-400">0 à 50 dB, 0 pour automatique</span></label>
-        <label class="block rtl-only"><span class="text-xs text-gray-500">Seuil modulation (dB std)</span>
+          <span class="text-[11px] text-gray-400">{{ _('0 à 50 dB, 0 pour automatique') }}</span></label>
+        <label class="block rtl-only"><span class="text-xs text-gray-500">{{ _('Seuil modulation (dB std)') }}</span>
           <input id="f-std-threshold" type="number" step="0.1" min="0.1" max="5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="0.5"></label>
-        <label class="block rtl-only"><span class="text-xs text-gray-500">Seuil perte émetteur (dBFS)</span>
+        <label class="block rtl-only"><span class="text-xs text-gray-500">{{ _('Seuil perte émetteur (dBFS)') }}</span>
           <input id="f-lost-threshold" type="number" step="1" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="-50"></label>
-        <label class="block"><span class="text-xs text-gray-500">Modulation absente : alerte après (s)</span>
+        <label class="block"><span class="text-xs text-gray-500">{{ _('Modulation absente : alerte après (s)') }}</span>
           <input id="f-mod-delay" type="number" step="5" min="5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="30"></label>
-        <label class="block"><span class="text-xs text-gray-500">Émetteur non capté : alerte après (s)</span>
+        <label class="block"><span class="text-xs text-gray-500">{{ _('Émetteur non capté : alerte après (s)') }}</span>
           <input id="f-sig-delay" type="number" step="5" min="5" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="30">
-          <span class="text-[11px] text-gray-400 tef-only">Perte détectée par le tuner, sans seuil à régler</span></label>
-        <label class="block"><span class="text-xs text-gray-500">RDS absent : alerte après (s)</span>
+          <span class="text-[11px] text-gray-400 tef-only">{{ _('Perte détectée par le tuner, sans seuil à régler') }}</span></label>
+        <label class="block"><span class="text-xs text-gray-500">{{ _('RDS absent : alerte après (s)') }}</span>
           <input id="f-rds-delay" type="number" step="10" min="10" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="300"></label>
-        <label class="block"><span class="text-xs text-gray-500">RadioText absent : alerte après (s)</span>
+        <label class="block"><span class="text-xs text-gray-500">{{ _('RadioText absent : alerte après (s)') }}</span>
           <input id="f-rt-delay" type="number" step="10" min="10" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="600"></label>
       </div>
       <div class="mt-4 pt-4 border-t border-gray-100">
-        <div class="text-xs font-semibold text-gray-700 mb-1">Mails d'alerte</div>
-        <p class="text-[11px] text-gray-400 mb-2">Les alertes décochées restent enregistrées dans les journaux et sur le tableau de bord, sans mail.</p>
+        <div class="text-xs font-semibold text-gray-700 mb-1">{{ _("Mails d'alerte") }}</div>
+        <p class="text-[11px] text-gray-400 mb-2">{{ _('Les alertes décochées restent enregistrées dans les journaux et sur le tableau de bord, sans mail.') }}</p>
         <div class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-          <label class="flex items-center gap-2"><input id="m-signal" type="checkbox" class="w-4 h-4"> Émetteur non capté</label>
-          <label class="flex items-center gap-2"><input id="m-modulation" type="checkbox" class="w-4 h-4"> Absence de modulation</label>
-          <label class="flex items-center gap-2"><input id="m-rds" type="checkbox" class="w-4 h-4"> RDS absent</label>
-          <label class="flex items-center gap-2"><input id="m-rt" type="checkbox" class="w-4 h-4"> RadioText absent</label>
-          <label class="flex items-center gap-2 rtl-only"><input id="m-deviation" type="checkbox" class="w-4 h-4"> Sur-déviation</label>
+          <label class="flex items-center gap-2"><input id="m-signal" type="checkbox" class="w-4 h-4"> {{ _('Émetteur non capté') }}</label>
+          <label class="flex items-center gap-2"><input id="m-modulation" type="checkbox" class="w-4 h-4"> {{ _('Absence de modulation') }}</label>
+          <label class="flex items-center gap-2"><input id="m-rds" type="checkbox" class="w-4 h-4"> {{ _('RDS absent') }}</label>
+          <label class="flex items-center gap-2"><input id="m-rt" type="checkbox" class="w-4 h-4"> {{ _('RadioText absent') }}</label>
+          <label class="flex items-center gap-2 rtl-only"><input id="m-deviation" type="checkbox" class="w-4 h-4"> {{ _('Sur-déviation') }}</label>
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-3 mt-4">
-        <button onclick="saveSettings()" id="f-save" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Enregistrer</button>
-        <span class="text-xs text-gray-400" id="f-msg">Un changement de fréquence relance la réception FM (quelques secondes de coupure de l'écoute et de la pige).</span>
+        <button onclick="saveSettings()" id="f-save" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">{{ _('Enregistrer') }}</button>
+        <span class="text-xs text-gray-400" id="f-msg">{{ _("Un changement de fréquence relance la réception FM (quelques secondes de coupure de l'écoute et de la pige).") }}</span>
       </div>
-      <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">L'expéditeur, les destinataires et la coupure générale des mails se règlent dans <a href="/system#general" class="text-blue-600 hover:text-blue-800">Système</a>. La durée de conservation de la pige se règle dans l'onglet <a href="#pige" class="text-blue-600 hover:text-blue-800">Pige</a>.</p>
+      <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">{{ _("L'expéditeur, les destinataires et la coupure générale des mails se règlent dans") }} <a href="/system#general" class="text-blue-600 hover:text-blue-800">{{ _('Système') }}</a>{{ _(". La durée de conservation de la pige se règle dans l'onglet") }} <a href="#pige" class="text-blue-600 hover:text-blue-800">{{ _('Pige') }}</a>.</p>
     </div>
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
-        Source de réception
+        {{ _('Source de réception') }}
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <div class="text-xs text-gray-700"><span class="font-semibold">Source active :</span> <span id="src-current">-</span></div>
-        <button onclick="scanDongle()" id="btn-scan" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1">Détecter les récepteurs</button>
+        <div class="text-xs text-gray-700"><span class="font-semibold">{{ _('Source active :') }}</span> <span id="src-current">-</span></div>
+        <button onclick="scanDongle()" id="btn-scan" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1">{{ _('Détecter les récepteurs') }}</button>
         <span id="scan-status" class="text-[11px] text-gray-400"></span>
       </div>
       <div id="scan-found" class="mt-3 space-y-2 text-sm"></div>
@@ -358,15 +358,15 @@
   const pad = n => String(n).padStart(2, '0');
   const role = document.documentElement.dataset.role;
   const isAdmin = role === 'admin', canExport = role === 'admin' || role === 'operateur';
-  const num = (v, d = 1) => Number(v).toFixed(d).replace('.', ',');
+  const num = (v, d = 1) => Number(v).toFixed(d).replace('.', _DEC);
   const tms = iso => iso ? new Date(String(iso).replace(' ', 'T')).getTime() : null;
   const IC_PLAY = '<svg class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
   const IC_PAUSE = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>';
 
   async function api(url) {
     const r = await fetch(url, { credentials: 'include' });
-    if (r.status === 401 || r.redirected) { location.href = '/login?timeout=1'; throw new Error('Session expirée'); }
-    if (!r.ok) throw new Error(`Erreur ${r.status}`);
+    if (r.status === 401 || r.redirected) { location.href = '/login?timeout=1'; throw new Error(_t('Session expirée')); }
+    if (!r.ok) throw new Error(`${_t('Erreur')} ${r.status}`);
     return r.json();
   }
   function fmtDur(s) {
@@ -377,9 +377,9 @@
     return `${Math.floor(s / 3600)} h ${pad(Math.floor(s % 3600 / 60))} min`;
   }
   const fmtTime = ts => { const d = new Date(ts * 1000); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
-  const fmtDay = ts => new Date(ts * 1000).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const fmtDay = ts => new Date(ts * 1000).toLocaleDateString(BLRMO_LOCALE, { weekday: 'long', day: 'numeric', month: 'long' });
   const fmtShort = ts => { const d = new Date(ts * 1000); return `${pad(d.getDate())}-${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
-  const fmtBytes = b => b == null ? '?' : b >= 1e9 ? (b / 1e9).toFixed(1).replace('.', ',') + ' Go' : Math.round(b / 1e6) + ' Mo';
+  const fmtBytes = b => b == null ? '?' : b >= 1e9 ? (b / 1e9).toFixed(1).replace('.', _DEC) + ' ' + _t('Go') : Math.round(b / 1e6) + ' ' + _t('Mo');
   const isoDate = ts => { const d = new Date(ts * 1000); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
   function tile(id, text, color, sub) {
     $(id).textContent = text;
@@ -432,29 +432,29 @@
   function renderStats(s) {
     const sig = !!s.signal_ok;
     const freq = s.frequency ? String(s.frequency).replace('M', ' MHz') : '';
-    $('subtitle').textContent = `Antenne reçue par ${s.use_tef ? 'le tuner TEF' : 'la clé RTL-SDR'}` + (freq ? ` · ${freq}` : '');
+    $('subtitle').textContent = _t('Antenne reçue par {src}', { src: s.use_tef ? _t('le tuner TEF') : _t('la clé RTL-SDR') }) + (freq ? ` · ${freq}` : '');
     if (freq) $('sidebar-frequency').textContent = freq;
     const tunerGone = s.use_tef && s.tuner_connected === false;
     $('notice').classList.toggle('hidden', !tunerGone);
-    if (tunerGone) { $('notice-title').textContent = 'Le tuner ne répond plus'; $('notice-text').textContent = 'Le tuner TEF n\'est plus détecté sur le port USB : vérifier son câble.'; }
+    if (tunerGone) { $('notice-title').textContent = _t('Le tuner ne répond plus'); $('notice-text').textContent = _t('Le tuner TEF n\'est plus détecté sur le port USB : vérifier son câble.'); }
     $('sig-dot').className = 'w-2.5 h-2.5 rounded-full ' + (sig ? 'bg-green-500' : 'bg-red-500');
-    $('sig').textContent = s.signal_dbf != null ? `${num(s.signal_dbf)} dBf` : (sig ? 'OK' : 'Perdu');
+    $('sig').textContent = s.signal_dbf != null ? `${num(s.signal_dbf)} dBf` : (sig ? 'OK' : _t('Perdu'));
     $('sig').className = 'text-base font-semibold ' + (sig ? 'text-gray-900' : 'text-red-600');
     const pct = s.signal_dbf != null ? Math.max(0, Math.min(100, s.signal_dbf / 100 * 100)) : 0;
     $('sig-bar').style.width = pct + '%'; $('sig-bar').className = 'h-full ' + (sig ? 'bg-green-500' : 'bg-red-500');
     const parts = [];
-    if (s.snr != null) parts.push(`S/B ${Math.round(s.snr)} dB`);
+    if (s.snr != null) parts.push(`${_t('S/B')} ${Math.round(s.snr)} dB`);
     if (s.multipath != null) parts.push(`multitrajet ${Math.round(s.multipath)} %`);
-    $('sig-sub').textContent = sig ? (parts.join(' · ') || ' ') : 'Aucun signal capté';
+    $('sig-sub').textContent = sig ? (parts.join(' · ') || ' ') : _t('Aucun signal capté');
     const lvl = Math.max(s.level_left ?? -100, s.level_right ?? -100);
-    const thr = modThreshold != null ? ` · seuil ${modThreshold}` : '';
+    const thr = modThreshold != null ? ` · ${_t('seuil')} ${modThreshold}` : '';
     if (!sig) tile('mod', '-', 'text-gray-400', '-');
-    else tile('mod', s.modulation_ok ? 'Active' : 'Absente', s.modulation_ok ? 'text-green-600' : 'text-orange-600', (lvl > -100 ? `${Math.round(lvl)} dBFS` : '-') + thr);
+    else tile('mod', s.modulation_ok ? _t('Active') : _t('Absente'), s.modulation_ok ? 'text-green-600' : 'text-orange-600', (lvl > -100 ? `${Math.round(lvl)} dBFS` : '-') + thr);
     if (!sig || s.stereo_known === false) tile('st', '-', 'text-gray-400', '-');
-    else tile('st', s.stereo_present ? 'Stéréo' : 'Mono', s.stereo_present ? 'text-green-600' : 'text-orange-600', s.stereo_present ? 'pilote 19 kHz' : 'sans pilote');
+    else tile('st', s.stereo_present ? _t('Stéréo') : _t('Mono'), s.stereo_present ? 'text-green-600' : 'text-orange-600', s.stereo_present ? _t('pilote 19 kHz') : _t('sans pilote'));
     const id = [s.ps && s.ps !== '-' ? s.ps : '', s.pi && s.pi !== '-' ? `PI ${s.pi}` : ''].filter(Boolean).join(' · ');
-    if (!s.rds_ever_received) tile('rds', 'Non reçu', 'text-gray-400', '-');
-    else tile('rds', s.rds_ok ? 'Reçu' : 'Absent', s.rds_ok ? 'text-green-600' : 'text-red-600', id || '-');
+    if (!s.rds_ever_received) tile('rds', _t('Non reçu'), 'text-gray-400', '-');
+    else tile('rds', s.rds_ok ? _t('Reçu') : _t('Absent'), s.rds_ok ? 'text-green-600' : 'text-red-600', id || '-');
     // Nom de la station : son PS, sinon la fréquence reçue (comme le nom du service en DAB+)
     $('pl-name').textContent = s.ps && s.ps !== '-' ? s.ps : (freq || 'FM');
     // Logo de la station, trouvé par son PI dans rds-station-db (comme le tableau de bord)
@@ -499,10 +499,10 @@
     if (want && specConn) return;
     if (specConn) { specConn.close(); specConn = null; }
     if (!want) return;
-    spectrum.clear('Connexion…');
+    spectrum.clear(_t('Connexion…'));
     specConn = BLRMO.connectSpectrum('fm', '', d => {
       if (d.state === 'ok' && d.bands) spectrum.update(d.bands);
-      else spectrum.clear(d.message || 'En attente du son');
+      else spectrum.clear(d.message || _t('En attente du son'));
     });
   }
   $('spec-on').onchange = e => {
@@ -528,11 +528,11 @@
     a.volume = $('pl-volume').value / 100;
     a.play().catch(() => {});
     playing = true; $('pl-play').innerHTML = IC_PAUSE;
-    $('pl-help').textContent = 'En écoute (arrêt automatique après 15 min)';
+    $('pl-help').textContent = _t('En écoute (arrêt automatique après 15 min)');
     stopTimer = setTimeout(stopPlay, 15 * 60 * 1000);
   }
   $('pl-play').innerHTML = IC_PLAY;
-  $('pl-audio').onerror = () => { if (playing) { stopPlay(); $('pl-help').textContent = 'Écoute impossible pour le moment'; } };
+  $('pl-audio').onerror = () => { if (playing) { stopPlay(); $('pl-help').textContent = _t('Écoute impossible pour le moment'); } };
 
   // ── Début de la pige : les liens « Écouter » n'apparaissent que dans la pige ──
   let pigeFrom = null;
@@ -553,8 +553,8 @@
     const rows = d.data || [];
     const cur = String(d.current || '').split(/\s+/).join(' ').trim();
     if (!rows.length) {
-      $('rt-body').innerHTML = '<tr><td colspan="3" class="py-6 text-center text-gray-400">Aucun RadioText enregistré pour le moment</td></tr>';
-      $('rt-short').textContent = 'Aucun RadioText enregistré pour le moment';
+      $('rt-body').innerHTML = '<tr><td colspan="3" class="py-6 text-center text-gray-400">' + _t('Aucun RadioText enregistré pour le moment') + '</td></tr>';
+      $('rt-short').textContent = _t('Aucun RadioText enregistré pour le moment');
       return;
     }
     const today = new Date();
@@ -564,16 +564,16 @@
       const hm = isNaN(t) ? esc(r.timestamp) : `${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}` + (same ? '' : ` <span class="text-gray-400">${pad(t.getDate())}-${pad(t.getMonth() + 1)}</span>`);
       const live = i === 0 && r.rt === cur;
       const t0 = isNaN(t) ? 0 : Math.floor(t.getTime() / 1000);
-      const listen = pigeAt(t0) ? `<a href="${pigeHref(t0)}" class="font-medium text-blue-600 hover:text-blue-800" title="Écouter l'antenne à ce moment">Écouter</a>` : '';
+      const listen = pigeAt(t0) ? `<a href="${pigeHref(t0)}" class="font-medium text-blue-600 hover:text-blue-800" title="${_t('Écouter l\'antenne à ce moment')}">${_t('Écouter')}</a>` : '';
       return `<tr class="hover:bg-slate-50">
         <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${hm}</td>
         <td class="py-2 pr-3 truncate ${live ? 'font-semibold text-gray-900' : 'text-gray-700'}" title="${esc(r.rt)}">${esc(r.rt)}</td>
-        <td class="py-2 text-right whitespace-nowrap">${live ? '<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 mr-3">À l\'antenne</span>' : ''}${listen}</td>
+        <td class="py-2 text-right whitespace-nowrap">${live ? '<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 mr-3">' + _t('À l\'antenne') + '</span>' : ''}${listen}</td>
       </tr>`;
     }).join('');
     const first = rows[0], t = new Date(String(first.timestamp).replace(' ', 'T'));
-    $('rt-short').innerHTML = (first.rt === cur ? 'À l\'antenne : ' : 'Dernier titre : ')
-      + `<span class="text-gray-800 font-medium">${esc(first.rt)}</span>` + (isNaN(t) ? '' : ` · depuis ${pad(t.getHours())}:${pad(t.getMinutes())}`);
+    $('rt-short').innerHTML = (first.rt === cur ? _t('À l\'antenne : ') : _t('Dernier titre : '))
+      + `<span class="text-gray-800 font-medium">${esc(first.rt)}</span>` + (isNaN(t) ? '' : ` · ${_t('depuis')} ${pad(t.getHours())}:${pad(t.getMinutes())}`);
   }
 
   // ═══ JOURNAL : alertes FM et historique du RadioText ═══════════════
@@ -587,28 +587,28 @@
     sec = Math.max(0, Math.round(sec));
     if (sec < 3600) return `${Math.max(1, Math.floor(sec / 60))} min`;
     if (sec < 86400) return `${Math.floor(sec / 3600)} h ${pad(Math.floor(sec % 3600 / 60))} min`;
-    return `${Math.floor(sec / 86400)} j ${Math.floor(sec % 86400 / 3600)} h`;
+    return `${Math.floor(sec / 86400)} ${_t('j')} ${Math.floor(sec % 86400 / 3600)} h`;
   }
-  function fmtStamp(t) { const d = new Date(t); return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+  function fmtStamp(t) { const d = new Date(t); return _t('{d} à {h}', { d: `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`, h: `${pad(d.getHours())}:${pad(d.getMinutes())}` }); }
   // Seules comptent les alertes qui ont envoyé un mail
   function headerAlerts(alerts) {
     const now = Date.now(), mailed = alerts.filter(a => (a.emails || 0) > 0);
     const last30 = mailed.filter(a => now - a.t0 <= 30 * 86400e3);
     const mails = last30.reduce((n, a) => n + (a.emails || 0), 0);
     setTile('rc-30d', String(last30.length), last30.length ? 'text-gray-900' : C_OK,
-            last30.length ? `${mails} mail${mails > 1 ? 's' : ''} envoyé${mails > 1 ? 's' : ''}` : 'aucune alerte avec mail');
+            last30.length ? _t(mails > 1 ? '{n} mails envoyés' : '{n} mail envoyé', { n: mails }) : _t('aucune alerte avec mail'));
     const ongoing = mailed.filter(a => !a.t1);
     if (ongoing.length) {
       const t0 = Math.min(...ongoing.map(a => a.t0));
-      $('rc-ok-label').textContent = 'En alerte depuis';
-      setTile('rc-ok', fmtSince((now - t0) / 1000), C_BAD, `depuis le ${fmtStamp(t0)}`);
+      $('rc-ok-label').textContent = _t('En alerte depuis');
+      setTile('rc-ok', fmtSince((now - t0) / 1000), C_BAD, _t('depuis le {t}', { t: fmtStamp(t0) }));
       return;
     }
-    $('rc-ok-label').textContent = 'Tout est OK depuis';
+    $('rc-ok-label').textContent = _t('Tout est OK depuis');
     const ends = mailed.map(a => a.t1).filter(Boolean);
-    if (!ends.length) { setTile('rc-ok', 'Aucune alerte', C_OK, 'pas d\'alerte avec mail enregistrée'); return; }
+    if (!ends.length) { setTile('rc-ok', _t('Aucune alerte'), C_OK, _t('pas d\'alerte avec mail enregistrée')); return; }
     const last = Math.max(...ends);
-    setTile('rc-ok', fmtSince((now - last) / 1000), C_OK, `fin de la dernière alerte le ${fmtStamp(last)}`);
+    setTile('rc-ok', fmtSince((now - last) / 1000), C_OK, _t('fin de la dernière alerte le {t}', { t: fmtStamp(last) }));
   }
 
   let rcMonitorStart = null, rcAlerts = [], rcLimit = 10, rcArchives = [], journalAt = 0;
@@ -626,13 +626,13 @@
     if (!pigeAt(t0)) {
       const arc = rcArchives.find(a => t0 >= a.clip_start - 60 && t0 <= a.end + 60);
       return arc
-        ? `<a href="/fm?t=${t0}&arc=${arc.id}#pige" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Extrait archivé, de 30 s avant à 30 s après">Écouter</a>`
-          + mp3(`/api/pige/archives/${arc.id}/audio?dl=1`, 'Extrait archivé (MP3)')
-        : '<span class="text-gray-300">hors pige</span>';
+        ? `<a href="/fm?t=${t0}&arc=${arc.id}#pige" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="${_t('Extrait archivé, de 30 s avant à 30 s après')}">${_t('Écouter')}</a>`
+          + mp3(`/api/pige/archives/${arc.id}/audio?dl=1`, _t('Extrait archivé (MP3)'))
+        : '<span class="text-gray-300">' + _t('hors pige') + '</span>';
     }
     const [a, b] = alertRange(t0, t1);
-    return `<a href="/fm?t=${t0}${t1 ? '&e=' + t1 : ''}#pige" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Ouvrir la pige 30 s avant l'alerte">Écouter</a>`
-         + mp3(`/api/pige/export?start=${a}&end=${b}`, 'Extrait MP3 de 30 s avant à 30 s après');
+    return `<a href="/fm?t=${t0}${t1 ? '&e=' + t1 : ''}#pige" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="${_t('Ouvrir la pige 30 s avant l\'alerte')}">${_t('Écouter')}</a>`
+         + mp3(`/api/pige/export?start=${a}&end=${b}`, _t('Extrait MP3 de 30 s avant à 30 s après'));
   }
   async function loadJournal(force) {
     if (!force && Date.now() - journalAt < 20000) return;
@@ -662,7 +662,7 @@
       t0: tms(a.start_time), t1: a.status === 'ongoing' ? null : tms(a.end_time), emails: a.emails_sent || 0 })));
     const sel = $('rc-type'), cur = sel.value;
     const types = [...new Set(rcAlerts.map(a => a.alert_label).filter(Boolean))];
-    sel.innerHTML = '<option value="">Tous les types</option>' + types.map(t => `<option>${esc(t)}</option>`).join('');
+    sel.innerHTML = '<option value="">' + _t('Tous les types') + '</option>' + types.map(t => `<option value="${esc(t)}">${esc(_t(t))}</option>`).join('');
     sel.value = types.includes(cur) ? cur : '';
     renderReception();
   }
@@ -670,11 +670,11 @@
     const type = $('rc-type').value;
     const list = rcAlerts.filter(a => !type || a.alert_label === type);
     const shown = list.slice(0, rcLimit);
-    $('rc-count').textContent = rcAlerts.length >= 500 ? `${list.length} alerte${list.length > 1 ? 's' : ''} parmi les 500 plus récentes`
-                                                       : `${list.length} alerte${list.length > 1 ? 's' : ''}`;
+    $('rc-count').textContent = rcAlerts.length >= 500 ? _t(list.length > 1 ? '{n} alertes parmi les 500 plus récentes' : '{n} alerte parmi les 500 plus récentes', { n: list.length })
+                                                       : _t(list.length > 1 ? '{n} alertes' : '{n} alerte', { n: list.length });
     $('rc-more').classList.toggle('hidden', list.length <= rcLimit);
     if (!shown.length) {
-      $('rc-body').innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-400">Aucune alerte enregistrée</td></tr>';
+      $('rc-body').innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-400">' + _t('Aucune alerte enregistrée') + '</td></tr>';
       return;
     }
     $('rc-body').innerHTML = shown.map(a => {
@@ -685,20 +685,20 @@
       if (a.status === 'complete') {
         const d1 = new Date(tms(a.end_time));
         range = `${t0} → ${pad(d1.getHours())}:${pad(d1.getMinutes())}:${pad(d1.getSeconds())}`;
-        state = '<span class="px-2 py-0.5 rounded-full bg-green-50 text-green-700">Rétabli</span>';
+        state = '<span class="px-2 py-0.5 rounded-full bg-green-50 text-green-700">' + _t('Rétabli') + '</span>';
       } else if (a.status === 'ongoing') {
-        range = `${t0} → <span class="text-red-600 font-medium">en cours</span>`;
-        state = '<span class="px-2 py-0.5 rounded-full bg-red-50 text-red-700">En cours</span>';
+        range = `${t0} → <span class="text-red-600 font-medium">${_t('en cours')}</span>`;
+        state = '<span class="px-2 py-0.5 rounded-full bg-red-50 text-red-700">' + _t('En cours') + '</span>';
       } else if (a.status === 'orphan') {
         range = `${t0} → <span class="text-gray-400">?</span>`;
-        state = '<span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600" title="Fin non enregistrée (redémarrage de la surveillance pendant l\'alerte)">Fin inconnue</span>';
+        state = '<span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600" title="' + _t('Fin non enregistrée (redémarrage de la surveillance pendant l\'alerte)') + '">' + _t('Fin inconnue') + '</span>';
       } else {
-        state = '<span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700" title="Rétablissement enregistré sans le début de l\'alerte (début avant un redémarrage)">Retour seul</span>';
+        state = '<span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700" title="' + _t('Rétablissement enregistré sans le début de l\'alerte (début avant un redémarrage)') + '">' + _t('Retour seul') + '</span>';
       }
       const col = RC_COLORS[a.alert_label] || 'bg-gray-100 text-gray-700';
       return `<tr class="hover:bg-slate-50">
         <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${day}</td>
-        <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${col}">${esc(a.alert_label || '-')}</span></td>
+        <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${col}">${esc(_t(a.alert_label || '-'))}</span></td>
         <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${range}</td>
         <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.status === 'complete' ? fmtDur(a.duration) : '-'}</td>
         <td class="py-2 pr-3 whitespace-nowrap">${state}</td>
@@ -718,7 +718,7 @@
     const rows = d.data || [];
     $('rth-more').classList.toggle('hidden', rows.length < rthLimit);
     if (!rows.length) {
-      $('rth-body').innerHTML = '<tr><td colspan="3" class="py-8 text-center text-gray-400">Aucun RadioText enregistré pour le moment</td></tr>';
+      $('rth-body').innerHTML = '<tr><td colspan="3" class="py-8 text-center text-gray-400">' + _t('Aucun RadioText enregistré pour le moment') + '</td></tr>';
       return;
     }
     const cur = String(d.current || '').split(/\s+/).join(' ').trim();
@@ -727,14 +727,14 @@
     $('rth-body').innerHTML = rows.map((r, i) => {
       const t = new Date(String(r.timestamp).replace(' ', 'T'));
       const hm = isNaN(t) ? esc(r.timestamp) : `${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}`;
-      const day = isNaN(t) || sameDay(t, today) ? '' : sameDay(t, yest) ? 'hier' : `${pad(t.getDate())}-${pad(t.getMonth() + 1)}`;
+      const day = isNaN(t) || sameDay(t, today) ? '' : sameDay(t, yest) ? _t('hier') : `${pad(t.getDate())}-${pad(t.getMonth() + 1)}`;
       const live = i === 0 && r.rt === cur;
       const t0 = isNaN(t) ? 0 : Math.floor(t.getTime() / 1000);
-      const listen = pigeAt(t0) ? `<a href="${pigeHref(t0)}" class="font-medium text-blue-600 hover:text-blue-800" title="Écouter l'antenne à ce moment">Écouter</a>` : '';
+      const listen = pigeAt(t0) ? `<a href="${pigeHref(t0)}" class="font-medium text-blue-600 hover:text-blue-800" title="${_t('Écouter l\'antenne à ce moment')}">${_t('Écouter')}</a>` : '';
       return `<tr class="hover:bg-slate-50">
         <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${hm}${day ? ` <span class="text-gray-400">${day}</span>` : ''}</td>
         <td class="py-2 pr-3 ${live ? 'font-semibold text-gray-900' : 'text-gray-700'}">${esc(r.rt)}</td>
-        <td class="py-2 whitespace-nowrap text-right">${live ? '<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 mr-3">À l\'antenne</span>' : ''}${listen}</td>
+        <td class="py-2 whitespace-nowrap text-right">${live ? '<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 mr-3">' + _t('À l\'antenne') + '</span>' : ''}${listen}</td>
       </tr>`;
     }).join('');
   }
@@ -755,7 +755,7 @@
     if (isNaN(d)) return [String(iso), ''];
     return [`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`];
   }
-  const CSV_STATUS = { complete: 'rétabli', ongoing: 'en cours', restored_only: 'retour seul', orphan: 'fin non enregistrée' };
+  const CSV_STATUS = { complete: _t('rétabli'), ongoing: _t('en cours'), restored_only: _t('retour seul'), orphan: _t('fin non enregistrée') };
   function exportReception() {
     const type = $('rc-type').value;
     const list = rcAlerts.filter(a => !type || a.alert_label === type);
@@ -799,15 +799,15 @@
     const on = pgSt.enabled !== false && pgSt.recording;
     $('pg-dot').className = 'w-2.5 h-2.5 rounded-full flex-shrink-0 ' + (on ? 'bg-red-500' : 'bg-amber-500');
     $('pg-avail').innerHTML = pgSt.oldest
-      ? `Disponible du <strong>${fmtDay(pgSt.oldest)} ${fmtTime(pgSt.oldest).slice(0, 5)}</strong> `
-        + (on || !pgSt.newest ? 'jusqu\'à maintenant' : `au <strong>${fmtDay(pgSt.newest)} ${fmtTime(pgSt.newest).slice(0, 5)}</strong>`)
-        + (on ? '' : ` · <span class="text-amber-700">${pgSt.enabled === false ? 'pige arrêtée' : 'enregistrement interrompu'}</span>`)
-      : 'Aucun enregistrement pour le moment';
+      ? `${_t('Disponible du')} <strong>${fmtDay(pgSt.oldest)} ${fmtTime(pgSt.oldest).slice(0, 5)}</strong> `
+        + (on || !pgSt.newest ? _t('jusqu\'à maintenant') : `${_t('au')} <strong>${fmtDay(pgSt.newest)} ${fmtTime(pgSt.newest).slice(0, 5)}</strong>`)
+        + (on ? '' : ` · <span class="text-amber-700">${pgSt.enabled === false ? _t('pige arrêtée') : _t('enregistrement interrompu')}</span>`)
+      : _t('Aucun enregistrement pour le moment');
     if (isAdmin) {
-      $('pg-toggle').textContent = pgSt.enabled === false ? 'Démarrer la pige' : 'Arrêter la pige';
+      $('pg-toggle').textContent = pgSt.enabled === false ? _t('Démarrer la pige') : _t('Arrêter la pige');
       const days = Math.round((pgSt.retention_hours || 24) / 24);
       if (!$('pg-days').value) $('pg-days').value = days;
-      $('pg-estimate').textContent = `Environ ${fmtBytes(128 * 125 * 86400)} par jour à 128 kb/s · pige actuelle ${fmtBytes(pgSt.used_bytes)} · ${fmtBytes(pgSt.free_bytes)} libres sur le disque. Les extraits des dernières alertes sont gardés après la sortie de la pige.`;
+      $('pg-estimate').textContent = _t('Environ {day} par jour à 128 kb/s · pige actuelle {used} · {free} libres sur le disque. Les extraits des dernières alertes sont gardés après la sortie de la pige.', { day: fmtBytes(128 * 125 * 86400), used: fmtBytes(pgSt.used_bytes), free: fmtBytes(pgSt.free_bytes) });
     }
   }
   async function pgEnsure(ts) { if (!pgSt || ts < pgWin[0] + 600 || ts > pgWin[1] - 600) await pgLoadStatus(ts); }
@@ -844,7 +844,7 @@
     }
     await pgEnsure(ts);
     const f = pgFind(ts);
-    if (!f) { $('pg-summary').innerHTML = '<span class="text-red-600">Pas d\'enregistrement à ce moment</span>'; return; }
+    if (!f) { $('pg-summary').innerHTML = '<span class="text-red-600">' + _t('Pas d\'enregistrement à ce moment') + '</span>'; return; }
     pgLoadSeg(f.seg, f.offset);
   }
   function pigeStop() { if (!pAudio.paused) pAudio.pause(); }
@@ -877,10 +877,10 @@
   function pgUI() {
     const playingNow = pgLoaded() && !pAudio.paused;
     $('pg-play-ic').innerHTML = playingNow ? IC_PAUSE : IC_PLAY;
-    $('pg-play-txt').textContent = playingNow ? 'Pause' : 'Lecture';
+    $('pg-play-txt').textContent = playingNow ? _t('Pause') : _t('Lecture');
     const ts = pgPos(), [a, b] = pgRange();
     $('pg-pos').textContent = ts != null ? fmtTime(ts) : '--:--:--';
-    $('pg-state').textContent = ts == null ? '' : fmtDay(ts) + (playingNow ? ' · en lecture' : ' · en pause');
+    $('pg-state').textContent = ts == null ? '' : fmtDay(ts) + (playingNow ? _t(' · en lecture') : _t(' · en pause'));
     const end = b ?? (a != null ? a + 3600 : null);
     $('pg-bar-a').textContent = a != null ? fmtTime(a) : '';
     $('pg-bar-b').textContent = b != null ? fmtTime(b) : '';
@@ -908,18 +908,18 @@
   async function pgCheck() {
     const [a, b] = pgRange(), box = $('pg-summary');
     pgInfo = null;
-    if (a == null) { box.textContent = 'Choisir une date et une heure de début.'; return; }
-    if (b == null) { box.textContent = 'Lecture à partir de l\'heure de début. Indiquer une heure de fin pour télécharger.'; return; }
+    if (a == null) { box.textContent = _t('Choisir une date et une heure de début.'); return; }
+    if (b == null) { box.textContent = _t('Lecture à partir de l\'heure de début. Indiquer une heure de fin pour télécharger.'); return; }
     const dur = `<span class="font-mono">${fmtTime(a)} → ${fmtTime(b)}</span> · <strong>${fmtDur(b - a)}</strong>`;
-    if (pgArc) { box.innerHTML = `${dur} · extrait archivé`; pgInfo = { arc: true }; $('pg-dl').disabled = false; return; }
+    if (pgArc) { box.innerHTML = `${dur} · ${_t('extrait archivé')}`; pgInfo = { arc: true }; $('pg-dl').disabled = false; return; }
     if (!canExport) { box.innerHTML = dur; return; }
     try {
       const d = await api(`/api/pige/export?check=1&start=${a}&end=${b}`);
-      if (d.status !== 'ok') { box.innerHTML = `${dur} · <span class="text-red-600">${esc(d.message || 'Créneau impossible')}</span>`; return; }
-      const gaps = d.gaps.length ? ` · <span class="text-amber-700">incomplet, ${fmtDur(d.duration - d.recorded)} manquantes</span>` : ' · complet';
-      box.innerHTML = `${dur} <span class="text-gray-400">· environ ${fmtBytes(d.recorded * 128 * 125)}</span>${gaps}`;
+      if (d.status !== 'ok') { box.innerHTML = `${dur} · <span class="text-red-600">${esc(d.message || _t('Créneau impossible'))}</span>`; return; }
+      const gaps = d.gaps.length ? ` · <span class="text-amber-700">${_t('incomplet, {d} manquantes', { d: fmtDur(d.duration - d.recorded) })}</span>` : _t(' · complet');
+      box.innerHTML = `${dur} <span class="text-gray-400">· ${_t('environ')} ${fmtBytes(d.recorded * 128 * 125)}</span>${gaps}`;
       pgInfo = d; $('pg-dl').disabled = false;
-    } catch (e) { box.innerHTML = `${dur} · <span class="text-red-600">vérification impossible</span>`; }
+    } catch (e) { box.innerHTML = `${dur} · <span class="text-red-600">${_t('vérification impossible')}</span>`; }
   }
   function pigeDownload() {
     const [a, b] = pgRange();
@@ -942,8 +942,8 @@
       if (x) {
         pgArc = { id: x.id, a: x.clip_start, b: x.clip_end };
         pgSetRange(x.clip_start, x.clip_end);
-        $('pg-arc-note').innerHTML = `Ce moment n'est plus dans la pige : extrait archivé de l'alerte du ${fmtShort(x.start)}, de 30 s avant à 30 s après le rétablissement`
-          + (x.clip_end - x.clip_start < x.end - x.start + 60 ? ' (limité à ' + fmtDur(x.clip_end - x.clip_start) + ')' : '') + '.';
+        $('pg-arc-note').innerHTML = _t("Ce moment n'est plus dans la pige : extrait archivé de l'alerte du {t}, de 30 s avant à 30 s après le rétablissement", { t: fmtShort(x.start) })
+          + (x.clip_end - x.clip_start < x.end - x.start + 60 ? _t(' (limité à ') + fmtDur(x.clip_end - x.clip_start) + ')' : '') + '.';
         $('pg-arc-note').classList.remove('hidden');
       }
     }
@@ -956,15 +956,15 @@
   // ── Conservation de la pige FM (administrateur) ──────────────────────
   async function savePigeDays() {
     const msg = $('pg-msg'), days = parseInt($('pg-days').value, 10);
-    if (!(days >= 1 && days <= 90)) { msg.className = 'text-xs text-red-600'; msg.textContent = 'De 1 à 90 jours'; return; }
+    if (!(days >= 1 && days <= 90)) { msg.className = 'text-xs text-red-600'; msg.textContent = _t('De 1 à 90 jours'); return; }
     $('pg-save').disabled = true;
     try {
       const r = await fetch('/api/pige/config', { method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
         body: JSON.stringify({ action: 'update', id: 'fm', retention_days: days }) });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
-      msg.className = 'text-xs text-green-600'; msg.textContent = 'Enregistré.';
+      if (!r.ok || d.status !== 'ok') throw new Error(d.message || `${_t('Erreur')} ${r.status}`);
+      msg.className = 'text-xs text-green-600'; msg.textContent = _t('Enregistré.');
     } catch (e) { msg.className = 'text-xs text-red-600'; msg.textContent = e.message; }
     finally { $('pg-save').disabled = false; }
   }
@@ -976,9 +976,9 @@
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
         body: JSON.stringify({ action: 'update', id: 'fm', enabled: start }) });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
+      if (!r.ok || d.status !== 'ok') throw new Error(d.message || `${_t('Erreur')} ${r.status}`);
       msg.className = 'text-xs text-green-600';
-      msg.textContent = start ? 'Pige démarrée : l\'enregistrement reprend dans les 20 secondes.' : 'Pige arrêtée.';
+      msg.textContent = start ? _t('Pige démarrée : l\'enregistrement reprend dans les 20 secondes.') : _t('Pige arrêtée.');
       pgLoadStatus(pgRange()[0] ?? Date.now() / 1000);
     } catch (e) { msg.className = 'text-xs text-red-600'; msg.textContent = e.message; }
   }
@@ -1010,7 +1010,7 @@
     const c = cfg, a = c.audio || {};
     document.querySelectorAll('.tef-only').forEach(e => e.classList.toggle('hidden', !useTef));
     document.querySelectorAll('.rtl-only').forEach(e => e.classList.toggle('hidden', useTef));
-    $('src-current').textContent = useTef ? `tuner TEF${c.tef?.serial_port ? ' (' + c.tef.serial_port + ')' : ''}` : 'clé RTL-SDR';
+    $('src-current').textContent = useTef ? _t('tuner TEF') + (c.tef?.serial_port ? ' (' + c.tef.serial_port + ')' : '') : _t('clé RTL-SDR');
     $('f-frequency').value = cfgFreq;
     $('f-mod-threshold').value = modThreshold;
     $('f-gain').value = c.rtl_sdr?.gain ?? '';
@@ -1027,13 +1027,13 @@
     const r = await fetch(url, { method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }, body: body ? JSON.stringify(body) : undefined });
     const d = await r.json().catch(() => ({}));
-    if (!r.ok || (d.status && d.status !== 'success')) throw new Error(d.message || `Erreur ${r.status}`);
+    if (!r.ok || (d.status && d.status !== 'success')) throw new Error(d.message || `${_t('Erreur')} ${r.status}`);
     return d;
   }
   const MAIL_KINDS = ['signal', 'modulation', 'rds', 'rt', 'deviation'];
   async function saveSettings() {
     const freq = $('f-frequency').value.trim().replace(',', '.');
-    if (!/^\d{2,3}(\.\d{1,2})?M$/i.test(freq)) { $('f-msg').className = 'text-xs text-red-600'; $('f-msg').textContent = 'Fréquence invalide (format 88.6M)'; return; }
+    if (!/^\d{2,3}(\.\d{1,2})?M$/i.test(freq)) { $('f-msg').className = 'text-xs text-red-600'; $('f-msg').textContent = _t('Fréquence invalide (format 88.6M)'); return; }
     const int = (id, d) => { const v = parseInt($(id).value, 10); return isNaN(v) ? d : v; };
     const body = {
       station: { frequency: freq.toUpperCase() },
@@ -1054,15 +1054,15 @@
     }
     const restart = body.rtl_sdr.frequency !== String(cfgFreq).toUpperCase() || (!useTef);
     $('f-save').disabled = true;
-    $('f-msg').className = 'text-xs text-gray-500'; $('f-msg').textContent = 'Enregistrement…';
+    $('f-msg').className = 'text-xs text-gray-500'; $('f-msg').textContent = _t('Enregistrement…');
     try {
       await post('/api/config/save', body);
       if (restart) {
-        $('f-msg').textContent = 'Enregistré. Relance de la réception FM…';
+        $('f-msg').textContent = _t('Enregistré. Relance de la réception FM…');
         await post('/api/restart');
       }
       $('f-msg').className = 'text-xs text-green-600';
-      $('f-msg').textContent = restart ? 'Enregistré, réception FM relancée.' : 'Enregistré et appliqué.';
+      $('f-msg').textContent = restart ? _t('Enregistré, réception FM relancée.') : _t('Enregistré et appliqué.');
       loadSettings();
     } catch (e) { $('f-msg').className = 'text-xs text-red-600'; $('f-msg').textContent = e.message; }
     finally { $('f-save').disabled = false; }
@@ -1072,32 +1072,32 @@
   const BTN = 'text-xs font-medium border border-gray-200 hover:border-blue-500 hover:text-blue-700 rounded-lg px-3 py-1.5 mr-2';
   async function scanDongle() {
     const btn = $('btn-scan'), status = $('scan-status'), found = $('scan-found');
-    btn.disabled = true; status.textContent = 'Détection en cours…'; found.innerHTML = '';
+    btn.disabled = true; status.textContent = _t('Détection en cours…'); found.innerHTML = '';
     try {
       const data = await post('/api/scan-dongle');
       const tef = data.tef || [], rtl = data.rtlsdr;
       if (!tef.length && !rtl) {
-        found.innerHTML = '<div class="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">Aucun récepteur détecté. Vérifier les branchements USB.</div>';
+        found.innerHTML = '<div class="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">' + _t('Aucun récepteur détecté. Vérifier les branchements USB.') + '</div>';
       } else {
         const opts = [];
-        tef.forEach(p => opts.push(`<button class="${BTN}" onclick="selectSource('tef', '${esc(p)}')">Tuner TEF (${esc(p)})</button>`));
+        tef.forEach(p => opts.push(`<button class="${BTN}" onclick="selectSource('tef', '${esc(p)}')">${_t('Tuner TEF')} (${esc(p)})</button>`));
         if (rtl) {
-          opts.push(`<button class="${BTN}" onclick="selectSource('rtlsdr', '')">RTL-SDR, rtl_fm (mono)</button>`);
-          opts.push(`<button class="${BTN}" onclick="selectSource('gnuradio', '')">RTL-SDR, GNU Radio (stéréo)</button>`);
+          opts.push(`<button class="${BTN}" onclick="selectSource('rtlsdr', '')">${_t('RTL-SDR, rtl_fm (mono)')}</button>`);
+          opts.push(`<button class="${BTN}" onclick="selectSource('gnuradio', '')">${_t('RTL-SDR, GNU Radio (stéréo)')}</button>`);
         }
-        found.innerHTML = '<div class="text-xs text-gray-500 mb-2">Choisir la source active (BL-RMO redémarre la réception FM) :</div>' + opts.join('');
+        found.innerHTML = '<div class="text-xs text-gray-500 mb-2">' + _t('Choisir la source active (BL-RMO redémarre la réception FM) :') + '</div>' + opts.join('');
       }
-      status.textContent = 'Détection terminée.';
-    } catch (e) { status.textContent = 'Erreur : ' + e.message; }
+      status.textContent = _t('Détection terminée.');
+    } catch (e) { status.textContent = _t('Erreur : ') + e.message; }
     finally { btn.disabled = false; }
   }
   async function selectSource(source, port) {
     try {
       await post('/api/select-source', { source, port });
-      const label = source === 'tef' ? `tuner TEF (${port})` : source === 'gnuradio' ? 'RTL-SDR, GNU Radio' : 'RTL-SDR, rtl_fm';
-      $('scan-found').innerHTML = `<div class="p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700">Source ${esc(label)} activée, la réception FM redémarre.</div>`;
+      const label = source === 'tef' ? `${_t('tuner TEF')} (${port})` : source === 'gnuradio' ? _t('RTL-SDR, GNU Radio') : _t('RTL-SDR, rtl_fm');
+      $('scan-found').innerHTML = `<div class="p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700">${_t('Source {s} activée, la réception FM redémarre.', { s: esc(label) })}</div>`;
       setTimeout(loadSettings, 5000);
-    } catch (e) { $('scan-status').textContent = 'Erreur : ' + e.message; }
+    } catch (e) { $('scan-status').textContent = _t('Erreur : ') + e.message; }
   }
 
   // ── Menu ─────────────────────────────────────────────────────────────

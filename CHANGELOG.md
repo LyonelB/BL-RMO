@@ -6,6 +6,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Traduction anglaise, étape 2 : pages FM et DAB+
+- **Pages FM et DAB+ traduites**, tous onglets : Direct, Journal, Pige et Configuration, avec les messages affichés par le JavaScript (états, tuiles, journal, pige, détection des récepteurs, balayage de la bande III).
+- **Libellés des alertes** (Signal perdu, Absence modulation, Silence audio...) et mode de décodage DAB+ traduits à l'affichage ; les filtres du journal gardent leur valeur d'origine.
+- **Analyseur de spectre** (`static/spectrum.js`) : boutons et messages traduits, séparateur décimal de la langue. Barres G/D affichées L/R en anglais, aussi sur le tableau de bord.
+- **Outil** `tools/i18n_js.py` : entoure les textes français du JavaScript des modèles de `_t('…')` (`--dry` pour la liste), sans toucher au code, aux classes CSS ni aux gabarits à valeurs, traduits à la main.
+
 ### Traduction anglaise, étape 1 : mécanisme, choix de la langue, menu, connexion et tableau de bord
 - **Choix de la langue** dans Système › Général : Français ou English, un réglage pour tout BL-RMO (`config.json`, `"ui": {"language": "fr" | "en"}`), enregistré dès le choix sans redémarrer la surveillance. Les mails suivront la même langue (étape 4).
 - **Mécanisme** (`i18n.py`, `i18n/en.json`, `templates/_i18n.html`) : le texte français sert de clé et `i18n/en.json` donne sa traduction ; un texte non traduit reste en français. Dans les modèles `{{ _('…') }}`, dans le JavaScript `_t('…')`, en Python `i18n.t('…')`. Les dates, le séparateur décimal et les unités (Go, Mo, j) suivent la langue.

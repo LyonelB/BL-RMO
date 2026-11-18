@@ -8,7 +8,7 @@ La langue est un réglage de tout BL-RMO : config.json, "ui": {"language": "fr" 
 réglée dans Système, onglet Général. Les mails suivent la même langue.
 
   Jinja      : {{ _('Tableau de bord') }}, {{ _('Il y a {n} min', n=5) }}
-  JavaScript : t('Tableau de bord'), t('Il y a {n} min', { n: 5 })   (templates/_i18n.html)
+  JavaScript : _t('Tableau de bord'), _t('Il y a {n} min', { n: 5 })   (templates/_i18n.html)
   Python     : from i18n import t ; t('Signal FM non capté')
 """
 import json

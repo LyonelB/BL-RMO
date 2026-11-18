@@ -342,6 +342,7 @@ Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-RMO (pas `bl
 - [ ] welle-monitor : reporter les changements de la prochaine version de welle.io
 - [ ] Version anglaise de l'interface
 - [ ] Piste : sonde AES67 (sortie console Dante)
+- [ ] Surveillance Dante, libre et auto-hébergée, dans l'esprit de Dante Director : découverte des appareils (mDNS), état, horloge, abonnements audio, journal des changements et alertes. Piste : bibliothèque [netaudio](https://github.com/chris-ritsen/network-audio-controller)
 
 ---
 

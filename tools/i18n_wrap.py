@@ -23,7 +23,9 @@ def wanted(txt):
     t = txt.strip()
     if not t or '{{' in t or '{%' in t or '}}' in t or '%}' in t:
         return False
-    if not LETTERS.search(t):
+    if not LETTERS.search(re.sub(r'&\w+;', '', t)):   # &nbsp; seul : rien à traduire
+        return False
+    if re.fullmatch(r'[-+]?[\d.,]+\s*(dB|dBFS|dBf|kHz|MHz|%|s|ms|min|h)?', t):   # valeur et unité
         return False
     if re.fullmatch(r'[\w.-]+\.(py|json|sh|html|db|mp3|local)', t):
         return False
