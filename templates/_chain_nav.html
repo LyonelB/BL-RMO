@@ -5,9 +5,9 @@
   .ctab:hover { color:#1f2937; }
   .ctab.on { color:#1d4ed8; border-color:#2563eb; font-weight:500; }
 </style>
-<nav class="flex gap-5 mt-3 text-sm overflow-x-auto" aria-label="Chaîne de diffusion">
-  <a href="/chain" class="ctab {{ 'on' if chain_tab == 'synoptique' }}" {% if chain_tab == 'synoptique' %}aria-current="page"{% endif %}>Synoptique</a>
-  <a href="/chain/journal" class="ctab {{ 'on' if chain_tab == 'journal' }}" {% if chain_tab == 'journal' %}aria-current="page"{% endif %}>Journal</a>
-  <a href="/chain/appareils" class="ctab need-admin {{ 'on' if chain_tab == 'appareils' }}" {% if chain_tab == 'appareils' %}aria-current="page"{% endif %}>Appareils</a>
-  <a href="/chain/configuration" class="ctab need-admin {{ 'on' if chain_tab == 'configuration' }}" {% if chain_tab == 'configuration' %}aria-current="page"{% endif %}>Configuration</a>
+<nav class="flex gap-5 mt-3 text-sm overflow-x-auto" aria-label="{{ _('Chaîne de diffusion') }}">
+  <a href="/chain" class="ctab {{ 'on' if chain_tab == 'synoptique' }}" {% if chain_tab == 'synoptique' %}aria-current="page"{% endif %}>{{ _('Synoptique') }}</a>
+  <a href="/chain/journal" class="ctab {{ 'on' if chain_tab == 'journal' }}" {% if chain_tab == 'journal' %}aria-current="page"{% endif %}>{{ _('Journal') }}</a>
+  <a href="/chain/appareils" class="ctab need-admin {{ 'on' if chain_tab == 'appareils' }}" {% if chain_tab == 'appareils' %}aria-current="page"{% endif %}>{{ _('Appareils') }}</a>
+  <a href="/chain/configuration" class="ctab need-admin {{ 'on' if chain_tab == 'configuration' }}" {% if chain_tab == 'configuration' %}aria-current="page"{% endif %}>{{ _('Configuration') }}</a>
 </nav>

@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ lang or 'fr' }}">
 <head>
   <meta charset="UTF-8">
+  {% include '_i18n.html' %}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>BL-RMO · Système</title>
@@ -76,6 +77,21 @@
 
     <!-- ═══════════════════════ GÉNÉRAL (administrateur) ═══════════════════════ -->
     <div id="tab-general" class="tab-pane hidden need-admin max-w-3xl">
+    <!-- ── Langue : interface et mails de tout BL-RMO ── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+        {{ _('Langue') }}
+      </div>
+      <div class="flex items-center gap-3 flex-wrap">
+        <select id="ui-language" class="field-input" style="max-width:220px" onchange="saveLanguage()">
+          <option value="fr">Français</option>
+          <option value="en">English</option>
+        </select>
+        <span class="field-hint">{{ _("Interface et mails d'alerte, pour tous les comptes. Enregistré dès le choix.") }}</span>
+      </div>
+    </div>
+
     <!-- ── Réglages de la réception : pages FM et DAB+ (FM_PAGE_PATCH) ── -->
     <div class="section" style="border-color:#bfdbfe;background:#eff6ff">
       <div class="text-sm font-semibold text-blue-900">Réception, station et mails par type d'alerte</div>
@@ -607,6 +623,7 @@ function renderSysLogs() {
         recipientsStr = typeof r === 'string' ? r : r.join(', ');
       }
 
+      document.getElementById('ui-language').value              = config.ui?.language || 'fr';
       document.getElementById('sender-email').value             = config.email?.sender_email || '';
       document.getElementById('sender-password').value          = '';
       document.getElementById('recipient-emails').value         = recipientsStr;
@@ -686,6 +703,19 @@ function renderSysLogs() {
   // ═══════════════════════════════════════════════
   // SAVE CONFIG
   // ═══════════════════════════════════════════════
+  // Langue : enregistrée seule (sans redémarrage), puis la page se recharge dans la nouvelle langue
+  async function saveLanguage() {
+    const language = document.getElementById('ui-language').value;
+    try {
+      const resp = await fetch('/api/config/save', { credentials: 'include', method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+        body: JSON.stringify({ ui: { language } }) });
+      const result = await resp.json();
+      if (result.status !== 'success') throw new Error(result.message || resp.status);
+      location.reload();
+    } catch (e) { showToast(_t('Langue non enregistrée : {e}', { e: e.message }), 'error'); }
+  }
+
   async function saveConfig() {
     const isDHCP = networkModeToggle.checked;
     const config = {

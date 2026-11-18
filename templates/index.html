@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ lang or 'fr' }}">
 <head>
   <meta charset="UTF-8">
+  {% include '_i18n.html' %}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>BL-RMO · Dashboard</title>
+  <title>{{ _('BL-RMO · Dashboard') }}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background: #f1f5f9; }
@@ -57,7 +58,7 @@
       <span class="text-xs text-gray-400 font-mono" id="frequency-display">—</span>
     </div>
     <div class="flex items-center gap-5">
-      {% if public_mode %}<span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">Vue publique</span>{% endif %}
+      {% if public_mode %}<span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">{{ _('Vue publique') }}</span>{% endif %}
       <div class="text-right">
         <div class="text-sm font-mono font-semibold text-gray-900" id="current-time">--:--:--</div>
         <div class="text-xs text-gray-400" id="current-date"></div>
@@ -71,26 +72,26 @@
   <div class="max-w-7xl mx-auto flex flex-col gap-5">
 
     <!-- ── Bandeau d'état ─────────────────────────────────────── -->
-    <div class="flex flex-wrap gap-2" aria-label="État général">
+    <div class="flex flex-wrap gap-2" aria-label="{{ _('État général') }}">
       <a href="#card-fm" class="pill" style="text-decoration:none;color:inherit"><span class="pdot" id="pill-fm"></span>FM</a>
       <a href="#card-dab" class="pill" style="text-decoration:none;color:inherit" id="pill-dab-wrap"><span class="pdot" id="pill-dab"></span>DAB+</a>
-      <a href="/chain" class="pill" style="text-decoration:none;color:inherit"><span class="pdot" id="pill-chain"></span>Chaîne <span class="mono text-gray-500" id="pill-chain-n">-</span></a>
-      <a href="/fm#pige" class="pill" style="text-decoration:none;color:inherit"><span class="pdot" id="pill-pige"></span>Pige</a>
-      <span class="pill" style="color:#64748b" title="Alertes FM, DAB+ et chaîne des dernières 24 h : détail dans le Journal de chaque page">Alertes 24 h <span class="mono font-semibold text-gray-900" id="pill-alerts">-</span></span>
+      <a href="/chain" class="pill" style="text-decoration:none;color:inherit"><span class="pdot" id="pill-chain"></span>{{ _('Chaîne') }} <span class="mono text-gray-500" id="pill-chain-n">-</span></a>
+      <a href="/fm#pige" class="pill" style="text-decoration:none;color:inherit"><span class="pdot" id="pill-pige"></span>{{ _('Pige') }}</a>
+      <span class="pill" style="color:#64748b" title="{{ _('Alertes FM, DAB+ et chaîne des dernières 24 h : détail dans le Journal de chaque page') }}">{{ _('Alertes 24 h') }} <span class="mono font-semibold text-gray-900" id="pill-alerts">-</span></span>
     </div>
 
     <!-- ── Ligne 1 : FM | DAB+ ───────────────────────────────── -->
     <div class="grid gap-5" style="grid-template-columns:repeat(auto-fit, minmax(min(100%, 420px), 1fr))">
 
       <!-- ═══ Réception FM ═══ -->
-      <section id="card-fm" class="card flex flex-col gap-4" aria-label="Réception FM">
+      <section id="card-fm" class="card flex flex-col gap-4" aria-label="{{ _('Réception FM') }}">
         <div class="flex items-center justify-between gap-2">
-          <div class="card-title">Réception FM</div>
+          <div class="card-title">{{ _('Réception FM') }}</div>
           <div class="mono text-xs text-gray-500" id="fm-freq">-</div>
         </div>
         <div class="flex gap-4 items-start">
           <div class="flex-shrink-0 rounded-xl border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center" style="width:112px;height:112px">
-            <img id="station-logo" src="" alt="Logo de la station" class="hidden w-full h-full object-contain">
+            <img id="station-logo" src="" alt="{{ _('Logo de la station') }}" class="hidden w-full h-full object-contain">
             <span id="station-logo-placeholder" class="text-xs text-gray-400">FM</span>
           </div>
           <div class="flex-1 min-w-0 flex flex-col gap-2">
@@ -98,90 +99,90 @@
               <div><div class="tile-k">PS</div><div class="mono text-2xl font-semibold tracking-wide" id="fm-ps">-</div></div>
               <div><div class="tile-k">PI</div><div class="mono text-2xl font-semibold" id="fm-pi">-</div></div>
             </div>
-            <div><div class="tile-k">RT</div><div class="text-sm leading-snug break-words" id="fm-rt">-</div></div>
+            <div><div class="tile-k">{{ _('RT') }}</div><div class="text-sm leading-snug break-words" id="fm-rt">-</div></div>
           </div>
         </div>
         <!-- Lecteur FM -->
         <div class="border border-gray-200 rounded-xl p-3 flex flex-col gap-2">
           <div class="flex items-center gap-3 flex-wrap">
-            <button type="button" class="playbtn" id="fm-play" aria-label="Écouter la FM"></button>
-            <div class="flex-1 text-sm text-gray-500 min-w-0 truncate hidden sm:block" id="fm-play-help">Antenne en direct</div><div class="flex-1 sm:hidden"></div>
-            <label class="flex items-center gap-2 text-xs text-gray-500">Volume
+            <button type="button" class="playbtn" id="fm-play" aria-label="{{ _('Écouter la FM') }}"></button>
+            <div class="flex-1 text-sm text-gray-500 min-w-0 truncate hidden sm:block" id="fm-play-help">{{ _('Antenne en direct') }}</div><div class="flex-1 sm:hidden"></div>
+            <label class="flex items-center gap-2 text-xs text-gray-500">{{ _('Volume') }}
               <input type="range" id="fm-volume" min="0" max="100" value="50" class="w-20 accent-blue-600">
               <span class="mono w-8" id="fm-volume-v">50%</span></label>
-            <a href="/stream.mp3" target="_blank" rel="noopener" class="text-xs font-medium text-blue-600 hover:text-blue-800">Externe</a>
+            <a href="/stream.mp3" target="_blank" rel="noopener" class="text-xs font-medium text-blue-600 hover:text-blue-800">{{ _('Externe') }}</a>
             <audio id="fm-audio" preload="none"></audio>
           </div>
-          <div class="flex items-center gap-2 mono text-[11px] text-gray-500" title="Niveau reçu par le tuner, crête en dBFS">
+          <div class="flex items-center gap-2 mono text-[11px] text-gray-500" title="{{ _('Niveau reçu par le tuner, crête en dBFS') }}">
             <span class="w-3">G</span><div class="vu"><div class="bar" id="fm-vu-l"></div><div class="peak" id="fm-vu-lp"></div></div><span class="w-12 text-right" id="fm-vu-ld">-</span></div>
           <div class="flex items-center gap-2 mono text-[11px] text-gray-500">
             <span class="w-3">D</span><div class="vu"><div class="bar" id="fm-vu-r"></div><div class="peak" id="fm-vu-rp"></div></div><span class="w-12 text-right" id="fm-vu-rd">-</span></div>
         </div>
         <div class="tiles">
-          <div class="tile"><div class="tile-k">Signal</div><div class="tile-v" id="fm-sig">-</div><div class="tile-s" id="fm-sig-s">-</div></div>
-          <div class="tile"><div class="tile-k">Modulation</div><div class="tile-v" id="fm-mod">-</div><div class="tile-s" id="fm-mod-s">-</div></div>
-          <div class="tile"><div class="tile-k">Mode</div><div class="tile-v" id="fm-st">-</div><div class="tile-s" id="fm-st-s">-</div></div>
+          <div class="tile"><div class="tile-k">{{ _('Signal') }}</div><div class="tile-v" id="fm-sig">-</div><div class="tile-s" id="fm-sig-s">-</div></div>
+          <div class="tile"><div class="tile-k">{{ _('Modulation') }}</div><div class="tile-v" id="fm-mod">-</div><div class="tile-s" id="fm-mod-s">-</div></div>
+          <div class="tile"><div class="tile-k">{{ _('Mode') }}</div><div class="tile-v" id="fm-st">-</div><div class="tile-s" id="fm-st-s">-</div></div>
           <div class="tile"><div class="tile-k">RDS</div><div class="tile-v" id="fm-rds">-</div><div class="tile-s" id="fm-rds-s">-</div></div>
-          <div class="tile"><div class="tile-k">Uptime</div><div class="tile-v" id="fm-up">-</div><div class="tile-s" id="fm-up-s">-</div></div>
+          <div class="tile"><div class="tile-k">{{ _('Uptime') }}</div><div class="tile-v" id="fm-up">-</div><div class="tile-s" id="fm-up-s">-</div></div>
         </div>
         <a href="/fm#journal" class="last-alert" id="fm-last">
-          <span class="text-[11px] text-gray-500 whitespace-nowrap">Dernière alerte</span>
+          <span class="text-[11px] text-gray-500 whitespace-nowrap">{{ _('Dernière alerte') }}</span>
           <span class="mono text-xs text-gray-600 whitespace-nowrap" id="fm-last-t"></span>
-          <span class="flex-1 min-w-0 truncate" id="fm-last-l">Aucune</span>
-          <span class="text-xs text-blue-600 whitespace-nowrap">Journal ›</span>
+          <span class="flex-1 min-w-0 truncate" id="fm-last-l">{{ _('Aucune') }}</span>
+          <span class="text-xs text-blue-600 whitespace-nowrap">{{ _('Journal ›') }}</span>
         </a>
       </section>
 
       <!-- ═══ Réception DAB+ ═══ -->
-      <section id="card-dab" class="card flex flex-col gap-4" aria-label="Réception DAB+">
+      <section id="card-dab" class="card flex flex-col gap-4" aria-label="{{ _('Réception DAB+') }}">
         <div class="flex items-center justify-between gap-2">
-          <div class="card-title">Réception DAB+</div>
+          <div class="card-title">{{ _('Réception DAB+') }}</div>
           <div class="mono text-xs text-gray-500 truncate" id="dab-ens">-</div>
         </div>
         <div id="dab-off" class="hidden text-sm text-gray-500 py-6 text-center"></div>
         <div id="dab-on" class="flex flex-col gap-4">
           <div class="flex gap-4 items-start">
             <div class="flex-shrink-0 rounded-xl border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center" style="width:150px;height:112px">
-              <img id="dab-slide" alt="Diaporama du service" class="hidden w-full h-full object-cover">
+              <img id="dab-slide" alt="{{ _('Diaporama du service') }}" class="hidden w-full h-full object-cover">
               <span id="dab-slide-ph" class="text-xs text-gray-400">DAB+</span>
             </div>
             <div class="flex-1 min-w-0 flex flex-col gap-2">
-              <div><div class="tile-k">Service suivi</div><div class="text-xl font-semibold truncate" id="dab-name">-</div>
+              <div><div class="tile-k">{{ _('Service suivi') }}</div><div class="text-xl font-semibold truncate" id="dab-name">-</div>
                 <div class="mono text-xs text-gray-500 truncate" id="dab-sub">-</div></div>
-              <div><div class="tile-k">Titre en cours</div><div class="text-sm leading-snug break-words" id="dab-dls">-</div></div>
+              <div><div class="tile-k">{{ _('Titre en cours') }}</div><div class="text-sm leading-snug break-words" id="dab-dls">-</div></div>
             </div>
           </div>
           <!-- Lecteur DAB+ -->
           <div class="border border-gray-200 rounded-xl p-3 flex flex-col gap-2">
             <div class="flex items-center gap-3 flex-wrap">
-              <button type="button" class="playbtn" id="dab-play" aria-label="Écouter le service DAB+"></button>
-              <div class="flex-1 text-sm text-gray-500 min-w-0 truncate hidden sm:block" id="dab-play-help">Écoute via la clé DAB+</div><div class="flex-1 sm:hidden"></div>
-              <label class="flex items-center gap-2 text-xs text-gray-500">Volume
+              <button type="button" class="playbtn" id="dab-play" aria-label="{{ _('Écouter le service DAB+') }}"></button>
+              <div class="flex-1 text-sm text-gray-500 min-w-0 truncate hidden sm:block" id="dab-play-help">{{ _('Écoute via la clé DAB+') }}</div><div class="flex-1 sm:hidden"></div>
+              <label class="flex items-center gap-2 text-xs text-gray-500">{{ _('Volume') }}
                 <input type="range" id="dab-volume" min="0" max="100" value="50" class="w-20 accent-blue-600">
                 <span class="mono w-8" id="dab-volume-v">50%</span></label>
-              <a id="dab-external" href="#" target="_blank" rel="noopener" class="text-xs font-medium text-blue-600 hover:text-blue-800">Externe</a>
+              <a id="dab-external" href="#" target="_blank" rel="noopener" class="text-xs font-medium text-blue-600 hover:text-blue-800">{{ _('Externe') }}</a>
               <audio id="dab-audio" preload="none"></audio>
             </div>
-            <div class="flex items-center gap-2 mono text-[11px] text-gray-500" title="Pendant l'écoute : crête mesurée sur l'audio reçu ; sinon, niveau relevé par welle-cli">
+            <div class="flex items-center gap-2 mono text-[11px] text-gray-500" title="{{ _("Pendant l'écoute : crête mesurée sur l'audio reçu ; sinon, niveau relevé par welle-cli") }}">
               <span class="w-3">G</span><div class="vu"><div class="bar" id="dab-vu-l"></div><div class="peak" id="dab-vu-lp"></div></div><span class="w-12 text-right" id="dab-vu-ld">-</span></div>
             <div class="flex items-center gap-2 mono text-[11px] text-gray-500">
               <span class="w-3">D</span><div class="vu"><div class="bar" id="dab-vu-r"></div><div class="peak" id="dab-vu-rp"></div></div><span class="w-12 text-right" id="dab-vu-rd">-</span></div>
           </div>
           <div class="tiles">
-            <div class="tile"><div class="tile-k">Présence</div><div class="tile-v" id="dab-pres">-</div><div class="tile-s" id="dab-pres-s">-</div></div>
-            <div class="tile"><div class="tile-k">Audio</div><div class="tile-v" id="dab-aud">-</div><div class="tile-s" id="dab-aud-s">-</div></div>
-            <div class="tile"><div class="tile-k">Mode</div><div class="tile-v" id="dab-st">-</div><div class="tile-s" id="dab-st-s">-</div></div>
-            <div class="tile"><div class="tile-k">Ensemble</div><div class="tile-v" id="dab-snr">-</div><div class="tile-s" id="dab-snr-s">-</div></div>
-            <div class="tile"><div class="tile-k">Disponibilité</div><div class="tile-v" id="dab-upt">-</div><div class="tile-s">sur 24 h</div></div>
+            <div class="tile"><div class="tile-k">{{ _('Présence') }}</div><div class="tile-v" id="dab-pres">-</div><div class="tile-s" id="dab-pres-s">-</div></div>
+            <div class="tile"><div class="tile-k">{{ _('Audio') }}</div><div class="tile-v" id="dab-aud">-</div><div class="tile-s" id="dab-aud-s">-</div></div>
+            <div class="tile"><div class="tile-k">{{ _('Mode') }}</div><div class="tile-v" id="dab-st">-</div><div class="tile-s" id="dab-st-s">-</div></div>
+            <div class="tile"><div class="tile-k">{{ _('Ensemble') }}</div><div class="tile-v" id="dab-snr">-</div><div class="tile-s" id="dab-snr-s">-</div></div>
+            <div class="tile"><div class="tile-k">{{ _('Disponibilité') }}</div><div class="tile-v" id="dab-upt">-</div><div class="tile-s">{{ _('sur 24 h') }}</div></div>
           </div>
           <a href="/dab#journal" class="last-alert">
-            <span class="text-[11px] text-gray-500 whitespace-nowrap">Dernière alerte</span>
+            <span class="text-[11px] text-gray-500 whitespace-nowrap">{{ _('Dernière alerte') }}</span>
             <span class="mono text-xs text-gray-600 whitespace-nowrap" id="dab-last-t"></span>
-            <span class="flex-1 min-w-0 truncate" id="dab-last-l">Aucune</span>
-            <span class="text-xs text-blue-600 whitespace-nowrap">Journal ›</span>
+            <span class="flex-1 min-w-0 truncate" id="dab-last-l">{{ _('Aucune') }}</span>
+            <span class="text-xs text-blue-600 whitespace-nowrap">{{ _('Journal ›') }}</span>
           </a>
         </div>
-        <div class="text-xs text-gray-500">Service choisi dans <a href="/dab#configuration" class="text-blue-600 hover:text-blue-800">DAB+ › Configuration › Service du tableau de bord</a></div>
+        <div class="text-xs text-gray-500">{{ _('Service choisi dans') }} <a href="/dab#configuration" class="text-blue-600 hover:text-blue-800">{{ _('DAB+ › Configuration › Station suivie') }}</a></div>
       </section>
     </div>
 
@@ -189,32 +190,32 @@
     <div class="grid gap-5 lg:grid-cols-3">
 
       <!-- ═══ Chaîne de diffusion ═══ -->
-      <section class="card flex flex-col gap-4 lg:col-span-2 min-w-0" aria-label="Chaîne de diffusion">
+      <section class="card flex flex-col gap-4 lg:col-span-2 min-w-0" aria-label="{{ _('Chaîne de diffusion') }}">
         <div class="flex items-center justify-between gap-2">
-          <div class="card-title">Chaîne de diffusion</div>
-          <a href="/chain" class="text-xs font-medium text-blue-600 hover:text-blue-800">Voir la chaîne ›</a>
+          <div class="card-title">{{ _('Chaîne de diffusion') }}</div>
+          <a href="/chain" class="text-xs font-medium text-blue-600 hover:text-blue-800">{{ _('Voir la chaîne ›') }}</a>
         </div>
-        <div class="chain-grid" id="chain-grid"><div class="text-sm text-gray-400">Chargement…</div></div>
+        <div class="chain-grid" id="chain-grid"><div class="text-sm text-gray-400">{{ _('Chargement…') }}</div></div>
         <div class="tiles" style="grid-template-columns:repeat(auto-fit, minmax(160px, 1fr))">
-          <div class="tile"><div class="tile-k">Appareils et sondes</div><div class="tile-v" id="chain-ok">-</div></div>
-          <div class="tile"><div class="tile-k">En défaut</div><div class="tile-v" id="chain-bad">-</div></div>
-          <a href="/chain/journal" class="tile block hover:bg-gray-100" style="text-decoration:none;color:inherit"><div class="tile-k">Dernier événement</div><div class="text-sm truncate" id="chain-last">-</div></a>
+          <div class="tile"><div class="tile-k">{{ _('Appareils et sondes') }}</div><div class="tile-v" id="chain-ok">-</div></div>
+          <div class="tile"><div class="tile-k">{{ _('En défaut') }}</div><div class="tile-v" id="chain-bad">-</div></div>
+          <a href="/chain/journal" class="tile block hover:bg-gray-100" style="text-decoration:none;color:inherit"><div class="tile-k">{{ _('Dernier événement') }}</div><div class="text-sm truncate" id="chain-last">-</div></a>
         </div>
       </section>
 
       <!-- ═══ Pige ═══ -->
-      <section class="card flex flex-col gap-4" aria-label="Pige">
+      <section class="card flex flex-col gap-4" aria-label="{{ _('Pige') }}">
         <div class="flex items-center justify-between gap-2">
-          <div class="card-title">Pige</div>
-          <a href="/fm#pige" class="text-xs font-medium text-blue-600 hover:text-blue-800">Ouvrir la pige ›</a>
+          <div class="card-title">{{ _('Pige') }}</div>
+          <a href="/fm#pige" class="text-xs font-medium text-blue-600 hover:text-blue-800">{{ _('Ouvrir la pige ›') }}</a>
         </div>
         <div class="flex items-center gap-2"><span class="pdot" id="pige-dot" style="width:10px;height:10px"></span><span class="text-lg font-semibold" id="pige-state">-</span></div>
         <div class="tiles" style="grid-template-columns:repeat(2, minmax(0, 1fr))">
-          <div class="tile"><div class="tile-k">Disponible depuis</div><div class="text-sm font-medium truncate" id="pige-since">-</div></div>
-          <div class="tile"><div class="tile-k">Espace pige / libre</div><div class="mono text-sm truncate" id="pige-disk">-</div></div>
+          <div class="tile"><div class="tile-k">{{ _('Disponible depuis') }}</div><div class="text-sm font-medium truncate" id="pige-since">-</div></div>
+          <div class="tile"><div class="tile-k">{{ _('Espace pige / libre') }}</div><div class="mono text-sm truncate" id="pige-disk">-</div></div>
         </div>
         <div>
-          <div class="flex justify-between text-[11px] text-gray-500 mb-1"><span id="pige-cov-k">Couverture</span><span id="pige-cov-v">-</span></div>
+          <div class="flex justify-between text-[11px] text-gray-500 mb-1"><span id="pige-cov-k">{{ _('Couverture') }}</span><span id="pige-cov-v">-</span></div>
           <div class="h-2.5 rounded-full bg-gray-100 overflow-hidden flex justify-end"><div id="pige-cov" class="h-full bg-blue-600" style="width:0"></div></div>
         </div>
       </section>
@@ -250,11 +251,11 @@
     const d = new Date(String(iso).replace(' ', 'T'));
     return isNaN(d) ? String(iso) : `${pad(d.getDate())}-${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
-  function fmtBytes(b) { return b == null ? '?' : b >= 1e9 ? (b / 1e9).toFixed(1).replace('.', ',') + ' Go' : Math.round(b / 1e6) + ' Mo'; }
+  function fmtBytes(b) { return b == null ? '?' : b >= 1e9 ? (b / 1e9).toFixed(1).replace('.', _DEC) + ' ' + _t('Go') : Math.round(b / 1e6) + ' ' + _t('Mo'); }
   function lastAlert(prefix, a) {
-    if (!a) { $(prefix + '-last-t').textContent = ''; $(prefix + '-last-l').textContent = 'Aucune alerte enregistrée'; return; }
+    if (!a) { $(prefix + '-last-t').textContent = ''; $(prefix + '-last-l').textContent = _t('Aucune alerte enregistrée'); return; }
     $(prefix + '-last-t').textContent = fmtStamp(a.start);
-    const tail = a.status === 'ongoing' ? ', en cours' : a.duration != null ? `, rétabli après ${fmtDur(a.duration)}` : '';
+    const tail = a.status === 'ongoing' ? _t(', en cours') : a.duration != null ? _t(', rétabli après {d}', { d: fmtDur(a.duration) }) : '';
     $(prefix + '-last-l').textContent = (a.label || '') + tail;
     $(prefix + '-last-l').style.color = a.status === 'ongoing' ? BAD : '';
   }
@@ -272,7 +273,7 @@
         $(`${prefix}-vu-${ch}`).style.width = pct(s.disp);
         $(`${prefix}-vu-${ch}`).style.background = stale ? '#cbd5e1' : '#22c55e';
         $(`${prefix}-vu-${ch}p`).style.left = pct(s.hold);
-        $(`${prefix}-vu-${ch}d`).textContent = s.hold > -60 ? s.hold.toFixed(1).replace('.', ',') : '-';
+        $(`${prefix}-vu-${ch}d`).textContent = s.hold > -60 ? s.hold.toFixed(1).replace('.', _DEC) : '-';
       }
     };
   }
@@ -286,7 +287,7 @@
     [fmAudio, dabAudio].forEach(a => { a.pause(); a.removeAttribute('src'); a.load(); });
     if (fmTimer) { clearTimeout(fmTimer); fmTimer = null; }
     playing = null; btn('fm-play', false); btn('dab-play', false);
-    $('fm-play-help').textContent = 'Antenne en direct';
+    $('fm-play-help').textContent = _t('Antenne en direct');
   }
   $('fm-play').onclick = () => {
     if (playing === 'fm') { stopAll(); return; }
@@ -295,7 +296,7 @@
     fmAudio.volume = $('fm-volume').value / 100;
     fmAudio.play().catch(() => {});
     playing = 'fm'; btn('fm-play', true);
-    $('fm-play-help').textContent = 'En écoute (arrêt automatique après 15 min)';
+    $('fm-play-help').textContent = _t('En écoute (arrêt automatique après 15 min)');
     fmTimer = setTimeout(stopAll, 15 * 60 * 1000);
   };
   $('fm-volume').oninput = e => { fmAudio.volume = e.target.value / 100; $('fm-volume-v').textContent = e.target.value + '%'; };
@@ -323,14 +324,14 @@
     if (!dabSid) return;
     audioGraph(); dabRetried = false;
     playing = 'dab'; btn('dab-play', true);
-    $('dab-play-help').textContent = 'Connexion…';
+    $('dab-play-help').textContent = _t('Connexion…');
     dabStart();
   };
-  dabAudio.onplaying = () => { $('dab-play-help').textContent = 'En écoute via la clé DAB+'; };
+  dabAudio.onplaying = () => { $('dab-play-help').textContent = _t('En écoute via la clé DAB+'); };
   dabAudio.onerror = () => {
     if (playing !== 'dab' || !dabAudio.getAttribute('src')) return;
-    if (!dabRetried) { dabRetried = true; $('dab-play-help').textContent = 'Démarrage du service…'; setTimeout(() => { if (playing === 'dab') dabStart(); }, 2000); return; }
-    stopAll(); $('dab-play-help').textContent = 'Écoute impossible pour le moment';
+    if (!dabRetried) { dabRetried = true; $('dab-play-help').textContent = _t('Démarrage du service…'); setTimeout(() => { if (playing === 'dab') dabStart(); }, 2000); return; }
+    stopAll(); $('dab-play-help').textContent = _t('Écoute impossible pour le moment');
   };
   dabAudio.onended = () => { if (playing === 'dab') stopAll(); };
   $('dab-volume').oninput = e => {
@@ -360,7 +361,7 @@
   function fmUptime(sec) {
     sec = sec || 0;
     const d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60);
-    return d ? `${d} j ${h} h` : `${h} h ${pad(m)} min`;
+    return d ? `${d} ${_t('j')} ${h} h` : `${h} h ${pad(m)} min`;
   }
   let fmOk = null;
   function renderFM(s) {
@@ -370,14 +371,14 @@
     if (s.frequency) $('fm-freq').textContent = String(s.frequency).replace('M', ' MHz');
     fmLevels = [typeof s.level_left === 'number' ? s.level_left : -100, typeof s.level_right === 'number' ? s.level_right : -100];
     const sig = !!s.signal_ok;
-    setTile('fm-sig', sig ? 'OK' : 'Perdu', sig ? OK : BAD, s.signal_dbf != null ? `${Number(s.signal_dbf).toFixed(1).replace('.', ',')} dBf` : '-');
+    setTile('fm-sig', sig ? 'OK' : _t('Perdu'), sig ? OK : BAD, s.signal_dbf != null ? `${Number(s.signal_dbf).toFixed(1).replace('.', _DEC)} dBf` : '-');
     const lvl = Math.max(fmLevels[0], fmLevels[1]);
     if (!sig) setTile('fm-mod', '-', MUTED, '-');
-    else setTile('fm-mod', s.modulation_ok ? 'Active' : 'Absente', s.modulation_ok ? OK : WARN, lvl > -100 ? `${Math.round(lvl)} dBFS` : '-');
+    else setTile('fm-mod', s.modulation_ok ? _t('Active') : _t('Absente'), s.modulation_ok ? OK : WARN, lvl > -100 ? `${Math.round(lvl)} dBFS` : '-');
     if (!sig || s.stereo_known === false) setTile('fm-st', '-', MUTED, '-');
-    else setTile('fm-st', s.stereo_present ? 'Stéréo' : 'Mono', s.stereo_present ? OK : WARN, s.stereo_present ? 'pilote 19 kHz' : 'sans pilote');
-    if (!s.rds_ever_received) setTile('fm-rds', 'Non reçu', MUTED, '-');
-    else setTile('fm-rds', s.rds_ok ? 'Reçu' : 'Absent', s.rds_ok ? OK : BAD, s.snr != null ? `S/B ${Math.round(s.snr)} dB` : '-');
+    else setTile('fm-st', s.stereo_present ? _t('Stéréo') : 'Mono', s.stereo_present ? OK : WARN, s.stereo_present ? _t('pilote 19 kHz') : _t('sans pilote'));
+    if (!s.rds_ever_received) setTile('fm-rds', _t('Non reçu'), MUTED, '-');
+    else setTile('fm-rds', s.rds_ok ? _t('Reçu') : _t('Absent'), s.rds_ok ? OK : BAD, s.snr != null ? `${_t('S/B')} ${Math.round(s.snr)} dB` : '-');
     setTile('fm-up', fmUptime(s.uptime), '', s.start_time ? String(s.start_time).slice(0, 16).replace(/\//g, '-').replace(/-\d{4}/, '') : '-');
     fmOk = sig && s.modulation_ok;
     $('pill-fm').style.background = fmOk ? DOT.ok : sig ? DOT.warn : DOT.bad;
@@ -399,28 +400,28 @@
   // ═══ Résumé DAB+, chaîne, pige (toutes les 5 s) ═══
   const STATES = {
     up:       { label: 'OK',           dot: '#10b981', bg: '#ecfdf5', bd: '#bbf7d0', fg: '#047857' },
-    warn:     { label: 'Alerte',       dot: '#f59e0b', bg: '#fffbeb', bd: '#fde68a', fg: '#b45309' },
-    unstable: { label: 'Instable',     dot: '#f59e0b', bg: '#fffbeb', bd: '#fde68a', fg: '#b45309' },
-    down:     { label: 'Hors service', dot: '#ef4444', bg: '#fef2f2', bd: '#fecaca', fg: '#b91c1c' },
-    unknown:  { label: 'En attente',   dot: '#cbd5e1', bg: '#f8fafc', bd: '#e2e8f0', fg: '#475569' },
-    disabled: { label: 'Désactivé',    dot: '#e2e8f0', bg: '#f8fafc', bd: '#e2e8f0', fg: '#64748b' },
+    warn:     { label: _t('Alerte'),       dot: '#f59e0b', bg: '#fffbeb', bd: '#fde68a', fg: '#b45309' },
+    unstable: { label: _t('Instable'),     dot: '#f59e0b', bg: '#fffbeb', bd: '#fde68a', fg: '#b45309' },
+    down:     { label: _t('Hors service'), dot: '#ef4444', bg: '#fef2f2', bd: '#fecaca', fg: '#b91c1c' },
+    unknown:  { label: _t('En attente'),   dot: '#cbd5e1', bg: '#f8fafc', bd: '#e2e8f0', fg: '#475569' },
+    disabled: { label: _t('Désactivé'),    dot: '#e2e8f0', bg: '#f8fafc', bd: '#e2e8f0', fg: '#64748b' },
   };
-  const PROBE_LABELS = { ping: 'Ping', burst: 'Ping qualité', tcp: 'Port TCP', http: 'Page web', snmp: 'SNMP', icecast: 'Icecast', stream: 'Flux audio', fm_local: 'Récepteur FM', dab_local: 'Réception DAB+', livebox: 'Livebox' };
+  const PROBE_LABELS = { ping: 'Ping', burst: _t('Ping qualité'), tcp: _t('Port TCP'), http: _t('Page web'), snmp: 'SNMP', icecast: 'Icecast', stream: _t('Flux audio'), fm_local: _t('Récepteur FM'), dab_local: _t('Réception DAB+'), livebox: 'Livebox' };
 
   function renderDAB(d) {
     const off = $('dab-off'), on = $('dab-on');
     $('pill-dab-wrap').classList.toggle('opacity-50', !d.enabled);
     if (!d.enabled) {
       off.classList.remove('hidden'); on.classList.add('hidden');
-      off.innerHTML = 'Réception DAB+ désactivée. <a href="/dab" class="text-blue-600">Page DAB+</a>';
+      off.innerHTML = _t('Réception DAB+ désactivée.') + ' <a href="/dab" class="text-blue-600">' + _t('Page DAB+') + '</a>';
       $('dab-ens').textContent = '-'; $('pill-dab').style.background = DOT.off; dabSid = null; return;
     }
     $('dab-ens').textContent = [d.channel, d.ensemble].filter(Boolean).join(' · ') || '-';
     const svc = d.service;
     if (!svc) {
       off.classList.remove('hidden'); on.classList.add('hidden');
-      off.innerHTML = d.selected_sid ? `Le service ${esc(d.selected_sid)} n'est pas reçu pour le moment.`
-        : 'Aucun service choisi : <a href="/dab#configuration" class="text-blue-600">DAB+ › Configuration</a>.';
+      off.innerHTML = d.selected_sid ? _t("Le service {sid} n'est pas reçu pour le moment.", { sid: esc(d.selected_sid) })
+        : _t('Aucun service choisi :') + ' <a href="/dab#configuration" class="text-blue-600">DAB+ › ' + _t('Configuration') + '</a>.';
       $('pill-dab').style.background = d.receiver_up ? DOT.warn : DOT.bad; dabSid = null; return;
     }
     off.classList.add('hidden'); on.classList.remove('hidden');
@@ -429,7 +430,7 @@
     $('dab-sub').textContent = `${svc.sid}${svc.mode ? ' · ' + svc.mode : ''}${svc.bitrate ? ' ' + svc.bitrate + ' kb/s' : ''}`;
     $('dab-dls').textContent = svc.dls || '-';
     $('dab-external').href = `/api/dab/listen/${encodeURIComponent(svc.sid)}`;
-    if (PUBLIC) { $('dab-play').disabled = true; $('dab-play').title = 'Connexion requise pour écouter le DAB+'; $('dab-external').classList.add('hidden'); }
+    if (PUBLIC) { $('dab-play').disabled = true; $('dab-play').title = _t('Connexion requise pour écouter le DAB+'); $('dab-external').classList.add('hidden'); }
     // Diaporama
     const img = $('dab-slide'), url = svc.mot_time ? `/api/dab/slide/${encodeURIComponent(svc.sid)}?t=${svc.mot_time}` : '';
     if (img.dataset.url !== url) {
@@ -443,38 +444,38 @@
     const present = svc.present, fresh = svc.level_age != null && svc.level_age < 20;
     const lvl = Math.max(svc.audio_l ?? -100, svc.audio_r ?? -100);
     dabIdle = [svc.audio_l ?? -100, svc.audio_r ?? -100, !fresh];
-    if (present == null) setTile('dab-pres', '-', MUTED, 'récepteur arrêté'); else
-    setTile('dab-pres', present ? 'Présent' : 'Absent', present ? OK : BAD, present ? 'multiplex' : 'hors multiplex');
+    if (present == null) setTile('dab-pres', '-', MUTED, _t('récepteur arrêté')); else
+    setTile('dab-pres', present ? _t('Présent') : _t('Absent'), present ? OK : BAD, present ? 'multiplex' : _t('hors multiplex'));
     if (!present) setTile('dab-aud', '-', MUTED, '-');
-    else setTile('dab-aud', svc.silence ? 'Silence' : 'Modulé', svc.silence ? WARN : OK, fresh && lvl > -100 ? `${lvl.toFixed(1).replace('.', ',')} dBFS` : 'niveau non rafraîchi');
-    setTile('dab-st', svc.channels === 1 ? 'Mono' : svc.channels ? 'Stéréo' : '-', svc.channels === 1 ? WARN : svc.channels ? OK : MUTED,
+    else setTile('dab-aud', svc.silence ? 'Silence' : _t('Modulé'), svc.silence ? WARN : OK, fresh && lvl > -100 ? `${lvl.toFixed(1).replace('.', _DEC)} dBFS` : _t('niveau non rafraîchi'));
+    setTile('dab-st', svc.channels === 1 ? 'Mono' : svc.channels ? _t('Stéréo') : '-', svc.channels === 1 ? WARN : svc.channels ? OK : MUTED,
             svc.samplerate ? `${svc.samplerate / 1000} kHz` : '-');
     const snrName = d.receiver === 'si468x' ? 'CNR' : 'SNR';     // dongle Si468x : CNR (MER) de la puce
     setTile('dab-snr', d.snr != null ? `${snrName} ${Math.round(d.snr)} dB` : '-', d.snr == null ? MUTED : d.ensemble_ok ? OK : BAD, d.fic != null ? `FIC ${Math.round(d.fic)} %` : '-');
     const u = svc.uptime_pct;
-    $('dab-upt').textContent = u == null ? '-' : `${u.toFixed(u >= 99.95 ? 0 : 1).replace('.', ',')} %`;
+    $('dab-upt').textContent = u == null ? '-' : `${u.toFixed(u >= 99.95 ? 0 : 1).replace('.', _DEC)} %`;
     lastAlert('dab', d.last_alert);
     $('pill-dab').style.background = d.receiver_up && d.ensemble_ok && present && !svc.silence ? DOT.ok
       : d.receiver_up && present ? DOT.warn : DOT.bad;
   }
 
   function renderChain(c) {
-    if (!c.available) { $('chain-grid').innerHTML = '<div class="text-sm text-gray-400">Supervision de la chaîne non démarrée.</div>'; return; }
+    if (!c.available) { $('chain-grid').innerHTML = `<div class="text-sm text-gray-400">${_t('Supervision de la chaîne non démarrée.')}</div>`; return; }
     let n = 0;
     $('chain-grid').innerHTML = c.items.map(it => {
       const st = STATES[it.state] || STATES.unknown;
       const probe = it.kind === 'probe', sensor = it.kind === 'sensor';
-      const head = probe ? `sonde · ${PROBE_LABELS[it.probe] || it.probe}`
-        : sensor ? `capteur${it.site ? ' · ' + esc(it.site) : ''}` : `${++n}${it.site ? ' · ' + esc(it.site) : ''}`;
+      const head = probe ? `${_t('sonde')} · ${PROBE_LABELS[it.probe] || it.probe}`
+        : sensor ? `${_t('capteur')}${it.site ? ' · ' + esc(it.site) : ''}` : `${++n}${it.site ? ' · ' + esc(it.site) : ''}`;
       // Un capteur affiche toujours ses mesures (une température trop haute se lit d'un coup d'œil)
       const line = sensor && it.value ? esc(it.value) : `${st.label}${it.value && it.state === 'up' ? ' · ' + esc(it.value) : ''}`;
       return `<a href="/chain" class="chain-item" style="background:${probe || sensor ? '#fff' : st.bg};border-color:${st.bd}${probe ? ';border-style:dashed' : ''}" title="${esc(it.name)} : ${st.label}${it.value ? ' · ' + esc(it.value) : ''}">
         <div class="mono truncate" style="font-size:10px;color:#64748b">${head}</div>
         <div class="font-semibold truncate">${esc(it.name)}</div>
         <div class="truncate" style="color:${st.fg}">${line}</div></a>`;
-    }).join('') || '<div class="text-sm text-gray-400">Aucun appareil configuré.</div>';
+    }).join('') || `<div class="text-sm text-gray-400">${_t('Aucun appareil configuré.')}</div>`;
     $('chain-ok').innerHTML = `${c.ok}/${c.total} <span class="font-normal text-gray-500">OK</span>`;
-    $('chain-bad').textContent = c.bad ? `${c.bad}` : 'Aucun';
+    $('chain-bad').textContent = c.bad ? `${c.bad}` : _t('Aucun');
     $('chain-bad').style.color = c.bad ? BAD : OK;
     const e = c.last_event;
     $('chain-last').textContent = e ? `${fmtStamp(e.timestamp)} ${e.device} : ${(STATES[e.to_state] || {}).label || e.to_state}` : '-';
@@ -484,18 +485,18 @@
   }
 
   function renderPige(p) {
-    if (!p.available) { $('pige-state').textContent = 'Indisponible'; $('pill-pige').style.background = DOT.off; return; }
+    if (!p.available) { $('pige-state').textContent = _t('Indisponible'); $('pill-pige').style.background = DOT.off; return; }
     const on = p.enabled && p.recording;
-    $('pige-state').textContent = !p.enabled ? 'Désactivée' : on ? 'Enregistrement' : 'Arrêtée';
+    $('pige-state').textContent = !p.enabled ? _t('Désactivée') : on ? _t('Enregistrement') : _t('Arrêtée');
     $('pige-dot').style.background = on ? DOT.bad : p.enabled ? DOT.warn : DOT.off;
     $('pige-dot').classList.toggle('pulse', on);
     $('pill-pige').style.background = on ? DOT.bad : p.enabled ? DOT.warn : DOT.off;
     $('pill-pige').classList.toggle('pulse', on);
-    $('pige-since').textContent = p.oldest ? new Date(p.oldest * 1000).toLocaleString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Aucun enregistrement';
+    $('pige-since').textContent = p.oldest ? new Date(p.oldest * 1000).toLocaleString(BLRMO_LOCALE, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : _t('Aucun enregistrement');
     $('pige-disk').textContent = `${fmtBytes(p.used_bytes)} / ${fmtBytes(p.free_bytes)}`;
     const days = p.retention_hours / 24, have = p.oldest ? (p.now - p.oldest) / 86400 : 0;
-    $('pige-cov-k').textContent = `Couverture, ${Math.round(days)} jour${days >= 2 ? 's' : ''}`;
-    $('pige-cov-v').textContent = `${have < 10 ? have.toFixed(1).replace('.', ',') : Math.round(have)} j sur ${Math.round(days)}`;
+    $('pige-cov-k').textContent = _t(days >= 2 ? 'Couverture, {n} jours' : 'Couverture, {n} jour', { n: Math.round(days) });
+    $('pige-cov-v').textContent = _t('{a} j sur {b}', { a: have < 10 ? have.toFixed(1).replace('.', _DEC) : Math.round(have), b: Math.round(days) });
     $('pige-cov').style.width = Math.min(100, have / days * 100) + '%';
   }
 
@@ -513,8 +514,8 @@
   // ═══ En-tête, menu ═══
   function updateTime() {
     const now = new Date();
-    $('current-time').textContent = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    $('current-date').textContent = now.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    $('current-time').textContent = now.toLocaleTimeString(BLRMO_LOCALE, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    $('current-date').textContent = now.toLocaleDateString(BLRMO_LOCALE, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }
   async function loadConfig() {
     try {

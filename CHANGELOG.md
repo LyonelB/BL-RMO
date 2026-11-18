@@ -6,6 +6,12 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Traduction anglaise, étape 1 : mécanisme, choix de la langue, menu, connexion et tableau de bord
+- **Choix de la langue** dans Système › Général : Français ou English, un réglage pour tout BL-RMO (`config.json`, `"ui": {"language": "fr" | "en"}`), enregistré dès le choix sans redémarrer la surveillance. Les mails suivront la même langue (étape 4).
+- **Mécanisme** (`i18n.py`, `i18n/en.json`, `templates/_i18n.html`) : le texte français sert de clé et `i18n/en.json` donne sa traduction ; un texte non traduit reste en français. Dans les modèles `{{ _('…') }}`, dans le JavaScript `_t('…')`, en Python `i18n.t('…')`. Les dates, le séparateur décimal et les unités (Go, Mo, j) suivent la langue.
+- **Traduits** : le menu, les onglets de la Chaîne, la page de connexion (messages d'erreur compris) et le tableau de bord. Les autres pages suivent aux étapes 2 à 4 (FM et DAB+, Chaîne et Parc, Système, À propos, mails et README.en.md).
+- **Outil** `tools/i18n_wrap.py` : entoure les textes visibles d'un modèle de `{{ _('…') }}` et liste les textes à traduire (`--keys`).
+
 ### Lecteur FM épuré
 - **Écoute et spectre (page FM)** : la mention « Son reçu par le tuner, en direct » et le suffixe « · Antenne en direct » sont retirés, comme sur le lecteur DAB+. Le lecteur affiche le PS de la station, sinon la fréquence reçue.
 

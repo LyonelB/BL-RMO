@@ -39,6 +39,20 @@ from version import __version__ as APP_VERSION
 def inject_app_version():
     return {'app_version': APP_VERSION}
 
+
+# ── Langue de l'interface (Système, Général) : {{ _('texte') }} dans les pages,
+#    _t('texte') dans leur JavaScript (templates/_i18n.html) ──
+import i18n
+from markupsafe import Markup
+
+
+@app.context_processor
+def inject_i18n():
+    lang = i18n.language()
+    # Les textes viennent des modèles eux-mêmes (entités HTML comprises) : pas d'échappement
+    return {'lang': lang, 'i18n_dict': i18n.dictionary(lang),
+            '_': lambda text, **v: Markup(i18n.t(text, lang, **v))}
+
 from werkzeug.middleware.proxy_fix import ProxyFix
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
@@ -343,6 +357,10 @@ def save_config():
                     gain = 'auto'
                 config['rtl_sdr']['gain'] = gain
                 logger.info(f"Gain modifié: {gain}")
+
+        # Langue de l'interface et des mails (i18n.py relit config.json quand il change)
+        if isinstance(data.get('ui'), dict) and data['ui'].get('language') in i18n.LANGUAGES:
+            config.setdefault('ui', {})['language'] = data['ui']['language']
 
         # Configuration audio
         if 'audio' in data:

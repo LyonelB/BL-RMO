@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ lang or 'fr' }}">
 <head>
   <meta charset="UTF-8">
+  {% include '_i18n.html' %}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>BL-RMO · Connexion</title>
+  <title>{{ _('BL-RMO · Connexion') }}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -20,17 +21,17 @@
     <div class="text-center mb-8">
       <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg mx-auto mb-4">RMO</div>
       <h1 class="text-lg font-semibold text-gray-900">BL-RMO</h1>
-      <p class="text-xs text-gray-400 mt-1">Surveillance radio FM, DAB+ et chaîne de diffusion</p>
+      <p class="text-xs text-gray-400 mt-1">{{ _('Surveillance radio FM, DAB+ et chaîne de diffusion') }}</p>
     </div>
 
     <!-- Card -->
     <div class="bg-white border border-gray-100 rounded-xl p-7 shadow-sm">
 
-      <h2 class="text-sm font-semibold text-gray-700 mb-5">Connexion</h2>
+      <h2 class="text-sm font-semibold text-gray-700 mb-5">{{ _('Connexion') }}</h2>
 
       {% if timeout %}
       <div id="timeout-message" class="mb-4 bg-amber-50 border border-amber-100 rounded-lg px-4 py-3">
-        <p class="text-xs text-amber-800">Session fermée après 60 minutes d'inactivité : reconnectez-vous.</p>
+        <p class="text-xs text-amber-800">{{ _("Session fermée après 60 minutes d'inactivité : reconnectez-vous.") }}</p>
       </div>
       {% endif %}
       <!-- Message d'erreur -->
@@ -38,7 +39,7 @@
         <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
         </svg>
-        <p class="text-xs text-red-700" id="error-text">Nom d'utilisateur ou mot de passe incorrect</p>
+        <p class="text-xs text-red-700" id="error-text">{{ _("Nom d'utilisateur ou mot de passe incorrect") }}</p>
       </div>
 
       <!-- Formulaire -->
@@ -46,25 +47,25 @@
 
         <!-- Username -->
         <div>
-          <div class="text-xs text-gray-500 font-medium mb-1">Nom d'utilisateur</div>
+          <div class="text-xs text-gray-500 font-medium mb-1">{{ _("Nom d'utilisateur") }}</div>
           <div class="relative">
             <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
             </svg>
             <input type="text" id="username" name="username" required autocomplete="username"
-              class="field-input" placeholder="Nom d'utilisateur">
+              class="field-input" placeholder="{{ _("Nom d'utilisateur") }}">
           </div>
         </div>
 
         <!-- Password -->
         <div>
-          <div class="text-xs text-gray-500 font-medium mb-1">Mot de passe</div>
+          <div class="text-xs text-gray-500 font-medium mb-1">{{ _('Mot de passe') }}</div>
           <div class="relative">
             <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
             </svg>
             <input type="password" id="password" name="password" required autocomplete="current-password"
-              class="field-input" placeholder="Mot de passe">
+              class="field-input" placeholder="{{ _('Mot de passe') }}">
           </div>
         </div>
 
@@ -72,19 +73,19 @@
         <div class="flex items-center gap-2">
           <input type="checkbox" id="remember" name="remember"
             class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
-          <label for="remember" class="text-xs text-gray-600 cursor-pointer">Se souvenir de moi</label>
+          <label for="remember" class="text-xs text-gray-600 cursor-pointer">{{ _('Se souvenir de moi') }}</label>
         </div>
 
         <!-- Submit -->
         <button type="submit" id="submit-button"
           class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2">
-          <span id="button-text">Se connecter</span>
+          <span id="button-text">{{ _('Se connecter') }}</span>
           <span id="button-spinner" class="hidden">
             <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            Connexion…
+            {{ _('Connexion…') }}
           </span>
         </button>
 
@@ -93,7 +94,7 @@
 
     <!-- Footer -->
     <div class="text-center mt-6">
-      <p class="text-xs text-gray-400">BL-RMO · Surveillance radio · © 2026</p>
+      <p class="text-xs text-gray-400">{{ _('BL-RMO · Surveillance radio · © 2026') }}</p>
     </div>
 
   </div>
@@ -150,14 +151,14 @@
         let [response, result] = await send();
         if (response.status === 400) [response, result] = await send();   // jeton refusé : un nouvel essai
         if (!result) {
-          result = { message: response.status === 429 ? 'Trop de tentatives : réessayez dans une minute.'
-                                                      : `Le serveur a refusé la connexion (erreur ${response.status}) : rechargez la page.` };
+          result = { message: response.status === 429 ? _t('Trop de tentatives : réessayez dans une minute.')
+                                                      : _t('Le serveur a refusé la connexion (erreur {n}) : rechargez la page.', { n: response.status }) };
         }
 
         if (response.ok && result.status === 'success') {
           window.location.href = result.redirect || '/';
         } else {
-          errorText.textContent = result.message || "Nom d'utilisateur ou mot de passe incorrect";
+          errorText.textContent = _t(result.message || "Nom d'utilisateur ou mot de passe incorrect");
           errorMessage.classList.remove('hidden');
           submitButton.disabled = false;
           buttonText.classList.remove('hidden');
@@ -165,7 +166,7 @@
         }
       } catch (error) {
         console.error('Erreur de connexion:', error);
-        errorText.textContent = 'Erreur de connexion au serveur';
+        errorText.textContent = _t('Erreur de connexion au serveur');
         errorMessage.classList.remove('hidden');
         submitButton.disabled = false;
         buttonText.classList.remove('hidden');

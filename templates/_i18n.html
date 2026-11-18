@@ -1,0 +1,14 @@
+{# Traduction côté navigateur : _t('texte français') renvoie la traduction de la langue réglée
+   (Système › Général), ou le texte français s'il n'est pas traduit. _t('Il y a {n} min', {n: 5}).
+   BLRMO_LOCALE sert aux dates, _DEC au séparateur décimal. #}
+<script>
+  window.BLRMO_LANG = {{ (lang or 'fr')|tojson }};
+  window.BLRMO_LOCALE = window.BLRMO_LANG === 'en' ? 'en-GB' : 'fr-FR';
+  window._DEC = window.BLRMO_LANG === 'en' ? '.' : ',';
+  window.BLRMO_T = {{ (i18n_dict or {})|tojson }};
+  function _t(s, v) {
+    let o = Object.prototype.hasOwnProperty.call(window.BLRMO_T, s) ? window.BLRMO_T[s] : s;
+    if (v) o = o.replace(/\{(\w+)\}/g, (m, k) => (v[k] !== undefined ? v[k] : m));
+    return o;
+  }
+</script>
