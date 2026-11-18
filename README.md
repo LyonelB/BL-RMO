@@ -75,23 +75,23 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 
 ### 📶 Réception DAB+ (option, clé RTL-SDR ou dongle Si468x)
 - **Ensemble** : SNR, qualité FIC, gain, identifiant ; alerte quand l'ensemble se dégrade
-- **Services** : présence dans le multiplex, niveaux audio, DLS, débit, disponibilité sur 24 h ; alertes **service absent** et **silence**, sur tous les services ou seulement ceux cochés
-- **Écoute** d'un service depuis la page DAB+, diaporama (slideshow) affiché pendant l'écoute
-- Alertes DAB+ par mail et dans un onglet **Réception DAB+** de la page Journaux, avec lien vers la pige du service s'il en a une
+- **Une station suivie**, choisie dans l'onglet Configuration de la page DAB+ : niveaux audio, DLS, débit, disponibilité sur 24 h ; alertes **station absente du multiplex** et **silence** ; les autres services du multiplex sont comptés dans la tuile Ensemble
+- **Écoute** de la station depuis la page DAB+ (arrêt automatique après 15 min, comme en FM), diaporama (slideshow) affiché pendant l'écoute
+- Alertes DAB+ par mail et dans l'onglet **Journal** de la page DAB+, avec lien vers la pige
 - Service indépendant `bl-rmo-dab` : un plantage de welle-cli ou de la clé ne touche ni l'interface, ni la FM
 - **Dongle Si468X Headless** (essai, puce Skyworks Si4684) à la place de la clé RTL-SDR et de welle-cli : même interface, CNR (MER) et qualité FIC donnés par la puce, un seul service décodé à la fois, presque aucune charge processeur ; balayage de la bande III depuis la page DAB+
-- **Décodage « Services surveillés seulement »** (conseillé) : seuls les services cochés sont décodés, en continu, pour la charge d'un seul décodeur ; l'ensemble et la présence de tous les services restent suivis. « Tous les services en continu » occupe plus de deux cœurs (welle-cli réencode chaque service en MP3) ; le carrousel n'écoute chaque service que 10 s par tour
+- **Décodage « Station suivie seulement »** (conseillé) : seule la station suivie est décodée, en continu, pour la charge d'un seul décodeur ; l'ensemble et la présence de tous les services restent suivis. « Tous les services en continu » occupe plus de deux cœurs (welle-cli réencode chaque service en MP3) ; le carrousel n'écoute chaque service que 10 s par tour
 
 ### 🔊 Retour FM
 - **Écoute de l'antenne** dans le navigateur, flux Icecast2 MP3 128 kbps
 - **Mode public** `/public` : tableau de bord sans authentification
 
 ### 🎙️ Pige audio
-- **Enregistrement continu sur 30 jours** de l'antenne en segments MP3 (service `bl-rmo-pige`, indépendant de l'application), environ 1,4 Go par jour ; durée réglable depuis la page Pige
-- **Piges DAB+** : un service DAB+ par pige, créée depuis la page Pige (nom, service, durée de conservation) ; MP3 128 kb/s, environ 1,4 Go par jour ; demande un décodage continu du service (« Services surveillés seulement » ou « Tous les services en continu »)
-- **Écoute à l'instant choisi**, déplacements de 10 s, 1 min ou 10 min, repère de 30 min autour de la position, disponibilité jour par jour ; **extrait** marqué pendant l'écoute, écouté puis téléchargé en MP3 sans réencodage
-- **Extraits des 10 dernières alertes**, de 30 s avant l'alerte à 30 s après le rétablissement, conservés après la sortie de la pige
-- Chaque alerte et chaque événement de la chaîne ouvre la pige au bon moment
+- **Une pige par réception**, dans l'onglet **Pige** des pages FM et DAB+ : l'antenne FM et la station DAB+ suivie, en continu, en segments MP3 (service `bl-rmo-pige`, indépendant de l'application), environ 1,4 Go par jour et par pige ; durée de conservation réglable, pige arrêtable et redémarrable
+- La pige DAB+ suit la station suivie : changer de station change ce qu'elle enregistre, les enregistrements déjà faits restent jusqu'à la fin de leur conservation ; sans station suivie, pas de pige
+- **Écoute et extrait** : date, heure de début, heure de fin, lecture et téléchargement en MP3 sans réencodage
+- **Extraits des 10 dernières alertes FM**, de 30 s avant l'alerte à 30 s après le rétablissement, conservés après la sortie de la pige et lus dans le même lecteur
+- Chaque alerte et chaque événement de la chaîne ouvre la pige au bon moment et lance la lecture
 
 ### 🔗 Chaîne de diffusion
 - **Synoptique** du studio à l'antenne : état de chaque appareil et de chaque lien, depuis quand, détail en un clic
@@ -100,20 +100,24 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 - **Préréglages** : BW Broadcast TX V3, Deva DB91-TX / DB91-RX, Sound4 PULSE / IMPACT
 - **Sondes réseau** (rafales de pings : pertes, latence, gigue) rattachées aux liens
 - **Historique en courbes**, alertes mail avec les valeurs en défaut, export ZIP
+- Onglets **Synoptique**, **Journal** (alertes et changements d'état, événements netwatch, messages syslog et traps), **Appareils** et **Configuration**
 
 ### 🖥️ Parc (PC, NAS, sites web)
 - **PC Windows** en SNMP : allumé ou éteint et depuis quand, processeur (valeur actuelle et maximum depuis l'allumage), occupation des disques ; « 24 h/24 » : éteint ou redémarrage = alerte, sinon simple information
 - **NAS Synology** en SNMP (v2c ou v3) : système, alimentation, ventilateurs, température, disques, volumes, mise à jour DSM
 - **Sites web** : réponse HTTPS, texte attendu, temps de réponse, disponibilité sur 24 h
 - SNMP sur un PC Windows 10 ou 11 : `install/windows/activer-snmp-bl-rmo.ps1` (PowerShell en administrateur), lecture seule, réservé à l'adresse de BL-RMO
+- Onglets **État**, **Journal** (événements des 90 derniers jours, filtres, export CSV) et **Appareils**
 
 ### 📜 Journaux et traps
 - **Serveur syslog** UDP 514 (service `bl-rmo-syslog`) : les appareils de la radio envoient leurs journaux à BL-RMO
 - **Traps SNMP** UDP 162 traduits en français, avec relevé immédiat de l'appareil
 - **Lecture nettoyée** et **messages masqués** (bruit connu), réaffichables d'une case à cocher
+- Dans l'onglet **Journal** de la page Chaîne ; règles et aide à l'envoi dans son onglet **Configuration**
 
 ### 🔔 Alertes
-- **Mail** à la panne et au rétablissement, pour la réception comme pour la chaîne
+- **Mail** à la panne et au rétablissement, pour la réception comme pour la chaîne ; la station y est nommée par son PS en FM et par le nom du service en DAB+
+- **Mails par type d'alerte** à cocher dans l'onglet Configuration des pages FM et DAB+ ; une alerte décochée reste enregistrée dans le journal
 - **Historique** des alertes en base SQLite, chacune reliée à la pige
 - **Push webhook** : données temps réel en JSON vers une URL externe
 
@@ -123,6 +127,8 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 
 ### 🌐 Interface web
 - **Tableau de bord** d'un seul coup d'œil : réception FM et DAB+ (lecteur, VU-mètre, indicateurs, dernière alerte), chaîne de diffusion complète avec ses sondes, état de la pige
+- **Un menu par domaine** : Dashboard, FM, DAB+, Chaîne, Parc et Système ; chaque page regroupe en onglets l'état en direct, le journal, la pige et la configuration de son domaine
+- **Système** : mails, réseau et volume DAC+ (Général), comptes et rôles (Comptes), journal de BL-RMO et de ses services (Journal BL-RMO), sauvegarde et restauration
 - Configuration complète depuis le navigateur
 - **Responsive** : smartphone et tablette
 - **Accès local** via `https://bl-rmo.local` (Nginx + mDNS)
@@ -141,7 +147,7 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 
 Le tuner apparaît sous Linux comme un port série (`/dev/ttyACM0`, protocole XDR) et une carte son (`hw:Tuner`). Il est reconnu par son identifiant USB `1209:6687` : si `/dev/ttyACM0` désigne un autre appareil (dongle DAB+ branché à côté), BL-RMO ouvre le port stable du TEF (`/dev/serial/by-id/...`).
 
-**En essai** : dongle DAB+ Si468X Headless (puce Skyworks Si4684, contrôle série et carte son USB `hw:DAB`, identifiant `1209:468f`), à la place de la clé RTL-SDR et de welle-cli (page DAB+, Réglages, « Récepteur ») : surveillance d'un service et écoute, avec la même interface. Un seul service décodé à la fois ; les autres services du multiplex restent suivis (présence). Quand il ne sert pas de récepteur, il balaye la bande III (bloc Récepteurs).
+**En essai** : dongle DAB+ Si468X Headless (puce Skyworks Si4684, contrôle série et carte son USB `hw:DAB`, identifiant `1209:468f`), à la place de la clé RTL-SDR et de welle-cli (page DAB+, onglet Configuration, « Récepteur ») : surveillance d'un service et écoute, avec la même interface. Un seul service décodé à la fois ; les autres services du multiplex restent suivis (présence). Quand il ne sert pas de récepteur, il balaye la bande III (bloc Récepteurs).
 
 ---
 
@@ -169,7 +175,7 @@ aplay -l | grep Tuner
 sudo usermod -a -G dialout $USER
 ```
 
-Puis, dans l'interface : **Configuration**, bouton **« Scan dongle »**, source **TEF668X**. La section correspondante de `config.json` :
+Puis, dans l'interface : page **FM**, onglet **Configuration**, bouton **« Détecter les récepteurs »**, source **TEF668X**. La section correspondante de `config.json` :
 
 ```json
 "tef": {
@@ -192,7 +198,7 @@ sudo bash install/build/66-syslog.sh   # journaux UDP 514 et traps UDP 162 (bl-r
 sudo BUILD_WELLE=1 bash install/build/67-dab.sh   # réception DAB+ (bl-rmo-dab) et compilation de welle-cli
 ```
 
-La réception DAB+ reste en veille jusqu'à son activation dans la page **DAB+** (menu, administrateur) : canal, seuils et services surveillés s'y règlent.
+La réception DAB+ reste en veille tant qu'aucun récepteur n'est choisi dans l'onglet **Configuration** de la page **DAB+** (administrateur) : récepteur, canal, station suivie et seuils s'y règlent.
 
 #### Réglage de la clé DAB+
 
@@ -236,7 +242,7 @@ bash update.sh
 
 ### ✉️ Alertes mail
 
-Dans **Configuration**, renseigner l'expéditeur et les destinataires. Avec Gmail, utiliser un [mot de passe d'application](https://myaccount.google.com/apppasswords), puis le bouton **Test Email**.
+Dans **Système**, onglet **Général**, renseigner l'expéditeur et les destinataires. Avec Gmail, utiliser un [mot de passe d'application](https://myaccount.google.com/apppasswords), puis le bouton **Test Email**.
 
 ---
 
@@ -300,7 +306,7 @@ La carte son du tuner ne peut être ouverte que par un seul programme. Vérifier
 
 ### Les mails ne partent pas
 
-1. Vérifier la configuration dans la page Configuration
+1. Vérifier la configuration dans l'onglet Configuration des pages FM et DAB+, et dans Système
 2. Utiliser le bouton **Test Email**
 3. Consulter les logs : `sudo journalctl -u bl-rmo -n 50`
 
@@ -320,13 +326,14 @@ Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-RMO (pas `bl
 - [x] v0.3 à v0.7 : Icecast2, SSL, installation automatique, alertes, accès local, mode public, webhook, interface mobile
 - [x] v0.8.0 : tuner TEF668X, pige 24 h, chaîne de diffusion, journaux et traps, comptes et rôles
 - [ ] Courbes du relevé de l'émetteur et alerte sur l'écart entre alimentations
-- [ ] Journaux par domaine (réception, diffusion, système) et page Bilan
+- [x] Navigation par domaine : FM, DAB+, Chaîne, Parc et Système, chacun avec son journal, sa pige et sa configuration
+- [ ] Page Bilan
 - [ ] Page Incidents : regroupement des alertes de réception et de diffusion, cause probable, frise
 - [ ] Retrait du mode RTL-SDR, de l'analyse MPX et de Docker
 - [x] v0.9.0 : nouveau nom BL-RMO, journaux en trois onglets
 - [x] Réception DAB+ (reprise de BL-DMO), validée sur site
 - [x] Tableau de bord FM, DAB+, chaîne et pige
-- [x] Piges multiples : FM et services DAB+, créées depuis la page Pige
+- [x] Une pige par réception : FM et station DAB+ suivie
 - [ ] Alerte de passage en mono
 - [x] Capteurs de site (température, humidité... d'un shelter), hors du flux du signal
 - [ ] Battement de cœur vers un service extérieur (healthchecks.io...) : une alerte même si BL-RMO ou le serveur tombe

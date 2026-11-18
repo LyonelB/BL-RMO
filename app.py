@@ -242,8 +242,15 @@ def setup_wizard():
 @app.route('/config')
 @auth.login_required
 def config():
-    """Page de configuration"""
-    return render_template('config.html')
+    """Ancienne page Configuration : onglet Général de la page Système"""
+    return redirect('/system#general')
+
+
+@app.route('/system')
+@auth.login_required
+def system_page():
+    """Système : Général (administrateur), Comptes, Journal BL-RMO, Sauvegarde (administrateur)"""
+    return render_template('system.html')
 
 @app.route('/stats')
 @auth.login_required
@@ -1946,7 +1953,14 @@ def _syslog_filters():
 @app.route('/logs')
 @auth.login_required
 def logs_page():
-    return render_template('logs.html')
+    """Ancienne page Journaux : chaque onglet est rangé avec son domaine. Le #onglet de
+    l'adresse n'arrive pas au serveur : la page le lit et redirige au bon endroit."""
+    return """<!doctype html><meta charset="utf-8"><title>BL-RMO</title><script>
+var h = location.hash.slice(1), q = location.search;
+var to = {reception: '/fm#journal', dab: '/dab#journal', chaine: '/chain/journal' + q, blfmo: '/system#journal'}[h]
+      || (q ? '/chain/journal' + q : '/chain/journal');
+location.replace(to);
+</script>"""
 
 
 @app.route('/api/syslog')
@@ -2305,7 +2319,7 @@ def park_reorder():
 ROLE_ALWAYS = {'login', 'logout', 'get_csrf_token', 'public_dashboard', 'static', 'chain_hook', 'dashboard_data'}
 # Lecteur : consulter et écouter
 ROLE_LECTEUR = {
-    'index', 'stats', 'about_page', 'pige_page', 'chain_page', 'logs_page', 'account_page',
+    'index', 'stats', 'about_page', 'pige_page', 'chain_page', 'logs_page', 'account_page', 'system_page', 'config',
     'get_stats', 'stream_stats', 'get_config_full', 'get_logs', 'get_signal_history', 'get_audio_history',
     'get_alerts_history', 'get_alerts_history_grouped', 'get_volume', 'proxy_stream', 'record_status',
     'wifi_status', 'email_alerts_status', 'mpx_spectrum', 'rt_history',
@@ -2373,7 +2387,8 @@ def inject_current_user():
 @app.route('/account')
 @auth.login_required
 def account_page():
-    return render_template('account.html')
+    """Ancienne page Utilisateurs / Mon compte : onglet Comptes de la page Système"""
+    return redirect('/system#comptes')
 
 
 @app.route('/api/account/password', methods=['POST'])

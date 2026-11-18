@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>BL-RMO · Configuration</title>
+  <title>BL-RMO · Système</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -34,91 +34,52 @@
     .toast.error   { background:#fee2e2; color:#991b1b; }
     .toast.warning { background:#fef3c7; color:#92400e; }
     .toast.info    { background:#dbeafe; color:#1e40af; }
+      .tab { padding-bottom:10px; border-bottom:2px solid transparent; color:#6b7280; white-space:nowrap; text-decoration:none; }
+    .tab:hover { color:#1f2937; }
+    .tab.on { color:#1d4ed8; border-color:#2563eb; font-weight:500; }
+    code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-size:0.8em; }
+    .log-line { white-space:pre-wrap; word-break:break-word; font-size:12px; line-height:1.55; }
+    .log-error { color:#fca5a5; } .log-warning { color:#fcd34d; } .log-info { color:#cbd5e1; }
+    /* Comptes (repris de la page Utilisateurs) */
+    #tab-comptes .field { display:block; }
+    #tab-comptes .field > span { display:block; font-size:0.75rem; font-weight:600; color:#64748b; margin-bottom:4px; }
+    #tab-comptes .field input, #tab-comptes .field select { width:100%; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px; font-size:0.875rem; background:white; }
+    #tab-comptes .field input:focus, #tab-comptes .field select:focus { outline:none; box-shadow:0 0 0 2px #3b82f6; border-color:transparent; }
+    .msg-ok { color:#15803d; } .msg-err { color:#dc2626; }
+    table.users { width:100%; font-size:0.8125rem; border-collapse:collapse; }
+    table.users th { text-align:left; font-size:0.6875rem; text-transform:uppercase; letter-spacing:0.04em; color:#94a3b8; font-weight:600; padding:6px 8px; border-bottom:1px solid #f1f5f9; }
+    table.users td { padding:8px; border-bottom:1px solid #f8fafc; vertical-align:middle; }
+    table.users select { border:1px solid #e2e8f0; border-radius:6px; padding:4px 6px; font-size:0.8125rem; background:white; }
+    .pill { display:inline-block; font-size:0.6875rem; font-weight:600; padding:2px 8px; border-radius:999px; }
   </style>
 {% include '_roles.html' %}
 </head>
 <body class="flex h-screen overflow-hidden bg-slate-50">
 
-<!-- ═══ SIDEBAR ═══ -->
-<aside class="w-64 bg-white border-r border-gray-100 flex flex-col flex-shrink-0 h-screen">
+{% set nav = 'system' %}{% include '_sidebar.html' %}
 
-  <div class="p-5 border-b border-gray-100">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">RMO</div>
-      <div>
-        <div class="text-sm font-semibold text-gray-900">BL-RMO</div>
-        <div class="text-xs text-gray-400 font-mono" id="sidebar-frequency">— MHz</div>
-      </div>
-    </div>
-  </div>
-
-  <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
-    <a href="/" class="sidebar-link">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-      Dashboard
-    </a>
-    <a href="/config" class="sidebar-link active">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
-      Configuration
-    </a>
-    <a href="/pige" class="sidebar-link">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
-      Pige
-    </a>
-    <a href="/fm" class="sidebar-link">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8zm0 0l13-4M8 14a2 2 0 104 0 2 2 0 00-4 0m8-1h1m-1 3h1"/></svg>
-      FM
-    </a>
-    {% if dab_enabled or (current_user and current_user.role == 'admin') %}
-    <a href="/dab" class="sidebar-link">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01"/></svg>
-      DAB+
-    </a>
-    {% endif %}
-    <a href="/chain" class="sidebar-link">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-      Chaîne
-    </a>
-    <a href="/park" class="sidebar-link">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-      Parc
-    </a>
-    <a href="/logs" class="sidebar-link">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
-      Journaux
-    </a>
-    <a href="/about" class="sidebar-link">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      À propos
-    </a>
-    <a href="https://github.com/LyonelB/BL-RMO" target="_blank" class="sidebar-link">
-      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
-      GitHub
-    </a>
-  </nav>
-
-  <div class="p-4 border-t border-gray-100">
-    <a href="/logout" class="sidebar-link" style="color:#f87171" onmouseover="this.style.background='#fff1f2';this.style.color='#dc2626'" onmouseout="this.style.background='';this.style.color='#f87171'">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-      Déconnexion
-    </a>
-  </div>
-</aside>
-
-<!-- ═══ MAIN ═══ -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
 <main class="flex-1 overflow-y-auto">
 
-  <header class="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10">
-    <h1 class="text-base font-semibold text-gray-900">Configuration</h1>
-    <p class="text-xs text-gray-400 mt-0.5">Paramètres généraux de BL-RMO</p>
+  <header class="bg-white border-b border-gray-100 px-6 pt-4 sticky top-0 z-10">
+    <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">Système</h1></div>
+    <p class="text-xs text-gray-400 mt-0.5">BL-RMO lui-même : mails, réseau, comptes, journal et sauvegarde</p>
+    <nav class="flex gap-5 mt-3 text-sm overflow-x-auto" role="tablist" aria-label="Système">
+      <a href="#general" data-tab="general" role="tab" class="tab need-admin">Général</a>
+      <a href="#comptes" data-tab="comptes" role="tab" class="tab">Comptes</a>
+      <a href="#journal" data-tab="journal" role="tab" class="tab">Journal BL-RMO</a>
+      <a href="#sauvegarde" data-tab="sauvegarde" role="tab" class="tab need-admin">Sauvegarde</a>
+    </nav>
   </header>
 
-  <div class="p-6 max-w-3xl">
+  <div class="p-4 md:p-6 max-w-5xl">
 
+    <!-- ═══════════════════════ GÉNÉRAL (administrateur) ═══════════════════════ -->
+    <div id="tab-general" class="tab-pane hidden need-admin max-w-3xl">
     <!-- ── Réglages de la réception : pages FM et DAB+ (FM_PAGE_PATCH) ── -->
     <div class="section" style="border-color:#bfdbfe;background:#eff6ff">
-      <div class="text-sm font-semibold text-blue-900">Réglages de la réception</div>
-      <div class="text-xs text-blue-800 mt-1 leading-relaxed">La source, la fréquence, la station suivie, les seuils et les délais d'alerte se règlent sur les pages
+      <div class="text-sm font-semibold text-blue-900">Réception, station et mails par type d'alerte</div>
+      <div class="text-xs text-blue-800 mt-1 leading-relaxed">La source, la fréquence, la station suivie, les seuils, les délais et les mails par type d'alerte se règlent dans l'onglet Configuration des pages
         <a href="/fm#configuration" class="font-semibold underline">FM</a> et <a href="/dab#configuration" class="font-semibold underline">DAB+</a>. Dans les mails, la station est nommée par son PS en FM et par le nom du service en DAB+.</div>
     </div>
 
@@ -126,7 +87,7 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        1. Alertes email (Gmail)
+        Alertes email (Gmail)
       </div>
       <div class="grid grid-cols-2 gap-4 mb-4">
         <div>
@@ -169,7 +130,7 @@
           Email de test
         </button>
         <span id="test-email-result" class="text-xs text-gray-400 hidden"></span>
-        <span id="test-email-dirty" class="text-xs text-amber-600 hidden">Modifications non enregistrées : enregistrez la configuration (bouton en bas de page) avant le test, sinon il part avec les anciens réglages.</span>
+        <span id="test-email-dirty" class="text-xs text-amber-600 hidden">Modifications non enregistrées : enregistrez la configuration (bouton « Enregistrer » en bas de l'onglet) avant le test, sinon il part avec les anciens réglages.</span>
       </div>
     </div>
 
@@ -177,7 +138,7 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
-        2. Réseau
+        Réseau
       </div>
       <div class="toggle-wrap mb-4">
         <div>
@@ -247,49 +208,6 @@
       </div>
     </div>
 
-    <!-- ── 5. AUTHENTIFICATION ─────────────────────────────────── -->
-    <div class="section">
-      <div class="section-title">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-        3. Authentification
-      </div>
-      <div class="grid grid-cols-3 gap-4">
-        <div>
-          <div class="field-label">Utilisateur actuel</div>
-          <input type="text" id="current-username" class="field-input" readonly>
-        </div>
-        <div>
-          <div class="field-label">Nouveau nom d'utilisateur</div>
-          <input type="text" id="new-username" class="field-input" placeholder="Laisser vide pour ne pas changer">
-        </div>
-        <div></div>
-        <div>
-          <div class="field-label">Nouveau mot de passe</div>
-          <div class="relative">
-            <input type="password" id="new-password" class="field-input" placeholder="Min. 8 caractères" style="padding-right:36px">
-            <button type="button" class="eye-btn" onclick="toggleNewPassword()">
-              <svg id="new-password-eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div>
-          <div class="field-label">Confirmer le mot de passe</div>
-          <div class="relative">
-            <input type="password" id="confirm-password" class="field-input" placeholder="Retapez le mot de passe" style="padding-right:36px">
-            <button type="button" class="eye-btn" onclick="toggleConfirmPassword()">
-              <svg id="confirm-password-eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- ── 6. VOLUME DAC+ ──────────────────────────────────────── -->
     <div class="section">
       <div class="section-title">
@@ -298,7 +216,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.54 8.46a5 5 0 010 7.07"/>
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.07 4.93a10 10 0 010 14.14"/>
         </svg>
-        4. Volume de sortie DAC+
+        Volume de sortie DAC+
       </div>
       <div class="flex items-center gap-4">
         <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -319,11 +237,146 @@
       <div class="field-hint mt-2">Appliqué immédiatement via ALSA sur la carte DAC+ (contrôle <code>Digital</code>).</div>
     </div>
 
+    <!-- ── Boutons ─────────────────────────────────────────────── -->
+    <div class="flex items-center justify-between pb-10">
+      <div class="flex items-center gap-3">
+        <button id="save-btn" onclick="saveConfig()" class="btn-primary">
+          <svg id="save-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          <span id="save-label">Enregistrer</span>
+        </button>
+        <button onclick="loadConfig()" class="btn-secondary">Annuler</button>
+      </div>
+      <button onclick="restartMonitoring()" class="btn-danger">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        Redémarrer monitoring
+      </button>
+    </div>
+
+    </div>
+
+    <!-- ═══════════════════════ COMPTES ═══════════════════════ -->
+    <div id="tab-comptes" class="tab-pane hidden">
+    <!-- ── Mon compte ───────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        Mon compte
+      </div>
+      <div class="text-sm text-gray-700 mb-4">
+        Connecté en tant que <b>{{ current_user.username }}</b>{% if current_user.full_name %} ({{ current_user.full_name }}){% endif %},
+        rôle <b>{{ current_user.role_label }}</b>.
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <label class="field"><span>Mot de passe actuel</span><input id="pw-cur" type="password" autocomplete="current-password"></label>
+        <label class="field"><span>Nouveau mot de passe</span><input id="pw-new" type="password" autocomplete="new-password" placeholder="8 caractères minimum"></label>
+        <label class="field"><span>Confirmer</span><input id="pw-conf" type="password" autocomplete="new-password"></label>
+      </div>
+      <div class="flex items-center gap-3 mt-4">
+        <button class="btn btn-primary" onclick="changeOwnPassword()">Changer mon mot de passe</button>
+        <span id="pw-msg" class="text-xs"></span>
+      </div>
+    </div>
+
+    <!-- ── Rôles ─────────────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        Niveaux d'accès
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-gray-600">
+        <div class="rounded-lg bg-slate-50 p-3"><div class="text-sm font-semibold text-gray-900 mb-1">Lecteur</div>Consulte toutes les pages, écoute le direct, la pige et les extraits d'alertes. Aucun export, aucun réglage.</div>
+        <div class="rounded-lg bg-slate-50 p-3"><div class="text-sm font-semibold text-gray-900 mb-1">Opérateur</div>Comme le lecteur, avec en plus les exports MP3 et CSV, l'enregistrement et le relevé immédiat d'un appareil.</div>
+        <div class="rounded-lg bg-slate-50 p-3"><div class="text-sm font-semibold text-gray-900 mb-1">Administrateur</div>Tout : réglages de la réception, de la chaîne, du parc et du système, et gestion des comptes.</div>
+      </div>
+    </div>
+
+    {% if current_user.role == 'admin' %}
+    <!-- ── Comptes (admin) ───────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-5-3.87M9 20H4v-2a4 4 0 015-3.87m8-4.13a4 4 0 11-8 0 4 4 0 018 0zm6 2a3 3 0 11-6 0 3 3 0 016 0zM7 10a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Comptes
+      </div>
+      <div class="overflow-x-auto">
+        <table class="users">
+          <thead><tr><th>Utilisateur</th><th>Nom affiché</th><th>Rôle</th><th>Actif</th><th>Dernière connexion</th><th></th></tr></thead>
+          <tbody id="users-body"><tr><td colspan="6" class="text-gray-400">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+      <div id="users-msg" class="text-xs mt-3"></div>
+
+      <div class="border-t border-gray-100 mt-5 pt-4">
+        <div class="text-sm font-semibold text-gray-900 mb-3">Nouveau compte</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <label class="field"><span>Nom d'utilisateur</span><input id="n-user" type="text" autocomplete="off" placeholder="ex. benevole"></label>
+          <label class="field"><span>Nom affiché</span><input id="n-name" type="text" autocomplete="off" placeholder="facultatif"></label>
+          <label class="field"><span>Rôle</span><select id="n-role"><option value="lecteur">Lecteur</option><option value="operateur">Opérateur</option><option value="admin">Administrateur</option></select></label>
+          <label class="field"><span>Mot de passe</span><input id="n-pw" type="password" autocomplete="new-password" placeholder="8 caractères minimum"></label>
+        </div>
+        <div class="flex items-center gap-3 mt-4">
+          <button class="btn btn-primary" onclick="createUser()">Créer le compte</button>
+          <span id="n-msg" class="text-xs"></span>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    </div>
+
+    <!-- ═══════════════════════ JOURNAL BL-RMO ═══════════════════════ -->
+    <div id="tab-journal" class="tab-pane hidden">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">BL-RMO en service depuis</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="sys-uptime">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="sys-uptime-sub"></div>
+        </div>
+        <div class="section" style="margin-bottom:0">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Services</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="sys-svc">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="sys-svc-sub"></div>
+        </div>
+        <button type="button" class="section text-left hover:bg-slate-50" style="margin-bottom:0" onclick="showErrors()" title="Afficher les avertissements et erreurs du journal">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Erreurs et avertissements, 24 h</div>
+          <div class="text-2xl font-bold font-mono text-gray-900" id="sys-err">-</div>
+          <div class="text-xs text-gray-400 mt-1" id="sys-err-sub"></div>
+        </button>
+      </div>
+      <div class="section">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="section-title" style="margin-bottom:0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Journal de BL-RMO
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="sl-unit" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="loadSysLogs()">
+              <option value="bl-rmo">Application (bl-rmo)</option>
+              <option value="bl-rmo-pige">Pige (bl-rmo-pige)</option>
+              <option value="bl-rmo-syslog">Réception des journaux (bl-rmo-syslog)</option>
+              <option value="bl-rmo-dab">Réception DAB+ (bl-rmo-dab)</option>
+            </select>
+            <select id="sl-lines" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="loadSysLogs()">
+              <option value="10">10 lignes</option>
+              <option value="100">100 lignes</option>
+              <option value="500">500 lignes</option>
+              <option value="2000">2 000 lignes</option>
+            </select>
+            <label class="flex items-center gap-1.5 text-xs text-gray-600 select-none"><input id="sl-errors" type="checkbox" class="rounded" onchange="renderSysLogs()"> Avertissements et erreurs</label>
+            <button onclick="loadSysLogs()" class="text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-3 py-1.5">Actualiser</button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mb-3">Démarrages, tuner, alertes envoyées, erreurs : le fonctionnement de BL-RMO lui-même.</p>
+        <div id="sl-box" class="bg-gray-950 text-gray-300 p-4 rounded-lg font-mono overflow-y-auto border border-gray-800" style="max-height:32rem">Chargement...</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════ SAUVEGARDE (administrateur) ═══════════════════════ -->
+    <div id="tab-sauvegarde" class="tab-pane hidden need-admin max-w-3xl">
     <!-- ── 7. SAUVEGARDE & RESTAURATION ───────────────────────── -->
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-        5. Sauvegarde &amp; Restauration
+        Sauvegarde et restauration
       </div>
       <div class="field-hint mb-4">Le fichier ZIP contient : <code>config.json</code>, <code>.env</code> et les certificats SSL.</div>
       <div class="flex items-center gap-3 flex-wrap">
@@ -340,19 +393,6 @@
       </div>
     </div>
 
-    <!-- ── Boutons ─────────────────────────────────────────────── -->
-    <div class="flex items-center justify-between pb-10">
-      <div class="flex items-center gap-3">
-        <button id="save-btn" onclick="saveConfig()" class="btn-primary">
-          <svg id="save-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-          <span id="save-label">Enregistrer la configuration</span>
-        </button>
-        <button onclick="loadConfig()" class="btn-secondary">Annuler</button>
-      </div>
-      <button onclick="restartMonitoring()" class="btn-danger">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        Redémarrer monitoring
-      </button>
     </div>
 
   </div>
@@ -360,8 +400,148 @@
 
 <!-- Toast -->
 <div id="toast" class="toast"></div>
-
 <script>
+const ME = {{ current_user.username|tojson }};
+const IS_ADMIN = {{ (current_user.role == 'admin')|tojson }};
+const $ = id => document.getElementById(id);
+const csrf = () => document.querySelector('meta[name="csrf-token"]').content;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+async function api(url, method = 'GET', body) {
+  const o = { method, credentials: 'include', headers: {} };
+  if (method !== 'GET') { o.headers['X-CSRFToken'] = csrf(); o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(body || {}); }
+  const r = await fetch(url, o);
+  if (r.status === 401) { location.href = '/login?timeout=1'; throw new Error('session'); }
+  let d = {};
+  try { d = await r.json(); } catch (e) {}
+  if (!r.ok || d.status === 'error') throw new Error(d.message || `Erreur ${r.status}`);
+  return d;
+}
+function say(id, text, ok) { const el = $(id); el.textContent = text; el.className = 'text-xs ' + (ok ? 'msg-ok' : 'msg-err'); }
+
+async function changeOwnPassword() {
+  const cur = $('pw-cur').value, nw = $('pw-new').value, cf = $('pw-conf').value;
+  if (nw !== cf) return say('pw-msg', 'Les deux mots de passe ne correspondent pas', false);
+  try {
+    await api('/api/account/password', 'POST', { current: cur, new: nw });
+    ['pw-cur', 'pw-new', 'pw-conf'].forEach(i => $(i).value = '');
+    say('pw-msg', 'Mot de passe changé', true);
+  } catch (e) { say('pw-msg', e.message, false); }
+}
+
+const ROLE_OPTS = [['lecteur', 'Lecteur'], ['operateur', 'Opérateur'], ['admin', 'Administrateur']];
+function fmtLogin(s) {
+  if (!s) return '<span class="text-gray-300">jamais</span>';
+  const d = new Date(s), p = n => String(n).padStart(2, '0');
+  return `${p(d.getDate())}-${p(d.getMonth() + 1)}-${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+async function loadUsers() {
+  if (!IS_ADMIN) return;
+  let d;
+  try { d = await api('/api/users'); } catch (e) { return say('users-msg', e.message, false); }
+  $('users-body').innerHTML = d.users.map(u => {
+    const me = u.username.toLowerCase() === ME.toLowerCase();
+    return `<tr data-id="${u.id}">
+      <td class="font-medium text-gray-900">${esc(u.username)}${me ? ' <span class="pill bg-blue-50 text-blue-600">vous</span>' : ''}</td>
+      <td><input value="${esc(u.full_name)}" class="border border-transparent hover:border-gray-200 rounded px-1.5 py-1 text-sm w-40" onchange="updateUser(${u.id}, {full_name: this.value})"></td>
+      <td><select onchange="updateUser(${u.id}, {role: this.value}, this)" ${me ? 'disabled title="Un autre administrateur doit changer votre rôle"' : ''}>
+        ${ROLE_OPTS.map(([v, l]) => `<option value="${v}" ${v === u.role ? 'selected' : ''}>${l}</option>`).join('')}</select></td>
+      <td><input type="checkbox" ${u.enabled ? 'checked' : ''} ${me ? 'disabled' : ''} onchange="updateUser(${u.id}, {enabled: this.checked}, this)"></td>
+      <td class="text-xs text-gray-500 whitespace-nowrap">${fmtLogin(u.last_login)}</td>
+      <td class="whitespace-nowrap text-right">
+        <span id="reset-${u.id}" class="hidden"><input type="password" placeholder="nouveau mot de passe" class="border border-gray-200 rounded px-2 py-1 text-xs w-40">
+          <button class="text-xs font-medium text-blue-600 ml-1" onclick="resetPw(${u.id})">OK</button></span>
+        <button class="text-xs font-medium text-blue-600 hover:text-blue-800 ml-3" onclick="$('reset-${u.id}').classList.toggle('hidden')">Mot de passe</button>
+        ${me ? '' : `<button class="text-xs font-medium text-red-500 hover:text-red-700 ml-3" onclick="deleteUser(${u.id}, '${esc(u.username)}')">Supprimer</button>`}
+      </td></tr>`;
+  }).join('');
+}
+async function updateUser(id, patch, el) {
+  try { await api(`/api/users/${id}`, 'PUT', patch); say('users-msg', 'Modification enregistrée', true); }
+  catch (e) { say('users-msg', e.message, false); }
+  loadUsers();
+}
+async function resetPw(id) {
+  const inp = document.querySelector(`#reset-${id} input`);
+  try { await api(`/api/users/${id}`, 'PUT', { password: inp.value }); say('users-msg', 'Mot de passe modifié', true); loadUsers(); }
+  catch (e) { say('users-msg', e.message, false); }
+}
+async function deleteUser(id, name) {
+  if (!confirm(`Supprimer le compte « ${name} » ?`)) return;
+  try { await api(`/api/users/${id}`, 'DELETE'); say('users-msg', `Compte ${name} supprimé`, true); }
+  catch (e) { say('users-msg', e.message, false); }
+  loadUsers();
+}
+async function createUser() {
+  try {
+    await api('/api/users', 'POST', { username: $('n-user').value, full_name: $('n-name').value, role: $('n-role').value, password: $('n-pw').value });
+    ['n-user', 'n-name', 'n-pw'].forEach(i => $(i).value = '');
+    say('n-msg', 'Compte créé', true);
+    loadUsers();
+  } catch (e) { say('n-msg', e.message, false); }
+}
+function setTile(id, text, color, sub) {
+  $(id).textContent = text;
+  $(id).className = $(id).className.replace(/\btext-(gray|green|amber|red)-\d+\b/g, '').trim() + ' ' + (color || 'text-gray-900');
+  if (sub !== undefined && $(id + '-sub')) $(id + '-sub').innerHTML = sub;
+}
+function fmtSince(sec) {
+  sec = Math.max(0, Math.round(sec));
+  if (sec < 3600) return `${Math.max(1, Math.floor(sec / 60))} min`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)} h ${pad(Math.floor(sec % 3600 / 60))} min`;
+  return `${Math.floor(sec / 86400)} j ${Math.floor(sec % 86400 / 3600)} h`;
+}
+function fmtStamp(t) { const d = new Date(t); return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+const tms = iso => iso ? new Date(String(iso).replace(' ', 'T')).getTime() : null;
+function pad(n) { return String(n).padStart(2, '0'); }
+const C_OK = 'text-green-600', C_WARN = 'text-amber-600', C_BAD = 'text-red-600';
+// ── BL-RMO : service, services systemd, erreurs et disque ──
+async function loadSystemSummary() {
+  let d;
+  try { d = await api('/api/system/summary'); } catch (e) { return; }
+  setTile('sys-uptime', fmtSince(d.uptime), 'text-gray-900', `depuis le ${fmtStamp(tms(d.started))} · version ${esc(d.version)}`);
+  const exp = d.services.filter(x => x.expected), act = exp.filter(x => x.state === 'active');
+  const off = exp.filter(x => x.state !== 'active');
+  setTile('sys-svc', `${act.length} / ${exp.length} actifs`, off.length ? C_BAD : C_OK,
+    d.services.map(x => {
+      const ok = x.state === 'active', col = !x.expected ? 'text-gray-300' : ok ? '' : 'text-red-600 font-semibold';
+      return `<span class="${col}" title="${esc(x.unit)} : ${esc(x.state)}">${esc(x.label)}${x.expected && !ok ? ' (arrêté)' : ''}</span>`;
+    }).join(' · '));
+  const lc = d.log_counts || {}, dk = d.disk || {};
+  const go = v => v == null ? '-' : `${Math.round(v / 1e9)} Go`;
+  const disk = dk.low
+    ? `<div class="text-red-600 font-semibold mt-0.5">Espace disque faible : ${go(dk.free)} libres (seuil ${Math.round(dk.min_free_gb)} Go)</div>`
+    : `<div class="mt-0.5">Disque : ${go(dk.free)} libres sur ${go(dk.total)}</div>`;
+  const e = lc.errors ?? null, w = lc.warnings ?? null;
+  setTile('sys-err', e == null ? '-' : `${e} erreur${e > 1 ? 's' : ''}`, dk.low || e ? C_BAD : w ? C_WARN : C_OK,
+          (w == null ? '' : `${w} avertissement${w > 1 ? 's' : ''}`) + disk);
+}
+function showErrors() {
+  $('sl-lines').value = '2000';
+  $('sl-errors').checked = true;
+  loadSysLogs();
+}
+
+// ══ BL-RMO (journal système) ════════════════════════════════════════════
+let slLines = [];
+async function loadSysLogs() {
+  $('sl-box').textContent = 'Chargement...';
+  try {
+    const d = await api(`/api/logs?unit=${encodeURIComponent($('sl-unit').value)}&lines=${$('sl-lines').value}`);
+    slLines = (d.logs || '').split('\n').filter(l => l.trim());
+  } catch (e) { $('sl-box').textContent = e.message; return; }
+  renderSysLogs();
+}
+function renderSysLogs() {
+  const only = $('sl-errors').checked;
+  const lines = slLines.filter(l => !only || /ERROR|WARNING|CRITICAL|Traceback|Erreur/i.test(l));
+  const box = $('sl-box');
+  box.innerHTML = lines.length ? lines.map(l => {
+    const cls = /ERROR|CRITICAL|Traceback/.test(l) ? 'log-error' : /WARNING/.test(l) ? 'log-warning' : 'log-info';
+    return `<div class="log-line ${cls}">${esc(l)}</div>`;
+  }).join('') : '<div class="log-line log-info">Aucune ligne</div>';
+  box.scrollTop = box.scrollHeight;
+}
   // ═══════════════════════════════════════════════
   // CSRF
   // ═══════════════════════════════════════════════
@@ -394,8 +574,6 @@
   }
   function togglePassword()        { togglePass('sender-password',  'eye-icon'); }
   function toggleWifiPassword()    { togglePass('wifi-password',     'wifi-eye-icon'); }
-  function toggleNewPassword()     { togglePass('new-password',      'new-password-eye-icon'); }
-  function toggleConfirmPassword() { togglePass('confirm-password',  'confirm-password-eye-icon'); }
 
   // ═══════════════════════════════════════════════
   // NETWORK MODE TOGGLE
@@ -450,8 +628,6 @@
         document.getElementById('wifi-ssid').value = config.network.wifi_ssid || '';
       }
 
-      if (config.auth?.username)
-        document.getElementById('current-username').value = config.auth.username;
 
     } catch (error) {
       console.error('Erreur chargement config:', error);
@@ -511,19 +687,6 @@
   // SAVE CONFIG
   // ═══════════════════════════════════════════════
   async function saveConfig() {
-    const newUsername     = document.getElementById('new-username').value.trim();
-    const newPassword     = document.getElementById('new-password').value;
-    const confirmPassword = document.getElementById('confirm-password').value;
-
-    if (newPassword || confirmPassword) {
-      if (newPassword !== confirmPassword) {
-        showToast('Les mots de passe ne correspondent pas', 'error'); return;
-      }
-      if (newPassword.length < 8) {
-        showToast('Le mot de passe doit contenir au moins 8 caractères', 'error'); return;
-      }
-    }
-
     const isDHCP = networkModeToggle.checked;
     const config = {
       email: {
@@ -542,12 +705,6 @@
         wifi_password:document.getElementById('wifi-password').value
       }
     };
-
-    if (newUsername || newPassword) {
-      config.auth = {};
-      if (newUsername) config.auth.username = newUsername;
-      if (newPassword) config.auth.password = newPassword;
-    }
 
     const btn   = document.getElementById('save-btn');
     const label = document.getElementById('save-label');
@@ -580,7 +737,7 @@
           return;
         }
         label.textContent = 'Redémarrage…';
-        showToast('Configuration enregistrée — redémarrage du monitoring…', 'info');
+        showToast('Configuration enregistrée, redémarrage de la surveillance…', 'info');
 
         setTimeout(async () => {
           try {
@@ -592,10 +749,10 @@
             if (restartData.status === 'success') {
               showToast('Configuration enregistrée et monitoring redémarré !', 'success');
             } else {
-              showToast('Config enregistrée — échec du redémarrage', 'warning');
+              showToast('Configuration enregistrée, échec du redémarrage', 'warning');
             }
           } catch (e) {
-            showToast('Config enregistrée — échec du redémarrage', 'warning');
+            showToast('Configuration enregistrée, échec du redémarrage', 'warning');
           } finally {
             setTimeout(() => {
               btn.disabled = false;
@@ -643,9 +800,9 @@
       const resp = await fetch('/api/config/import', { method: 'POST', body: formData, credentials: 'include' });
       const data = await resp.json();
       if (data.success) {
-        result.textContent = `✓ Restauré (v${data.version} — ${data.date?.slice(0,10)})`;
+        result.textContent = `✓ Restauré (v${data.version}, ${data.date?.slice(0,10)})`;
         result.className   = 'text-xs text-green-600';
-        showToast('Restauration OK — redémarrage du service en cours…', 'info');
+        showToast('Restauration faite, redémarrage du service en cours…', 'info');
         setTimeout(() => location.reload(), 6000);
       } else {
         result.textContent = '✗ ' + data.error;
@@ -755,7 +912,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    loadWifiStatus();
+    if (IS_ADMIN) loadWifiStatus();
     const toggle = document.getElementById('wifi-toggle');
     if (toggle) {
       toggle.addEventListener('change', async () => {
@@ -809,7 +966,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    loadEmailAlertsStatus();
+    if (IS_ADMIN) loadEmailAlertsStatus();
     const toggle = document.getElementById('email-alerts-toggle');
     if (toggle) {
       toggle.addEventListener('change', async () => {
@@ -843,10 +1000,37 @@
 
   // INIT
   // ═══════════════════════════════════════════════
-  loadConfig();
-  loadVolume();
+  if (IS_ADMIN) { loadConfig(); loadVolume(); }
 
 
+
+// ═══ Onglets : #general, #comptes, #journal, #sauvegarde ═══
+const TABS = ['general', 'comptes', 'journal', 'sauvegarde'];
+const ADMIN_TABS = ['general', 'sauvegarde'];
+let curTab = null;
+const loaded = {};
+function showTab(t) {
+  if (t === 'utilisateurs') t = 'comptes';
+  if (!TABS.includes(t) || (ADMIN_TABS.includes(t) && !IS_ADMIN)) t = IS_ADMIN ? 'general' : 'comptes';
+  curTab = t;
+  TABS.forEach(x => $('tab-' + x).classList.toggle('hidden', x !== t));
+  document.querySelectorAll('[data-tab]').forEach(a => {
+    const on = a.dataset.tab === t;
+    a.classList.toggle('on', on); a.setAttribute('aria-selected', on);
+  });
+  if (t === 'comptes' && !loaded.comptes) { loaded.comptes = true; loadUsers(); }
+  if (t === 'journal') { loadSystemSummary(); if (!loaded.journal) { loaded.journal = true; loadSysLogs(); } }
+}
+window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
+showTab(location.hash.slice(1));
+setInterval(() => { if (curTab === 'journal' && !document.hidden) loadSystemSummary(); }, 60000);
+
+fetch('/api/config/full', { credentials: 'include' }).then(r => r.json()).then(config => {
+  const freq = config.rtl_sdr?.frequency || '88.6M';
+  $('sidebar-frequency').textContent = freq.replace('M', ' MHz');
+}).catch(() => {});
+function toggleSidebar() { $('sidebar').classList.toggle('-translate-x-full'); $('sidebar-overlay').classList.toggle('hidden'); }
+function closeSidebar() { $('sidebar').classList.add('-translate-x-full'); $('sidebar-overlay').classList.add('hidden'); }
 </script>
 </body>
 </html>

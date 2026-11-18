@@ -6,6 +6,14 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Navigation regroupée par domaine, étape 4 : Système et nouveau menu
+- **Nouveau menu**, le même sur toutes les pages (`templates/_sidebar.html`) : Dashboard, FM, DAB+, Chaîne, Parc et Système ; À propos, GitHub, l'utilisateur connecté et Déconnexion en bas. Configuration, Pige, Journaux et Utilisateurs disparaissent du menu : leur contenu est rangé dans les pages de chaque domaine.
+- **Page Système** (`/system`) en quatre onglets : **Général** (alertes email, réseau, volume DAC+, enregistrement et redémarrage de la surveillance), **Comptes** (mon compte, niveaux d'accès, comptes et rôles), **Journal BL-RMO** (services, erreurs, journal de chaque service) et **Sauvegarde** (export et import de la configuration). Général et Sauvegarde sont réservés à l'administrateur ; les autres rôles y trouvent leur compte et le journal de BL-RMO.
+- **Doublon supprimé** : la rubrique « Authentification » de l'ancienne Configuration (nom et mot de passe) faisait doublon avec les comptes ; chacun change son mot de passe dans Système, Comptes.
+- **Anciennes adresses** : `/config` mène à Système, Général ; `/account` à Système, Comptes ; `/pige` à l'onglet Pige de la page FM (ou DAB+) ; `/logs` à l'onglet Journal du bon domaine (`#reception` FM, `#dab` DAB+, `#chaine` Chaîne, `#blfmo` Système, filtre `?src=` conservé). Les pages `config.html`, `account.html` et `logs.html` sont supprimées.
+- **Tableau de bord** : la pastille Pige ouvre la pige FM ; la pastille « Alertes 24 h » n'est plus un lien (pas de vue globale : le détail est dans le Journal de chaque page).
+- **README et À propos** : navigation par domaine, une pige par réception, station DAB+ suivie, « Détecter les récepteurs » dans l'onglet Configuration de la page FM.
+
 ### Navigation regroupée par domaine, étape 3 : Chaîne et Parc
 - **Chaîne de diffusion en quatre onglets** : Synoptique (`/chain`), Journal (`/chain/journal`), Appareils (`/chain/appareils`, administrateur) et Configuration (`/chain/configuration`, administrateur), avec la même barre d'onglets sur chaque page. Le bouton « Gérer la chaîne » disparaît ; `/chain/manage` mène à l'onglet Appareils.
 - **Journal de la chaîne** : une seule liste « Alertes et changements d'état » remplace les « Alertes de la chaîne » de la page Journaux et le « Journal des changements d'état » de Gérer la chaîne. Elle regroupe les appareils, sondes et capteurs, et les événements des équipements tiers (netwatch, scripts : badge « externe »), avec filtre, export CSV, archive ZIP des journaux (sur une durée, ou ±10 min autour d'une alerte) et « Écouter » qui lit la pige FM pendant l'alerte. En dessous, les messages des appareils (syslog et traps SNMP), repris de la page Journaux.
