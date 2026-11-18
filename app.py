@@ -1077,15 +1077,13 @@ pige_store = PigeStore()
 @app.route('/pige')
 @auth.login_required
 def pige_page():
-    """Page de la pige audio. Un lien ?t= (alertes, chaîne) ouvre l'onglet Pige
-    de la page FM, ou de la page DAB+ pour une pige DAB+ (?p=), 30 s avant l'événement."""
+    """Ancienne page Pige : chaque pige est dans l'onglet Pige de sa réception.
+    Un lien ?t= (alertes, chaîne) ouvre ce moment, ?p=<pige DAB+> la page DAB+."""
     t, p = request.args.get('t', ''), (request.args.get('p') or 'fm').lower()
-    if t.isdigit():
-        if p == 'fm':
-            return redirect(f'/fm?t={t}#pige')
-        if PIGE_ID_RE.match(p):
-            return redirect(f'/dab?p={p}&t={t}#pige')
-    return render_template('pige.html')
+    tq = f'?t={t}' if t.isdigit() else ''
+    if p != 'fm' and PIGE_ID_RE.match(p):
+        return redirect(f'/dab{tq}#pige')
+    return redirect(f'/fm{tq}#pige')
 
 
 def _pige(pid=None):
@@ -1126,7 +1124,8 @@ def pige_list():
         segs = st.segments()
         newest = max((os.path.getmtime(x['path']) for x in segs[-1:]), default=0)
         out.append({'id': cfg['id'], 'name': cfg['name'], 'kind': cfg['kind'], 'sid': cfg.get('sid'),
-                    'enabled': bool(cfg['enabled']), 'retention_hours': cfg['retention_hours'],
+                    'enabled': bool(cfg['enabled']), 'wanted': bool(cfg.get('wanted', cfg['enabled'])),
+                    'blocked': cfg.get('blocked'), 'retention_hours': cfg['retention_hours'],
                     'bitrate_kbps': cfg['bitrate_kbps'], 'recording': time.time() - newest < 30,
                     'oldest': segs[0]['start'] if segs else None,
                     'used_bytes': sum(x['size'] for x in segs)})
@@ -1140,73 +1139,44 @@ def pige_list():
 @app.route('/api/pige/config', methods=['POST'])
 @auth.login_required
 def pige_config_save():
-    """Créer, modifier ou supprimer une pige (administrateur).
-    {action: create|update|delete, id, name, sid, retention_days, enabled}"""
+    """Réglages d'une pige (administrateur) : une pige par réception, FM et DAB+.
+    {action: update, id: fm|<id de la pige DAB+>, retention_days, enabled}. La pige
+    DAB+ suit la station DAB+ suivie : elle ne se crée ni ne se supprime."""
     data = request.get_json(silent=True) or {}
-    action = data.get('action')
-    with open('config.json') as f:
-        config = json.load(f)
-    pige = config.setdefault('pige', {})
-    extra = pige.setdefault('extra', [])
+    if data.get('action') != 'update':
+        return jsonify({'status': 'error', 'message': 'Une seule pige par réception : seuls la conservation et l\'arrêt se règlent'}), 400
     pid = str(data.get('id') or '').strip().lower()
+    cur = pige_config(pid)
+    if cur is None:
+        return jsonify({'status': 'error', 'message': 'Pige inconnue'}), 404
     try:
         days = float(data['retention_days']) if data.get('retention_days') not in (None, '') else None
     except (TypeError, ValueError):
         return jsonify({'status': 'error', 'message': 'Durée de conservation invalide'}), 400
     if days is not None and not (1 <= days <= 90):
         return jsonify({'status': 'error', 'message': 'Conservation : de 1 à 90 jours'}), 400
-    name = str(data.get('name') or '').strip()[:60]
-    cfg = None
-
-    if action == 'create':
-        sid = str(data.get('sid') or '').strip().lower()
-        if not re.match(r'^[0-9a-fx]{1,8}$', sid):
-            return jsonify({'status': 'error', 'message': 'Service DAB+ invalide'}), 400
-        base = re.sub(r'[^a-z0-9]+', '-', (name or f'dab-{sid}').lower()).strip('-')[:24] or f'dab-{sid}'
-        if base == 'fm':
-            base = f'dab-{sid}'
-        pid, n = base, 2
-        while pid in {e.get('id') for e in extra}:
-            pid, n = f'{base}-{n}', n + 1
-        extra.append({'id': pid, 'name': name or f'DAB+ {sid}', 'sid': sid,
-                      'retention_hours': int((days or 7) * 24), 'enabled': True})
-    elif action == 'update':
-        if pid == 'fm':
-            if days is not None:
-                pige['retention_hours'] = int(days * 24)
-            if name:
-                pige['name'] = name
-        else:
-            e = next((e for e in extra if e.get('id') == pid), None)
-            if e is None:
-                return jsonify({'status': 'error', 'message': 'Pige inconnue'}), 404
-            if days is not None:
-                e['retention_hours'] = int(days * 24)
-            if name:
-                e['name'] = name
-            if 'enabled' in data:
-                e['enabled'] = bool(data['enabled'])
-    elif action == 'delete':
-        if pid == 'fm':
-            return jsonify({'status': 'error', 'message': 'La pige FM ne se supprime pas'}), 400
-        cfg = pige_config(pid)
-        if cfg is None:
-            return jsonify({'status': 'error', 'message': 'Pige inconnue'}), 404
-        pige['extra'] = [e for e in extra if e.get('id') != pid]
+    with open('config.json') as f:
+        config = json.load(f)
+    pige = config.setdefault('pige', {})
+    if cur['kind'] == 'fm':
+        target = pige
     else:
-        return jsonify({'status': 'error', 'message': 'Action inconnue'}), 400
-
+        # Première écriture : la section "dab" reprend l'identifiant de l'ancienne pige
+        # DAB+ (ses enregistrements restent dans pige/extra/<id>)
+        target = pige.setdefault('dab', {'id': pid, 'enabled': bool(cur.get('wanted', True)),
+                                         'retention_hours': cur['retention_hours']})
+        target['id'] = pid
+    if days is not None:
+        target['retention_hours'] = int(days * 24)
+    if 'enabled' in data:
+        target['enabled'] = bool(data['enabled'])
     tmp = 'config.json.tmp'
     with open(tmp, 'w') as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
     os.replace(tmp, 'config.json')
-    if action == 'delete' and cfg and PIGE_ID_RE.match(pid):
-        # Les enregistrements partent avec la pige (dossier toujours sous pige/extra/)
-        target = os.path.realpath(cfg['directory'])
-        root = os.path.realpath(os.path.join(pige_store.dir, 'extra'))
-        if target.startswith(root + os.sep):
-            shutil.rmtree(target, ignore_errors=True)
-    logger.info(f"Pige {action} {pid} par {session.get('username', '?')}")
+    logger.info(f"Pige {pid} réglée par {session.get('username', '?')} : "
+                f"{'conservation ' + str(int(days)) + ' j ' if days is not None else ''}"
+                f"{('démarrée' if data['enabled'] else 'arrêtée') if 'enabled' in data else ''}")
     return jsonify({'status': 'ok', 'id': pid})
 
 
@@ -1557,6 +1527,14 @@ def dab_settings():
             dab['watched_sids'] = [str(x).lower() for x in (data['watched_sids'] or []) if str(x).strip()]
     except (TypeError, ValueError):
         return jsonify({'status': 'error', 'message': 'Valeur invalide'}), 400
+    # Station suivie choisie : la réception DAB+ est active et la station surveillée
+    # (décodée en continu, donc enregistrée par la pige DAB+)
+    station = str(dab.get('dashboard_sid') or '').lower()
+    if 'dashboard_sid' in data and station:
+        dab['enabled'] = True
+        watched = dab.get('watched_sids') or []
+        if watched and station not in watched:
+            dab['watched_sids'] = watched + [station]
     if str(dab.get('channel', '9A')).upper() not in BAND_III:
         return jsonify({'status': 'error', 'message': 'Canal inconnu (bande III : 5A à 13F)'}), 400
     dab['channel'] = str(dab.get('channel', '9A')).upper()

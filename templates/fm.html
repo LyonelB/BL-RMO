@@ -338,6 +338,7 @@
           <label class="block"><span class="text-xs text-gray-500">Conservation (jours)</span>
             <input type="number" id="pg-days" min="1" max="90" class="mt-1 block w-28 border border-gray-200 rounded-lg px-2 py-1.5"></label>
           <button onclick="savePigeDays()" id="pg-save" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Enregistrer</button>
+          <button onclick="togglePige()" id="pg-toggle" class="px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-400 text-gray-700 text-sm font-medium">Arrêter la pige</button>
           <span class="text-xs text-gray-500" id="pg-msg"></span>
         </div>
         <div class="text-xs text-gray-500 mt-3" id="pg-estimate"></div>
@@ -835,9 +836,10 @@
     $('pg-avail').innerHTML = pgSt.oldest
       ? `Disponible du <strong>${fmtDay(pgSt.oldest)} ${fmtTime(pgSt.oldest).slice(0, 5)}</strong> `
         + (on || !pgSt.newest ? 'jusqu\'à maintenant' : `au <strong>${fmtDay(pgSt.newest)} ${fmtTime(pgSt.newest).slice(0, 5)}</strong>`)
-        + (on ? '' : ' · <span class="text-amber-700">enregistrement arrêté</span>')
+        + (on ? '' : ` · <span class="text-amber-700">${pgSt.enabled === false ? 'pige arrêtée' : 'enregistrement interrompu'}</span>`)
       : 'Aucun enregistrement pour le moment';
     if (isAdmin) {
+      $('pg-toggle').textContent = pgSt.enabled === false ? 'Démarrer la pige' : 'Arrêter la pige';
       const days = Math.round((pgSt.retention_hours || 24) / 24);
       if (!$('pg-days').value) $('pg-days').value = days;
       $('pg-estimate').textContent = `Environ ${fmtBytes(128 * 125 * 86400)} par jour à 128 kb/s · pige actuelle ${fmtBytes(pgSt.used_bytes)} · ${fmtBytes(pgSt.free_bytes)} libres sur le disque. Les extraits des dernières alertes sont gardés après la sortie de la pige.`;
@@ -1000,6 +1002,20 @@
       msg.className = 'text-xs text-green-600'; msg.textContent = 'Enregistré.';
     } catch (e) { msg.className = 'text-xs text-red-600'; msg.textContent = e.message; }
     finally { $('pg-save').disabled = false; }
+  }
+
+  async function togglePige() {
+    const msg = $('pg-msg'), start = pgSt && pgSt.enabled === false;
+    try {
+      const r = await fetch('/api/pige/config', { method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
+        body: JSON.stringify({ action: 'update', id: 'fm', enabled: start }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
+      msg.className = 'text-xs text-green-600';
+      msg.textContent = start ? 'Pige démarrée : l\'enregistrement reprend dans les 20 secondes.' : 'Pige arrêtée.';
+      pgLoadStatus(pgRange()[0] ?? Date.now() / 1000);
+    } catch (e) { msg.className = 'text-xs text-red-600'; msg.textContent = e.message; }
   }
 
   async function initPige(args, play) {

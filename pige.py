@@ -13,10 +13,14 @@ Deux usages :
   2. Module importé par app.py (PigeStore) : liste des segments,
      couverture, extraction d'un créneau.
 
-Piges multiples : la pige « fm » (section "pige" de config.json) enregistre
-l'antenne ; chaque entrée de "pige"."extra" enregistre un service DAB+ servi
-par welle-cli (http://127.0.0.1:<port>/mp3/<sid>), réencodé en MP3 CBR pour
-que la durée des segments se déduise du débit, comme pour la FM.
+Une pige par réception : la pige « fm » (section "pige" de config.json)
+enregistre l'antenne FM ; la pige DAB+ (section "pige"."dab") enregistre la
+station DAB+ suivie, choisie sur la page DAB+. Sans station suivie, pas de pige.
+Elle suit cette station : changer de station change ce qu'elle enregistre, les
+enregistrements déjà faits restent jusqu'à la fin de leur conservation.
+Le son est servi par welle-cli ou le dongle Si468x (http://127.0.0.1:<port>/mp3/<sid>),
+réencodé en MP3 CBR pour que la durée des segments se déduise du débit,
+comme pour la FM. On ne règle que sa conservation, et on peut l'arrêter.
 
 Les noms de fichiers sont en UTC (AAAAMMJJ-HHMMSS.mp3 = début du segment),
 ce qui évite toute ambiguïté au passage heure d'été / heure d'hiver.
@@ -75,8 +79,31 @@ def load_pige_config(config_file=CONFIG_FILE):
 # Lecture / export (utilisé par Flask)
 # ════════════════════════════════════════════════════════════════════
 
+def dab_followed_sid(dab):
+    """Station DAB+ suivie, choisie sur la page DAB+ ; vide : pas de station, pas de pige.
+    Le dongle Si468x ne décode qu'un service, choisi par la même règle que
+    dab_monitor.held_sids() : la station suivie si elle est cochée (l'interface la coche)."""
+    watched = [str(x).lower() for x in (dab.get('watched_sids') or []) if str(x).strip()]
+    dash = str(dab.get('dashboard_sid') or '').strip().lower()
+    if dab.get('receiver') == 'si468x' and watched and dash not in watched:
+        return ''
+    return dash
+
+
+def _dab_pige_settings(pige):
+    """Réglages de la pige DAB+ : section "dab", sinon la première pige de l'ancienne
+    liste "extra" (son identifiant garde ses enregistrements dans pige/extra/<id>)."""
+    d = pige.get('dab')
+    if isinstance(d, dict):
+        return d
+    for e in pige.get('extra') or []:
+        if PIGE_ID_RE.match(str(e.get('id', '')).lower()) and str(e.get('id')).lower() != 'fm':
+            return {k: e[k] for k in ('id', 'enabled', 'retention_hours', 'bitrate_kbps') if k in e}
+    return {}
+
+
 def load_piges(config_file=CONFIG_FILE):
-    """Toutes les piges : d'abord la FM (id « fm »), puis les piges DAB+."""
+    """Les deux piges : la FM (id « fm »), puis la DAB+ (une seule, sur la station suivie)."""
     fm = load_pige_config(config_file)
     try:
         with open(config_file) as f:
@@ -89,19 +116,28 @@ def load_piges(config_file=CONFIG_FILE):
         rate = 44100
     fm.update(id='fm', kind='fm', name=fm.get('name') or 'FM', reencode=False, sample_rate=rate)
     out = [fm]
-    dab_port = int(((full.get('dab') or {}).get('port')) or 7979)
-    for e in (full.get('pige') or {}).get('extra') or []:
-        pid = str(e.get('id', '')).lower()
-        sid = str(e.get('sid', '')).lower()
-        if not PIGE_ID_RE.match(pid) or pid == 'fm' or not re.match(r'^[0-9a-fx]{1,8}$', sid):
-            continue
-        cfg = dict(fm)
-        cfg.update(EXTRA_DEFAULTS)
-        cfg.update({k: v for k, v in e.items() if k in ('name', 'enabled', 'retention_hours', 'bitrate_kbps')})
-        cfg.update(id=pid, kind='dab', sid=sid, name=e.get('name') or f'DAB+ {sid}', reencode=True, sample_rate=44100,
-                   directory=os.path.join(fm['directory'], 'extra', pid),
-                   source_url=f'http://127.0.0.1:{dab_port}/mp3/{sid}')
-        out.append(cfg)
+    dab = full.get('dab') or {}
+    if not dab.get('enabled') and not (full.get('pige') or {}).get('dab') and not (full.get('pige') or {}).get('extra'):
+        return out                                    # pas de DAB+ : pas de pige DAB+
+    dab_port = int(dab.get('port') or 7979)
+    d = _dab_pige_settings(full.get('pige') or {})
+    pid = str(d.get('id') or 'dab').lower()
+    if not PIGE_ID_RE.match(pid) or pid == 'fm':
+        pid = 'dab'
+    sid = dab_followed_sid(dab)
+    if not re.match(r'^[0-9a-fx]{1,8}$', sid):
+        sid = ''
+    wanted = bool(d.get('enabled', True))
+    # Pige voulue mais impossible : réception DAB+ coupée ou aucune station suivie
+    blocked = None if not wanted else ('reception' if not dab.get('enabled') else 'station' if not sid else None)
+    cfg = dict(fm)
+    cfg.update(EXTRA_DEFAULTS)
+    cfg.update({k: v for k, v in d.items() if k in ('retention_hours', 'bitrate_kbps')})
+    cfg.update(id=pid, kind='dab', sid=sid or None, name='DAB+', reencode=True, sample_rate=44100,
+               wanted=wanted, blocked=blocked, enabled=wanted and not blocked,
+               directory=os.path.join(fm['directory'], 'extra', pid),
+               source_url=f'http://127.0.0.1:{dab_port}/mp3/{sid}' if sid else None)
+    out.append(cfg)
     return out
 
 
@@ -546,6 +582,17 @@ class PigeSupervisor:
     def __init__(self):
         self.running = True
         self.recorders = {}     # id -> (recorder, thread, signature)
+        self.idle_purge_at = 0
+
+    @staticmethod
+    def purge_idle(cfg):
+        """Pige arrêtée (ou DAB+ sans station) : ses enregistrements restent jusqu'à
+        la fin de leur conservation, puis partent, comme ceux d'une pige qui tourne."""
+        store = PigeStore(cfg)
+        limit = time.time() - float(cfg['retention_hours']) * 3600
+        for s in store.segments():
+            if s['end'] < limit:
+                PigeRecorder._remove(s['path'], 'rétention, pige arrêtée')
 
     def stop(self, *_):
         self.running = False
@@ -553,7 +600,16 @@ class PigeSupervisor:
             rec.stop()
 
     def sync(self):
-        wanted = {c['id']: c for c in load_piges() if c['enabled']}
+        piges = load_piges()
+        wanted = {c['id']: c for c in piges if c['enabled']}
+        if time.time() - self.idle_purge_at > 600:
+            self.idle_purge_at = time.time()
+            for c in piges:
+                if not c['enabled'] and os.path.isdir(c['directory']):
+                    try:
+                        self.purge_idle(c)
+                    except Exception as e:
+                        logger.error(f"Purge de la pige {c['id']} : {e}")
         for pid in list(self.recorders):
             rec, th, sig = self.recorders[pid]
             c = wanted.get(pid)
@@ -591,10 +647,10 @@ class PigeSupervisor:
 def main():
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - pige - %(levelname)s - %(message)s')
+    # Le superviseur tourne même sans pige active : une pige arrêtée puis relancée
+    # depuis l'interface (ou la DAB+ qui attend sa station) redémarre d'elle-même.
     if not any(c['enabled'] for c in load_piges()):
-        logger.info("Aucune pige active dans config.json, arrêt.")
-        # Code 0 : systemd ne relance pas en boucle
-        return 0
+        logger.info("Aucune pige active pour le moment, en attente.")
     PigeSupervisor().run()
     return 0
 

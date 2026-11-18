@@ -6,6 +6,14 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Une pige par réception
+- **La station DAB+ suivie commande tout** : la choisir dans « Station suivie (tableau de bord et pige) » de la page DAB+ (anciennement « Service du tableau de bord ») active la réception DAB+, la coche dans les services surveillés et démarre sa pige. « Activer la réception DAB+ » est alors coché d'office ; sans station suivie, la case reste libre (réception sans pige, pour découvrir les services d'un multiplex).
+- **Une seule pige DAB+** : elle enregistre la station suivie. Sans station suivie, pas de pige (plus de repli sur le premier service surveillé). Changer de station change ce qu'elle enregistre ; les enregistrements déjà faits restent jusqu'à la fin de leur conservation. Avec le dongle Si468x, la station suivie est le service décodé.
+- **Réglages réduits** : pour la FM comme pour le DAB+, la durée de conservation et un bouton « Arrêter la pige » / « Démarrer la pige ». La création, la suppression et le choix du service d'une pige DAB+ disparaissent, avec le menu « Service » de l'onglet Pige. L'API `/api/pige/config` n'accepte plus que `update` (conservation, marche ou arrêt).
+- **Reprise de l'existant** : la pige DAB+ déjà créée garde son identifiant et ses enregistrements (`pige/extra/<id>`) ; ses réglages passent dans `config.json` sous `"pige"."dab"` au premier enregistrement. Les autres piges de l'ancienne liste `"extra"` ne sont plus enregistrées.
+- **Service de pige** : bl-rmo-pige reste lancé même sans pige active, pour qu'une pige arrêtée puis redémarrée reprenne sans redémarrage du service. Les enregistrements d'une pige arrêtée (ou d'une pige DAB+ sans station) partent eux aussi à la fin de leur conservation.
+- **Page Pige supprimée** : `/pige` mène à l'onglet Pige de la page FM, ou de la page DAB+ pour un lien vers la pige DAB+ (`?p=`).
+
 ### Navigation regroupée par domaine, étape 2 : la page DAB+
 - **Page DAB+ en quatre onglets**, chacun avec son adresse : Direct (`/dab#direct`), Journal (`/dab#journal`), Pige (`/dab#pige`) et Réglages (`/dab#reglages`, administrateur), sur le modèle de la page FM.
 - **Direct** : tuiles, écoute et spectre, les 5 derniers DLS du service suivi, services du multiplex. Le bloc « Derniers événements » est supprimé (doublon du Journal). L'écoute s'arrête automatiquement après 15 min, comme en FM (« En écoute (arrêt automatique après 15 min) »). Le spectre n'est calculé que sur l'onglet Direct, l'état du multiplex est relu toutes les 2 s sur Direct et toutes les 15 s ailleurs.

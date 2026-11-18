@@ -271,7 +271,7 @@
             <button onclick="exportDab()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Alertes affichées (filtres compris), en CSV"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-3">Mesurées sur le multiplex reçu. Un mail part à l'alerte, un second au rétablissement. « Écouter » ouvre l'onglet Pige au moment de l'alerte : la pige du service concerné, ou pour une alerte sur tout le multiplex, la première pige DAB+.</p>
+        <p class="text-xs text-gray-500 mb-3">Mesurées sur le multiplex reçu. Un mail part à l'alerte, un second au rétablissement. « Écouter » ouvre l'onglet Pige au moment de l'alerte, pour la station suivie et les alertes sur tout le multiplex.</p>
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left">
             <thead>
@@ -337,11 +337,9 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
           Écoute et extrait
         </div>
-        <div id="pg-none" class="hidden text-sm text-gray-500">Aucune pige DAB+ pour le moment. <span class="need-admin">Créer la pige d'un service dans « Réglages de la pige DAB+ » ci-dessous.</span><span class="lecteur-hint">Un administrateur peut en créer une.</span></div>
+        <div id="pg-none" class="hidden text-sm text-gray-500"></div>
         <div id="pg-main">
         <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 mb-4">
-          <label class="flex items-center gap-2" id="pg-sel-box"><span class="text-xs text-gray-500">Service</span>
-            <select id="pg-sel" class="border border-gray-200 rounded-lg px-2 py-1.5 text-sm bg-white"></select></label>
           <span class="flex items-center gap-2"><span id="pg-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300 flex-shrink-0"></span><span id="pg-avail">Chargement…</span></span>
         </div>
         <div class="flex flex-wrap items-end gap-3">
@@ -383,33 +381,16 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
           Réglages de la pige DAB+
         </div>
-        <p class="text-xs text-gray-500 mb-3">Chaque pige enregistre un service du multiplex, en continu. Le service doit être décodé en permanence : décodage « Services surveillés seulement » (service coché) ou « Tous les services en continu ».</p>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm" style="min-width:600px">
-            <thead><tr class="text-left text-[11px] text-gray-400 uppercase tracking-wide border-b border-gray-100">
-              <th class="py-2 pr-2 font-semibold">Nom</th><th class="py-2 px-2 font-semibold">Service</th><th class="py-2 px-2 font-semibold">Conservation</th>
-              <th class="py-2 px-2 font-semibold">Espace</th><th class="py-2 px-2 font-semibold">État</th><th class="py-2 font-semibold"></th></tr></thead>
-            <tbody id="cfg-body"></tbody>
-          </table>
+        <p class="text-xs text-gray-500 mb-3">La pige enregistre la station DAB+ suivie, choisie dans l'onglet <a href="#reglages" class="text-blue-600 hover:text-blue-800">Réglages</a> (« Station suivie »). Sans station suivie, pas de pige. Après un changement de station, les enregistrements déjà faits restent jusqu'à la fin de leur conservation.</p>
+        <div class="flex flex-wrap items-end gap-4 text-sm">
+          <label class="block"><span class="text-xs text-gray-500">Conservation (jours)</span>
+            <input type="number" id="pg-days" min="1" max="90" class="mt-1 block w-28 border border-gray-200 rounded-lg px-2 py-1.5"></label>
+          <button onclick="savePigeDays()" id="pg-save" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Enregistrer</button>
+          <button onclick="togglePige()" id="pg-toggle" class="px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-400 text-gray-700 text-sm font-medium"></button>
+          <span class="text-xs text-gray-500" id="pg-msg"></span>
         </div>
-        <form id="cfg-form" class="mt-4 border border-dashed border-gray-300 rounded-lg p-4" onsubmit="saveForm(event)">
-          <div class="text-sm font-semibold text-gray-800 mb-3" id="cfg-form-title">Nouvelle pige DAB+</div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-            <label class="block"><span class="text-xs text-gray-500">Nom</span>
-              <input type="text" id="f-name" maxlength="60" placeholder="ex. Graffiti DAB+" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
-            <label class="block"><span class="text-xs text-gray-500">Service</span>
-              <select id="f-sid" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"></select></label>
-            <label class="block"><span class="text-xs text-gray-500">Conservation (jours)</span>
-              <input type="number" id="f-days" min="1" max="90" value="7" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
-          </div>
-          <div class="text-xs text-gray-500 mt-2" id="f-estimate"></div>
-          <div class="text-xs hidden mt-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800" id="f-warn"></div>
-          <div class="flex flex-wrap items-center gap-3 mt-3">
-            <button type="submit" id="f-submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Créer la pige</button>
-            <button type="button" id="f-cancel" class="hidden text-sm text-gray-500 hover:text-gray-800" onclick="resetForm()">Annuler</button>
-            <span class="text-xs" id="f-msg"></span>
-          </div>
-        </form>
+        <div class="text-xs text-gray-500 mt-3" id="pg-estimate"></div>
+        <div class="text-xs hidden mt-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800" id="pg-warn"></div>
       </div>
     </div>
 
@@ -425,6 +406,7 @@
         <label class="flex items-center gap-2 sm:col-span-2 lg:col-span-3">
           <input type="checkbox" id="s-enabled" class="w-4 h-4">
           <span class="font-medium text-gray-800">Activer la réception DAB+</span>
+          <span class="text-[11px] text-gray-400" id="s-enabled-help"></span>
         </label>
         <label class="block"><span class="text-xs text-gray-500">Récepteur</span>
           <select id="s-receiver" onchange="receiverFields()" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
@@ -445,10 +427,11 @@
             <option value="4">Carrousel, 4 services à la fois</option>
           </select>
           <span class="text-[11px] text-gray-400">« Services surveillés » : seuls les services cochés sont décodés, en continu, pour une charge minimale. L'ensemble et la présence de tous les services restent suivis.</span></label>
-        <label class="block"><span class="text-xs text-gray-500">Service du tableau de bord</span>
-          <select id="s-dashboard_sid" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
-            <option value="">Premier service surveillé</option>
-          </select></label>
+        <label class="block"><span class="text-xs text-gray-500" title="Service affiché sur le tableau de bord et enregistré par la pige DAB+">Station suivie (tableau de bord et pige)</span>
+          <select id="s-dashboard_sid" onchange="stationFields()" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
+            <option value="">Aucune station suivie (pas de pige)</option>
+          </select>
+          <span class="text-[11px] text-gray-400">Choisir une station active la réception DAB+ et sa pige.</span></label>
         <label class="block rtl-only"><span class="text-xs text-gray-500" title="Gain de la clé RTL-SDR (tuner R820T/R828D). L'automatique de welle-cli peut retarder la synchronisation de plusieurs minutes ; un gain fixe synchronise en quelques secondes.">Gain de la clé</span>
           <select id="s-gain" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
             <option value="-1">Automatique (welle-cli)</option>
@@ -580,7 +563,9 @@
       st = await r.json();
     } catch (e) { return; }
     render();
+    if (loaded.pigeReady && curTab === 'pige' && !stLabelled) { stLabelled = true; renderPigeCfg(); if (pgSt) pgLoadStatus(pgWin[0] + 3600); }
   }
+  let stLabelled = false;
 
   // Étapes de mise en service : seules celles qui restent à faire sont en attente
   function prereqList(p) {
@@ -589,7 +574,7 @@
       const rows2 = [
         [!!p.dongle, p.dongle ? `Dongle Si468x branché : ${esc(p.dongle)}` : 'Brancher le dongle Si468x et son antenne bande III'],
         [!!p.arecord, p.arecord ? 'arecord installé' : 'Installer arecord : <code>sudo apt install alsa-utils</code>'],
-        [false, 'Cocher « Activer la réception DAB+ » dans l\'onglet <a href="#reglages" class="underline">Réglages</a>'],
+        [false, 'Choisir la station suivie dans l\'onglet <a href="#reglages" class="underline">Réglages</a> (la réception DAB+ démarre avec elle)'],
       ];
       return '<ul class="space-y-1 mt-1">' + rows2.map(([d, t]) => `<li class="flex gap-2"><span>${d ? ok : todo}</span><span>${t}</span></li>`).join('') + '</ul>';
     }
@@ -599,7 +584,7 @@
       [!!p.dongle, p.dongle ? `Clé RTL-SDR branchée (${esc(p.dongle)})` : "Brancher une clé RTL-SDR dédiée au DAB+ et son antenne bande III"],
     ];
     if (p.dvb_driver_loaded) rows.push([false, "Pilote TNT du noyau chargé : redémarrer la machine (il est écarté par <code>67-dab.sh</code>)"]);
-    rows.push([false, 'Cocher « Activer la réception DAB+ » dans l\'onglet <a href="#reglages" class="underline">Réglages</a>']);
+    rows.push([false, 'Choisir la station suivie dans l\'onglet <a href="#reglages" class="underline">Réglages</a> (la réception DAB+ démarre avec elle)']);
     return '<ul class="space-y-1 mt-1">' + rows.map(([d, t]) => `<li class="flex gap-2"><span>${d ? ok : todo}</span><span>${t}</span></li>`).join('') + '</ul>';
   }
 
@@ -653,12 +638,21 @@
     if (!sel || document.activeElement === sel) return;
     const want = (settings && settings.dashboard_sid) || sel.value || '';
     const known = new Set(svcs.map(v => v.sid));
-    const opts = ['<option value="">Premier service surveillé</option>']
+    const opts = ['<option value="">Aucune station suivie (pas de pige)</option>']
       .concat(svcs.map(v => `<option value="${esc(v.sid)}">${esc(v.label)} (${esc(v.sid)})</option>`));
     if (want && !known.has(want)) opts.push(`<option value="${esc(want)}">${esc(want)} (absent)</option>`);
     const html = opts.join('');
     if (sel.dataset.html !== html) { sel.innerHTML = html; sel.dataset.html = html; }
     sel.value = want;
+    stationFields();
+  }
+  // Une station suivie impose la réception DAB+ ; sans station, la case reste libre
+  // (réception sans pige, par exemple pour découvrir les services d'un multiplex)
+  function stationFields() {
+    const on = !!$('s-dashboard_sid').value;
+    if (on) $('s-enabled').checked = true;
+    $('s-enabled').disabled = on;
+    $('s-enabled-help').textContent = on ? 'Active tant qu\'une station est suivie' : 'Sans station suivie : réception sans pige, pour découvrir les services';
   }
   function renderServices() {
     const svcs = (st && st.services) || [];
@@ -922,7 +916,7 @@
   }
   let freeBytes = null;
   async function loadPigeDab() {
-    try { const d = await api('/api/pige/list'); pigeDab = (d.piges || []).filter(p => p.kind === 'dab' && p.sid); freeBytes = d.free_bytes; }
+    try { const d = await api('/api/pige/list'); pigeDab = (d.piges || []).filter(p => p.kind === 'dab'); freeBytes = d.free_bytes; }
     catch (e) { pigeDab = []; }
   }
 
@@ -937,6 +931,7 @@
     settings = d.settings;
     $('s-channel').innerHTML = d.channels.map(c => `<option ${c === settings.channel ? 'selected' : ''}>${c}</option>`).join('');
     $('s-enabled').checked = !!settings.enabled;
+    stationFields();
     FIELDS.forEach(f => { if (settings[f] != null) $('s-' + f).value = settings[f]; });
     if (!$('s-carousel_size').value) $('s-carousel_size').value = '2';   // ancien réglage « 1 à la fois »
     const ek = settings.email_kinds || {};
@@ -949,7 +944,7 @@
     const dongle = $('s-receiver').value === 'si468x';
     document.querySelectorAll('.rtl-only').forEach(el => el.classList.toggle('hidden', dongle));
     $('s-receiver-help').textContent = dongle
-      ? "Un seul service décodé : celui du tableau de bord, sinon le premier coché. Les autres services restent suivis (présence), sans son."
+      ? "Un seul service décodé : la station suivie. Les autres services restent suivis (présence), sans son."
       : 'Décodage par welle-cli : plusieurs services possibles.';
   }
   async function post(body) {
@@ -1175,10 +1170,10 @@
     'Récepteur DAB+ hors service': 'bg-gray-100 text-gray-700',
   };
   function dbPigeLinks(a) {
-    // Pige du service de l'alerte ; alerte sur tout le multiplex : première pige DAB+
-    if (!pigeDab.length) return '<span class="text-gray-300" title="Aucune pige DAB+ (onglet Pige)">pas de pige</span>';
-    const pg = a.sid ? pigeDab.find(p => p.sid === a.sid) : pigeDab[0];
-    if (!pg) return '<span class="text-gray-300" title="Ce service n\'est pas enregistré">pas de pige</span>';
+    // La pige enregistre la station suivie : ses alertes et celles de tout le multiplex
+    const pg = pigeDab[0];
+    if (!pg || !pg.oldest) return '<span class="text-gray-300" title="Pas d\'enregistrement DAB+ (onglet Pige)">pas de pige</span>';
+    if (a.sid && a.sid !== pg.sid) return '<span class="text-gray-300" title="La pige enregistre seulement la station suivie">pas de pige</span>';
     const t0 = Math.floor(tms(a.start) / 1000), t1 = a.status === 'complete' && a.end ? Math.floor(tms(a.end) / 1000) : null;
     if (!pg.oldest || t0 < pg.oldest) return '<span class="text-gray-300">hors pige</span>';
     const [s, e] = alertRange(t0, t1), q = encodeURIComponent(pg.id);
@@ -1340,34 +1335,45 @@
     $('pg-start').value = fmtTime(a);
     $('pg-end').value = b != null ? fmtTime(b) : '';
   }
+  const svcLabel = sid => (((st && st.services) || []).find(x => x.sid === sid) || {}).label || sid;
   function renderPigeSel() {
-    const none = !pigeDab.length;
+    const pg = pigeDab[0];
+    pgId = pg ? pg.id : null;
+    const none = !pg || (!pg.oldest && pg.blocked);
     $('pg-none').classList.toggle('hidden', !none);
     $('pg-main').classList.toggle('hidden', none);
-    $('pg-none').textContent = isAdmin ? 'Aucune pige DAB+ pour le moment : créer la pige d\'un service dans « Réglages de la pige DAB+ » ci-dessous.'
-                                       : 'Aucune pige DAB+ pour le moment. Un administrateur peut en créer une.';
-    const html = pigeDab.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
-    if ($('pg-sel').dataset.html !== html) { $('pg-sel').innerHTML = html; $('pg-sel').dataset.html = html; }
-    if (pgId) $('pg-sel').value = pgId;
-    $('pg-sel-box').classList.toggle('hidden', pigeDab.length < 2);
+    $('pg-none').innerHTML = !pg || pg.blocked === 'reception'
+      ? 'La réception DAB+ est désactivée : la pige DAB+ démarre avec elle (onglet <a href="#reglages" class="text-blue-600">Réglages</a>).'
+      : 'Aucune station DAB+ suivie, donc pas de pige : choisir la station dans l\'onglet <a href="#reglages" class="text-blue-600">Réglages</a> (« Station suivie »).';
+    renderPigeCfg();
   }
-  $('pg-sel').addEventListener('change', async () => {
-    pgReset(); pgId = $('pg-sel').value; pgSt = null;
-    try { localStorage.setItem('blrmo-dab-pige', pgId); } catch (e) {}
-    pgChanged(); await pgLoadStatus(pgRange()[0] ?? Date.now() / 1000);
-  });
+  function renderPigeCfg() {
+    const pg = pigeDab[0];
+    if (!isAdmin) return;
+    $('pg-days').disabled = $('pg-save').disabled = $('pg-toggle').disabled = !pg;
+    if (!pg) { $('pg-estimate').textContent = 'La pige DAB+ apparaît quand la réception DAB+ est activée.'; $('pg-toggle').textContent = 'Arrêter la pige'; return; }
+    if (!$('pg-days').value) $('pg-days').value = Math.round(pg.retention_hours / 24);
+    $('pg-toggle').textContent = pg.wanted ? 'Arrêter la pige' : 'Démarrer la pige';
+    const perDay = (pg.bitrate_kbps || 128) * 125 * 86400;
+    $('pg-estimate').innerHTML = (pg.sid ? `Station enregistrée : <strong>${esc(svcLabel(pg.sid))}</strong>` + (svcLabel(pg.sid) !== pg.sid ? ` <span class="font-mono text-gray-400">${esc(pg.sid)}</span>` : '') + ' · ' : '')
+      + `environ ${fmtBytes(perDay)} par jour · pige actuelle ${fmtBytes(pg.used_bytes)} · ${fmtBytes(freeBytes)} libres sur le disque.`;
+    const mode = st ? (st.enabled ? st.mode : null) : null, w = $('pg-warn');
+    const carousel = mode && /carrousel/i.test(mode);
+    w.classList.toggle('hidden', !(pg.wanted && carousel));
+    w.textContent = 'Décodage en carrousel : la station n\'est décodée qu\'à tour de rôle et la pige aura des trous. Choisir « Services surveillés seulement » ou « Tous les services en continu » dans l\'onglet Réglages.';
+  }
   async function pgLoadStatus(center) {
     if (!pgId) return;
     const a = Math.floor(center - 3600), b = Math.ceil(center + 7200);
     try { pgSt = await api(`/api/pige/status?p=${encodeURIComponent(pgId)}&from=${a}&to=${b}`); pgWin = [a, b]; }
     catch (e) { return; }
-    const on = pgSt.enabled !== false && pgSt.recording;
+    const on = pgSt.enabled !== false && pgSt.recording, pg = pigeDab[0];
     $('pg-dot').className = 'w-2.5 h-2.5 rounded-full flex-shrink-0 ' + (on ? 'bg-red-500' : 'bg-amber-500');
-    $('pg-avail').innerHTML = pgSt.oldest
+    $('pg-avail').innerHTML = (pg && pg.sid ? `<strong>${esc(svcLabel(pg.sid))}</strong> · ` : '') + (pgSt.oldest
       ? `Disponible du <strong>${fmtDay(pgSt.oldest)} ${fmtTime(pgSt.oldest).slice(0, 5)}</strong> `
         + (on || !pgSt.newest ? 'jusqu\'à maintenant' : `au <strong>${fmtDay(pgSt.newest)} ${fmtTime(pgSt.newest).slice(0, 5)}</strong>`)
-        + (on ? '' : ` · <span class="text-amber-700">${pgSt.enabled === false ? 'pige suspendue' : 'enregistrement arrêté'}</span>`)
-      : 'Aucun enregistrement pour le moment';
+        + (on ? '' : ` · <span class="text-amber-700">${pg && !pg.wanted ? 'pige arrêtée' : 'enregistrement interrompu'}</span>`)
+      : 'Aucun enregistrement pour le moment');
   }
   async function pgEnsure(ts) { if (!pgSt || ts < pgWin[0] + 600 || ts > pgWin[1] - 600) await pgLoadStatus(ts); }
   function pgFind(ts) {
@@ -1471,9 +1477,8 @@
   }
   // Ouvre un créneau : {p, t, e} pige, alerte ou titre (début, fin) ; play : lecture tout de suite
   async function pigeOpenAt(args, play) {
-    const { p, t, e } = args || {};
+    const { t, e } = args || {};
     pgReset();
-    if (p && pigeDab.some(x => x.id === p)) pgId = p;
     renderPigeSel();
     if (t) { const [a, b] = e ? alertRange(t, e) : [t - 30, Math.min(t + 90, Math.floor(Date.now() / 1000))]; pgSetRange(a, b); }
     pgSt = null; pgChanged();
@@ -1482,73 +1487,14 @@
   }
   async function initPige(args, play) {
     args = args || urlArgs(location.href);
-    if (!pigeDab.length) await loadPigeDab();
-    // Pige choisie : celle du lien, sinon la dernière choisie, sinon celle du service affiché
-    let last = null;
-    try { last = localStorage.getItem('blrmo-dab-pige'); } catch (e) {}
-    const byShown = (pigeDab.find(p => p.sid === shown) || {}).id;
-    pgId = [args.p, last, byShown, (pigeDab[0] || {}).id].find(x => x && pigeDab.some(p => p.id === x)) || null;
+    await loadPigeDab();
     if (!args.t) { const now = Math.floor(Date.now() / 1000); pgSetRange(now - 300, now - 60); }
-    await pigeOpenAt({ ...args, p: pgId }, play);
-    if (isAdmin) loadDabSources().then(renderConfig);
+    await pigeOpenAt(args, play);
     loaded.pigeReady = true;
-    setInterval(() => { if (curTab === 'pige' && !pgSeg) { pgLoadStatus(pgRange()[0] ?? Date.now() / 1000); } }, 60000);
+    setInterval(async () => { if (curTab === 'pige' && !pgSeg) { await loadPigeDab(); renderPigeSel(); pgLoadStatus(pgRange()[0] ?? Date.now() / 1000); } }, 60000);
   }
 
-  // ── Réglages des piges DAB+ (administrateur) ─────────────────────────
-  let editId = null, delArm = null;
-  async function loadDabSources() { fillSources(); }
-  function fillSources() {
-    const sel = $('f-sid'), keep = sel.value;
-    const svcs = ((st && st.services) || []).filter(s => s.sid);
-    sel.innerHTML = svcs.length
-      ? svcs.map(s => `<option value="${esc(s.sid)}">${esc(s.label)} (${esc(s.sid)}${s.bitrate ? ', ' + s.bitrate + ' kb/s' : ''})</option>`).join('')
-      : '<option value="">Aucun service DAB+ reçu</option>';
-    if (keep) sel.value = keep;
-    formHints();
-  }
-  function renderConfig() {
-    if (!isAdmin) return;
-    const svcs = (st && st.services) || [];
-    $('cfg-body').innerHTML = pigeDab.length ? pigeDab.map(p => {
-      const label = (svcs.find(s => s.sid === p.sid) || {}).label || p.sid;
-      const state = !p.enabled ? '<span class="text-gray-500">Suspendue</span>' : p.recording ? '<span class="text-green-700">Enregistrement</span>' : '<span class="text-amber-700">Arrêtée</span>';
-      return `<tr class="border-b border-gray-50"><td class="py-2.5 pr-2 font-semibold">${esc(p.name)}</td>
-        <td class="py-2.5 px-2">${esc(label)} <span class="text-gray-400 font-mono text-xs">${esc(p.sid)}</span></td>
-        <td class="py-2.5 px-2">${Math.round(p.retention_hours / 24)} jours</td><td class="py-2.5 px-2 font-mono text-xs">${fmtBytes(p.used_bytes)}</td>
-        <td class="py-2.5 px-2">${state}</td><td class="py-2.5 text-right whitespace-nowrap text-xs">
-        <button type="button" class="text-blue-600" onclick="editPige('${esc(p.id)}')">Modifier</button>
-        · <button type="button" class="text-blue-600" onclick="togglePige('${esc(p.id)}', ${!p.enabled})">${p.enabled ? 'Suspendre' : 'Reprendre'}</button>
-        · <button type="button" class="text-red-700 ${delArm === p.id ? 'font-semibold' : ''}" onclick="deletePige('${esc(p.id)}')">${delArm === p.id ? 'Confirmer la suppression' : 'Supprimer'}</button></td></tr>`;
-    }).join('') : '<tr><td colspan="6" class="py-4 text-center text-xs text-gray-400">Aucune pige DAB+.</td></tr>';
-  }
-  function formHints() {
-    const days = Number($('f-days').value) || 0, kbps = editId ? ((pigeDab.find(p => p.id === editId) || {}).bitrate_kbps || 128) : 128;
-    const perDay = kbps * 125 * 86400;
-    $('f-estimate').innerHTML = days ? `Environ <strong>${fmtBytes(perDay)} par jour</strong>, soit ${fmtBytes(perDay * days)} pour ${days} jour${days > 1 ? 's' : ''} · ${fmtBytes(freeBytes)} libres.` : '';
-    const mode = st ? (st.enabled ? st.mode : 'désactivé') : null, w = $('f-warn');
-    if (mode === 'désactivé' || mode === 'carrousel') {
-      w.textContent = mode === 'désactivé' ? 'La réception DAB+ est désactivée : une pige DAB+ ne pourra rien enregistrer.'
-        : 'Une pige DAB+ demande que le service soit décodé en continu : choisir le décodage « Services surveillés seulement » ou « Tous les services en continu » dans l\'onglet Réglages.';
-      w.classList.remove('hidden');
-    } else w.classList.add('hidden');
-  }
-  $('f-days').addEventListener('input', formHints);
-  function editPige(id) {
-    const p = pigeDab.find(x => x.id === id); if (!p) return;
-    editId = id;
-    $('cfg-form-title').textContent = `Modifier : ${p.name}`;
-    $('f-name').value = p.name; $('f-days').value = Math.round(p.retention_hours / 24);
-    $('f-sid').value = p.sid; $('f-sid').disabled = true;
-    $('f-submit').textContent = 'Enregistrer'; $('f-cancel').classList.remove('hidden');
-    $('cfg-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    formHints();
-  }
-  function resetForm() {
-    editId = null; $('cfg-form-title').textContent = 'Nouvelle pige DAB+';
-    $('f-name').value = ''; $('f-days').value = 7; $('f-sid').disabled = false; fillSources();
-    $('f-submit').textContent = 'Créer la pige'; $('f-cancel').classList.add('hidden'); formHints();
-  }
+  // ── Réglages de la pige DAB+ (administrateur) ───────────────────────
   async function postPige(body) {
     const r = await fetch('/api/pige/config', { method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }, body: JSON.stringify(body) });
@@ -1556,32 +1502,22 @@
     if (!r.ok || d.status !== 'ok') throw new Error(d.message || `Erreur ${r.status}`);
     return d;
   }
-  function fMsg(text, ok) { $('f-msg').className = 'text-xs ' + (ok ? 'text-green-600' : 'text-red-600'); $('f-msg').textContent = text; }
-  async function refreshPiges() { await loadPigeDab(); renderPigeSel(); renderConfig(); }
-  async function saveForm(ev) {
-    ev.preventDefault();
-    const body = editId ? { action: 'update', id: editId, name: $('f-name').value, retention_days: $('f-days').value }
-                        : { action: 'create', name: $('f-name').value, sid: $('f-sid').value, retention_days: $('f-days').value };
-    if (!editId && !body.sid) { fMsg('Choisir un service DAB+.'); return; }
-    try {
-      await postPige(body);
-      fMsg(editId ? 'Enregistré.' : 'Pige créée : l\'enregistrement démarre dans les 20 secondes.', true);
-      resetForm(); await refreshPiges();
-      if (!pgId && pigeDab.length) { pgId = pigeDab[0].id; renderPigeSel(); pgChanged(); pgLoadStatus(Date.now() / 1000); }
-    } catch (e) { fMsg(e.message); }
+  function pgMsg(text, ok) { $('pg-msg').className = 'text-xs ' + (ok ? 'text-green-600' : 'text-red-600'); $('pg-msg').textContent = text; }
+  async function savePigeDays() {
+    const pg = pigeDab[0], days = parseInt($('pg-days').value, 10);
+    if (!pg) return;
+    if (!(days >= 1 && days <= 90)) { pgMsg('De 1 à 90 jours'); return; }
+    try { await postPige({ action: 'update', id: pg.id, retention_days: days }); pgMsg('Enregistré.', true); await loadPigeDab(); renderPigeSel(); }
+    catch (e) { pgMsg(e.message); }
   }
-  async function togglePige(id, enabled) {
-    try { await postPige({ action: 'update', id, enabled }); await refreshPiges(); } catch (e) { fMsg(e.message); }
-  }
-  async function deletePige(id) {
-    if (delArm !== id) { delArm = id; renderConfig(); setTimeout(() => { if (delArm === id) { delArm = null; renderConfig(); } }, 5000); return; }
-    delArm = null;
+  async function togglePige() {
+    const pg = pigeDab[0];
+    if (!pg) return;
     try {
-      await postPige({ action: 'delete', id });
-      fMsg('Pige supprimée, avec ses enregistrements.', true);
-      await refreshPiges();
-      if (pgId === id) { pgReset(); pgId = (pigeDab[0] || {}).id || null; renderPigeSel(); pgSt = null; pgChanged(); pgLoadStatus(Date.now() / 1000); }
-    } catch (e) { fMsg(e.message); }
+      await postPige({ action: 'update', id: pg.id, enabled: !pg.wanted });
+      pgMsg(pg.wanted ? 'Pige arrêtée.' : 'Pige démarrée : l\'enregistrement reprend dans les 20 secondes.', true);
+      await loadPigeDab(); renderPigeSel(); pgLoadStatus(pgRange()[0] ?? Date.now() / 1000);
+    } catch (e) { pgMsg(e.message); }
   }
 
   // ── Démarrage ──────────────────────────────────────────
