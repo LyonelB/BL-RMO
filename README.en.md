@@ -357,7 +357,6 @@ On the device, the syslog server must be the **IP address** of BL-RMO (not `bl-r
 - [ ] Removal of RTL-SDR FM reception, MPX analysis and Docker
 
 ### To do
-- [ ] Summary page
 - [ ] Alert when switching to mono
 - [ ] welle-monitor: port the changes of the next welle.io version
 
