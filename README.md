@@ -325,26 +325,34 @@ Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-RMO (pas `bl
 
 ## 🗺️ Roadmap
 
+### Fait
 - [x] v0.3 à v0.7 : Icecast2, SSL, installation automatique, alertes, accès local, mode public, webhook, interface mobile
 - [x] v0.8.0 : tuner TEF668X, pige 24 h, chaîne de diffusion, journaux et traps, comptes et rôles
-- [ ] Courbes du relevé de l'émetteur et alerte sur l'écart entre alimentations
-- [x] Navigation par domaine : FM, DAB+, Chaîne, Parc et Système, chacun avec son journal, sa pige et sa configuration
-- [ ] Page Bilan
-- [ ] Page Incidents : regroupement des alertes de réception et de diffusion, cause probable, frise
-- [ ] Retrait du mode RTL-SDR, de l'analyse MPX et de Docker
 - [x] v0.9.0 : nouveau nom BL-RMO, journaux en trois onglets
 - [x] Réception DAB+ (reprise de BL-DMO), validée sur site
 - [x] Tableau de bord FM, DAB+, chaîne et pige
+- [x] Navigation par domaine : FM, DAB+, Chaîne, Parc et Système, chacun avec son journal, sa pige et sa configuration
 - [x] Une pige par réception : FM et station DAB+ suivie
-- [ ] Alerte de passage en mono
 - [x] Capteurs de site (température, humidité... d'un shelter), hors du flux du signal
+- [x] Version anglaise de l'interface et des mails
+
+### Prochain chantier
+- [ ] Surveillance Dante, libre et auto-hébergée, dans l'esprit de Dante Director : découverte des appareils (mDNS), état, horloge, abonnements audio, journal des changements et alertes. Piste : bibliothèque [netaudio](https://github.com/chris-ritsen/network-audio-controller)
+
+### Prochaine version
+- [ ] Retrait du mode RTL-SDR en FM, de l'analyse MPX et de Docker
+
+### À faire
+- [ ] Page Bilan
+- [ ] Alerte de passage en mono
+- [ ] welle-monitor : reporter les changements de la prochaine version de welle.io
+
+### Mis de côté
+- [ ] Page Incidents : regroupement des alertes de réception et de diffusion, cause probable, frise
 - [ ] Battement de cœur vers un service extérieur (healthchecks.io...) : une alerte même si BL-RMO ou le serveur tombe
 - [ ] Alerte audio figé (boucle bloquée, tonalité fixe) et RadioText inchangé depuis trop longtemps
-- [ ] Fermeture de BL-DMO ([dabplus-monitor](https://github.com/LyonelB/dabplus-monitor)) : annonce, archivage, puis suppression du dépôt
-- [ ] welle-monitor : reporter les changements de la prochaine version de welle.io
-- [x] Version anglaise de l'interface et des mails
-- [ ] Piste : sonde AES67 (sortie console Dante)
-- [ ] Surveillance Dante, libre et auto-hébergée, dans l'esprit de Dante Director : découverte des appareils (mDNS), état, horloge, abonnements audio, journal des changements et alertes. Piste : bibliothèque [netaudio](https://github.com/chris-ritsen/network-audio-controller)
+- [ ] Sonde AES67 : écouter la sortie de la console sur le réseau Dante
+- [ ] BL-DMO ([dabplus-monitor](https://github.com/LyonelB/dabplus-monitor)) : dépôt archivé, suppression éventuelle plus tard
 
 ---
 

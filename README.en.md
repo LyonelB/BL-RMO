@@ -339,26 +339,34 @@ On the device, the syslog server must be the **IP address** of BL-RMO (not `bl-r
 
 ## 🗺️ Roadmap
 
+### Done
 - [x] v0.3 to v0.7: Icecast2, SSL, automatic installation, alerts, local access, public mode, webhook, mobile interface
 - [x] v0.8.0: TEF668X tuner, 24 h logger, broadcast chain, logs and traps, accounts and roles
-- [ ] Transmitter reading charts and alert on the difference between power supplies
-- [x] Navigation by domain: FM, DAB+, Chain, Assets and System, each with its log, logger and settings
-- [ ] Summary page
-- [ ] Incidents page: grouping of reception and broadcast alerts, probable cause, timeline
-- [ ] Removal of the RTL-SDR mode, MPX analysis and Docker
 - [x] v0.9.0: new name BL-RMO, logs in three tabs
 - [x] DAB+ reception (continuation of BL-DMO), validated on site
 - [x] FM, DAB+, chain and logger dashboard
+- [x] Navigation by domain: FM, DAB+, Chain, Assets and System, each with its log, logger and settings
 - [x] One logger per reception: FM and watched DAB+ station
-- [ ] Alert when switching to mono
 - [x] Site sensors (temperature, humidity... of a shelter), outside the signal path
+- [x] English version of the interface and the mails
+
+### Next
+- [ ] Dante monitoring, free and self-hosted, in the spirit of Dante Director: device discovery (mDNS), status, clock, audio subscriptions, change log and alerts. Lead: the [netaudio](https://github.com/chris-ritsen/network-audio-controller) library
+
+### Next release
+- [ ] Removal of RTL-SDR FM reception, MPX analysis and Docker
+
+### To do
+- [ ] Summary page
+- [ ] Alert when switching to mono
+- [ ] welle-monitor: port the changes of the next welle.io version
+
+### On hold
+- [ ] Incidents page: grouping of reception and broadcast alerts, probable cause, timeline
 - [ ] Heartbeat to an external service (healthchecks.io...): an alert even if BL-RMO or the server goes down
 - [ ] Frozen audio alert (stuck loop, fixed tone) and RadioText unchanged for too long
-- [ ] Closing BL-DMO ([dabplus-monitor](https://github.com/LyonelB/dabplus-monitor)): announcement, archiving, then deletion of the repository
-- [ ] welle-monitor: port the changes of the next welle.io version
-- [x] English version of the interface and the mails
-- [ ] Idea: AES67 probe (Dante console output)
-- [ ] Dante monitoring, free and self-hosted, in the spirit of Dante Director: device discovery (mDNS), status, clock, audio subscriptions, change log and alerts. Lead: the [netaudio](https://github.com/chris-ritsen/network-audio-controller) library
+- [ ] AES67 probe: listen to the console output on the Dante network
+- [ ] BL-DMO ([dabplus-monitor](https://github.com/LyonelB/dabplus-monitor)): repository archived, possible deletion later
 
 ---
 
