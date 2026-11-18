@@ -6,6 +6,14 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Navigation regroupée par domaine, étape 3 : Chaîne et Parc
+- **Chaîne de diffusion en quatre onglets** : Synoptique (`/chain`), Journal (`/chain/journal`), Appareils (`/chain/appareils`, administrateur) et Configuration (`/chain/configuration`, administrateur), avec la même barre d'onglets sur chaque page. Le bouton « Gérer la chaîne » disparaît ; `/chain/manage` mène à l'onglet Appareils.
+- **Journal de la chaîne** : une seule liste « Alertes et changements d'état » remplace les « Alertes de la chaîne » de la page Journaux et le « Journal des changements d'état » de Gérer la chaîne. Elle regroupe les appareils, sondes et capteurs, et les événements des équipements tiers (netwatch, scripts : badge « externe »), avec filtre, export CSV, archive ZIP des journaux (sur une durée, ou ±10 min autour d'une alerte) et « Écouter » qui lit la pige FM pendant l'alerte. En dessous, les messages des appareils (syslog et traps SNMP), repris de la page Journaux.
+- **Appareils** : les appareils dans l'ordre du signal, les sondes réseau et les capteurs de site (ancienne page Gérer la chaîne, sans son journal).
+- **Configuration de la chaîne** : messages masqués (règles), envoi des journaux d'un appareil vers BL-RMO (syslog UDP 514, et maintenant les traps SNMP sur UDP 162) et événements externes (URL, jeton, exemple RouterOS).
+- **Parc en trois onglets** : État (`/park#etat`), Journal (`/park#journal`) et Appareils (`/park#appareils`, administrateur). Le Journal remplace les « Derniers événements » : tous les événements des 90 derniers jours, filtres par appareil et alertes seules, export CSV (nouvelle route `/api/park/events`). Le formulaire des appareils passe dans l'onglet Appareils.
+- **Liens** : le « Dernier événement » de la chaîne sur le tableau de bord mène au Journal de la chaîne ; « Tous les journaux de cet appareil » du synoptique ouvre ce Journal filtré sur l'appareil. La page Journaux reste en place jusqu'à l'étape 4.
+
 ### Mails d'alerte FM par type
 - **Page FM, onglet Configuration** : une rubrique « Mails d'alerte », comme en DAB+, avec une case par type d'alerte : émetteur non capté, absence de modulation, RDS absent, RadioText absent (et sur-déviation avec une clé RTL-SDR). Une alerte décochée est enregistrée dans le journal et sur le tableau de bord comme les autres, sans mail (Mails = 0), et son rétablissement aussi. Les cases sont enregistrées dans `config.json` (`audio.email_kinds`) et lues à chaque alerte, sans redémarrage.
 

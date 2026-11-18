@@ -13,6 +13,9 @@
     .sidebar-link svg { width:18px; height:18px; flex-shrink:0; }
     .section { background:white; border:1px solid #f1f5f9; border-radius:12px; padding:20px; margin-bottom:16px; }
     .section-title { font-size:0.75rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .tab { padding-bottom:10px; border-bottom:2px solid transparent; color:#6b7280; white-space:nowrap; text-decoration:none; }
+    .tab:hover { color:#1f2937; }
+    .tab.on { color:#1d4ed8; border-color:#2563eb; font-weight:500; }
   </style>
 {% include '_roles.html' %}
 </head>
@@ -85,7 +88,7 @@
 <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
 <main class="flex-1 overflow-y-auto">
 
-  <header class="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10">
+  <header class="bg-white border-b border-gray-100 px-6 pt-4 sticky top-0 z-10">
     <div class="flex items-center gap-2">
       <button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -93,15 +96,22 @@
       <h1 class="text-base font-semibold text-gray-900">Parc</h1>
     </div>
     <p class="text-xs text-gray-400 mt-0.5">PC de production, NAS et sites web · relevé toutes les minutes</p>
+    <nav class="flex gap-5 mt-3 text-sm overflow-x-auto" role="tablist" aria-label="Parc">
+      <a href="#etat" data-tab="etat" role="tab" class="tab">État</a>
+      <a href="#journal" data-tab="journal" role="tab" class="tab">Journal</a>
+      <a href="#appareils" data-tab="appareils" role="tab" class="tab need-admin">Appareils</a>
+    </nav>
   </header>
 
-  <div class="p-6 max-w-6xl">
+  <div class="p-4 md:p-6 max-w-6xl">
 
     <div id="notice" class="section hidden" style="border-color:#fde68a;background:#fffbeb">
       <div class="text-sm font-semibold text-amber-800" id="notice-title"></div>
       <div class="text-xs text-amber-700 mt-1 leading-relaxed" id="notice-text"></div>
     </div>
 
+    <!-- ═══════════════════════ ÉTAT ═══════════════════════ -->
+    <div id="tab-etat" class="tab-pane hidden">
     <!-- ── Synthèse ── -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
       <div class="section" style="margin-bottom:0">
@@ -168,22 +178,56 @@
       <div class="text-[11px] text-gray-400 mt-3">Alertes : site injoignable ou en erreur (2 relevés de suite), texte attendu absent, réponse lente.</div>
     </div>
 
-    <!-- ── Événements ── -->
-    <div class="section">
-      <div class="section-title">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        Derniers événements
-        <button id="ev-toggle" type="button" class="ml-auto inline-flex items-center gap-1 text-[11px] font-medium normal-case tracking-normal text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1"></button>
-      </div>
-      <div id="ev-body" class="text-xs divide-y divide-gray-50"></div>
-      <div id="ev-short" class="text-xs text-gray-500 hidden"></div>
     </div>
 
+    <!-- ═══════════════════════ JOURNAL ═══════════════════════ -->
+    <div id="tab-journal" class="tab-pane hidden">
+      <div class="section">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="section-title" style="margin-bottom:0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Événements du parc
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <select id="ev-dev" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="evLimit = 20; renderJournal()">
+              <option value="">Tous les appareils</option>
+            </select>
+            <select id="ev-level" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="evLimit = 20; renderJournal()">
+              <option value="">Tous les événements</option>
+              <option value="alert">Alertes et rétablissements</option>
+            </select>
+            <button onclick="exportJournal()" class="need-operateur flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1.5" title="Événements affichés (filtres compris), en CSV"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mb-3">Allumages, extinctions, redémarrages, alertes (injoignable, disque, processeur, site lent) et leurs rétablissements. Les événements sont gardés 90 jours.</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead>
+              <tr class="text-gray-400 border-b border-gray-100">
+                <th class="font-medium py-2 pr-3 whitespace-nowrap">Date</th>
+                <th class="font-medium py-2 pr-3">Événement</th>
+                <th class="font-medium py-2 pr-3">Appareil</th>
+                <th class="font-medium py-2 pr-3">Détail</th>
+                <th class="font-medium py-2">Mail</th>
+              </tr>
+            </thead>
+            <tbody id="ev-body" class="divide-y divide-gray-50"><tr><td colspan="5" class="py-8 text-center text-gray-400">Chargement…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between mt-3 text-xs text-gray-500">
+          <span id="ev-count"></span>
+          <button id="ev-more" class="px-2.5 py-1 rounded-md border border-gray-200 hidden" onclick="evLimit += 50; renderJournal()">Afficher plus</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════ APPAREILS (administrateur) ═══════════════════════ -->
+    <div id="tab-appareils" class="tab-pane hidden need-admin">
     <!-- ── Réglages (administrateur) ── -->
     <div class="section need-admin" id="manage">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
-        Appareils et sites surveillés <span class="text-[11px] font-normal normal-case tracking-normal text-gray-400">(administrateur)</span>
+        Appareils et sites surveillés
         <button type="button" onclick="editDevice(null)" class="ml-auto text-[11px] font-medium normal-case tracking-normal text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-3 py-1">Ajouter</button>
       </div>
       <table class="w-full text-sm mb-2">
@@ -233,6 +277,7 @@
       </form>
     </div>
 
+    </div>
   </div>
 </main>
 
@@ -399,18 +444,70 @@
     }).join('');
   }
 
-  // ── Événements ──
-  const EV_CLS = { alert: 'text-red-600 font-semibold', restored: 'text-green-600 font-semibold', info: 'text-gray-500' };
+  // ═══ Onglets : #etat, #journal, #appareils ═══
+  const role = document.documentElement.dataset.role;
+  const TABS = ['etat', 'journal', 'appareils'];
+  let curTab = null;
+  function showTab(t) {
+    if (!TABS.includes(t) || (t === 'appareils' && role !== 'admin')) t = 'etat';
+    curTab = t;
+    TABS.forEach(x => $('tab-' + x).classList.toggle('hidden', x !== t));
+    document.querySelectorAll('[data-tab]').forEach(a => {
+      const on = a.dataset.tab === t;
+      a.classList.toggle('on', on); a.setAttribute('aria-selected', on);
+    });
+    if (t === 'journal') loadJournal();
+  }
+  window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
+
+  // ═══ Journal : événements du parc ═══
+  const EV_CLS = { alert: 'bg-red-50 text-red-700', restored: 'bg-green-50 text-green-700', info: 'bg-gray-100 text-gray-600' };
   const EV_LBL = { down: 'Injoignable', on: 'Allumé', off: 'Éteint', reboot: 'Redémarrage', disk: 'Disque', cpu: 'Processeur', nas: 'NAS', slow: 'Lent', snmp: 'SNMP' };
-  function evTime(ts) { const d = new Date(ts); return when(d.getTime() / 1000); }
-  function renderEvents() {
-    const ev = st.events || [];
-    const label = e => e.level === 'restored' ? 'Rétabli' : e.kind === 'down' && e.level === 'alert' ? 'Injoignable' : EV_LBL[e.kind] || e.kind;
-    $('ev-body').innerHTML = ev.length ? ev.slice(0, 20).map(e => `<div class="py-2 flex gap-3"><span class="font-mono text-gray-400 w-28 flex-shrink-0">${evTime(e.timestamp)}</span>
-        <span class="${EV_CLS[e.level] || ''} w-28 flex-shrink-0">${esc(label(e))}</span><span class="text-gray-700">${esc(e.device_name)} : ${esc(e.message)}${e.email_sent ? ' <span class="text-gray-400">· mail envoyé</span>' : ''}</span></div>`).join('')
-      : '<div class="py-3 text-gray-400">Aucun événement pour le moment.</div>';
-    const e = ev[0];
-    $('ev-short').innerHTML = e ? `Dernier : <span class="text-gray-800 font-medium">${esc(e.device_name)}, ${esc(e.message)}</span> · ${evTime(e.timestamp)}` : 'Aucun événement.';
+  const evLabel = e => e.level === 'restored' ? 'Rétabli' : e.kind === 'down' && e.level === 'alert' ? 'Injoignable' : EV_LBL[e.kind] || e.kind;
+  function evTime(ts) { const d = new Date(String(ts).replace(' ', 'T')); return `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`; }
+  const pad2 = n => String(n).padStart(2, '0');
+  let evAll = [], evLimit = 20;
+  async function loadJournal() {
+    try {
+      const r = await fetch('/api/park/events?limit=2000', { credentials: 'include' });
+      if (r.status === 401) { location.href = '/login?timeout=1'; return; }
+      evAll = (await r.json()).events || [];
+    } catch (e) { $('ev-body').innerHTML = `<tr><td colspan="5" class="py-8 text-center text-red-500">${esc(e.message)}</td></tr>`; return; }
+    const sel = $('ev-dev'), cur = sel.value;
+    const devs = [...new Set(evAll.map(e => e.device_name).filter(Boolean))].sort();
+    sel.innerHTML = '<option value="">Tous les appareils</option>' + devs.map(d => `<option>${esc(d)}</option>`).join('');
+    sel.value = devs.includes(cur) ? cur : '';
+    renderJournal();
+  }
+  function evList() {
+    const dev = $('ev-dev').value, lvl = $('ev-level').value;
+    return evAll.filter(e => (!dev || e.device_name === dev) && (!lvl || e.level === 'alert' || e.level === 'restored'));
+  }
+  function renderJournal() {
+    const list = evList(), shown = list.slice(0, evLimit);
+    $('ev-count').textContent = `${list.length} événement${list.length > 1 ? 's' : ''}`;
+    $('ev-more').classList.toggle('hidden', list.length <= evLimit);
+    $('ev-body').innerHTML = shown.length ? shown.map(e => `<tr class="hover:bg-slate-50">
+        <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${evTime(e.timestamp)}</td>
+        <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${EV_CLS[e.level] || EV_CLS.info}">${esc(evLabel(e))}</span></td>
+        <td class="py-2 pr-3 font-medium text-gray-800 whitespace-nowrap">${esc(e.device_name || '-')}</td>
+        <td class="py-2 pr-3 text-gray-600" style="overflow-wrap:anywhere">${esc(e.message || '')}</td>
+        <td class="py-2 text-gray-600">${e.email_sent ? 'oui' : '<span class="text-gray-300">-</span>'}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="py-8 text-center text-gray-400">Aucun événement pour le moment.</td></tr>';
+  }
+  function exportJournal() {
+    const cell = v => { const t = v == null ? '' : String(v); return /[;"\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+    const rows = [['date', 'heure', 'evenement', 'appareil', 'detail', 'mail']].concat(evList().map(e => {
+      const d = new Date(String(e.timestamp).replace(' ', 'T'));
+      return [`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`,
+              evLabel(e), e.device_name || '', e.message || '', e.email_sent ? 'oui' : 'non'];
+    }));
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + rows.map(r => r.map(cell).join(';')).join('\r\n') + '\r\n'], { type: 'text/csv;charset=utf-8' }));
+    const n = new Date();
+    a.download = `blrmo-parc_${n.getFullYear()}${pad2(n.getMonth() + 1)}${pad2(n.getDate())}-${pad2(n.getHours())}${pad2(n.getMinutes())}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
   }
 
   async function load() {
@@ -422,7 +519,7 @@
       $('notice').classList.toggle('hidden', st.devices.length > 0);
       $('notice-title').textContent = 'Aucun appareil surveillé';
       $('notice-text').textContent = isAdmin ? 'Ajoutez les PC, le NAS et les sites web dans « Appareils et sites surveillés », en bas de page.' : "Un administrateur doit ajouter les appareils à surveiller.";
-      renderSummary(); renderPcs(); renderNas(); renderSites(); renderEvents();
+      renderSummary(); renderPcs(); renderNas(); renderSites();
     } catch (e) {
       $('notice').classList.remove('hidden'); $('notice-title').textContent = 'Surveillance du parc indisponible'; $('notice-text').textContent = e.message;
     }
@@ -536,10 +633,11 @@
   function toggleSidebar() { $('sidebar').classList.toggle('-translate-x-full'); $('sidebar-overlay').classList.toggle('hidden'); }
   function closeSidebar() { $('sidebar').classList.add('-translate-x-full'); $('sidebar-overlay').classList.add('hidden'); }
 
-  BLRMO.collapsible('blrmo-park-events', [[$('ev-body'), true], [$('ev-short'), false]], $('ev-toggle'));
   updateSidebarFrequency();
+  showTab(location.hash.slice(1));
   load(); loadDevices();
   setInterval(load, 15000);
+  setInterval(() => { if (curTab === 'journal' && !document.hidden) loadJournal(); }, 30000);
 </script>
 </body>
 </html>

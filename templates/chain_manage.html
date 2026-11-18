@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>BL-RMO · Gérer la chaîne</title>
+  <title>BL-RMO · Chaîne de diffusion · Appareils</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -130,18 +130,21 @@
 <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
 <main class="flex-1 overflow-y-auto">
 
-  <header class="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3">
-    <div>
-      <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><a href="/chain" class="text-xs text-blue-600 hover:text-blue-800 mr-2">&larr; Synoptique</a><h1 class="text-base font-semibold text-gray-900">Gérer la chaîne</h1></div>
-      <p class="text-xs text-gray-400 mt-0.5">Ajouter, ordonner et régler les appareils et les sondes</p>
+  <header class="bg-white border-b border-gray-100 px-6 pt-4 sticky top-0 z-10">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">Chaîne de diffusion</h1></div>
+        <p class="text-xs text-gray-400 mt-0.5">Ajouter, ordonner et régler les appareils, les sondes et les capteurs</p>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <div id="summary" class="flex items-center gap-1.5 text-xs"></div>
+        <button onclick="openEditor(null, 'device')" class="flex items-center gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Ajouter un appareil
+        </button>
+      </div>
     </div>
-    <div class="flex items-center gap-2 flex-wrap">
-      <div id="summary" class="flex items-center gap-1.5 text-xs"></div>
-      <button onclick="openEditor(null, 'device')" class="flex items-center gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 transition">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Ajouter un appareil
-      </button>
-    </div>
+    {% set chain_tab = 'appareils' %}{% include '_chain_nav.html' %}
   </header>
 
   <div class="p-6 max-w-6xl">
@@ -222,55 +225,6 @@
         </table>
       </div>
     </div>
-
-    <!-- ── Journal ──────────────────────────────────────────────── -->
-    <div class="section mt-6">
-      <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
-        <div class="section-title !mb-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-          Journal des changements d'état
-        </div>
-        <div class="flex items-center gap-2 flex-wrap">
-          <select id="events-filter" onchange="loadEvents()" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white">
-            <option value="">Tous les appareils</option>
-          </select>
-          <span class="flex items-center gap-1" title="Archive ZIP : changements d'état, mesures de chaque sondage, alertes et niveaux FM">
-            <select id="export-hours" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white">
-              <option value="1">1 h</option><option value="6">6 h</option><option value="24" selected>24 h</option>
-              <option value="72">3 jours</option><option value="168">7 jours</option>
-            </select>
-            <button onclick="exportLogs()" class="flex items-center gap-1 text-xs font-medium border border-gray-200 hover:border-gray-400 text-gray-700 rounded-lg px-2 py-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Exporter</button>
-          </span>
-        </div>
-      </div>
-      <div id="events" class="text-xs"></div>
-    </div>
-
-    <!-- ── Remontée externe ─────────────────────────────────────── -->
-    <details class="section" id="hook-section">
-      <summary class="section-title !mb-0 cursor-pointer select-none">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Événements externes (netwatch MikroTik, scripts...)
-      </summary>
-      <div class="mt-4 space-y-3 text-xs text-gray-600">
-        <p>Un équipement tiers peut signaler ses propres sondes à BL-RMO par une requête HTTP. L'événement apparaît dans le journal et sur la carte de l'appareil qui a la même adresse IP.</p>
-        <div class="grid grid-cols-1 sm:grid-cols-[7rem_1fr_auto] gap-2 items-center">
-          <span class="font-medium text-gray-700">URL</span>
-          <code id="hook-url" class="!text-xs break-all"></code><span></span>
-          <span class="font-medium text-gray-700">Jeton</span>
-          <code id="hook-token" class="!text-xs break-all">...</code>
-          <button onclick="regenToken()" class="text-xs text-red-500 hover:text-red-700 justify-self-start">Régénérer</button>
-        </div>
-        <div>
-          <div class="font-medium text-gray-700 mb-1">Paramètres (GET ou POST)</div>
-          <p><code>token</code>, <code>source</code> (ex. CRS-Studio), <code>probe</code> (nom de la sonde), <code>host</code> (IP surveillée), <code>state</code> (<code>up</code> ou <code>down</code>), <code>text</code> (facultatif).</p>
-        </div>
-        <div>
-          <div class="font-medium text-gray-700 mb-1">Exemple RouterOS (à ajouter dans le down-script d'une sonde netwatch)</div>
-          <pre id="hook-example" class="bg-slate-900 text-slate-100 rounded-lg p-3 overflow-x-auto text-[11px] leading-relaxed whitespace-pre"></pre>
-        </div>
-      </div>
-    </details>
 
     <!-- ── Gestion ──────────────────────────────────────────────── -->
     <div class="section">
@@ -542,7 +496,7 @@ async function api(url, opts = {}, retried = false) {
   }
   if (o.method && o.method !== 'GET') o.headers['X-CSRFToken'] = csrfHeader();
   const r = await fetch(url, o);
-  if (r.status === 401) { window.location = '/login?next=/chain/manage'; throw new Error('Session expirée'); }
+  if (r.status === 401) { window.location = '/login?next=/chain/appareils'; throw new Error('Session expirée'); }
   let data = null;
   try { data = await r.clone().json(); } catch (e) {}
   // Jeton CSRF expiré (page ouverte longtemps) : on en reprend un et on rejoue une fois
@@ -866,6 +820,7 @@ async function move(kind, i, dir) {
 // ═══════════════════════════════════════════════════════════════════════
 function renderFilterOptions() {
   const sel = document.getElementById('events-filter');
+  if (!sel) return;                       // journal : onglet Journal
   const cur = sel.value;
   const grp = (label, list) => list.length ? `<optgroup label="${label}">` +
     list.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('') + '</optgroup>' : '';
@@ -884,37 +839,7 @@ function exportLogs() {
   window.location = '/api/chain/export?hours=' + document.getElementById('export-hours').value;
 }
 
-async function loadEvents() {
-  const id = document.getElementById('events-filter').value;
-  try {
-    const data = await api('/api/chain/events?limit=60' + (id ? '&device_id=' + id : ''));
-    const ev = data.events || [];
-    const el = document.getElementById('events');
-    if (!ev.length) { el.innerHTML = '<div class="text-gray-400 py-3 text-center">Aucun changement d\'état enregistré</div>'; return; }
-    const badge = (s, ext) => {
-      const st = STATES[s] || STATES.unknown;
-      const label = ext ? ({ up: 'Normal', down: 'Dégradé' }[s] || st.label) : st.label;
-      return `<span class="px-1.5 py-0.5 rounded ${st.pill} font-medium">${esc(label)}</span>`;
-    };
-    el.innerHTML = '<div class="divide-y divide-gray-50">' + ev.map(e => {
-      const ts = Math.floor(new Date(e.timestamp).getTime() / 1000);
-      const ext = !!e.source;
-      return `
-      <div class="py-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span class="font-mono text-gray-400 w-28 flex-shrink-0">${fmtDate(e.timestamp)}</span>
-        <span class="font-medium text-gray-800 w-36 truncate">${esc(e.device_name)}</span>
-        <span class="flex items-center gap-1">${badge(e.from_state, ext)}<span class="text-gray-300">›</span>${badge(e.to_state, ext)}</span>
-        ${ext ? `<span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-medium" title="Événement reçu de ${esc(e.source)}">${esc(e.source)} · ${esc(e.probe || '')}</span>` : ''}
-        <span class="text-gray-500 truncate flex-1 min-w-[8rem]">${esc(e.message)}</span>
-        <a href="${exportUrl(ts - 600, ts + 600)}" class="listen-link !text-gray-500" title="Exporter les journaux 10 min avant et après cet événement"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> ±10 min</a>
-        <a href="/pige?t=${ts}" class="listen-link" title="Ouvrir la pige 30 s avant cet événement">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          Écouter
-        </a>
-      </div>`;
-    }).join('') + '</div>';
-  } catch (e) { console.warn(e); }
-}
+function loadEvents() {}                  // journal : onglet Journal
 
 // ═══════════════════════════════════════════════════════════════════════
 //  Éditeur
@@ -1307,22 +1232,6 @@ async function addDabLocal() {
   } catch (e) { alert(e.message); }
 }
 
-async function loadHookInfo() {
-  try {
-    const d = await api('/api/chain/hook/info');
-    const url = location.origin + d.path;
-    document.getElementById('hook-url').textContent = url;
-    document.getElementById('hook-token').textContent = d.token;
-    document.getElementById('hook-example').textContent =
-      `:do {/tool fetch url="${url}" http-method=post check-certificate=no output=none \\\n` +
-      `  http-data="token=${d.token}&source=CRS-Studio&probe=faisceau-60&host=192.168.1.60&state=down"} on-error={}`;
-  } catch (e) { console.warn(e); }
-}
-async function regenToken() {
-  if (!confirm("Régénérer le jeton ? Les scripts qui utilisent l'ancien cesseront de fonctionner.")) return;
-  try { await api('/api/chain/hook/token', { method: 'POST' }); loadHookInfo(); } catch (e) { alert(e.message); }
-}
-document.getElementById('hook-section').addEventListener('toggle', e => { if (e.target.open) loadHookInfo(); });
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEditor(); });
 
@@ -1338,9 +1247,7 @@ refresh().then(() => {
   }
   if (h) history.replaceState(null, '', location.pathname);
 });
-loadEvents();
 setInterval(() => { if (!document.hidden) refresh(); }, 5000);
-setInterval(() => { if (!document.hidden) loadEvents(); }, 30000);
 
 fetch('/api/config/full', { credentials: 'include' }).then(r => r.json()).then(config => {
   const freq = config.rtl_sdr?.frequency || '88.6M';

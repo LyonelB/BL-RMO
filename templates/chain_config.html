@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>BL-RMO · Chaîne de diffusion · Configuration</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .sidebar-link { display:flex; align-items:center; gap:10px; padding:10px 16px; border-radius:8px; color:#64748b; font-size:0.875rem; font-weight:500; transition:all 0.15s; text-decoration:none; }
+    .sidebar-link:hover, .sidebar-link.active { background:#eff6ff; color:#2563eb; }
+    .sidebar-link svg { width:18px; height:18px; flex-shrink:0; }
+    .section { background:white; border:1px solid #f1f5f9; border-radius:12px; padding:20px; margin-bottom:16px; }
+    .tab-btn { padding:10px 14px; font-size:0.8125rem; font-weight:600; color:#64748b; border-bottom:2px solid transparent; white-space:nowrap; }
+    .tab-btn:hover { color:#0f172a; }
+    .tab-btn.active { color:#2563eb; border-bottom-color:#2563eb; }
+    .tab-pane { display:none; }
+    .tab-pane.active { display:block; }
+    .log-line { white-space:pre-wrap; word-break:break-word; font-size:12px; line-height:1.55; }
+    .log-error { color:#fca5a5; } .log-warning { color:#fcd34d; } .log-info { color:#cbd5e1; }
+    .section-title { font-size:0.75rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-size:0.8em; }
+    details > summary { list-style:none; }
+    details > summary::-webkit-details-marker { display:none; }
+  </style>
+{% include '_roles.html' %}
+</head>
+<body class="flex h-screen overflow-hidden bg-slate-50">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col flex-shrink-0 h-screen transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 ease-in-out">
+  <div class="p-5 border-b border-gray-100">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">RMO</div>
+      <div>
+        <div class="text-sm font-semibold text-gray-900">BL-RMO</div>
+        <div class="text-xs text-gray-400 font-mono" id="sidebar-frequency">— MHz</div>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+    <a href="/" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </a>
+    <a href="/config" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      Configuration
+    </a>
+    <a href="/pige" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+      Pige
+    </a>
+    <a href="/fm" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8zm0 0l13-4M8 14a2 2 0 104 0 2 2 0 00-4 0m8-1h1m-1 3h1"/></svg>
+      FM
+    </a>
+    {% if dab_enabled or (current_user and current_user.role == 'admin') %}
+    <a href="/dab" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01"/></svg>
+      DAB+
+    </a>
+    {% endif %}
+    <a href="/chain" class="sidebar-link active">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+      Chaîne
+    </a>
+    <a href="/park" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      Parc
+    </a>
+    <a href="/logs" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
+      Journaux
+    </a>
+    <a href="/about" class="sidebar-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      À propos
+    </a>
+    <a href="https://github.com/LyonelB/BL-RMO" target="_blank" class="sidebar-link">
+      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+      GitHub
+    </a>
+  </nav>
+  <div class="p-4 border-t border-gray-100">
+    <a href="/logout" class="sidebar-link" style="color:#f87171" onmouseover="this.style.background='#fff1f2';this.style.color='#dc2626'" onmouseout="this.style.background='';this.style.color='#f87171'">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Déconnexion
+    </a>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
+<main class="flex-1 overflow-y-auto">
+
+  <header class="bg-white border-b border-gray-100 px-6 pt-4 sticky top-0 z-10">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <div class="flex items-center gap-2"><button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 class="text-base font-semibold text-gray-900">Chaîne de diffusion</h1></div>
+        <p class="text-xs text-gray-400 mt-0.5">Messages masqués, envoi des journaux et événements des équipements tiers</p>
+      </div>
+      <div id="rx-status" class="text-xs"></div>
+    </div>
+    {% set chain_tab = 'configuration' %}{% include '_chain_nav.html' %}
+  </header>
+
+  <div class="p-4 md:p-6 max-w-5xl">
+    <div id="rx-warning" class="hidden mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800"></div>
+
+    <!-- ── Messages masqués ───────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+        Messages masqués <span id="rules-count" class="text-gray-400 normal-case font-normal tracking-normal"></span>
+      </div>
+      <p class="text-xs text-gray-500">Ces messages restent enregistrés : ils sont seulement cachés du journal, de l'export et du synoptique. Dans l'onglet <a href="/chain/journal" class="text-blue-600 hover:text-blue-800">Journal</a>, cochez « Afficher les messages masqués » pour les revoir, et utilisez l'icône <b>œil barré</b> au bout d'une ligne pour en masquer d'autres.</p>
+      <div id="rules-list" class="mt-3 divide-y divide-gray-50 text-xs"><div class="py-3 text-gray-400">Chargement…</div></div>
+    </div>
+
+    <!-- ── Envoyer les journaux d'un appareil ─────────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Envoyer les journaux d'un appareil vers BL-RMO
+      </div>
+      <div class="space-y-3 text-xs text-gray-600 leading-relaxed">
+        <p>Dans les réglages de l'appareil, cherchez « Syslog », « Remote log » ou « Journal distant » et indiquez :
+          serveur <code id="h-ip"></code>, port <code id="h-port">514</code>, protocole <code>UDP</code>.</p>
+        <p class="font-medium text-gray-700">MikroTik RouterOS</p>
+        <p>Repérer l'action d'envoi existante, puis la diriger vers BL-RMO :</p>
+        <pre class="bg-slate-50 border border-slate-100 rounded-lg p-3 overflow-x-auto"><code style="background:none;padding:0">/system logging action print where target=remote
+/system logging action set [find target=remote] remote=<span class="h-ip-txt"></span> remote-port=514</code></pre>
+        <p class="font-medium text-gray-700">Ubiquiti airOS</p>
+        <p>Onglet <b>Services</b>, section <b>System Log</b> : cocher <i>Remote Log</i>, adresse <code class="h-ip-txt"></code>, port 514.</p>
+        <p class="text-gray-500">Le nom affiché vient de la chaîne de diffusion : un appareil dont l'adresse IP figure dans l'onglet Appareils prend son nom. Sinon, BL-RMO affiche le nom d'hôte envoyé par l'appareil ou son adresse.</p>
+        <p class="font-medium text-gray-700">Traps SNMP</p>
+        <p>Les traps sont reçus sur le port <code>UDP 162</code> de la même adresse : chacun devient une ligne du journal (programme « trap ») et déclenche un relevé immédiat de l'appareil. Régler l'envoi des traps en SNMP v1 ou v2c ; les traps v3 (chiffrés) ne sont pas décodés.</p>
+      </div>
+    </div>
+
+    <!-- ── Événements externes ────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Événements externes (netwatch MikroTik, scripts...)
+      </div>
+      <div class="space-y-3 text-xs text-gray-600">
+        <p>Un équipement tiers peut signaler ses propres sondes à BL-RMO par une requête HTTP. L'événement apparaît dans l'onglet <a href="/chain/journal" class="text-blue-600 hover:text-blue-800">Journal</a> (badge « externe ») et sur la carte de l'appareil qui a la même adresse IP.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-[7rem_1fr_auto] gap-2 items-center">
+          <span class="font-medium text-gray-700">URL</span>
+          <code id="hook-url" class="!text-xs break-all"></code><span></span>
+          <span class="font-medium text-gray-700">Jeton</span>
+          <code id="hook-token" class="!text-xs break-all">...</code>
+          <button onclick="regenToken()" class="text-xs text-red-500 hover:text-red-700 justify-self-start">Régénérer</button>
+        </div>
+        <div>
+          <div class="font-medium text-gray-700 mb-1">Paramètres (GET ou POST)</div>
+          <p><code>token</code>, <code>source</code> (ex. CRS-Studio), <code>probe</code> (nom de la sonde), <code>host</code> (IP surveillée), <code>state</code> (<code>up</code> ou <code>down</code>), <code>text</code> (facultatif).</p>
+        </div>
+        <div>
+          <div class="font-medium text-gray-700 mb-1">Exemple RouterOS (à ajouter dans le down-script d'une sonde netwatch)</div>
+          <pre id="hook-example" class="bg-slate-900 text-slate-100 rounded-lg p-3 overflow-x-auto text-[11px] leading-relaxed whitespace-pre"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function csrf() { const m = document.querySelector('meta[name="csrf-token"]'); return m ? m.content : ''; }
+async function api(url, method, body) {
+  const o = { credentials: 'include' };
+  if (method) { o.method = method; o.headers = { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }; o.body = JSON.stringify(body || {}); }
+  const r = await fetch(url, o);
+  if (r.status === 401) { window.location = '/login?next=/chain/configuration'; throw new Error('Session expirée'); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.message || `Erreur ${r.status}`);
+  return d;
+}
+function ago(iso, nowIso) {
+  if (!iso) return 'jamais';
+  const s = Math.max(0, Math.round(((nowIso ? new Date(nowIso).getTime() : Date.now()) - new Date(iso).getTime()) / 1000));
+  if (s < 60) return `il y a ${s} s`;
+  if (s < 3600) return `il y a ${Math.floor(s / 60)} min`;
+  if (s < 86400) return `il y a ${Math.floor(s / 3600)} h`;
+  return `il y a ${Math.floor(s / 86400)} j`;
+}
+
+// ── Réception syslog : état, adresse et port à donner aux appareils ──
+let names = {}, hostOf = {};
+const displayName = src => names[src] || hostOf[src] || src;
+function setHelpIp(ip) {
+  document.querySelectorAll('.h-ip-txt').forEach(e => e.textContent = ip);
+  if ($('h-ip')) $('h-ip').textContent = ip;
+}
+setHelpIp(location.hostname);
+async function loadSources() {
+  let d;
+  try { d = await api('/api/syslog/sources'); } catch (e) { return; }
+  names = d.names || {};
+  hostOf = {};
+  (d.sources || []).forEach(s => { if (s.host) hostOf[s.src] = s.host; });
+  const m = d.meta || {};
+  const age = m.heartbeat ? (new Date(d.now) - new Date(m.heartbeat)) / 1000 : null;
+  const alive = age !== null && age < 60;
+  $('rx-status').innerHTML = alive
+    ? `<span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 rounded-full px-2.5 py-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Réception active · UDP ${esc(m.port)}</span>`
+    : `<span class="inline-flex items-center gap-1.5 bg-red-50 text-red-700 rounded-full px-2.5 py-1"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Réception arrêtée</span>`;
+  $('rx-warning').classList.toggle('hidden', alive);
+  if (!alive) {
+    $('rx-warning').innerHTML = m.heartbeat
+      ? `Le service de réception ne répond plus depuis ${esc(ago(m.heartbeat, d.now).replace('il y a ', ''))}. Vérifier : <code>sudo systemctl status bl-rmo-syslog</code>`
+      : `Le service de réception n'est pas installé. Depuis le dossier de l'application : <code>sudo bash install/build/66-syslog.sh</code>`;
+  }
+  if (m.port && $('h-port')) $('h-port').textContent = m.port;
+  if (m.ip) setHelpIp(m.ip);
+}
+
+// ── Messages masqués : règles ──
+async function loadRules() {
+  let d;
+  try { d = await api('/api/syslog/rules'); } catch (e) { $('rules-list').innerHTML = `<div class="py-3 text-red-600">${esc(e.message)}</div>`; return; }
+  const on = d.rules.filter(r => r.enabled).length;
+  $('rules-count').textContent = `${on} règle${on > 1 ? 's' : ''} active${on > 1 ? 's' : ''}`;
+  $('rules-list').innerHTML = d.rules.length ? d.rules.map(r => {
+    const scope = [r.src ? displayName(r.src) : 'tous les appareils', r.program ? `programme ${r.program}` : ''].filter(Boolean).join(' · ');
+    return `<div class="flex items-center gap-3 py-2">
+      <input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="toggleRule('${esc(r.id)}', this.checked)" title="Activer ou désactiver">
+      <div class="flex-1 ${r.enabled ? 'text-gray-700' : 'text-gray-400'}">${esc(r.label)}
+        <div class="text-[11px] text-gray-400">${esc(scope)}${r.builtin ? ' · intégrée' : (r.created_by ? ' · ajoutée par ' + esc(r.created_by) : '')}</div></div>
+      ${r.builtin ? '' : `<button class="text-red-500 hover:text-red-700 font-medium" onclick="deleteRule('${esc(r.id)}')">Supprimer</button>`}
+    </div>`;
+  }).join('') : '<div class="py-3 text-gray-400">Aucune règle.</div>';
+}
+async function toggleRule(id, enabled) {
+  try { await api(`/api/syslog/rules/${encodeURIComponent(id)}`, 'PUT', { enabled }); } catch (e) { alert(e.message); }
+  loadRules();
+}
+async function deleteRule(id) {
+  if (!confirm('Supprimer cette règle ? Les messages concernés réapparaîtront.')) return;
+  try { await api(`/api/syslog/rules/${encodeURIComponent(id)}`, 'DELETE'); } catch (e) { alert(e.message); }
+  loadRules();
+}
+
+// ── Événements externes : URL et jeton ──
+async function loadHookInfo() {
+  try {
+    const d = await api('/api/chain/hook/info');
+    const url = location.origin + d.path;
+    $('hook-url').textContent = url;
+    $('hook-token').textContent = d.token;
+    $('hook-example').textContent =
+      `:do {/tool fetch url="${url}" http-method=post check-certificate=no output=none \\\n` +
+      `  http-data="token=${d.token}&source=CRS-Studio&probe=faisceau-60&host=192.168.1.60&state=down"} on-error={}`;
+  } catch (e) { $('hook-token').textContent = e.message; }
+}
+async function regenToken() {
+  if (!confirm("Régénérer le jeton ? Les scripts qui utilisent l'ancien cesseront de fonctionner.")) return;
+  try { await api('/api/chain/hook/token', 'POST'); loadHookInfo(); } catch (e) { alert(e.message); }
+}
+
+// ── Démarrage ──
+loadSources().then(loadRules);
+loadHookInfo();
+setInterval(() => { if (!document.hidden) loadSources(); }, 30000);
+
+fetch('/api/config/full', { credentials: 'include' }).then(r => r.json()).then(config => {
+  const freq = config.rtl_sdr?.frequency || '88.6M';
+  $('sidebar-frequency').textContent = freq.replace('M', ' MHz');
+}).catch(() => {});
+function toggleSidebar() {
+  $('sidebar').classList.toggle('-translate-x-full');
+  $('sidebar-overlay').classList.toggle('hidden');
+}
+function closeSidebar() {
+  $('sidebar').classList.add('-translate-x-full');
+  $('sidebar-overlay').classList.add('hidden');
+}
+</script>
+</body>
+</html>

@@ -2007,11 +2007,32 @@ def logs_export():
 
 
 # ── Synoptique de la chaîne (CHAIN_SYNOPTIC_PATCH) ───────────────────────
-@app.route('/chain/manage')
+@app.route('/chain/appareils')
 @auth.login_required
 def chain_manage_page():
-    # Ajout, ordre et réglages des appareils et des sondes
+    # Onglet Appareils : ajout, ordre et réglages des appareils, sondes et capteurs
     return render_template('chain_manage.html')
+
+
+@app.route('/chain/manage')
+@auth.login_required
+def chain_manage_old():
+    """Ancienne adresse de « Gérer la chaîne » : onglet Appareils"""
+    return redirect('/chain/appareils')
+
+
+@app.route('/chain/journal')
+@auth.login_required
+def chain_journal_page():
+    # Onglet Journal : alertes de la chaîne, événements externes, messages syslog et traps
+    return render_template('chain_journal.html')
+
+
+@app.route('/chain/configuration')
+@auth.login_required
+def chain_config_page():
+    # Onglet Configuration : messages masqués, envoi des journaux, événements externes
+    return render_template('chain_config.html')
 
 
 @app.route('/api/chain/devices/<int:device_id>/history')
@@ -2210,6 +2231,18 @@ def park_status():
     return _park_ready() or jsonify(park_monitor.status())
 
 
+@app.route('/api/park/events')
+@auth.login_required
+@limiter.exempt
+def park_events():
+    """Événements du parc pour l'onglet Journal (2 000 au plus)."""
+    err = _park_ready()
+    if err:
+        return err
+    limit = max(1, min(request.args.get('limit', 200, type=int), 2000))
+    return jsonify({'events': park_monitor.events(limit)})
+
+
 @app.route('/api/park/devices', methods=['GET', 'POST'])
 @auth.login_required
 @limiter.exempt
@@ -2282,7 +2315,7 @@ ROLE_LECTEUR = {
     'dab_page', 'dab_status', 'dab_events', 'dab_uptime', 'dab_slide', 'dab_listen',
     'audio_defects_list', 'audio_defect_clip', 'system_summary',
     'fm_page', 'stream_spectrum', 'dab_dls_history',
-    'park_page', 'park_status',
+    'park_page', 'park_status', 'park_events', 'chain_journal_page', 'chain_manage_old',
 }
 ROLE_LECTEUR_GET = {'chain_devices', 'chain_device', 'logs_rules', 'dab_settings', 'park_devices'}      # lecture seule pour ces routes
 # Opérateur : exporter, enregistrer, intervenir sans rien régler

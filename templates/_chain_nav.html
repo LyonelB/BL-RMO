@@ -1,0 +1,13 @@
+{# Onglets de la Chaîne de diffusion : une page par onglet, même barre partout.
+   Utilisation : {% set chain_tab = 'journal' %}{% include '_chain_nav.html' %} #}
+<style>
+  .ctab { padding-bottom:10px; border-bottom:2px solid transparent; color:#6b7280; white-space:nowrap; text-decoration:none; }
+  .ctab:hover { color:#1f2937; }
+  .ctab.on { color:#1d4ed8; border-color:#2563eb; font-weight:500; }
+</style>
+<nav class="flex gap-5 mt-3 text-sm overflow-x-auto" aria-label="Chaîne de diffusion">
+  <a href="/chain" class="ctab {{ 'on' if chain_tab == 'synoptique' }}" {% if chain_tab == 'synoptique' %}aria-current="page"{% endif %}>Synoptique</a>
+  <a href="/chain/journal" class="ctab {{ 'on' if chain_tab == 'journal' }}" {% if chain_tab == 'journal' %}aria-current="page"{% endif %}>Journal</a>
+  <a href="/chain/appareils" class="ctab need-admin {{ 'on' if chain_tab == 'appareils' }}" {% if chain_tab == 'appareils' %}aria-current="page"{% endif %}>Appareils</a>
+  <a href="/chain/configuration" class="ctab need-admin {{ 'on' if chain_tab == 'configuration' }}" {% if chain_tab == 'configuration' %}aria-current="page"{% endif %}>Configuration</a>
+</nav>
