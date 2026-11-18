@@ -147,7 +147,6 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
         <span>Écoute et spectre</span>
         <label class="ml-auto order-last flex items-center gap-1.5 text-[11px] font-medium normal-case tracking-normal text-gray-600 cursor-pointer" title="Afficher l'analyseur de spectre (mémorisé dans ce navigateur)"><input type="checkbox" id="spec-on" class="w-3.5 h-3.5 accent-blue-600"> Spectre</label>
-        <span class="text-[11px] font-normal normal-case tracking-normal text-gray-400 hidden lg:inline ml-auto">Service suivi par défaut · « Écouter » dans le tableau pour en changer</span>
       </div>
       <div id="player">
         <div class="flex flex-wrap items-center gap-3">
@@ -202,37 +201,6 @@
         <table class="w-full text-xs text-left table-fixed">
           <colgroup><col style="width:110px"><col><col style="width:170px"></colgroup>
           <tbody id="dls-body" class="divide-y divide-gray-50"><tr><td colspan="3" class="py-6 text-center text-gray-400">Chargement…</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ── Services ─────────────────────────────────────────── -->
-    <div class="section">
-      <div class="section-title" id="svc-title">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-        <span>Services du multiplex</span>
-        <span class="ml-auto flex items-center gap-3">
-          <span class="text-[11px] font-normal normal-case tracking-normal text-gray-400" id="svc-help"></span>
-          <button id="svc-toggle" class="flex items-center gap-1 text-[11px] font-medium normal-case tracking-normal text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2 py-1"></button>
-        </span>
-      </div>
-      <div class="overflow-x-auto" id="svc-full">
-        <table class="w-full text-sm table-fixed" style="min-width:640px">
-          <colgroup>
-            <col><col style="width:84px"><col style="width:96px">
-            <col style="width:140px"><col style="width:64px"><col style="width:84px">
-          </colgroup>
-          <thead>
-            <tr class="text-left text-[11px] uppercase tracking-wide text-gray-400 border-b border-gray-100">
-              <th class="py-2 pr-3 font-semibold">Service</th>
-              <th class="py-2 pr-3 font-semibold">État</th>
-              <th class="py-2 pr-3 font-semibold">Niveau</th>
-              <th class="py-2 pr-3 font-semibold">Diffusion</th>
-              <th class="py-2 pr-3 font-semibold">24 h</th>
-              <th class="py-2 font-semibold"></th>
-            </tr>
-          </thead>
-          <tbody id="svc-body"><tr><td colspan="6" class="py-6 text-center text-xs text-gray-400">Chargement…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -610,7 +578,8 @@
     // Ensemble et RF
     $('ens-label').textContent = rf.ensemble_label || '-';
     const dongle = s.receiver === 'si468x';
-    $('ens-sub').textContent = rf.ensemble_id ? `EId ${rf.ensemble_id}` + (dongle ? '' : ` · gain ${rf.gain} dB`) : ' ';
+    const nsvc = (s.services || []).length;
+    $('ens-sub').textContent = rf.ensemble_id ? `EId ${rf.ensemble_id}` + (nsvc ? ` · ${nsvc} services` : '') + (dongle ? '' : ` · gain ${rf.gain} dB`) : ' ';
     $('snr-title').textContent = dongle ? 'CNR (MER)' : 'SNR';
     const th = s.thresholds || {};
     if (up && rf.snr != null) {
@@ -643,37 +612,6 @@
   function renderServices() {
     const svcs = (st && st.services) || [];
     fillDashboardSelect(svcs);
-    const station = (settings && settings.dashboard_sid) || st.default_sid || '';
-    $('svc-help').textContent = svcs.length ? `${svcs.length} services` : '';
-    if (!svcs.length) {
-      $('svc-body').innerHTML = `<tr><td colspan="6" class="py-6 text-center text-xs text-gray-400">${st.enabled ? 'Aucun service reçu pour le moment.' : 'Aucun service : pas de réception DAB+.'}</td></tr>`;
-      return;
-    }
-    $('svc-body').innerHTML = svcs.map(v => {
-      const fresh = v.level_age != null && v.level_age < 20;
-      const lvl = Math.max(v.audio_l ?? -100, v.audio_r ?? -100);
-      let state;
-      if (v.present === null || v.present === undefined) state = '<span class="text-gray-400">-</span>';
-      else if (!v.present) state = '<span class="text-red-600 font-medium">Absent</span>';
-      else if (st.mode === 'station suivie' && !(st.held_sids || []).includes(v.sid))
-        state = '<span class="text-gray-500" title="Présent dans le multiplex, non décodé : seule la station suivie l\'est">Présent</span>';
-      else if (v.silence) state = '<span class="text-amber-600 font-medium">Silence</span>';
-      else state = '<span class="text-green-600 font-medium">Présent</span>';
-      const u = uptime[v.sid];
-      const upt = u && u.uptime_pct != null ? `${u.uptime_pct.toFixed(u.uptime_pct >= 99.95 ? 0 : 1)} %` : '-';
-      return `<tr class="border-b border-gray-50 align-top ${v.present === false ? 'bg-red-50/40' : ''}">
-        <td class="py-2 pr-3"><div class="font-medium text-gray-900 truncate">${esc(v.label)}${v.sid === station ? ' <span class="ml-1 px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-medium align-middle">Station suivie</span>' : ''}</div>
-          <div class="text-[11px] text-gray-400 font-mono truncate">${esc(v.sid)}${v.pty ? ' · ' + esc(v.pty) : ''}</div>
-          <div class="text-[11px] text-gray-500 mt-0.5 truncate" title="${esc(v.dls || '')}">${v.dls ? esc(v.dls) : '&nbsp;'}</div></td>
-        <td class="py-2 pr-3 text-xs whitespace-nowrap">${state}</td>
-        <td class="py-2 pr-3 text-xs font-mono whitespace-nowrap ${fresh ? 'text-gray-700' : 'text-gray-300'}" style="font-variant-numeric:tabular-nums"
-            title="${fresh ? 'Niveau relevé toutes les 2 s' : 'Niveau non rafraîchi : service non décodé en ce moment'}">${v.present && lvl > -100 ? lvl.toFixed(1) + ' dBFS' : '-'}</td>
-        <td class="py-2 pr-3 text-xs text-gray-600 whitespace-nowrap">${esc(v.mode || '')} ${v.bitrate ? v.bitrate + ' kb/s' : ''}
-          <div class="text-[11px] text-gray-400 truncate">${esc(v.protection || '')}${v.err_aac ? ' · AAC ' + v.err_aac : ''}</div></td>
-        <td class="py-2 pr-3 text-xs font-mono text-gray-600">${upt}</td>
-        <td class="py-2 text-right whitespace-nowrap">${v.present ? (listening === v.sid ? `<button class="text-xs font-medium text-blue-700" onclick="stopListen()" title="Arrêter l'écoute">En écoute</button>` : `<button class="text-xs font-medium text-blue-600 hover:text-blue-800" onclick="listen('${esc(v.sid)}')">Écouter</button>`) : ''}</td>
-      </tr>`;
-    }).join('');
     if (shown) {
       const v = svcs.find(x => x.sid === shown);
       if (v && !specOn && !listeningLive()) {
@@ -857,8 +795,6 @@
   }
 
   // ── Fenêtres repliables (mémorisé dans ce navigateur) ──
-  BLRMO.collapsible('blrmo-dab-services', [[$('svc-full'), true]], $('svc-toggle'),
-    open => { $('svc-title').style.marginBottom = open ? '' : '0'; });
 
   // ── Titres diffusés (DLS) ──────────────────────────────
   let pigeDab = [];

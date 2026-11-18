@@ -714,10 +714,17 @@ class DabMonitor:
                 except sqlite3.Error:
                     pass
             try:
-                self.email.send_alert(title, details, skip_cooldown=True, on_sent=mark, source=('Canal DAB+', canal))
+                self.email.send_alert(title, details, skip_cooldown=True, on_sent=mark, source=('Canal DAB+', canal),
+                                      station=self._station_label() or label or None)
             except Exception as e:
                 logger.warning(f"Mail DAB+ non envoyé : {e}")
         (logger.warning if state == 'lost' else logger.info)(title)
+
+    def _station_label(self):
+        """Nom du service de la station suivie, pour les mails DAB+ (équivalent du PS FM)."""
+        sid = str(self.cfg.get('dashboard_sid') or '').lower()
+        s = self.services.get(sid) if sid else None
+        return (s.label or '').strip() if s else ''
 
     def _watched(self, sid):
         w = self.cfg.get('watched_sids') or []

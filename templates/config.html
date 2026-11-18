@@ -118,30 +118,15 @@
     <!-- ── Réglages de la réception : pages FM et DAB+ (FM_PAGE_PATCH) ── -->
     <div class="section" style="border-color:#bfdbfe;background:#eff6ff">
       <div class="text-sm font-semibold text-blue-900">Réglages de la réception</div>
-      <div class="text-xs text-blue-800 mt-1 leading-relaxed">La source, la fréquence, les seuils et les délais d'alerte se règlent sur les pages
-        <a href="/fm#configuration" class="font-semibold underline">FM</a> et <a href="/dab#configuration" class="font-semibold underline">DAB+</a>.</div>
-    </div>
-
-    <!-- ── 1. STATION ─────────────────────────────────────────── -->
-    <div class="section">
-      <div class="section-title">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-        1. Station
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <div class="field-label">Nom de la station</div>
-          <input type="text" id="station-name" class="field-input" placeholder="Graffiti Radio">
-          <div class="field-hint">Affiché dans l'interface et les mails</div>
-        </div>
-      </div>
+      <div class="text-xs text-blue-800 mt-1 leading-relaxed">La source, la fréquence, la station suivie, les seuils et les délais d'alerte se règlent sur les pages
+        <a href="/fm#configuration" class="font-semibold underline">FM</a> et <a href="/dab#configuration" class="font-semibold underline">DAB+</a>. Dans les mails, la station est nommée par son PS en FM et par le nom du service en DAB+.</div>
     </div>
 
     <!-- ── 3. EMAIL ────────────────────────────────────────────── -->
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        2. Alertes email (Gmail)
+        1. Alertes email (Gmail)
       </div>
       <div class="grid grid-cols-2 gap-4 mb-4">
         <div>
@@ -192,7 +177,7 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
-        3. Réseau
+        2. Réseau
       </div>
       <div class="toggle-wrap mb-4">
         <div>
@@ -266,7 +251,7 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-        4. Authentification
+        3. Authentification
       </div>
       <div class="grid grid-cols-3 gap-4">
         <div>
@@ -313,7 +298,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.54 8.46a5 5 0 010 7.07"/>
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.07 4.93a10 10 0 010 14.14"/>
         </svg>
-        5. Volume de sortie DAC+
+        4. Volume de sortie DAC+
       </div>
       <div class="flex items-center gap-4">
         <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,7 +323,7 @@
     <div class="section">
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-        6. Sauvegarde &amp; Restauration
+        5. Sauvegarde &amp; Restauration
       </div>
       <div class="field-hint mb-4">Le fichier ZIP contient : <code>config.json</code>, <code>.env</code> et les certificats SSL.</div>
       <div class="flex items-center gap-3 flex-wrap">
@@ -444,7 +429,6 @@
         recipientsStr = typeof r === 'string' ? r : r.join(', ');
       }
 
-      document.getElementById('station-name').value             = config.station?.name || '';
       document.getElementById('sender-email').value             = config.email?.sender_email || '';
       document.getElementById('sender-password').value          = '';
       document.getElementById('recipient-emails').value         = recipientsStr;
@@ -542,9 +526,6 @@
 
     const isDHCP = networkModeToggle.checked;
     const config = {
-      station: {
-        name:      document.getElementById('station-name').value
-      },
       email: {
         sender_email:     document.getElementById('sender-email').value,
         sender_password:  document.getElementById('sender-password').value,

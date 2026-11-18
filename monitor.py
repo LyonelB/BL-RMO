@@ -132,8 +132,10 @@ class FMMonitor:
         self.signal_frame_window = int(self.tef_config.get('signal_frame_window', 30))
         self.signal_frame_min = int(self.tef_config.get('signal_frame_min', 5))
 
-        # Système d'alertes
+        # Système d'alertes : le nom de la station dans les mails FM est le PS reçu
         self.email_alert = EmailAlert(config_path)
+        self._last_ps = ''
+        self.email_alert.fm_station = self.station_ps
 
         # Statistiques
         self.stats = {
@@ -1455,6 +1457,14 @@ class FMMonitor:
                     )
             except Exception as e:
                 logger.warning(f"Watcher rds-station-db erreur: {e}")
+
+    def station_ps(self):
+        """PS (Program Service) reçu, pour les mails FM : le dernier PS valide si le
+        signal vient d'être perdu ; None si aucun PS n'a été reçu (repli sur config.json)."""
+        ps = str(self.stats.get('ps') or '').strip()
+        if ps and ps != '-':
+            self._last_ps = ps
+        return self._last_ps or None
 
     def _fetch_station_logo(self):
         """

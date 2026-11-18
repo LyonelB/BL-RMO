@@ -6,6 +6,11 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Nom de la station selon la réception
+- **Mails d'alerte** : la station est nommée par son PS (Program Service) reçu en FM, et par le nom du service de la station suivie en DAB+ (« ⚠️ ALERTE - GRAFFITI - Absence modulation »). Si le signal FM est perdu, le dernier PS reçu est gardé. Les mails de la chaîne, du parc et le mail de test gardent le nom de `config.json`, sinon « BL-RMO ».
+- **Configuration** : la fenêtre « 1. Station » (nom de la station) est supprimée ; les rubriques sont renumérotées.
+- **Page DAB+, onglet Direct** : la fenêtre « Services du multiplex » est supprimée (une seule station surveillée, choisie dans l'onglet Configuration, dont la liste reprend tous les services). Le nombre de services du multiplex passe dans la tuile Ensemble.
+
 ### Une seule station DAB+ surveillée, onglet Configuration
 - **Plus de doublon avec la colonne « Surveillé »** : on surveille une seule station DAB+, celle choisie dans « Station suivie » (onglet Configuration). Les cases à cocher du tableau « Services du multiplex » disparaissent ; la station suivie y porte un badge, les autres services sont seulement listés (présence, niveau, diffusion, écoute). Enregistrer la configuration fait de la station suivie le seul service surveillé (alertes silence et absence, décodage continu, pige).
 - **Libellés** : décodage « Station suivie seulement (conseillé) », mails « Silence audio de la station suivie » et « Station suivie absente du multiplex ».

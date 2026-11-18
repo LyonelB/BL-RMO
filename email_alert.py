@@ -25,8 +25,9 @@ class EmailAlert:
             config = json.load(f)
 
         self.config = config['email']
-        self.station_name = config['station']['name']
-        self.frequency = config['station']['frequency_display']
+        st = config.get('station') or {}
+        self.station_name = st.get('name') or 'BL-RMO'     # repli : chaîne, parc, test
+        self.frequency = st.get('frequency_display') or st.get('frequency') or ''
 
         self.last_alert_time = None
         self.cooldown = timedelta(minutes=self.config.get('cooldown_minutes', 1))  # 1 minute par défaut
@@ -62,8 +63,9 @@ class EmailAlert:
             config = json.load(f)
 
         self.config = config['email']
-        self.station_name = config['station']['name']
-        self.frequency = config['station']['frequency_display']
+        st = config.get('station') or {}
+        self.station_name = st.get('name') or 'BL-RMO'     # repli : chaîne, parc, test
+        self.frequency = st.get('frequency_display') or st.get('frequency') or ''
         self.cooldown = timedelta(minutes=self.config.get('cooldown_minutes', 1))
         self.alerts_enabled = self.config.get('alerts_enabled', True)
 
@@ -77,7 +79,11 @@ class EmailAlert:
 
         return datetime.now() - self.last_alert_time > self.cooldown
 
-    def send_alert(self, alert_type, details="", skip_cooldown=False, on_sent=None, source=None):
+    # Nom de la station dans le mail : le PS reçu en FM, le nom du service en DAB+.
+    # monitor.py y branche une fonction qui rend le PS courant (alertes FM, sans source).
+    fm_station = None
+
+    def send_alert(self, alert_type, details="", skip_cooldown=False, on_sent=None, source=None, station=None):
         """Envoie une alerte email
         
         Args:
@@ -87,6 +93,8 @@ class EmailAlert:
             on_sent: appelé quand le mail est parti, tout de suite ou plus tard depuis la file
             source: (libellé, valeur) de la ligne sous « Station » ; par défaut la fréquence FM.
                     Les alertes DAB+ y mettent leur canal : ('Canal DAB+', '9A (202,928 MHz)').
+            station: nom de la station dans l'objet et le corps du mail (PS FM, service DAB+) ;
+                    par défaut le PS FM courant pour une alerte FM, sinon le nom de config.json.
 
         Renvoie True si le mail est parti tout de suite. En cas d'échec, il est mis
         en attente et retenté (sauf l'email de test).
@@ -104,6 +112,13 @@ class EmailAlert:
             return False
 
         item = {'type': alert_type, 'details': details, 'ts': time.time(), 'tries': 0}
+        if station is None and source is None and callable(self.fm_station):
+            try:
+                station = self.fm_station()
+            except Exception:
+                station = None
+        if station:
+            item['station'] = str(station).strip()
         if source:
             item['source'] = [str(source[0]), str(source[1])]
         if alert_type == "Test":                   # le test dit tout de suite si l'envoi marche
@@ -140,9 +155,10 @@ class EmailAlert:
         alert_type, details = item['type'], item['details']
         src_label, src_value = item.get('source') or ('Fréquence', self.frequency)
         recovered = "rétabli" in alert_type.lower()
+        station_name = item.get('station') or self.station_name
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = (f"✅ RÉTABLI - {self.station_name} - {alert_type}" if recovered
-                          else f"⚠️ ALERTE - {self.station_name} - {alert_type}")
+        msg['Subject'] = (f"✅ RÉTABLI - {station_name} - {alert_type}" if recovered
+                          else f"⚠️ ALERTE - {station_name} - {alert_type}")
         msg['From'] = self.config['sender_email']
         msg['To'] = ', '.join(self.config['recipient_emails'])
 
@@ -156,7 +172,7 @@ class EmailAlert:
 ALERTE DE SURVEILLANCE
 ======================
 
-Station: {self.station_name}
+Station: {station_name}
 {src_label}: {src_value}
 Type d'alerte: {alert_type}
 Date et heure: {timestamp}
@@ -190,7 +206,7 @@ BL-RMO · Surveillance radio
                 <div class="alert-box">
                     <div class="header">{"✅" if recovered else "⚠️"} {alert_type.upper()}</div>
                     <hr>
-                    <div class="info"><span class="label">Station:</span> {self.station_name}</div>
+                    <div class="info"><span class="label">Station:</span> {station_name}</div>
                     <div class="info"><span class="label">{src_label}:</span> {src_value}</div>
                     <div class="info"><span class="label">Type d'alerte:</span> {alert_type}</div>
                     <div class="info"><span class="label">Date et heure:</span> {timestamp}</div>
