@@ -6,6 +6,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Logo de la station FM
+- **Écoute et spectre (page FM)** : le logo de la station s'affiche à côté du bouton de lecture, comme le diaporama en DAB+. C'est le logo déjà trouvé par le PI dans rds-station-db pour le tableau de bord ; il disparaît quand le signal est perdu ou qu'aucun logo n'est connu.
+
 ### Une pige par réception
 - **La station DAB+ suivie commande tout** : la choisir dans « Station suivie (tableau de bord et pige) » de la page DAB+ (anciennement « Service du tableau de bord ») active la réception DAB+, la coche dans les services surveillés et démarre sa pige. « Activer la réception DAB+ » est alors coché d'office ; sans station suivie, la case reste libre (réception sans pige, pour découvrir les services d'un multiplex).
 - **Une seule pige DAB+** : elle enregistre la station suivie. Sans station suivie, pas de pige (plus de repli sur le premier service surveillé). Changer de station change ce qu'elle enregistre ; les enregistrements déjà faits restent jusqu'à la fin de leur conservation. Avec le dongle Si468x, la station suivie est le service décodé.
