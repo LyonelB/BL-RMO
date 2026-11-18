@@ -339,6 +339,11 @@ def save_config():
 
         # Configuration audio
         if 'audio' in data:
+            if isinstance(data['audio'].get('email_kinds'), dict):
+                # Mails par type d'alerte FM, lus par monitor.py à chaque alerte
+                ek = data['audio']['email_kinds']
+                config['audio']['email_kinds'] = {k: bool(ek.get(k, True))
+                                                  for k in ('signal', 'modulation', 'rds', 'rt', 'deviation')}
             if 'silence_threshold' in data['audio']:
                 config['audio']['silence_threshold'] = float(data['audio']['silence_threshold'])
             if 'silence_duration' in data['audio']:

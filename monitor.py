@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 
 class FMMonitor:
     def __init__(self, config_path='config.json'):
+        self.config_path = config_path
         """Initialise le moniteur FM"""
         with open(config_path, 'r') as f:
             self.config = json.load(f)
@@ -1133,11 +1134,7 @@ class FMMonitor:
                                 _sig_detail = f"Aucune porteuse FM détectée.\nNiveau: {current_level:.2f} dB\nDurée: {int(silence_duration)}s"
                                 _sig_msg = f"Émetteur hors ligne - {current_level:.2f} dB"
                             logger.error(f"{_sig_type} depuis {silence_duration:.0f}s - ENVOI ALERTE")
-                            success = self.email_alert.send_alert(
-                                alert_type=_sig_type,
-                                details=_sig_detail,
-                                skip_cooldown=True
-                            )
+                            success, mailed = self.notify('signal', _sig_type, _sig_detail)
                             if success:
                                 self.alert_sent = True
                                 with self.stats_lock:
@@ -1148,19 +1145,21 @@ class FMMonitor:
                                     level_db=current_level,
                                     duration_seconds=int(silence_duration),
                                     message=_sig_msg,
-                                    email_sent=True
+                                    email_sent=mailed
                                 )
                 else:
                     if not self.signal_ok:
                         logger.info(f"Émetteur rétabli: {current_level:.2f} dB")
                         if self.alert_sent:
-                            self.email_alert.send_recovery_alert()
+                            mailed = self.mail_on('signal')
+                            if mailed:
+                                self.email_alert.send_recovery_alert()
                             self.db.save_alert(
                                 alert_type='signal_restored',
                                 level_db=current_level,
                                 duration_seconds=int(time.time() - self.silence_start_time),
                                 message=f"Émetteur rétabli - {current_level:.2f} dB",
-                                email_sent=True
+                                email_sent=mailed
                             )
                     self.signal_ok = True
                     self.silence_start_time = None
@@ -1214,11 +1213,8 @@ class FMMonitor:
 
                     if absence_duration >= self.modulation_alert_delay and not self.modulation_alert_sent:
                         logger.warning(f"Absence modulation ({absence_duration:.0f}s) - ENVOI ALERTE")
-                        success = self.email_alert.send_alert(
-                            alert_type="Absence de modulation audio",
-                            details=mod_detail.format(int(absence_duration)) if '{}' in mod_detail else mod_detail,
-                            skip_cooldown=True
-                        )
+                        success, mailed = self.notify('modulation', "Absence de modulation audio",
+                            mod_detail.format(int(absence_duration)) if '{}' in mod_detail else mod_detail)
                         if success:
                             self.modulation_alert_sent = True
                             self.modulation_ok = False
@@ -1230,22 +1226,18 @@ class FMMonitor:
                                 level_db=current_level,
                                 duration_seconds=int(absence_duration),
                                 message=mod_message,
-                                email_sent=True
+                                email_sent=mailed
                             )
                 elif mod_message:
                     if self.modulation_alert_sent:
                         logger.info("Modulation rétablie")
-                        self.email_alert.send_alert(
-                            alert_type="Modulation audio rétablie",
-                            details=mod_restored_detail,
-                            skip_cooldown=True
-                        )
+                        _, mailed = self.notify('modulation', "Modulation audio rétablie", mod_restored_detail)
                         self.db.save_alert(
                             alert_type='modulation_restored',
                             level_db=current_level,
                             duration_seconds=0,
                             message=mod_restored_message,
-                            email_sent=True
+                            email_sent=mailed
                         )
                     self.modulation_ok = True
                     self.modulation_alert_sent = False
@@ -1258,12 +1250,9 @@ class FMMonitor:
                         if not self.rds_alert_sent:
                             self.rds_ok = False
                             logger.warning(f"RDS absent depuis {rds_absence:.0f}s - ENVOI ALERTE")
-                            success = self.email_alert.send_alert(
-                                alert_type="Signal RDS absent",
-                                details=f"Aucune donnée RDS reçue depuis {int(rds_absence)}s.\n"
-                                        f"Vérifier le codeur RDS de la station.",
-                                skip_cooldown=True
-                            )
+                            success, mailed = self.notify('rds', "Signal RDS absent",
+                                f"Aucune donnée RDS reçue depuis {int(rds_absence)}s.\n"
+                                f"Vérifier le codeur RDS de la station.")
                             if success:
                                 self.rds_alert_sent = True
                                 self.db.save_alert(
@@ -1271,22 +1260,19 @@ class FMMonitor:
                                     level_db=current_level,
                                     duration_seconds=int(rds_absence),
                                     message=f"RDS absent depuis {int(rds_absence)}s",
-                                    email_sent=True
+                                    email_sent=mailed
                                 )
                     else:
                         if self.rds_alert_sent:
                             logger.info("Signal RDS rétabli")
-                            self.email_alert.send_alert(
-                                alert_type="Signal RDS rétabli",
-                                details="Les données RDS sont à nouveau reçues correctement.",
-                                skip_cooldown=True
-                            )
+                            _, mailed = self.notify('rds', "Signal RDS rétabli",
+                                                    "Les données RDS sont à nouveau reçues correctement.")
                             self.db.save_alert(
                                 alert_type='rds_restored',
                                 level_db=current_level,
                                 duration_seconds=0,
                                 message="RDS rétabli",
-                                email_sent=True
+                                email_sent=mailed
                             )
                         self.rds_ok = True
                         self.rds_alert_sent = False
@@ -1298,12 +1284,9 @@ class FMMonitor:
                         if rt_absence >= self.rt_timeout:
                             if not self.rt_alert_sent:
                                 logger.warning(f"RT absent depuis {rt_absence:.0f}s - ENVOI ALERTE")
-                                success = self.email_alert.send_alert(
-                                    alert_type="RadioText absent",
-                                    details=f"Aucun RadioText (RT) reçu depuis {int(rt_absence)}s.\n"
-                                            f"Vérifier le codeur RDS de la station.",
-                                    skip_cooldown=True
-                                )
+                                success, mailed = self.notify('rt', "RadioText absent",
+                                    f"Aucun RadioText (RT) reçu depuis {int(rt_absence)}s.\n"
+                                    f"Vérifier le codeur RDS de la station.")
                                 if success:
                                     self.rt_alert_sent = True
                                     self.db.save_alert(
@@ -1311,22 +1294,19 @@ class FMMonitor:
                                         level_db=current_level,
                                         duration_seconds=int(rt_absence),
                                         message=f"RadioText absent depuis {int(rt_absence)}s",
-                                        email_sent=True
+                                        email_sent=mailed
                                     )
                         else:
                             if self.rt_alert_sent:
                                 logger.info("RadioText rétabli")
-                                self.email_alert.send_alert(
-                                    alert_type="RadioText rétabli",
-                                    details="Le RadioText est à nouveau reçu correctement.",
-                                    skip_cooldown=True
-                                )
+                                _, mailed = self.notify('rt', "RadioText rétabli",
+                                                        "Le RadioText est à nouveau reçu correctement.")
                                 self.db.save_alert(
                                     alert_type='rt_restored',
                                     level_db=current_level,
                                     duration_seconds=0,
                                     message="RadioText rétabli",
-                                    email_sent=True
+                                    email_sent=mailed
                                 )
                             self.rt_alert_sent = False
 
@@ -1345,17 +1325,14 @@ class FMMonitor:
                                 f"Sur-déviation FM : {deviation:.1f} kHz > "
                                 f"{self.deviation_alert_threshold:.0f} kHz depuis {over_duration:.0f}s"
                             )
-                            success = self.email_alert.send_alert(
-                                alert_type="Sur-déviation FM détectée",
-                                details=(
+                            success, mailed = self.notify('deviation', "Sur-déviation FM détectée",
+                                (
                                     f"Déviation FM : {deviation:.1f} kHz "
                                     f"(seuil : {self.deviation_alert_threshold:.0f} kHz)\n"
                                     f"Durée : {int(over_duration)}s\n"
                                     f"Pilote 19 kHz : {mpx.get('pilot_level', -100):.1f} dBFS\n"
                                     f"Vérifier le processeur audio et le limiter de déviation."
-                                ),
-                                skip_cooldown=True
-                            )
+                                ))
                             if success:
                                 self.deviation_alert_sent = True
                                 self.db.save_alert(
@@ -1363,16 +1340,12 @@ class FMMonitor:
                                     level_db=current_level,
                                     duration_seconds=int(over_duration),
                                     message=f"Sur-déviation {deviation:.1f} kHz",
-                                    email_sent=True
+                                    email_sent=mailed
                                 )
                     else:
                         if self.deviation_alert_sent:
                             logger.info(f"Déviation revenue dans les limites : {deviation:.1f} kHz")
-                            self.email_alert.send_alert(
-                                alert_type="Déviation FM normalisée",
-                                details=f"Déviation revenue à {deviation:.1f} kHz.",
-                                skip_cooldown=True
-                            )
+                            self.notify('deviation', "Déviation FM normalisée", f"Déviation revenue à {deviation:.1f} kHz.")
                         self.deviation_alert_sent = False
                         self.deviation_over_start = None
 
@@ -1457,6 +1430,26 @@ class FMMonitor:
                     )
             except Exception as e:
                 logger.warning(f"Watcher rds-station-db erreur: {e}")
+
+    # Mails par type d'alerte FM (page FM, onglet Configuration). Une alerte décochée est
+    # enregistrée dans le journal comme les autres, sans mail (Mails = 0).
+    FM_MAIL_KINDS = ('signal', 'modulation', 'rds', 'rt', 'deviation')
+
+    def mail_on(self, kind):
+        try:
+            with open(self.config_path) as f:
+                kinds = (json.load(f).get('audio') or {}).get('email_kinds') or {}
+        except Exception:
+            kinds = {}
+        return kinds.get(kind, True) is not False
+
+    def notify(self, kind, alert_type, details):
+        """Mail d'une alerte FM s'il est coché. Renvoie (alerte à enregistrer, mail parti)."""
+        if not self.mail_on(kind):
+            logger.info(f"Alerte '{alert_type}' : mail décoché, enregistrée sans mail")
+            return True, False
+        ok = self.email_alert.send_alert(alert_type=alert_type, details=details, skip_cooldown=True)
+        return ok, ok
 
     def station_ps(self):
         """PS (Program Service) reçu, pour les mails FM : le dernier PS valide si le

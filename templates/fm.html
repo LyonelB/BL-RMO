@@ -377,11 +377,22 @@
         <label class="block"><span class="text-xs text-gray-500">RadioText absent : alerte après (s)</span>
           <input id="f-rt-delay" type="number" step="10" min="10" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="600"></label>
       </div>
+      <div class="mt-4 pt-4 border-t border-gray-100">
+        <div class="text-xs font-semibold text-gray-700 mb-1">Mails d'alerte</div>
+        <p class="text-[11px] text-gray-400 mb-2">Les alertes décochées restent enregistrées dans les journaux et sur le tableau de bord, sans mail.</p>
+        <div class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+          <label class="flex items-center gap-2"><input id="m-signal" type="checkbox" class="w-4 h-4"> Émetteur non capté</label>
+          <label class="flex items-center gap-2"><input id="m-modulation" type="checkbox" class="w-4 h-4"> Absence de modulation</label>
+          <label class="flex items-center gap-2"><input id="m-rds" type="checkbox" class="w-4 h-4"> RDS absent</label>
+          <label class="flex items-center gap-2"><input id="m-rt" type="checkbox" class="w-4 h-4"> RadioText absent</label>
+          <label class="flex items-center gap-2 rtl-only"><input id="m-deviation" type="checkbox" class="w-4 h-4"> Sur-déviation</label>
+        </div>
+      </div>
       <div class="flex flex-wrap items-center gap-3 mt-4">
         <button onclick="saveSettings()" id="f-save" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Enregistrer</button>
         <span class="text-xs text-gray-400" id="f-msg">Un changement de fréquence relance la réception FM (quelques secondes de coupure de l'écoute et de la pige).</span>
       </div>
-      <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">Les mails d'alerte (expéditeur, destinataires, coupure) se règlent dans la <a href="/config" class="text-blue-600 hover:text-blue-800">Configuration</a>. La durée de conservation de la pige se règle dans l'onglet <a href="#pige" class="text-blue-600 hover:text-blue-800">Pige</a>.</p>
+      <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">L'expéditeur, les destinataires et la coupure générale des mails se règlent dans la <a href="/config" class="text-blue-600 hover:text-blue-800">Configuration</a>. La durée de conservation de la pige se règle dans l'onglet <a href="#pige" class="text-blue-600 hover:text-blue-800">Pige</a>.</p>
     </div>
     <div class="section">
       <div class="section-title">
@@ -1068,6 +1079,8 @@
     $('f-sig-delay').value = a.silence_duration ?? 10;
     $('f-rds-delay').value = a.rds_timeout ?? 120;
     $('f-rt-delay').value = a.rt_timeout ?? 300;
+    const ek = a.email_kinds || {};
+    MAIL_KINDS.forEach(k => { $('m-' + k).checked = ek[k] !== false; });
   }
   async function post(url, body) {
     const r = await fetch(url, { method: 'POST', credentials: 'include',
@@ -1076,6 +1089,7 @@
     if (!r.ok || (d.status && d.status !== 'success')) throw new Error(d.message || `Erreur ${r.status}`);
     return d;
   }
+  const MAIL_KINDS = ['signal', 'modulation', 'rds', 'rt', 'deviation'];
   async function saveSettings() {
     const freq = $('f-frequency').value.trim().replace(',', '.');
     if (!/^\d{2,3}(\.\d{1,2})?M$/i.test(freq)) { $('f-msg').className = 'text-xs text-red-600'; $('f-msg').textContent = 'Fréquence invalide (format 88.6M)'; return; }
@@ -1086,6 +1100,7 @@
       audio: {
         modulation_alert_delay: int('f-mod-delay', 30), silence_duration: int('f-sig-delay', 10),
         rds_timeout: int('f-rds-delay', 120), rt_timeout: int('f-rt-delay', 300),
+        email_kinds: Object.fromEntries(MAIL_KINDS.map(k => [k, $('m-' + k).checked])),
       },
     };
     if (useTef) {

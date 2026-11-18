@@ -6,6 +6,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Mails d'alerte FM par type
+- **Page FM, onglet Configuration** : une rubrique « Mails d'alerte », comme en DAB+, avec une case par type d'alerte : émetteur non capté, absence de modulation, RDS absent, RadioText absent (et sur-déviation avec une clé RTL-SDR). Une alerte décochée est enregistrée dans le journal et sur le tableau de bord comme les autres, sans mail (Mails = 0), et son rétablissement aussi. Les cases sont enregistrées dans `config.json` (`audio.email_kinds`) et lues à chaque alerte, sans redémarrage.
+
 ### Nom de la station selon la réception
 - **Mails d'alerte** : la station est nommée par son PS (Program Service) reçu en FM, et par le nom du service de la station suivie en DAB+ (« ⚠️ ALERTE - GRAFFITI - Absence modulation »). Si le signal FM est perdu, le dernier PS reçu est gardé. Les mails de la chaîne, du parc et le mail de test gardent le nom de `config.json`, sinon « BL-RMO ».
 - **Configuration** : la fenêtre « 1. Station » (nom de la station) est supprimée ; les rubriques sont renumérotées.
