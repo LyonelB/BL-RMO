@@ -308,6 +308,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Télécharger</button>
         </div>
         <div class="text-xs text-gray-500 mt-3" id="pg-summary">&nbsp;</div>
+        <div class="hidden mt-3 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800" id="pg-arc-note"></div>
 
         <div id="pg-player" class="hidden mt-4 p-3 rounded-lg bg-slate-50">
           <div class="flex flex-wrap items-center gap-3">
@@ -326,16 +327,6 @@
           <div class="text-[11px] text-gray-400 mt-1" id="pg-state"></div>
           <audio id="pg-audio" preload="auto"></audio>
         </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-          Extraits des dernières alertes
-        </div>
-        <p class="text-xs text-gray-400 mb-3" id="arch-help">De 30 s avant l'alerte à 30 s après le rétablissement. Ces extraits restent disponibles après la sortie de la pige.</p>
-        <div id="arch-list" class="text-sm text-gray-400">Chargement…</div>
-        <audio id="arch-audio" controls preload="none" class="w-full mt-3" style="display:none"></audio>
       </div>
 
       <div class="section need-admin">
@@ -464,13 +455,22 @@
 
   // Liens « Écouter » (/fm?t=...#pige) : ouverture de la pige sans recharger la page
   function pigeHref(t0) { return `/fm?t=${t0}#pige`; }
+  // Créneau d'une alerte : de 30 s avant à 30 s après le rétablissement (2 min sans fin connue), 4 h au plus
+  function alertRange(t0, t1) {
+    const now = Math.floor(Date.now() / 1000);
+    const b = t1 ? t1 + 30 : t0 + 90;
+    return [t0 - 30, Math.min(b, t0 - 30 + 4 * 3600, now)];
+  }
+  const urlArgs = href => { const q = new URL(href, location.href).searchParams, n = k => parseInt(q.get(k), 10) || null;
+                            return { t: n('t'), e: n('e'), arc: n('arc') }; };
   document.addEventListener('click', ev => {
     const a = ev.target.closest('a[href^="/fm?t="]');
     if (!a || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.button) return;
     ev.preventDefault();
-    const t = parseInt(new URL(a.href).searchParams.get('t'), 10);
     history.pushState(null, '', a.getAttribute('href'));
-    showTab('pige'); pigeOpenAt(t);
+    const args = urlArgs(a.href);
+    if (!loaded.pige) { loaded.pige = true; initPige(args, true); }
+    showTab('pige'); if (loaded.pigeReady) pigeOpenAt(args, true);
   });
 
   // ═══ DIRECT : état de la réception (SSE, comme le tableau de bord) ═══
@@ -655,17 +655,17 @@
   };
   function rcPigeLinks(startIso, endIso) {
     const t0 = Math.floor(tms(startIso) / 1000);
+    const t1 = endIso ? Math.floor(tms(endIso) / 1000) : null;
     const mp3 = (href, title) => canExport ? `<a href="${href}" class="font-medium text-blue-600 hover:text-blue-800" title="${title}">MP3</a>` : '';
     if (!pigeAt(t0)) {
       const arc = rcArchives.find(a => t0 >= a.clip_start - 60 && t0 <= a.end + 60);
       return arc
-        ? `<a href="/api/pige/archives/${arc.id}/audio" target="_blank" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Extrait archivé, de 30 s avant à 30 s après">Écouter</a>`
+        ? `<a href="/fm?t=${t0}&arc=${arc.id}#pige" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Extrait archivé, de 30 s avant à 30 s après">Écouter</a>`
           + mp3(`/api/pige/archives/${arc.id}/audio?dl=1`, 'Extrait archivé (MP3)')
         : '<span class="text-gray-300">hors pige</span>';
     }
-    const t1 = endIso ? Math.floor(tms(endIso) / 1000) : t0 + 90;
-    const a = t0 - 30, b = Math.min(t1 + 30, Math.floor(Date.now() / 1000));
-    return `<a href="${pigeHref(t0)}" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Ouvrir la pige 30 s avant l'alerte">Écouter</a>`
+    const [a, b] = alertRange(t0, t1);
+    return `<a href="/fm?t=${t0}${t1 ? '&e=' + t1 : ''}#pige" class="font-medium text-blue-600 hover:text-blue-800" style="margin-right:12px" title="Ouvrir la pige 30 s avant l'alerte">Écouter</a>`
          + mp3(`/api/pige/export?start=${a}&end=${b}`, 'Extrait MP3 de 30 s avant à 30 s après');
   }
   async function loadJournal(force) {
@@ -704,7 +704,8 @@
     const type = $('rc-type').value;
     const list = rcAlerts.filter(a => !type || a.alert_label === type);
     const shown = list.slice(0, rcLimit);
-    $('rc-count').textContent = `${list.length} alerte${list.length > 1 ? 's' : ''}`;
+    $('rc-count').textContent = rcAlerts.length >= 500 ? `${list.length} alerte${list.length > 1 ? 's' : ''} parmi les 500 plus récentes`
+                                                       : `${list.length} alerte${list.length > 1 ? 's' : ''}`;
     $('rc-more').classList.toggle('hidden', list.length <= rcLimit);
     if (!shown.length) {
       $('rc-body').innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-400">Aucune alerte enregistrée</td></tr>';
@@ -726,14 +727,14 @@
         range = `${t0} → <span class="text-gray-400">?</span>`;
         state = '<span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600" title="Fin non enregistrée (redémarrage de la surveillance pendant l\'alerte)">Fin inconnue</span>';
       } else {
-        state = '<span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">Retour seul</span>';
+        state = '<span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700" title="Rétablissement enregistré sans le début de l\'alerte (début avant un redémarrage)">Retour seul</span>';
       }
       const col = RC_COLORS[a.alert_label] || 'bg-gray-100 text-gray-700';
       return `<tr class="hover:bg-slate-50">
         <td class="py-2 pr-3 font-mono text-gray-500 whitespace-nowrap">${day}</td>
         <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${col}">${esc(a.alert_label || '-')}</span></td>
         <td class="py-2 pr-3 font-mono text-gray-600 whitespace-nowrap">${range}</td>
-        <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.status === 'ongoing' || a.status === 'orphan' ? '-' : fmtDur(a.duration)}</td>
+        <td class="py-2 pr-3 font-semibold text-gray-800 whitespace-nowrap">${a.status === 'complete' ? fmtDur(a.duration) : '-'}</td>
         <td class="py-2 pr-3 whitespace-nowrap">${state}</td>
         <td class="py-2 pr-3 text-gray-600">${a.emails_sent}</td>
         <td class="py-2 whitespace-nowrap">${rcPigeLinks(a.start_time, a.end_time)}</td>
@@ -805,8 +806,9 @@
   }
 
   // ═══ PIGE : date, heure de début, heure de fin, lecture, téléchargement ═══
+  // Un seul lecteur : la pige, ou l'extrait archivé d'une alerte sortie de la pige (pgArc).
   const pAudio = $('pg-audio');
-  let pgSt = null, pgWin = [0, 0], pgSeg = null, pgOffset = 0, pgA = null, pgB = null, pgInfo = null;
+  let pgSt = null, pgWin = [0, 0], pgSeg = null, pgOffset = 0, pgInfo = null, pgArc = null;
   function pgRange() {
     // Instant de début et de fin d'après les champs ; une fin avant le début passe au lendemain
     const d = $('pg-date').value, s = $('pg-start').value, e = $('pg-end').value;
@@ -822,7 +824,6 @@
     $('pg-date').value = isoDate(a);
     $('pg-start').value = fmtTime(a);
     $('pg-end').value = b != null ? fmtTime(b) : '';
-    pgChanged();
   }
   async function pgLoadStatus(center) {
     const a = Math.floor(center - 3600), b = Math.ceil(center + 7200);
@@ -839,7 +840,7 @@
     if (isAdmin) {
       const days = Math.round((pgSt.retention_hours || 24) / 24);
       if (!$('pg-days').value) $('pg-days').value = days;
-      $('pg-estimate').textContent = `Environ ${fmtBytes(128 * 125 * 86400)} par jour à 128 kb/s · pige actuelle ${fmtBytes(pgSt.used_bytes)} · ${fmtBytes(pgSt.free_bytes)} libres sur le disque.`;
+      $('pg-estimate').textContent = `Environ ${fmtBytes(128 * 125 * 86400)} par jour à 128 kb/s · pige actuelle ${fmtBytes(pgSt.used_bytes)} · ${fmtBytes(pgSt.free_bytes)} libres sur le disque. Les extraits des dernières alertes sont gardés après la sortie de la pige.`;
     }
   }
   async function pgEnsure(ts) { if (!pgSt || ts < pgWin[0] + 600 || ts > pgWin[1] - 600) await pgLoadStatus(ts); }
@@ -850,7 +851,9 @@
     }
     return null;
   }
-  const pgPos = () => pgSeg ? pgSeg.start + (pAudio.currentTime || pgOffset) : null;
+  const pgPos = () => pgArc ? (pAudio.src ? pgArc.a + (pAudio.currentTime || 0) : null)
+                            : pgSeg ? pgSeg.start + (pAudio.currentTime || pgOffset) : null;
+  const pgLoaded = () => !!(pgArc ? pAudio.src : pgSeg);
   function pgLoadSeg(seg, offset, autoplay = true) {
     pgSeg = seg; pgOffset = offset;
     pAudio.src = `/api/pige/segment/${encodeURIComponent(seg.name)}`;
@@ -862,25 +865,34 @@
     pgUI();
   }
   async function pgPlayAt(ts) {
+    stopPlay();
+    if (pgArc) {
+      if (!pAudio.src) { pAudio.src = `/api/pige/archives/${pgArc.id}/audio`; pAudio.onloadedmetadata = null; }
+      const off = Math.max(0, ts - pgArc.a);
+      $('pg-player').classList.remove('hidden');
+      if (pAudio.readyState >= 1) pAudio.currentTime = off;
+      else pAudio.onloadedmetadata = () => { pAudio.currentTime = off; };
+      pAudio.play().catch(() => {});
+      pgUI(); return;
+    }
     await pgEnsure(ts);
     const f = pgFind(ts);
     if (!f) { $('pg-summary').innerHTML = '<span class="text-red-600">Pas d\'enregistrement à ce moment</span>'; return; }
-    stopPlay();
-    $('arch-audio').pause();
     pgLoadSeg(f.seg, f.offset);
   }
   function pigeStop() { if (!pAudio.paused) pAudio.pause(); }
+  function pgReset() { pAudio.pause(); pAudio.removeAttribute('src'); pAudio.load(); pgSeg = null; }
   function pigePlayToggle() {
-    if (pgSeg && !pAudio.paused) { pAudio.pause(); return; }
+    if (pgLoaded() && !pAudio.paused) { pAudio.pause(); return; }
     const [a, b] = pgRange();
     if (a == null) return;
     const pos = pgPos();
     // Reprise là où la lecture s'était arrêtée si elle est dans le créneau
-    if (pgSeg && pos != null && pos >= a && (b == null || pos < b - 1)) { stopPlay(); pAudio.play().catch(() => {}); return; }
+    if (pgLoaded() && pos != null && pos >= a && (b == null || pos < b - 1)) { stopPlay(); pAudio.play().catch(() => {}); return; }
     pgPlayAt(a);
   }
   pAudio.addEventListener('ended', async () => {
-    if (!pgSeg) return;
+    if (pgArc || !pgSeg) { pgUI(); return; }
     const end = pgSeg.end;
     await pgEnsure(end + 1);
     const i = pgSt.segments.findIndex(s => s.start >= end - 1);
@@ -896,7 +908,7 @@
   $('pg-volume').oninput = e => { pAudio.volume = e.target.value / 100; };
   pAudio.volume = 0.8;
   function pgUI() {
-    const playingNow = pgSeg && !pAudio.paused;
+    const playingNow = pgLoaded() && !pAudio.paused;
     $('pg-play-ic').innerHTML = playingNow ? IC_PAUSE : IC_PLAY;
     $('pg-play-txt').textContent = playingNow ? 'Pause' : 'Lecture';
     const ts = pgPos(), [a, b] = pgRange();
@@ -912,7 +924,7 @@
     if (a == null) return;
     const end = b ?? a + 3600, r = $('pg-bar').getBoundingClientRect();
     const ts = a + (end - a) * Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width));
-    if (pgSeg && ts >= pgSeg.start && ts < pgSeg.end) { pAudio.currentTime = ts - pgSeg.start; if (pAudio.paused) pAudio.play().catch(() => {}); }
+    if (!pgArc && pgSeg && ts >= pgSeg.start && ts < pgSeg.end) { pAudio.currentTime = ts - pgSeg.start; if (pAudio.paused) pAudio.play().catch(() => {}); }
     else pgPlayAt(ts);
   });
   let pgCheckT = null;
@@ -921,13 +933,18 @@
     pgUI();
     clearTimeout(pgCheckT); pgCheckT = setTimeout(pgCheck, 250);
   }
-  ['pg-date', 'pg-start', 'pg-end'].forEach(id => $(id).addEventListener('change', pgChanged));
+  // Un créneau saisi à la main quitte l'extrait archivé et revient à la pige
+  ['pg-date', 'pg-start', 'pg-end'].forEach(id => $(id).addEventListener('change', () => {
+    if (pgArc) { pgArc = null; pgReset(); $('pg-arc-note').classList.add('hidden'); }
+    pgChanged();
+  }));
   async function pgCheck() {
     const [a, b] = pgRange(), box = $('pg-summary');
     pgInfo = null;
     if (a == null) { box.textContent = 'Choisir une date et une heure de début.'; return; }
     if (b == null) { box.textContent = 'Lecture à partir de l\'heure de début. Indiquer une heure de fin pour télécharger.'; return; }
     const dur = `<span class="font-mono">${fmtTime(a)} → ${fmtTime(b)}</span> · <strong>${fmtDur(b - a)}</strong>`;
+    if (pgArc) { box.innerHTML = `${dur} · extrait archivé`; pgInfo = { arc: true }; $('pg-dl').disabled = false; return; }
     if (!canExport) { box.innerHTML = dur; return; }
     try {
       const d = await api(`/api/pige/export?check=1&start=${a}&end=${b}`);
@@ -939,41 +956,34 @@
   }
   function pigeDownload() {
     const [a, b] = pgRange();
-    if (a == null || b == null || !pgInfo) return;
-    location.href = `/api/pige/export?start=${a}&end=${b}`;
+    if (!pgInfo) return;
+    if (pgArc) { location.href = `/api/pige/archives/${pgArc.id}/audio?dl=1`; return; }
+    if (a != null && b != null) location.href = `/api/pige/export?start=${a}&end=${b}`;
   }
-  async function pigeOpenAt(t) {
-    if (!loaded.pige) { loaded.pige = true; await initPige(t); return; }
-    pigeStop();
-    const now = Math.floor(Date.now() / 1000);
-    pgSetRange(t - 30, Math.min(t + 90, now));
-    await pgLoadStatus(t);
-    $('tab-pige').scrollIntoView({ block: 'start' });
-  }
-
-  // ── Extraits des dernières alertes ───────────────────────────────────
-  async function loadArchives() {
-    let d;
-    try { d = await api('/api/pige/archives'); } catch (e) { return; }
-    const box = $('arch-list');
-    if (d.keep) $('arch-help').textContent = `Les ${d.keep} derniers incidents, de 30 s avant l'alerte à 30 s après le rétablissement. Ces extraits restent disponibles après la sortie de la pige.`;
-    if (!d.archives || !d.archives.length) { box.innerHTML = '<span class="text-xs">Aucun extrait pour le moment.</span>'; return; }
-    box.innerHTML = '<div class="divide-y divide-gray-100">' + d.archives.map(a => {
-      const causes = (a.causes && a.causes.length ? a.causes : [a.label]).map(esc).join('<br>');
-      const dl = canExport ? `<a class="text-xs font-medium text-blue-600 hover:text-blue-800" href="/api/pige/archives/${a.id}/audio?dl=1">MP3</a>` : '';
-      return `<div class="flex flex-wrap items-center gap-x-4 gap-y-1 py-2.5">
-        <div class="font-mono text-xs text-gray-500" style="min-width:120px">${fmtShort(a.start)}</div>
-        <div class="flex-1 text-sm text-gray-800" style="min-width:200px">${causes}
-          <div class="text-xs text-gray-400">Durée de l'incident ${fmtDur(a.end - a.start)} · extrait ${fmtDur(a.clip_end - a.clip_start)} · ${fmtBytes(a.size)}</div></div>
-        <div class="flex gap-3 whitespace-nowrap">
-          <button class="text-xs font-medium text-blue-600 hover:text-blue-800" onclick="playArchive(${a.id})">Écouter</button>${dl}
-        </div></div>`;
-    }).join('') + '</div>';
-  }
-  function playArchive(id) {
-    const p = $('arch-audio');
-    pigeStop(); stopPlay();
-    p.style.display = ''; p.src = `/api/pige/archives/${id}/audio`; p.play().catch(() => {});
+  // Ouvre un créneau : {t, e} alerte ou titre (début, fin), {arc} extrait archivé ; play : lecture tout de suite
+  async function pigeOpenAt(args, play) {
+    const { t, e, arc } = args || {};
+    pgReset(); pgArc = null; $('pg-arc-note').classList.add('hidden');
+    if (!pigeFrom) await loadPigeFrom();
+    // Moment sorti de la pige (lien de la chaîne, d'un vieux mail) : extrait archivé qui le couvre, s'il existe
+    if (arc || (t && (!pigeFrom || t < pigeFrom))) {
+      let x = null;
+      try {
+        const list = (await api('/api/pige/archives')).archives || [];
+        x = arc ? list.find(r => r.id === arc) : list.find(r => t >= r.clip_start && t <= r.clip_end);
+      } catch (err) {}
+      if (x) {
+        pgArc = { id: x.id, a: x.clip_start, b: x.clip_end };
+        pgSetRange(x.clip_start, x.clip_end);
+        $('pg-arc-note').innerHTML = `Ce moment n'est plus dans la pige : extrait archivé de l'alerte du ${fmtShort(x.start)}, de 30 s avant à 30 s après le rétablissement`
+          + (x.clip_end - x.clip_start < x.end - x.start + 60 ? ' (limité à ' + fmtDur(x.clip_end - x.clip_start) + ')' : '') + '.';
+        $('pg-arc-note').classList.remove('hidden');
+      }
+    }
+    if (!pgArc && t) { const [a, b] = e ? alertRange(t, e) : [t - 30, Math.min(t + 90, Math.floor(Date.now() / 1000))]; pgSetRange(a, b); }
+    pgChanged();
+    await pgLoadStatus(t || Date.now() / 1000);
+    if (play && (pgArc || t)) pgPlayAt(pgRange()[0]);
   }
 
   // ── Conservation de la pige FM (administrateur) ──────────────────────
@@ -992,14 +1002,16 @@
     finally { $('pg-save').disabled = false; }
   }
 
-  async function initPige(t) {
-    const now = Math.floor(Date.now() / 1000);
-    if (!t) t = parseInt(new URLSearchParams(location.search).get('t'), 10) || null;
-    if (t) pgSetRange(t - 30, Math.min(t + 90, now));
-    else pgSetRange(now - 300, now - 60);
-    await pgLoadStatus(t || now);
-    loadArchives();
-    setInterval(() => { if (curTab === 'pige') { loadArchives(); if (!pgSeg) pgLoadStatus(pgRange()[0] ?? Date.now() / 1000); } }, 60000);
+  async function initPige(args, play) {
+    args = args || urlArgs(location.href);
+    if (args.t || args.arc) await pigeOpenAt(args, play);
+    else {
+      const now = Math.floor(Date.now() / 1000);
+      pgSetRange(now - 300, now - 60); pgChanged();
+      await pgLoadStatus(now);
+    }
+    loaded.pigeReady = true;
+    setInterval(() => { if (curTab === 'pige' && !pgLoaded()) pgLoadStatus(pgRange()[0] ?? Date.now() / 1000); }, 60000);
   }
 
   // ═══ RÉGLAGES (administrateur) ═══════════════════════════════════════
