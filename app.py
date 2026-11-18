@@ -248,8 +248,8 @@ def config():
 @app.route('/stats')
 @auth.login_required
 def stats():
-    """Ancienne page Statistiques : son contenu est dans Journaux, onglet Réception FM"""
-    return redirect('/logs#reception')
+    """Ancienne page Statistiques : son contenu est dans la page FM, onglet Journal"""
+    return redirect('/fm#journal')
 
 @app.route('/api/stats')
 @limiter.exempt
@@ -1077,7 +1077,11 @@ pige_store = PigeStore()
 @app.route('/pige')
 @auth.login_required
 def pige_page():
-    """Page de la pige audio"""
+    """Page de la pige audio. Un lien ?t= sans ?p= (alertes FM, chaîne) ouvre
+    l'onglet Pige de la page FM, 30 s avant l'événement."""
+    t = request.args.get('t', '')
+    if t.isdigit() and not request.args.get('p'):
+        return redirect(f'/fm?t={t}#pige')
     return render_template('pige.html')
 
 
