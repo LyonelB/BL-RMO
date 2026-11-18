@@ -6,6 +6,11 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Chaîne, onglet Appareils allégé
+- **Doublons supprimés** : les cartes des appareils (état, mesures, courbes) et le tableau des sondes avec leurs mesures reprenaient le Synoptique ; le second tableau « Sondes réseau » doublait le premier ; le résumé et le bouton d'ajout de l'en-tête doublaient ceux des tableaux.
+- **Trois tableaux de même forme** : Appareils de la chaîne (ordre du signal), Sondes réseau et Capteurs de site. Chacun a son bouton d'ajout, une ligne d'explication, et par élément : ordre, état (pastille, détail au survol), nom, site, type de sonde, cible, intervalle, mail, « Sonder maintenant » et « Modifier ». Les capteurs se réordonnent aussi.
+- L'état en direct, les mesures et l'historique restent sur le Synoptique.
+
 ### Navigation regroupée par domaine, étape 4 : Système et nouveau menu
 - **Nouveau menu**, le même sur toutes les pages (`templates/_sidebar.html`) : Dashboard, FM, DAB+, Chaîne, Parc et Système ; À propos, GitHub, l'utilisateur connecté et Déconnexion en bas. Configuration, Pige, Journaux et Utilisateurs disparaissent du menu : leur contenu est rangé dans les pages de chaque domaine.
 - **Page Système** (`/system`) en quatre onglets : **Général** (alertes email, réseau, volume DAC+, enregistrement et redémarrage de la surveillance), **Comptes** (mon compte, niveaux d'accès, comptes et rôles), **Journal BL-RMO** (services, erreurs, journal de chaque service) et **Sauvegarde** (export et import de la configuration). Général et Sauvegarde sont réservés à l'administrateur ; les autres rôles y trouvent leur compte et le journal de BL-RMO.
