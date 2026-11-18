@@ -7,7 +7,7 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
 ### Logo de la station FM
-- **Écoute et spectre (page FM)** : le logo de la station s'affiche à côté du bouton de lecture, comme le diaporama en DAB+. C'est le logo déjà trouvé par le PI dans rds-station-db pour le tableau de bord ; il disparaît quand le signal est perdu ou qu'aucun logo n'est connu.
+- **Écoute et spectre (page FM)** : le logo de la station s'affiche à côté du bouton de lecture, comme le diaporama en DAB+. C'est le logo déjà trouvé par le PI dans rds-station-db pour le tableau de bord ; il disparaît quand le signal est perdu ou qu'aucun logo n'est connu. Même cadre qu'en DAB+ (64 × 48 px, image entière sans recadrage), pour le logo FM comme pour le diaporama DAB+.
 
 ### Une pige par réception
 - **La station DAB+ suivie commande tout** : la choisir dans « Station suivie (tableau de bord et pige) » de la page DAB+ (anciennement « Service du tableau de bord ») active la réception DAB+, la coche dans les services surveillés et démarre sa pige. « Activer la réception DAB+ » est alors coché d'office ; sans station suivie, la case reste libre (réception sans pige, pour découvrir les services d'un multiplex).
