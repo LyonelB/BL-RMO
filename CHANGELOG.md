@@ -6,6 +6,9 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Lecteur FM épuré
+- **Écoute et spectre (page FM)** : la mention « Son reçu par le tuner, en direct » et le suffixe « · Antenne en direct » sont retirés, comme sur le lecteur DAB+. Le lecteur affiche le PS de la station, sinon la fréquence reçue.
+
 ### Chaîne, onglet Appareils allégé
 - **Doublons supprimés** : les cartes des appareils (état, mesures, courbes) et le tableau des sondes avec leurs mesures reprenaient le Synoptique ; le second tableau « Sondes réseau » doublait le premier ; le résumé et le bouton d'ajout de l'en-tête doublaient ceux des tableaux.
 - **Trois tableaux de même forme** : Appareils de la chaîne (ordre du signal), Sondes réseau et Capteurs de site. Chacun a son bouton d'ajout, une ligne d'explication, et par élément : ordre, état (pastille, détail au survol), nom, site, type de sonde, cible, intervalle, mail, « Sonder maintenant » et « Modifier ». Les capteurs se réordonnent aussi.

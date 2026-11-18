@@ -85,14 +85,13 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
         <span>Écoute et spectre</span>
         <label class="ml-auto order-last flex items-center gap-1.5 text-[11px] font-medium normal-case tracking-normal text-gray-600 cursor-pointer" title="Afficher l'analyseur de spectre (mémorisé dans ce navigateur)"><input type="checkbox" id="spec-on" class="w-3.5 h-3.5 accent-blue-600"> Spectre</label>
-        <span class="text-[11px] font-normal normal-case tracking-normal text-gray-400 hidden lg:inline ml-auto">Son reçu par le tuner, en direct</span>
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <button id="pl-play" onclick="togglePlay()" title="Lecture / pause" aria-label="Écouter la FM"
           class="w-9 h-9 rounded-full border-2 border-gray-200 bg-white hover:border-blue-500 hover:text-blue-600 transition flex items-center justify-center flex-shrink-0"></button>
         <img id="pl-logo" class="w-16 h-12 object-contain rounded flex-shrink-0 hidden" alt="Logo de la station">
         <div class="flex-1 min-w-0">
-          <div class="text-sm font-semibold text-gray-900 truncate" id="pl-name">Antenne en direct</div>
+          <div class="text-sm font-semibold text-gray-900 truncate" id="pl-name">&nbsp;</div>
           <div class="text-xs text-gray-500 truncate" id="pl-rt">&nbsp;</div>
         </div>
         <div class="flex items-center gap-1.5">
@@ -455,7 +454,8 @@
     const id = [s.ps && s.ps !== '-' ? s.ps : '', s.pi && s.pi !== '-' ? `PI ${s.pi}` : ''].filter(Boolean).join(' · ');
     if (!s.rds_ever_received) tile('rds', 'Non reçu', 'text-gray-400', '-');
     else tile('rds', s.rds_ok ? 'Reçu' : 'Absent', s.rds_ok ? 'text-green-600' : 'text-red-600', id || '-');
-    $('pl-name').textContent = (s.ps && s.ps !== '-' ? s.ps + ' · ' : '') + 'Antenne en direct';
+    // Nom de la station : son PS, sinon la fréquence reçue (comme le nom du service en DAB+)
+    $('pl-name').textContent = s.ps && s.ps !== '-' ? s.ps : (freq || 'FM');
     // Logo de la station, trouvé par son PI dans rds-station-db (comme le tableau de bord)
     const logo = $('pl-logo'), url = sig && s.station_logo ? s.station_logo : '';
     if (logo.dataset.src !== url) {
