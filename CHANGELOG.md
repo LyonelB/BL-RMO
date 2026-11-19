@@ -6,6 +6,15 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Surveillance Dante, étape 1 : visualisation
+- **Page Dante** (menu, entre Chaîne et Parc), onglet **État** : synthèse (réseau, appareils, abonnements, horloge), liste « À vérifier », appareils (état, produit, adresse IP, rôle d'horloge, latence, fréquence, canaux) et abonnements (récepteur, source, état, transport).
+- **Sonde Dante** (`install/windows/sonde-dante.py`) : sur un PC Windows du réseau Dante, lit toutes les minutes `netaudio status` et `netaudio clock`, en lecture seule, et envoie le relevé compressé à `POST /api/dante/report` avec son jeton. Pas de service netaudio lancé, aucun port ouvert sur le PC.
+- **Installeur** (`install/windows/installer-sonde-dante.ps1`, PowerShell en administrateur) : vérifie Python 3.10 ou plus (hors Microsoft Store), installe netaudio 0.6.1, copie la sonde dans `C:\ProgramData\BL-RMO\sonde-dante`, demande le jeton, restreint le fichier de réglages à SYSTEM et aux administrateurs, crée la tâche planifiée « BL-RMO Sonde Dante » (SYSTEM, au démarrage). `-Desinstaller` pour la retirer.
+- **Référence** : tout appareil et tout abonnement vus entrent dans la référence ; s'ils disparaissent, ils sont signalés. Signalés aussi : abonnement en erreur, aucun ou plusieurs leaders d'horloge, leader changé, horloge non synchronisée, sonde muette depuis plus de 3 minutes.
+- **Onglet Sonde** (administrateur) : jeton (afficher, copier, nouveau jeton), commandes d'installation, état de la sonde et versions, « Prendre l'état actuel comme référence ».
+- **Stockage** : table `dante_kv` de `fm_monitor.db` (jeton, dernier relevé, référence). Lecteur : consultation de la page ; réglages réservés à l'administrateur.
+- Traduction anglaise de la page. Alertes, journal et tuile du tableau de bord : étape suivante.
+
 ### Traduction anglaise, étape 4 : Système, À propos, mails, messages du serveur et README anglais
 - **Pages traduites** : Système (Général, Comptes, Journal BL-RMO, Sauvegarde), À propos et l'assistant de configuration initiale ; le rôle du compte dans le menu.
 - **Mails d'alerte dans la langue de BL-RMO** : objet, cadre et type d'alerte, et les lignes de détail connues (FM, DAB+, chaîne, parc). La langue est lue au moment de l'envoi ; un mail en attente part dans la langue en vigueur.

@@ -111,6 +111,14 @@ The RTL-SDR dongle comes back in another role: **a second tuner dedicated to DAB
 - SNMP on a Windows 10 or 11 PC: `install/windows/activer-snmp-bl-rmo.ps1` (PowerShell as administrator), read-only, restricted to the BL-RMO address
 - **Status**, **Log** (events of the last 90 days, filters, CSV export) and **Devices** tabs
 
+### 🎚️ Dante
+- **Devices** of the Dante network: online or missing, product, address, latency, sample rate, channels
+- **Subscriptions**: who receives what, status of each subscription (unicast, multicast, unresolved...)
+- **Clock**: clock leader and its source; reported if there is no leader, several, or a different one than usual
+- **Reference**: a device or subscription seen once and then gone is reported, until an administrator uses the current state as reference
+- **Dante probe** on a Windows PC of the Dante network (`install/windows/installer-sonde-dante.ps1`): reads the network with [netaudio](https://github.com/chris-ritsen/network-audio-controller), read-only, and sends the report to BL-RMO every minute; no port opened on the PC, a token of its own
+- First step: visualisation. Alerts, log and dashboard tile to come
+
 ### 📜 Logs and traps
 - **Syslog server** UDP 514 (`bl-rmo-syslog` service): the station's devices send their logs to BL-RMO
 - **SNMP traps** UDP 162, decoded, with an immediate reading of the device
@@ -130,7 +138,7 @@ The RTL-SDR dongle comes back in another role: **a second tuner dedicated to DAB
 
 ### 🌐 Web interface
 - **Dashboard** at a glance: FM and DAB+ reception (player, level meter, indicators, last alert), complete broadcast chain with its probes, logger status
-- **One menu per domain**: Dashboard, FM, DAB+, Chain, Assets and System; each page groups in tabs the live status, the log, the logger and the settings of its domain
+- **One menu per domain**: Dashboard, FM, DAB+, Chain, Dante, Assets and System; each page groups in tabs the live status, the log, the logger and the settings of its domain
 - **System**: mails, network, language and DAC+ volume (General), accounts and roles (Accounts), log of BL-RMO and its services (BL-RMO log), backup and restore
 - **French or English**: one setting for the whole of BL-RMO (System › General); alert mails follow the same language
 - Full configuration from the browser
@@ -274,6 +282,7 @@ bl-rmo/
 ├── si468x_server.py    # Si468x DAB+ dongle served with the welle-cli API (DAB+ reception)
 ├── chain_probe.py      # Chain monitoring (SNMP, probes, events)
 ├── park.py             # Assets: Windows PCs, Synology NAS, websites
+├── dante.py            # Dante: probe reports, devices, subscriptions, clock
 ├── audio_defects.py    # Audio defects: dropouts, clicks, crackles
 ├── pige.py             # 30-day logger (recorder and export)
 ├── pige_archive.py     # Audio clips of the latest alerts
@@ -286,7 +295,7 @@ bl-rmo/
 ├── database.py         # SQLite database (history, alerts)
 ├── install.sh          # Full installation
 ├── install/build/      # Installation steps (logger, logs...)
-├── install/windows/    # SNMP activation script for Windows PCs
+├── install/windows/    # Windows PCs: SNMP activation, Dante probe
 ├── update.sh           # Update
 ├── i18n/               # Translations (en.json)
 ├── templates/          # Pages: dashboard, FM, DAB+, chain, assets, system...
@@ -351,7 +360,8 @@ On the device, the syslog server must be the **IP address** of BL-RMO (not `bl-r
 - [x] English version of the interface and the mails
 
 ### Next
-- [ ] Dante monitoring, free and self-hosted, in the spirit of Dante Director: device discovery (mDNS), status, clock, audio subscriptions, change log and alerts. Lead: the [netaudio](https://github.com/chris-ritsen/network-audio-controller) library
+- [x] Dante monitoring, step 1: Dante page (devices, subscriptions, clock) fed by the Dante probe, built on [netaudio](https://github.com/chris-ritsen/network-audio-controller)
+- [ ] Dante monitoring, step 2: alerts, change log and dashboard tile
 
 ### Next release
 - [ ] Removal of RTL-SDR FM reception, MPX analysis and Docker

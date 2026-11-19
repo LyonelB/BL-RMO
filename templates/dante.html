@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+  <meta charset="UTF-8">
+  {% include '_i18n.html' %}
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{{ _('BL-RMO · Dante') }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .sidebar-link { display:flex; align-items:center; gap:10px; padding:10px 16px; border-radius:8px; color:#64748b; font-size:0.875rem; font-weight:500; transition:all 0.15s; text-decoration:none; }
+    .sidebar-link:hover, .sidebar-link.active { background:#eff6ff; color:#2563eb; }
+    .sidebar-link svg { width:18px; height:18px; flex-shrink:0; }
+    .section { background:white; border:1px solid #f1f5f9; border-radius:12px; padding:20px; margin-bottom:16px; }
+    .section-title { font-size:0.75rem; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .tab { padding-bottom:10px; border-bottom:2px solid transparent; color:#6b7280; white-space:nowrap; text-decoration:none; }
+    .tab:hover { color:#1f2937; }
+    .tab.on { color:#1d4ed8; border-color:#2563eb; font-weight:500; }
+    .btn { font-size:0.75rem; padding:6px 12px; border-radius:8px; border:1px solid #e5e7eb; background:white; color:#374151; }
+    .btn:hover { background:#f8fafc; }
+    .btn.warn { border-color:#fecaca; color:#b91c1c; }
+    .btn.warn.armed { background:#dc2626; border-color:#dc2626; color:white; }
+    code.cmd { display:block; background:#0f172a; color:#e2e8f0; font-size:12px; padding:10px 12px; border-radius:8px; overflow-x:auto; white-space:pre; }
+  </style>
+{% include '_roles.html' %}
+</head>
+<body class="flex h-screen overflow-hidden bg-slate-50">
+
+<!-- ═══ SIDEBAR ═══ -->
+{% set nav = 'dante' %}{% include '_sidebar.html' %}
+
+<!-- ═══ MAIN ═══ -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="closeSidebar()"></div>
+<main class="flex-1 overflow-y-auto">
+
+  <header class="bg-white border-b border-gray-100 px-6 pt-4 sticky top-0 z-10">
+    <div class="flex items-center gap-2">
+      <button class="md:hidden text-gray-500 hover:text-gray-700 flex-shrink-0 mr-2" onclick="toggleSidebar()">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <h1 class="text-base font-semibold text-gray-900">Dante</h1>
+    </div>
+    <p class="text-xs text-gray-400 mt-0.5">{{ _('Appareils, abonnements et horloge du réseau audio · relevé par la sonde Dante toutes les minutes') }}</p>
+    <nav class="flex gap-5 mt-3 text-sm overflow-x-auto" role="tablist" aria-label="Dante">
+      <a href="#etat" data-tab="etat" role="tab" class="tab">{{ _('État') }}</a>
+      <a href="#sonde" data-tab="sonde" role="tab" class="tab need-admin">{{ _('Sonde') }}</a>
+    </nav>
+  </header>
+
+  <div class="p-4 md:p-6 max-w-6xl">
+
+    <div id="notice" class="section hidden" style="border-color:#fde68a;background:#fffbeb">
+      <div class="text-sm font-semibold text-amber-800" id="notice-title"></div>
+      <div class="text-xs text-amber-700 mt-1 leading-relaxed" id="notice-text"></div>
+    </div>
+
+    <!-- ═══════════════════════ ÉTAT ═══════════════════════ -->
+    <div id="tab-etat" class="tab-pane hidden">
+
+    <!-- ── Synthèse ── -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('Réseau Dante') }}</div>
+        <div class="flex items-center gap-2"><span id="t-net-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+          <span class="text-base font-semibold text-gray-900" id="t-net">-</span></div>
+        <div class="text-xs text-gray-400 mt-1 truncate" id="t-net-sub">&nbsp;</div>
+      </div>
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('Appareils') }}</div>
+        <div class="flex items-center gap-2"><span id="t-dev-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+          <span class="text-base font-semibold text-gray-900" id="t-dev">-</span></div>
+        <div class="text-xs text-gray-400 mt-1 truncate" id="t-dev-sub">&nbsp;</div>
+      </div>
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('Abonnements') }}</div>
+        <div class="flex items-center gap-2"><span id="t-sub-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+          <span class="text-base font-semibold text-gray-900" id="t-sub">-</span></div>
+        <div class="text-xs text-gray-400 mt-1 truncate" id="t-sub-sub">&nbsp;</div>
+      </div>
+      <div class="section" style="margin-bottom:0">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ _('Horloge') }}</div>
+        <div class="flex items-center gap-2"><span id="t-clk-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+          <span class="text-base font-semibold text-gray-900 truncate" id="t-clk">-</span></div>
+        <div class="text-xs text-gray-400 mt-1 truncate" id="t-clk-sub">&nbsp;</div>
+      </div>
+    </div>
+
+    <!-- ── Problèmes ── -->
+    <div class="section hidden" id="pb-section" style="border-color:#fecaca">
+      <div class="section-title" style="color:#b91c1c">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        {{ _('À vérifier') }}
+      </div>
+      <ul id="pb-list" class="space-y-1.5 text-sm"></ul>
+    </div>
+
+    <!-- ── Appareils ── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+        {{ _('Appareils') }}
+      </div>
+      <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead><tr class="text-[11px] text-gray-400 uppercase tracking-wide text-left border-b border-gray-100">
+          <th class="py-2 pr-3 font-semibold">{{ _('Appareil') }}</th><th class="py-2 pr-3 font-semibold">{{ _('État') }}</th>
+          <th class="py-2 pr-3 font-semibold">{{ _('Adresse IP') }}</th><th class="py-2 pr-3 font-semibold">{{ _('Horloge') }}</th>
+          <th class="py-2 pr-3 font-semibold">{{ _('Latence') }}</th><th class="py-2 pr-3 font-semibold">{{ _('Fréquence') }}</th>
+          <th class="py-2 pr-3 font-semibold">{{ _('Canaux') }}</th></tr></thead>
+        <tbody id="dev-body"></tbody>
+      </table>
+      </div>
+      <div class="text-[11px] text-gray-400 mt-3">{{ _("Canaux : réception / émission. Un appareil vu une fois puis disparu est signalé absent, jusqu'à ce qu'un administrateur recale la référence (onglet Sonde).") }}</div>
+    </div>
+
+    <!-- ── Abonnements ── -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+        {{ _('Abonnements') }}
+        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400">{{ _('qui reçoit quoi') }}</span>
+      </div>
+      <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead><tr class="text-[11px] text-gray-400 uppercase tracking-wide text-left border-b border-gray-100">
+          <th class="py-2 pr-3 font-semibold">{{ _('Récepteur') }}</th><th class="py-2 pr-3 font-semibold">{{ _('Source') }}</th>
+          <th class="py-2 pr-3 font-semibold">{{ _('État') }}</th><th class="py-2 pr-3 font-semibold">{{ _('Transport') }}</th></tr></thead>
+        <tbody id="sub-body" class="text-xs"></tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="text-[11px] text-gray-400 px-1" id="probe-line">&nbsp;</div>
+    </div>
+
+    <!-- ═══════════════════════ SONDE ═══════════════════════ -->
+    <div id="tab-sonde" class="tab-pane hidden need-admin">
+
+    <div class="section">
+      <div class="section-title">{{ _('Sonde Dante') }}</div>
+      <p class="text-sm text-gray-600 leading-relaxed">{{ _("BL-RMO n'est pas branché sur le réseau Dante. La sonde tourne sur un PC qui l'est (COOR), lit le réseau avec netaudio, en lecture seule, et envoie le relevé ici toutes les minutes. Elle ne peut rien modifier, et rien n'écoute sur ce PC.") }}</p>
+      <div class="grid sm:grid-cols-3 gap-3 mt-4 text-sm" id="probe-info"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">{{ _('Jeton') }}</div>
+      <p class="text-xs text-gray-500 mb-3">{{ _("La sonde envoie ce jeton avec chaque relevé. Après un nouveau jeton, relancer l'installeur sur le PC pour le saisir.") }}</p>
+      <div class="flex flex-wrap items-center gap-2">
+        <input id="token" type="password" readonly class="font-mono text-xs border border-gray-200 rounded-lg px-3 py-2 w-80 max-w-full bg-gray-50">
+        <button class="btn" onclick="toggleToken()" id="btn-show">{{ _('Afficher') }}</button>
+        <button class="btn" onclick="copyToken()" id="btn-copy">{{ _('Copier') }}</button>
+        <button class="btn warn" onclick="newToken(this)">{{ _('Nouveau jeton') }}</button>
+      </div>
+      <div class="text-xs mt-2" id="token-msg"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">{{ _('Installation sur le PC Windows') }}</div>
+      <ol class="text-sm text-gray-600 space-y-3 list-decimal pl-5">
+        <li>{{ _('Installer Python 3.10 ou plus récent depuis python.org, pour tous les utilisateurs (pas la version du Microsoft Store).') }}</li>
+        <li>{{ _('Copier sonde-dante.py et installer-sonde-dante.ps1 (dossier install/windows du dépôt) dans un dossier du PC.') }}</li>
+        <li>{{ _('Ouvrir PowerShell en administrateur dans ce dossier et lancer :') }}
+          <code class="cmd mt-2" id="cmd-install"></code></li>
+        <li>{{ _("Coller le jeton quand l'installeur le demande. Il installe netaudio, copie la sonde dans C:\\ProgramData\\BL-RMO\\sonde-dante, fait un premier relevé et crée la tâche planifiée « BL-RMO Sonde Dante » (compte SYSTEM, au démarrage).") }}</li>
+      </ol>
+      <p class="text-xs text-gray-500 mt-4">{{ _('Journal de la sonde : C:\\ProgramData\\BL-RMO\\sonde-dante\\sonde-dante.log. Désinstaller :') }}</p>
+      <code class="cmd mt-2">powershell -ExecutionPolicy Bypass -File installer-sonde-dante.ps1 -Desinstaller</code>
+    </div>
+
+    <div class="section">
+      <div class="section-title">{{ _('Référence') }}</div>
+      <p class="text-xs text-gray-500 mb-3 leading-relaxed">{{ _("Tout appareil et tout abonnement vus par la sonde entrent dans la référence. S'ils disparaissent, ils sont signalés. Après un changement voulu (appareil retiré, routage modifié dans Dante Controller), prendre l'état actuel comme référence.") }}</p>
+      <div class="text-xs text-gray-600 mb-3" id="ref-info"></div>
+      <button class="btn warn" onclick="resetBaseline(this)">{{ _("Prendre l'état actuel comme référence") }}</button>
+      <span class="text-xs ml-2" id="ref-msg"></span>
+    </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const csrf = () => document.querySelector('meta[name="csrf-token"]').content;
+  const role = document.documentElement.dataset.role;
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const pad = n => String(n).padStart(2, '0');
+  const DOT = { ok: 'bg-green-500', warn: 'bg-amber-500', down: 'bg-red-500', none: 'bg-gray-300' };
+  let st = null;
+
+  function ago(sec) {
+    sec = Math.max(0, Math.round(sec));
+    if (sec < 90) return _t('il y a {n} s', { n: sec });
+    if (sec < 5400) return _t('il y a {n} min', { n: Math.round(sec / 60) });
+    if (sec < 172800) return _t('il y a {n} h', { n: Math.round(sec / 3600) });
+    return _t('il y a {n} jours', { n: Math.round(sec / 86400) });
+  }
+  function when(ts) {
+    if (!ts) return '-';
+    const d = new Date(ts * 1000);
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  const dot = (id, lvl) => { $(id).className = 'w-2.5 h-2.5 rounded-full ' + DOT[lvl || 'none']; };
+  const SRC = { internal: _t('horloge interne'), external: _t('horloge externe'), word_clock: _t('horloge externe') };
+
+  // ── Synthèse ──
+  function renderSummary() {
+    const p = st.problems, lvl = st.state === 'waiting' ? 'none' : st.state;
+    $('t-net').textContent = { ok: _t('Normal'), warn: _t('À vérifier'), down: _t('En défaut'), waiting: _t('En attente') }[st.state];
+    dot('t-net-dot', lvl);
+    $('t-net-sub').textContent = st.state === 'waiting' ? _t('aucun relevé de la sonde') : p.length ? _t(p.length > 1 ? '{n} problèmes' : '{n} problème', { n: p.length }) : _t('aucun problème');
+
+    const devs = st.devices, on = devs.filter(d => d.online), miss = devs.filter(d => !d.online);
+    $('t-dev').textContent = devs.length ? _t('{a} en ligne sur {b}', { a: on.length, b: devs.length }) : _t('Aucun');
+    dot('t-dev-dot', !devs.length ? 'none' : miss.length ? 'down' : 'ok');
+    $('t-dev-sub').innerHTML = miss.length ? `<span class="text-red-600">${_t('absent : {n}', { n: esc(miss.map(d => d.name).join(', ')) })}</span>` : esc(on.map(d => d.name).join(' · ')) || '&nbsp;';
+
+    const subs = st.subscriptions, bad = subs.filter(s => s.state_ui !== 'ok');
+    $('t-sub').textContent = subs.length ? _t('{a} actifs sur {b}', { a: subs.length - bad.length, b: subs.length }) : _t('Aucun');
+    dot('t-sub-dot', !subs.length ? 'none' : bad.some(s => s.state_ui === 'down') ? 'down' : bad.length ? 'warn' : 'ok');
+    const uni = subs.filter(s => s.transport === 'unicast').length, multi = subs.filter(s => s.transport === 'multicast').length;
+    $('t-sub-sub').innerHTML = bad.length ? `<span class="text-red-600">${esc(bad.map(s => s.rx_device + ' · ' + s.rx_channel).join(', '))}</span>` : subs.length ? _t('{u} unicast · {m} multicast', { u: uni, m: multi }) : '&nbsp;';
+
+    const L = st.leaders, clkPb = p.filter(x => x.kind === 'clock');
+    const leader = L.length === 1 ? devs.find(d => d.name === L[0]) : null;
+    $('t-clk').textContent = L.length === 1 ? L[0] : L.length ? _t('{n} leaders', { n: L.length }) : (devs.length ? _t('Aucun leader') : '-');
+    dot('t-clk-dot', !devs.length ? 'none' : clkPb.some(x => x.level === 'down') ? 'down' : clkPb.length ? 'warn' : 'ok');
+    $('t-clk-sub').textContent = leader ? [_t('leader'), SRC[leader.clock_source] || leader.clock_source].filter(Boolean).join(' · ') : (clkPb[0] ? _t(clkPb[0].text, clkPb[0].values) : '\u00a0');
+  }
+
+  // ── Problèmes ──
+  function renderProblems() {
+    const p = st.problems;
+    $('pb-section').classList.toggle('hidden', !p.length);
+    $('pb-list').innerHTML = p.map(x => `<li class="flex items-start gap-2"><span class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${DOT[x.level]}"></span>
+      <span class="${x.level === 'down' ? 'text-red-700' : 'text-amber-800'}">${esc(_t(x.text, x.values))}</span></li>`).join('');
+  }
+
+  // ── Appareils ──
+  function renderDevices() {
+    const rank = d => d.state === 'down' ? 0 : 1;
+    const devs = [...st.devices].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+    $('dev-body').innerHTML = devs.length ? devs.map(d => {
+      let state;
+      if (d.missing) state = `<span class="text-red-600 font-semibold">${_t('Absent')}</span><div class="text-[11px] text-gray-500">${_t('vu le {t}', { t: when(d.last_seen) })}</div>`;
+      else if (!d.online) state = `<span class="text-red-600 font-semibold">${_t('Hors ligne')}</span>`;
+      else if (d.state === 'muted') state = `<span class="text-gray-500 font-medium">${_t('En ligne')}</span><div class="text-[11px] text-gray-400">${_t('sans canaux audio')}</div>`;
+      else state = `<span class="text-green-600 font-medium">${_t('En ligne')}</span>`;
+      let clk = '<span class="text-gray-300">-</span>';
+      if (d.clock_role && d.clock_role.toLowerCase() === 'leader')
+        clk = `<span class="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">${_t('Leader')}</span><div class="text-[11px] text-gray-500 mt-0.5">${esc(SRC[d.clock_source] || d.clock_source || '')}</div>`;
+      else if (d.audio && d.online) clk = `<span class="text-gray-600">${_t('Suiveur')}</span>`;
+      if (d.clock_muted) clk += `<div class="text-[11px] text-amber-700">${_t('non synchronisée')}</div>`;
+      const num = (v, u) => v == null ? '<span class="text-gray-300">-</span>' : `<span class="font-mono text-xs text-gray-600">${v}${u}</span>`;
+      return `<tr class="border-b border-gray-50 align-top">
+        <td class="py-2 pr-3"><div class="font-medium text-gray-900">${esc(d.name)}</div><div class="text-[11px] text-gray-400">${esc(d.product || '')}</div></td>
+        <td class="py-2 pr-3">${state}</td>
+        <td class="py-2 pr-3 font-mono text-xs text-gray-600">${esc(d.ip || '-')}</td>
+        <td class="py-2 pr-3">${clk}</td>
+        <td class="py-2 pr-3">${num(d.latency_ms, ' ms')}</td>
+        <td class="py-2 pr-3">${num(d.sample_rate ? (d.sample_rate / 1000).toString().replace('.', _DEC) : null, ' kHz')}</td>
+        <td class="py-2 pr-3">${d.rx == null && d.tx == null ? '<span class="text-gray-300">-</span>' : `<span class="font-mono text-xs text-gray-600">${d.rx ?? 0} / ${d.tx ?? 0}</span>`}</td></tr>`;
+    }).join('') : `<tr><td colspan="7" class="py-8 text-center text-gray-400">${_t('Aucun appareil pour le moment.')}</td></tr>`;
+  }
+
+  // ── Abonnements ──
+  function renderSubs() {
+    const S = st.subscriptions;
+    const rank = s => s.state_ui === 'down' ? 0 : s.state_ui === 'warn' ? 1 : 2;
+    const subs = [...S].sort((a, b) => rank(a) - rank(b));
+    let prev = null;
+    $('sub-body').innerHTML = subs.length ? subs.map(s => {
+      const cls = { ok: 'bg-green-50 text-green-700', warn: 'bg-amber-50 text-amber-800', down: 'bg-red-50 text-red-700' }[s.state_ui];
+      const label = s.missing ? _t('Abonnement disparu') : s.label || s.state;
+      const first = s.rx_device !== prev; prev = s.rx_device;
+      return `<tr class="${first ? 'border-t border-gray-100' : ''}">
+        <td class="py-1.5 pr-3 whitespace-nowrap"><span class="${first ? 'font-medium text-gray-900' : 'text-gray-300'}">${esc(s.rx_device)}</span> <span class="text-gray-500">· ${esc(s.rx_channel)}</span></td>
+        <td class="py-1.5 pr-3 whitespace-nowrap"><span class="text-gray-400">←</span> <span class="text-gray-800">${esc(s.tx_device)}</span> <span class="text-gray-500">· ${esc(s.tx_channel)}</span></td>
+        <td class="py-1.5 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${cls}">${esc(label)}</span></td>
+        <td class="py-1.5 pr-3 text-gray-500">${esc(s.transport || '-')}</td></tr>`;
+    }).join('') : `<tr><td colspan="4" class="py-8 text-center text-gray-400">${_t('Aucun abonnement pour le moment.')}</td></tr>`;
+  }
+
+  function renderProbe() {
+    const r = st.report;
+    if (!r) { $('probe-line').innerHTML = '&nbsp;'; $('probe-info').innerHTML = `<div class="text-gray-400">${_t('Aucun relevé reçu pour le moment.')}</div>`; return; }
+    const pr = r.probe || {}, stale = r.age > 180;
+    $('probe-line').innerHTML = `${_t('Dernier relevé de la sonde {h}', { h: esc(pr.host || r.remote || '') })} : <span class="${stale ? 'text-red-600 font-semibold' : ''}">${ago(r.age)}</span>`
+      + (r.duration != null ? ` · ${_t('lecture en {n} s', { n: String(r.duration).replace('.', _DEC) })}` : '');
+    const cell = (k, v, cls) => `<div><div class="text-[11px] text-gray-400 uppercase tracking-wide">${k}</div><div class="font-medium ${cls || 'text-gray-800'}">${v}</div></div>`;
+    $('probe-info').innerHTML = cell(_t('PC'), esc(pr.host || '-') + (r.remote ? ` <span class="text-xs text-gray-400 font-mono">${esc(r.remote)}</span>` : ''))
+      + cell(_t('Dernier relevé'), ago(r.age), stale ? 'text-red-600' : '')
+      + cell(_t('Versions'), `<span class="text-xs">${_t('sonde')} ${esc(pr.version || '?')} · netaudio ${esc(pr.netaudio || '?')} · Python ${esc(pr.python || '?')}</span>`);
+  }
+
+  async function load() {
+    try {
+      const r = await fetch('/api/dante/status', { credentials: 'include' });
+      if (r.status === 401) { location.href = '/login?timeout=1'; return; }
+      st = await r.json();
+      if (st.status === 'error') throw new Error(st.message);
+      $('notice').classList.toggle('hidden', st.state !== 'waiting');
+      $('notice-title').textContent = _t('Aucun relevé de la sonde Dante');
+      $('notice-text').textContent = role === 'admin' ? _t("Installer la sonde sur un PC du réseau Dante : voir l'onglet Sonde.") : _t('Un administrateur doit installer la sonde Dante.');
+      renderSummary(); renderProblems(); renderDevices(); renderSubs(); renderProbe();
+      const b = st.baseline || {};
+      $('ref-info').textContent = _t('Référence : {d} appareils, {s} abonnements, leader attendu {l}', { d: b.devices ?? 0, s: b.subscriptions ?? 0, l: b.leader || '-' });
+    } catch (e) {
+      $('notice').classList.remove('hidden'); $('notice-title').textContent = _t('Surveillance Dante indisponible'); $('notice-text').textContent = e.message;
+    }
+  }
+
+  // ═══ Sonde (administrateur) ═══
+  async function api(url, method) {
+    const r = await fetch(url, { method, credentials: 'include', headers: { 'X-CSRFToken': csrf() } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || j.status === 'error') throw new Error(j.message || 'HTTP ' + r.status);
+    return j;
+  }
+  async function loadToken() { try { $('token').value = (await api('/api/dante/token', 'GET')).token; } catch (e) { $('token-msg').textContent = e.message; } }
+  function toggleToken() { const t = $('token'); t.type = t.type === 'password' ? 'text' : 'password'; $('btn-show').textContent = t.type === 'password' ? _t('Afficher') : _t('Masquer'); }
+  async function copyToken() {
+    try { await navigator.clipboard.writeText($('token').value); }
+    catch (e) { const t = $('token'); t.type = 'text'; t.select(); document.execCommand('copy'); }
+    $('token-msg').className = 'text-xs mt-2 text-green-600'; $('token-msg').textContent = _t('Jeton copié');
+  }
+  function arm(btn, fn) {                    // deux clics, sans boîte de dialogue du navigateur
+    if (btn.classList.contains('armed')) { btn.classList.remove('armed'); btn.textContent = btn.dataset.lbl; fn(); return; }
+    btn.dataset.lbl = btn.textContent; btn.classList.add('armed'); btn.textContent = _t('Confirmer ?');
+    setTimeout(() => { if (btn.classList.contains('armed')) { btn.classList.remove('armed'); btn.textContent = btn.dataset.lbl; } }, 4000);
+  }
+  function newToken(btn) {
+    arm(btn, async () => {
+      try { $('token').value = (await api('/api/dante/token', 'POST')).token; $('token-msg').className = 'text-xs mt-2 text-amber-700'; $('token-msg').textContent = _t("Nouveau jeton créé : la sonde est refusée tant qu'il n'est pas saisi sur le PC."); }
+      catch (e) { $('token-msg').className = 'text-xs mt-2 text-red-600'; $('token-msg').textContent = e.message; }
+    });
+  }
+  function resetBaseline(btn) {
+    arm(btn, async () => {
+      try { await api('/api/dante/baseline', 'POST'); $('ref-msg').className = 'text-xs ml-2 text-green-600'; $('ref-msg').textContent = _t('Référence recalée'); load(); }
+      catch (e) { $('ref-msg').className = 'text-xs ml-2 text-red-600'; $('ref-msg').textContent = e.message; }
+    });
+  }
+
+  // ═══ Onglets : #etat, #sonde ═══
+  const TABS = ['etat', 'sonde'];
+  function showTab(t) {
+    if (!TABS.includes(t) || (t === 'sonde' && role !== 'admin')) t = 'etat';
+    TABS.forEach(x => $('tab-' + x).classList.toggle('hidden', x !== t));
+    document.querySelectorAll('[data-tab]').forEach(a => { const on = a.dataset.tab === t; a.classList.toggle('on', on); a.setAttribute('aria-selected', on); });
+    if (t === 'sonde') loadToken();
+  }
+  window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
+
+  // ── Menu ──
+  async function updateSidebarFrequency() {
+    try {
+      const config = await (await fetch('/api/config/full', { credentials: 'include' })).json();
+      $('sidebar-frequency').textContent = (config.rtl_sdr?.frequency || '88.6M').replace('M', ' MHz');
+    } catch (error) { }
+  }
+  function toggleSidebar() { $('sidebar').classList.toggle('-translate-x-full'); $('sidebar-overlay').classList.toggle('hidden'); }
+  function closeSidebar() { $('sidebar').classList.add('-translate-x-full'); $('sidebar-overlay').classList.add('hidden'); }
+
+  $('cmd-install').textContent = `powershell -ExecutionPolicy Bypass -File installer-sonde-dante.ps1 -Url ${location.origin}`;
+  updateSidebarFrequency();
+  showTab(location.hash.slice(1));
+  load();
+  setInterval(load, 15000);
+</script>
+</body>
+</html>

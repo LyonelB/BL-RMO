@@ -2353,7 +2353,88 @@ def park_reorder():
     return jsonify({'status': 'success'})
 
 
-ROLE_ALWAYS = {'login', 'logout', 'get_csrf_token', 'public_dashboard', 'static', 'chain_hook', 'dashboard_data'}
+# ── Dante : relevés de la sonde Dante (DANTE_PATCH) ──────────────────────
+dante_monitor = None
+DANTE_MAX_BODY = 10 * 1024 * 1024        # relevé décompressé (environ 250 Ko pour 5 appareils)
+
+
+def _dante_ready():
+    if dante_monitor is None:
+        return jsonify({'status': 'error', 'message': 'Surveillance Dante non démarrée'}), 503
+    return None
+
+
+@app.route('/dante')
+@auth.login_required
+def dante_page():
+    return render_template('dante.html')
+
+
+@app.route('/api/dante/report', methods=['POST'])
+@csrf.exempt
+@limiter.exempt
+def dante_report():
+    """Relevé envoyé par la sonde Dante. Pas de session : l'accès est protégé par le jeton."""
+    err = _dante_ready()
+    if err:
+        return err
+    if not dante_monitor.check_token(request.headers.get('X-Dante-Token', '')):
+        logger.warning(f"Dante : jeton invalide depuis {request.remote_addr}")
+        return jsonify({'status': 'error', 'message': 'Jeton invalide'}), 403
+    body = request.get_data(cache=False)
+    try:
+        if request.headers.get('Content-Encoding', '').lower() == 'gzip':
+            import zlib
+            d = zlib.decompressobj(16 + zlib.MAX_WBITS)
+            body = d.decompress(body, DANTE_MAX_BODY)
+            if d.unconsumed_tail:
+                return jsonify({'status': 'error', 'message': 'Relevé trop volumineux'}), 413
+        rep = json.loads(body)
+        if not isinstance(rep, dict):
+            raise ValueError
+    except Exception:
+        return jsonify({'status': 'error', 'message': 'Relevé illisible'}), 400
+    try:
+        res = dante_monitor.record(rep, request.remote_addr)
+    except Exception as e:
+        logger.error(f"Dante : relevé non traité : {e}")
+        return jsonify({'status': 'error', 'message': 'Relevé non traité'}), 400
+    return jsonify({'status': 'success', **res})
+
+
+@app.route('/api/dante/status')
+@auth.login_required
+@limiter.exempt
+def dante_status():
+    return _dante_ready() or jsonify(dante_monitor.status())
+
+
+@app.route('/api/dante/token', methods=['GET', 'POST'])
+@auth.login_required
+def dante_token():
+    """GET : jeton de la sonde ; POST : nouveau jeton (l'ancien est refusé aussitôt)."""
+    err = _dante_ready()
+    if err:
+        return err
+    if request.method == 'POST':
+        dante_monitor.regenerate_token()
+        logger.info("Dante : jeton de la sonde régénéré")
+    return jsonify({'status': 'success', 'token': dante_monitor.get_token()})
+
+
+@app.route('/api/dante/baseline', methods=['POST'])
+@auth.login_required
+def dante_baseline():
+    """L'état actuel devient la référence : les absents sont oubliés."""
+    err = _dante_ready()
+    if err:
+        return err
+    dante_monitor.reset_baseline()
+    logger.info("Dante : référence recalée sur l'état actuel")
+    return jsonify({'status': 'success'})
+
+
+ROLE_ALWAYS = {'login', 'logout', 'get_csrf_token', 'public_dashboard', 'static', 'chain_hook', 'dante_report', 'dashboard_data'}
 # Lecteur : consulter et écouter
 ROLE_LECTEUR = {
     'index', 'stats', 'about_page', 'pige_page', 'chain_page', 'logs_page', 'account_page', 'system_page', 'config',
@@ -2367,6 +2448,7 @@ ROLE_LECTEUR = {
     'audio_defects_list', 'audio_defect_clip', 'system_summary',
     'fm_page', 'stream_spectrum', 'dab_dls_history',
     'park_page', 'park_status', 'park_events', 'chain_journal_page', 'chain_manage_old',
+    'dante_page', 'dante_status',
 }
 ROLE_LECTEUR_GET = {'chain_devices', 'chain_device', 'logs_rules', 'dab_settings', 'park_devices'}      # lecture seule pour ces routes
 # Opérateur : exporter, enregistrer, intervenir sans rien régler
@@ -2620,6 +2702,14 @@ try:
     park_monitor.start()
 except Exception as e:
     logger.error(f"Erreur démarrage surveillance du parc: {e}")
+
+
+# Surveillance Dante : relevés de la sonde (DANTE_PATCH)
+try:
+    from dante import DanteMonitor
+    dante_monitor = DanteMonitor('fm_monitor.db')
+except Exception as e:
+    logger.error(f"Erreur démarrage surveillance Dante: {e}")
 
 
 # Extraits des dernières alertes (PIGE_ARCHIVE_PATCH)

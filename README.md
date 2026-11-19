@@ -109,6 +109,14 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 - SNMP sur un PC Windows 10 ou 11 : `install/windows/activer-snmp-bl-rmo.ps1` (PowerShell en administrateur), lecture seule, réservé à l'adresse de BL-RMO
 - Onglets **État**, **Journal** (événements des 90 derniers jours, filtres, export CSV) et **Appareils**
 
+### 🎚️ Dante
+- **Appareils** du réseau Dante : en ligne ou absent, produit, adresse, latence, fréquence d'échantillonnage, canaux
+- **Abonnements** : qui reçoit quoi, état de chaque abonnement (unicast, multicast, non résolu...)
+- **Horloge** : leader d'horloge et sa source ; signalé si aucun leader, plusieurs, ou un autre que d'habitude
+- **Référence** : un appareil ou un abonnement vu une fois puis disparu est signalé, jusqu'à ce qu'un administrateur prenne l'état actuel comme référence
+- **Sonde Dante** sur un PC Windows du réseau Dante (`install/windows/installer-sonde-dante.ps1`) : lit le réseau avec [netaudio](https://github.com/chris-ritsen/network-audio-controller), en lecture seule, et envoie le relevé à BL-RMO toutes les minutes ; aucun port ouvert sur le PC, jeton propre à la sonde
+- Première étape : visualisation. Alertes, journal et tuile du tableau de bord à venir
+
 ### 📜 Journaux et traps
 - **Serveur syslog** UDP 514 (service `bl-rmo-syslog`) : les appareils de la radio envoient leurs journaux à BL-RMO
 - **Traps SNMP** UDP 162 traduits en français, avec relevé immédiat de l'appareil
@@ -127,7 +135,7 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 
 ### 🌐 Interface web
 - **Tableau de bord** d'un seul coup d'œil : réception FM et DAB+ (lecteur, VU-mètre, indicateurs, dernière alerte), chaîne de diffusion complète avec ses sondes, état de la pige
-- **Un menu par domaine** : Dashboard, FM, DAB+, Chaîne, Parc et Système ; chaque page regroupe en onglets l'état en direct, le journal, la pige et la configuration de son domaine
+- **Un menu par domaine** : Dashboard, FM, DAB+, Chaîne, Dante, Parc et Système ; chaque page regroupe en onglets l'état en direct, le journal, la pige et la configuration de son domaine
 - **Système** : mails, réseau et volume DAC+ (Général), comptes et rôles (Comptes), journal de BL-RMO et de ses services (Journal BL-RMO), sauvegarde et restauration
 - Configuration complète depuis le navigateur
 - **Responsive** : smartphone et tablette
@@ -261,6 +269,7 @@ bl-rmo/
 ├── si468x_server.py    # Dongle DAB+ Si468x servi avec l'API de welle-cli (réception DAB+)
 ├── chain_probe.py      # Supervision de la chaîne (SNMP, sondes, événements)
 ├── park.py             # Parc : PC Windows, NAS Synology, sites web
+├── dante.py            # Dante : relevés de la sonde, appareils, abonnements, horloge
 ├── audio_defects.py    # Défauts audio : micro-coupures, clics, craquements
 ├── pige.py             # Pige 30 jours (enregistreur et export)
 ├── pige_archive.py     # Extraits audio des dernières alertes
@@ -273,7 +282,7 @@ bl-rmo/
 ├── database.py         # Base SQLite (historique, alertes)
 ├── install.sh          # Installation complète
 ├── install/build/      # Étapes d'installation (pige, journaux...)
-├── install/windows/    # Script d'activation SNMP pour les PC Windows
+├── install/windows/    # PC Windows : activation SNMP, sonde Dante
 ├── update.sh           # Mise à jour
 ├── templates/          # Pages : tableau de bord, pige, chaîne, journaux...
 └── static/             # CSS et JS
@@ -337,7 +346,8 @@ Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-RMO (pas `bl
 - [x] Version anglaise de l'interface et des mails
 
 ### Prochain chantier
-- [ ] Surveillance Dante, libre et auto-hébergée, dans l'esprit de Dante Director : découverte des appareils (mDNS), état, horloge, abonnements audio, journal des changements et alertes. Piste : bibliothèque [netaudio](https://github.com/chris-ritsen/network-audio-controller)
+- [x] Surveillance Dante, étape 1 : page Dante (appareils, abonnements, horloge) alimentée par la sonde Dante, à partir de [netaudio](https://github.com/chris-ritsen/network-audio-controller)
+- [ ] Surveillance Dante, étape 2 : alertes, journal des changements et tuile du tableau de bord
 
 ### Prochaine version
 - [ ] Retrait du mode RTL-SDR en FM, de l'analyse MPX et de Docker
