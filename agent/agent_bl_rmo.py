@@ -38,7 +38,7 @@ import time
 import urllib.error
 import urllib.request
 
-VERSION = '1.0.0'
+VERSION = '1.0.1'
 DATA_DIR = os.path.join(os.environ.get('ProgramData', r'C:\ProgramData'), 'BL-RMO', 'agent')
 CONFIG = os.path.join(DATA_DIR, 'agent.json')
 LOG = os.path.join(DATA_DIR, 'agent.log')

@@ -48,14 +48,15 @@ New-NetFirewallRule -DisplayName $Rule -Description 'Lecture du réseau Dante pa
     -Direction Inbound -Program $daemon -Protocol UDP -Action Allow -Profile Any | Out-Null
 
 # Tâche planifiée : au démarrage du PC, même sans session ouverte, compte SYSTEM
+# (pas de $action : PowerShell ignore la casse, ce serait le paramètre -Action)
 Stop-Agent
-$action = New-ScheduledTaskAction -Execute $Exe -Argument 'run' -WorkingDirectory $AppDir
-$trigger = New-ScheduledTaskTrigger -AtStartup
-$principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable `
+$taskAction = New-ScheduledTaskAction -Execute $Exe -Argument 'run' -WorkingDirectory $AppDir
+$taskTrigger = New-ScheduledTaskTrigger -AtStartup
+$taskPrincipal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
+$taskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable `
     -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero) `
     -MultipleInstances IgnoreNew
-Register-ScheduledTask -TaskName $Task -Action $action -Trigger $trigger -Principal $principal `
-    -Settings $settings -Description 'Agent BL-RMO : relevés de ce PC envoyés à BL-RMO' -Force | Out-Null
+Register-ScheduledTask -TaskName $Task -Action $taskAction -Trigger $taskTrigger -Principal $taskPrincipal `
+    -Settings $taskSettings -Description 'Agent BL-RMO : relevés de ce PC envoyés à BL-RMO' -Force | Out-Null
 if (-not (Get-ScheduledTask -TaskName $Task -ErrorAction SilentlyContinue)) { exit 1 }
 exit 0
