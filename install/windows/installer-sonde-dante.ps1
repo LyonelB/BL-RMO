@@ -10,7 +10,7 @@
 # - crée la tâche planifiée « BL-RMO Sonde Dante » : au démarrage du PC, même sans session
 #   ouverte, sous le compte système, relancée en cas d'arrêt.
 # La sonde ne fait que lire le réseau Dante et n'ouvre aucun port sur le PC.
-# Le jeton est affiché dans BL-RMO, page Dante, onglet Configuration : il est demandé au lancement.
+# Le jeton est affiché dans BL-RMO, page Dante, onglet Sonde : il est demandé au lancement.
 
 param([switch]$Desinstaller, [string]$Url = 'https://192.168.1.30')
 
@@ -70,7 +70,7 @@ if (Test-Path $cfgFile) {
     if ($keep -notmatch '^[nN]') { $token = (Get-Content $cfgFile -Raw | ConvertFrom-Json).token }
 }
 while (-not $token) {
-    $sec = Read-Host "Jeton de la sonde (BL-RMO, page Dante, onglet Configuration)" -AsSecureString
+    $sec = Read-Host "Jeton de la sonde (BL-RMO, page Dante, onglet Sonde)" -AsSecureString
     $token = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec))
     $token = $token.Trim()
 }
