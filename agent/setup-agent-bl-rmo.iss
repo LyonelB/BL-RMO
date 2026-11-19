@@ -197,8 +197,7 @@ begin
     2: ResultText := FmtMessage(CustomMessage('TestUnreachable'), [ServerPage.Values[0]]);
     3: ResultText := CustomMessage('TestToken');
   else
-    ResultText := FmtMessage(CustomMessage('TestOther'),
-      [IntToStr(Code), ExpandConstant('{commonappdata}\BL-RMO\agent\agent.log')]);
+    ResultText := FmtMessage(CustomMessage('TestOther'), [IntToStr(Code), ExpandConstant('{commonappdata}\BL-RMO\agent\agent.log')]);
   end;
 
   Exec(ExpandConstant('{sys}\schtasks.exe'), '/Run /TN "BL-RMO Agent"', '', SW_HIDE, ewWaitUntilTerminated, Code);

@@ -48,8 +48,8 @@ jobs:
         run: |
           dist\agent-bl-rmo\agent-bl-rmo.exe --version
           if (-not (Test-Path dist\agent-bl-rmo\_internal\netaudio\bin\netaudio-daemon.exe)) { throw 'netaudio-daemon.exe absent' }
-          dist\agent-bl-rmo\agent-bl-rmo.exe netaudio --help | Select-Object -First 5
-          if ($LASTEXITCODE -ne 0) { throw 'netaudio embarqué : échec' }
+          $help = dist\agent-bl-rmo\agent-bl-rmo.exe netaudio --help | Out-String
+          if ($LASTEXITCODE -ne 0 -or $help -notmatch 'netaudio') { throw 'netaudio embarqué : échec' }
 
       - name: Installeur (Inno Setup)
         run: |
