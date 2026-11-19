@@ -8,8 +8,8 @@ sans revenir sur le PC.
 
 Modules :
   system  allumé depuis, processeur (moyenne sur la minute), mémoire, disques fixes
-  dante   appareils, abonnements et horloge du réseau Dante, lus par netaudio
-          (« status » et « clock »), en lecture seule
+  dante   appareils, abonnements, horloge et niveaux du réseau Dante, lus par netaudio
+          (« status », « clock » et « meter --snapshot »), sans rien modifier
 
 Rien n'écoute sur le PC : l'agent ne fait qu'envoyer. netaudio lance le temps d'une
 lecture son moteur privé, qui s'arrête aussitôt après.
@@ -38,13 +38,15 @@ import time
 import urllib.error
 import urllib.request
 
-VERSION = '1.0.1'
+VERSION = '1.1.0'
 DATA_DIR = os.path.join(os.environ.get('ProgramData', r'C:\ProgramData'), 'BL-RMO', 'agent')
 CONFIG = os.path.join(DATA_DIR, 'agent.json')
 LOG = os.path.join(DATA_DIR, 'agent.log')
 INTERVAL = 60              # s entre deux envois (BL-RMO peut le changer)
 NETAUDIO_TIMEOUT = 50      # une lecture prend une dizaine de secondes
-READS = {'status': ['--output', 'json', 'status'], 'clock': ['--output', 'json', 'clock']}
+READS = {'status': ['--output', 'json', 'status'], 'clock': ['--output', 'json', 'clock'],
+         # niveaux : instantané, mesure détaillée demandée aux appareils (comme Dante Controller)
+         'meter': ['--output', 'json', 'meter', '--snapshot', '--detailed', '-t', '8']}
 
 EXIT_OK, EXIT_UNREACHABLE, EXIT_TOKEN, EXIT_CONFIG, EXIT_REFUSED = 0, 2, 3, 4, 5
 
@@ -145,7 +147,8 @@ def dante_read():
     t0 = time.time()
     status, e1 = netaudio_read('status')
     clock, e2 = netaudio_read('clock')
-    return {'status': status, 'clock': clock, 'errors': [e for e in (e1, e2) if e],
+    meter, e3 = netaudio_read('meter')
+    return {'status': status, 'clock': clock, 'meter': meter, 'errors': [e for e in (e1, e2, e3) if e],
             'duration': round(time.time() - t0, 1), 'netaudio': netaudio_version()}
 
 

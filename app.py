@@ -2467,7 +2467,7 @@ def agent_report():
                                             'netaudio': dante.get('netaudio'), 'python': info.get('python'),
                                             'agent': True, 'device': dev['name']},
                                   'ts': rep.get('ts'), 'duration': dante.get('duration'),
-                                  'status': dante.get('status'), 'clock': dante.get('clock'),
+                                  'status': dante.get('status'), 'clock': dante.get('clock'), 'meter': dante.get('meter'),
                                   'errors': dante.get('errors') or []}, request.remote_addr)
         except Exception as e:
             logger.error(f"Dante : relevé de l'agent {dev['name']} non traité : {e}")

@@ -115,6 +115,7 @@ The RTL-SDR dongle comes back in another role: **a second tuner dedicated to DAB
 ### 🎚️ Dante
 - **Devices** of the Dante network: online or missing, product, address, latency, sample rate, channels
 - **Subscriptions**: who receives what, status of each subscription (unicast, multicast, unresolved...)
+- **Levels**: peak per channel at the time of the reading (once a minute), to see whether a channel carries signal; also in the subscription list
 - **Clock**: clock leader and its source; reported if there is no leader, several, or a different one than usual
 - **Reference**: a device or subscription seen once and then gone is reported, until an administrator uses the current state as reference
 - **Read by the BL-RMO agent** of a PC on the Dante network, Dante module ticked in Assets › Devices: reads the network with [netaudio](https://github.com/chris-ritsen/network-audio-controller), read-only, and sends the report to BL-RMO every minute; no port opened on the PC. The former PowerShell script probe (`install/windows/installer-sonde-dante.ps1`) is still accepted

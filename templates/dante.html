@@ -114,6 +114,17 @@
       <div class="text-[11px] text-gray-400 mt-3">{{ _("Canaux : réception / émission. Un appareil vu une fois puis disparu est signalé absent, jusqu'à ce qu'un administrateur recale la référence (onglet Sonde).") }}</div>
     </div>
 
+    <!-- ── Niveaux ── -->
+    <div class="section hidden" id="meter-section">
+      <div class="section-title">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20V10m5 10V4m5 16v-7m5 7V8"/></svg>
+        {{ _('Niveaux') }}
+        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400" id="meter-at"></span>
+      </div>
+      <div id="meter-body" class="space-y-5"></div>
+      <div class="text-[11px] text-gray-400 mt-4">{{ _("Niveau crête au moment du relevé, une fois par minute : sert à voir si un canal porte du signal. Les canaux par défaut coupés sont masqués. Les PC en Dante Virtual Soundcard ne transmettent pas de niveaux.") }}</div>
+    </div>
+
     <!-- ── Abonnements ── -->
     <div class="section">
       <div class="section-title">
@@ -125,7 +136,7 @@
       <table class="w-full text-sm">
         <thead><tr class="text-[11px] text-gray-400 uppercase tracking-wide text-left border-b border-gray-100">
           <th class="py-2 pr-3 font-semibold">{{ _('Récepteur') }}</th><th class="py-2 pr-3 font-semibold">{{ _('Source') }}</th>
-          <th class="py-2 pr-3 font-semibold">{{ _('État') }}</th><th class="py-2 pr-3 font-semibold">{{ _('Transport') }}</th></tr></thead>
+          <th class="py-2 pr-3 font-semibold">{{ _('État') }}</th><th class="py-2 pr-3 font-semibold">{{ _('Niveau') }}</th><th class="py-2 pr-3 font-semibold">{{ _('Transport') }}</th></tr></thead>
         <tbody id="sub-body" class="text-xs"></tbody>
       </table>
       </div>
@@ -279,8 +290,37 @@
         <td class="py-1.5 pr-3 whitespace-nowrap"><span class="${first ? 'font-medium text-gray-900' : 'text-gray-300'}">${esc(s.rx_device)}</span> <span class="text-gray-500">· ${esc(s.rx_channel)}</span></td>
         <td class="py-1.5 pr-3 whitespace-nowrap"><span class="text-gray-400">←</span> <span class="text-gray-800">${esc(s.tx_device)}</span> <span class="text-gray-500">· ${esc(s.tx_channel)}</span></td>
         <td class="py-1.5 pr-3"><span class="px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${cls}">${esc(label)}</span></td>
+        <td class="py-1.5 pr-3">${s.level ? meterBar(s.level, 'w-20') : '<span class="text-gray-300">-</span>'}</td>
         <td class="py-1.5 pr-3 text-gray-500">${esc(s.transport || '-')}</td></tr>`;
-    }).join('') : `<tr><td colspan="4" class="py-8 text-center text-gray-400">${_t('Aucun abonnement pour le moment.')}</td></tr>`;
+    }).join('') : `<tr><td colspan="5" class="py-8 text-center text-gray-400">${_t('Aucun abonnement pour le moment.')}</td></tr>`;
+  }
+
+  // ── Niveaux : barre de -60 à 0 dBFS ──
+  function meterText(l) {
+    if (l.state === 'muted') return _t('muet');
+    if (l.state === 'clip') return _t('écrêtage');
+    if (l.db == null) return '-';
+    if (l.state === 'silence') return _t('silence');
+    return (l.db === 0 ? '0' : String(l.db).replace('.', _DEC)) + ' dB';
+  }
+  function meterBar(l, width) {
+    const pct = l.db == null ? 0 : Math.max(0, Math.min(100, (l.db + 60) / 60 * 100));
+    const col = l.state === 'clip' ? 'bg-red-500' : 'bg-green-500';
+    const txt = l.state === 'signal' ? 'text-gray-700' : l.state === 'clip' ? 'text-red-600' : 'text-gray-400';
+    return `<div class="flex items-center gap-2"><div class="${width} h-1.5 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">`
+      + `<div class="h-full ${col}" style="width:${pct}%"></div></div><span class="font-mono text-[11px] ${txt} whitespace-nowrap">${meterText(l)}</span></div>`;
+  }
+  function renderMeters() {
+    const M = [...(st.meters || [])].sort((a, b) => (a.source === 'signal_presence') - (b.source === 'signal_presence'));
+    $('meter-section').classList.toggle('hidden', !M.length);
+    if (!M.length) return;
+    const at = Math.max(...M.map(m => m.at || 0));
+    $('meter-at').textContent = at ? _t('relevé à {h}', { h: new Date(at * 1000).toLocaleTimeString(window.BLRMO_LOCALE) }) : '';
+    const col = (title, list) => list.length ? `<div><div class="text-[11px] text-gray-400 uppercase tracking-wide mb-1.5">${title}</div>`
+      + list.map(c => `<div class="flex items-center gap-3 py-0.5"><span class="text-xs text-gray-700 w-28 truncate" title="${esc(c.name)}">${esc(c.name || _t('canal {n}', { n: c.number }))}</span>${meterBar(c, 'w-40')}</div>`).join('')
+      + '</div>' : '';
+    $('meter-body').innerHTML = M.map(m => `<div><div class="text-sm font-medium text-gray-900 mb-2">${esc(m.device)}${m.source === 'signal_presence' ? ` <span class="text-[11px] font-normal text-gray-400">${_t('présence de signal seulement')}</span>` : ''}</div>
+      <div class="grid md:grid-cols-2 gap-x-10 gap-y-3">${col(_t('Sorties'), m.tx)}${col(_t('Entrées'), m.rx)}</div></div>`).join('');
   }
 
   function renderProbe() {
@@ -304,7 +344,7 @@
       $('notice').classList.toggle('hidden', st.state !== 'waiting');
       $('notice-title').textContent = _t('Aucun relevé de la sonde Dante');
       $('notice-text').textContent = role === 'admin' ? _t("Installer la sonde sur un PC du réseau Dante : voir l'onglet Sonde.") : _t('Un administrateur doit installer la sonde Dante.');
-      renderSummary(); renderProblems(); renderDevices(); renderSubs(); renderProbe();
+      renderSummary(); renderProblems(); renderDevices(); renderSubs(); renderMeters(); renderProbe();
       const b = st.baseline || {};
       $('ref-info').textContent = _t('Référence : {d} appareils, {s} abonnements, leader attendu {l}', { d: b.devices ?? 0, s: b.subscriptions ?? 0, l: b.leader || '-' });
     } catch (e) {

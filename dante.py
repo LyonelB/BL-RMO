@@ -13,6 +13,7 @@ Stockage : table dante_kv de fm_monitor.db (jeton, dernier relevé, référence)
 """
 import json
 import logging
+import re
 import secrets
 import sqlite3
 import threading
@@ -82,7 +83,49 @@ def parse_report(rep):
     devices.sort(key=lambda x: x['name'].lower())
     subs.sort(key=lambda x: (x['rx_device'].lower(), x['rx_number'] or 0))
     leaders = sorted(d['name'] for d in devices if d['clock_role'].lower() == 'leader')
-    return {'devices': devices, 'subscriptions': subs, 'leaders': leaders, 'errors': rep.get('errors') or []}
+    return {'devices': devices, 'subscriptions': subs, 'leaders': leaders, 'errors': rep.get('errors') or [],
+            'meters': parse_meter(rep.get('meter'))}
+
+
+DEFAULT_CHANNEL = re.compile(r'^(Tx|Rx)\d+$', re.I)
+
+
+def meter_value(raw, source):
+    """Octet de mesure Dante -> (dBFS ou None, état). Échelles de netaudio :
+    détaillée : 0 écrêtage, 1..253 = 0 à -126 dBFS par pas de 0,5 dB, 254 coupé ;
+    présence de signal : 1..252 = -0,5 à -126 dBFS, 253 et plus coupé ou plancher."""
+    if not isinstance(raw, int) or isinstance(raw, bool):
+        return None, 'unknown'
+    if raw == 0:
+        return 0.0, 'clip'
+    if source == 'signal_presence':
+        if raw >= 253:
+            return None, 'muted'
+        db = -raw / 2
+    else:
+        if raw >= 254:
+            return None, 'muted'
+        db = -(raw - 1) / 2
+    return db, ('signal' if db > -60 else 'silence')
+
+
+def parse_meter(meter):
+    """Sortie de « netaudio meter --snapshot » -> {appareil: {at, source, tx: {n: {...}}, rx: {...}}}."""
+    out = {}
+    for dev, m in (meter or {}).items():
+        if not isinstance(m, dict):
+            continue
+        name = dev[:-len('.local.')] if dev.endswith('.local.') else dev.rstrip('.')
+        src = m.get('metering_source') or 'detailed'
+        entry = {'at': m.get('wall_time'), 'source': src, 'tx': {}, 'rx': {}}
+        for direction in ('tx', 'rx'):
+            for num, ch in (m.get(direction) or {}).items():
+                if not isinstance(ch, dict):
+                    continue
+                db, state = meter_value(ch.get('level'), src)
+                entry[direction][str(num)] = {'name': ch.get('name') or '', 'db': db, 'state': state}
+        out[name] = entry
+    return out
 
 
 def sub_key(s):
@@ -185,6 +228,36 @@ class DanteMonitor:
     def _baseline_info(b):
         return {'devices': len(b['devices']), 'subscriptions': len(b['subscriptions']), 'leader': b.get('leader') or ''}
 
+    @staticmethod
+    def _meters_view(meters, subs):
+        """Niveaux à afficher : canaux nommés, abonnés ou avec du signal (les canaux par défaut
+        coupés, Tx05 à Tx64, sont masqués). Ajoute le niveau à chaque abonnement : celui de
+        l'entrée du récepteur, sinon celui de la sortie de la source."""
+        used = set()
+        for s in subs:
+            used.add((s['rx_device'], 'rx', str(s.get('rx_number'))))
+            used.add((s['tx_device'], 'tx', s.get('tx_channel') or ''))
+        view = []
+        for dev, m in sorted(meters.items(), key=lambda x: x[0].lower()):
+            chans = {'tx': [], 'rx': []}
+            for direction in ('tx', 'rx'):
+                for num, ch in sorted(m[direction].items(), key=lambda x: int(x[0]) if x[0].isdigit() else 0):
+                    named = ch['name'] and not DEFAULT_CHANNEL.match(ch['name'])
+                    if named or ch['state'] in ('signal', 'clip') or (dev, direction, num) in used \
+                            or (direction == 'tx' and (dev, 'tx', ch['name']) in used):
+                        chans[direction].append(dict(ch, number=int(num) if num.isdigit() else None))
+            if chans['tx'] or chans['rx']:
+                view.append({'device': dev, 'at': m.get('at'), 'source': m.get('source'), **chans})
+        for s in subs:
+            m = meters.get(s['rx_device'])
+            lv = m and m['rx'].get(str(s.get('rx_number')))
+            if not lv:
+                m = meters.get(s['tx_device'])
+                lv = m and next((c for c in m['tx'].values() if c['name'] == s.get('tx_channel')), None)
+            if lv:
+                s['level'] = {'db': lv['db'], 'state': lv['state']}
+        return view
+
     # ── état pour la page ────────────────────────────────────────────────
     def status(self):
         with self.lock:
@@ -252,9 +325,11 @@ class DanteMonitor:
                 problems.append({'level': 'warn', 'kind': 'clock', 'text': '{n} : horloge non synchronisée, audio coupé',
                                  'values': {'n': d['name']}})
 
+        meters = self._meters_view(p.get('meters') or {}, subs)
+
         levels = {x['level'] for x in problems}
         state = 'down' if 'down' in levels else 'warn' if 'warn' in levels else 'ok'
         return {'state': state, 'problems': problems, 'devices': devices, 'subscriptions': subs,
-                'leaders': leaders, 'baseline': self._baseline_info(b), 'now': now,
+                'meters': meters, 'leaders': leaders, 'baseline': self._baseline_info(b), 'now': now,
                 'report': {'received': rep['received'], 'age': age, 'probe': rep.get('probe') or {},
                            'remote': rep.get('remote'), 'duration': rep.get('duration')}}
