@@ -6,6 +6,15 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Non publié]
 
+### Agent BL-RMO pour les PC Windows
+- **Un agent à installer sur les PC du parc** (`agent/agent_bl_rmo.py`), qui envoie ses relevés à BL-RMO toutes les minutes (`POST /api/agent/report`, jeton propre à chaque PC). Les modules se choisissent dans BL-RMO et arrivent dans la réponse : rien à refaire sur le PC.
+  - **Système** : allumé depuis, processeur (moyenne sur la minute), mémoire, disques fixes. Même relevé qu'en SNMP, mêmes alertes (éteint, redémarré, disque, processeur), sans SNMP à activer ni communauté.
+  - **Dante** : la lecture netaudio de la sonde Dante, envoyée à la page Dante. L'agent relance netaudio pour chaque lecture : son moteur privé s'arrête aussitôt après.
+- **Installeur à double-cliquer** (`agent/setup-agent-bl-rmo.iss`, Inno Setup, français ou anglais selon Windows) : adresse de BL-RMO et jeton du PC, puis installation dans `C:\Program Files\BL-RMO Agent`, réglages dans `C:\ProgramData\BL-RMO\agent` (SYSTEM et administrateurs seulement), règle du pare-feu pour netaudio, tâche planifiée « BL-RMO Agent » (SYSTEM, au démarrage) et premier envoi de test, dont le résultat s'affiche à la fin. Retire l'ancienne sonde Dante. Désinstallation depuis « Applications installées ». Installation silencieuse : `/VERYSILENT /URL=… /TOKEN=…`.
+- **Construction par GitHub Actions** (`.github/workflows/agent.yml`) : exe PyInstaller (Python, psutil et netaudio embarqués, rien à installer sur le PC) puis installeur. Artefact à chaque modification de `agent/`, version GitHub « Agent BL-RMO x.y.z » au tag `agent-vx.y.z`.
+- **Parc › Appareils** : pour un PC, relevé « Agent BL-RMO installé sur le PC » ou « SNMP ». Avec l'agent : case Dante, jeton (afficher, copier, nouveau jeton) et étapes d'installation. État : « Agent ne répond plus » quand le PC répond sur le réseau sans relevé de l'agent, version de l'agent à côté de l'adresse.
+- **Page Dante, onglet Sonde** : installation par l'agent ; l'ancienne sonde en script PowerShell reste acceptée, dans une section repliée.
+
 ### Surveillance Dante, étape 1 : visualisation
 - **Page Dante** (menu, entre Chaîne et Parc), onglet **État** : synthèse (réseau, appareils, abonnements, horloge), liste « À vérifier », appareils (état, produit, adresse IP, rôle d'horloge, latence, fréquence, canaux) et abonnements (récepteur, source, état, transport).
 - **Sonde Dante** (`install/windows/sonde-dante.py`) : sur un PC Windows du réseau Dante, lit toutes les minutes `netaudio status` et `netaudio clock`, en lecture seule, et envoie le relevé compressé à `POST /api/dante/report` avec son jeton. Pas de service netaudio lancé, aucun port ouvert sur le PC.

@@ -103,10 +103,11 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 - Onglets **Synoptique**, **Journal** (alertes et changements d'état, événements netwatch, messages syslog et traps), **Appareils** et **Configuration**
 
 ### 🖥️ Parc (PC, NAS, sites web)
-- **PC Windows** en SNMP : allumé ou éteint et depuis quand, processeur (valeur actuelle et maximum depuis l'allumage), occupation des disques ; « 24 h/24 » : éteint ou redémarrage = alerte, sinon simple information
+- **PC Windows**, par l'**agent BL-RMO** ou en SNMP : allumé ou éteint et depuis quand, processeur (valeur actuelle et maximum depuis l'allumage), occupation des disques ; « 24 h/24 » : éteint ou redémarrage = alerte, sinon simple information
 - **NAS Synology** en SNMP (v2c ou v3) : système, alimentation, ventilateurs, température, disques, volumes, mise à jour DSM
 - **Sites web** : réponse HTTPS, texte attendu, temps de réponse, disponibilité sur 24 h
-- SNMP sur un PC Windows 10 ou 11 : `install/windows/activer-snmp-bl-rmo.ps1` (PowerShell en administrateur), lecture seule, réservé à l'adresse de BL-RMO
+- **Agent BL-RMO** (Windows 10 et 11, 64 bits) : un installeur à double-cliquer, `setup-agent-bl-rmo-x.y.z.exe`, dans les [versions de l'agent](https://github.com/LyonelB/BL-RMO/releases?q=agent&expanded=true). Il demande l'adresse de BL-RMO et le jeton du PC (Parc › Appareils, relevé « Agent BL-RMO »), installe l'agent comme tâche planifiée au démarrage et vérifie que BL-RMO reçoit le premier relevé. L'agent envoie ses relevés toutes les minutes ; les modules (système, Dante) se choisissent dans BL-RMO. Pas de SNMP à activer, aucun port ouvert sur le PC. Sources dans `agent/`, installeur construit par GitHub Actions
+- SNMP sur un PC Windows 10 ou 11, sans agent : `install/windows/activer-snmp-bl-rmo.ps1` (PowerShell en administrateur), lecture seule, réservé à l'adresse de BL-RMO
 - Onglets **État**, **Journal** (événements des 90 derniers jours, filtres, export CSV) et **Appareils**
 
 ### 🎚️ Dante
@@ -114,7 +115,7 @@ Le dongle RTL-SDR revient dans un autre rôle : **second tuner dédié au DAB+**
 - **Abonnements** : qui reçoit quoi, état de chaque abonnement (unicast, multicast, non résolu...)
 - **Horloge** : leader d'horloge et sa source ; signalé si aucun leader, plusieurs, ou un autre que d'habitude
 - **Référence** : un appareil ou un abonnement vu une fois puis disparu est signalé, jusqu'à ce qu'un administrateur prenne l'état actuel comme référence
-- **Sonde Dante** sur un PC Windows du réseau Dante (`install/windows/installer-sonde-dante.ps1`) : lit le réseau avec [netaudio](https://github.com/chris-ritsen/network-audio-controller), en lecture seule, et envoie le relevé à BL-RMO toutes les minutes ; aucun port ouvert sur le PC, jeton propre à la sonde
+- **Relevé par l'agent BL-RMO** d'un PC du réseau Dante, module Dante coché dans Parc › Appareils : lit le réseau avec [netaudio](https://github.com/chris-ritsen/network-audio-controller), en lecture seule, et envoie le relevé à BL-RMO toutes les minutes ; aucun port ouvert sur le PC. L'ancienne sonde en script PowerShell (`install/windows/installer-sonde-dante.ps1`) reste acceptée
 - Première étape : visualisation. Alertes, journal et tuile du tableau de bord à venir
 
 ### 📜 Journaux et traps
@@ -270,6 +271,7 @@ bl-rmo/
 ├── chain_probe.py      # Supervision de la chaîne (SNMP, sondes, événements)
 ├── park.py             # Parc : PC Windows, NAS Synology, sites web
 ├── dante.py            # Dante : relevés de la sonde, appareils, abonnements, horloge
+├── agent/              # Agent BL-RMO pour Windows : agent, installeur Inno Setup, construction
 ├── audio_defects.py    # Défauts audio : micro-coupures, clics, craquements
 ├── pige.py             # Pige 30 jours (enregistreur et export)
 ├── pige_archive.py     # Extraits audio des dernières alertes
@@ -347,6 +349,8 @@ Sur l'appareil, le serveur syslog doit être l'**adresse IP** de BL-RMO (pas `bl
 
 ### Prochain chantier
 - [x] Surveillance Dante, étape 1 : page Dante (appareils, abonnements, horloge) alimentée par la sonde Dante, à partir de [netaudio](https://github.com/chris-ritsen/network-audio-controller)
+- [x] Agent BL-RMO pour les PC Windows : installeur à double-cliquer, modules système et Dante réglés dans BL-RMO
+- [ ] Passage des PC du studio à l'agent, signature de l'installeur (SignPath Foundation)
 - [ ] Surveillance Dante, étape 2 : alertes, journal des changements et tuile du tableau de bord
 
 ### Prochaine version

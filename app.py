@@ -2364,6 +2364,24 @@ def _dante_ready():
     return None
 
 
+def _read_report():
+    """Corps JSON d'un relevé de sonde ou d'agent, compressé ou non -> (dict, None) ou (None, réponse d'erreur)."""
+    body = request.get_data(cache=False)
+    try:
+        if request.headers.get('Content-Encoding', '').lower() == 'gzip':
+            import zlib
+            d = zlib.decompressobj(16 + zlib.MAX_WBITS)
+            body = d.decompress(body, DANTE_MAX_BODY)
+            if d.unconsumed_tail:
+                return None, (jsonify({'status': 'error', 'message': 'Relevé trop volumineux'}), 413)
+        rep = json.loads(body)
+        if not isinstance(rep, dict):
+            raise ValueError
+    except Exception:
+        return None, (jsonify({'status': 'error', 'message': 'Relevé illisible'}), 400)
+    return rep, None
+
+
 @app.route('/dante')
 @auth.login_required
 def dante_page():
@@ -2381,19 +2399,9 @@ def dante_report():
     if not dante_monitor.check_token(request.headers.get('X-Dante-Token', '')):
         logger.warning(f"Dante : jeton invalide depuis {request.remote_addr}")
         return jsonify({'status': 'error', 'message': 'Jeton invalide'}), 403
-    body = request.get_data(cache=False)
-    try:
-        if request.headers.get('Content-Encoding', '').lower() == 'gzip':
-            import zlib
-            d = zlib.decompressobj(16 + zlib.MAX_WBITS)
-            body = d.decompress(body, DANTE_MAX_BODY)
-            if d.unconsumed_tail:
-                return jsonify({'status': 'error', 'message': 'Relevé trop volumineux'}), 413
-        rep = json.loads(body)
-        if not isinstance(rep, dict):
-            raise ValueError
-    except Exception:
-        return jsonify({'status': 'error', 'message': 'Relevé illisible'}), 400
+    rep, err = _read_report()
+    if err:
+        return err
     try:
         res = dante_monitor.record(rep, request.remote_addr)
     except Exception as e:
@@ -2434,7 +2442,54 @@ def dante_baseline():
     return jsonify({'status': 'success'})
 
 
-ROLE_ALWAYS = {'login', 'logout', 'get_csrf_token', 'public_dashboard', 'static', 'chain_hook', 'dante_report', 'dashboard_data'}
+# ── Agent BL-RMO : relevés envoyés par les PC du parc (AGENT_PATCH) ────────
+@app.route('/api/agent/report', methods=['POST'])
+@csrf.exempt
+@limiter.exempt
+def agent_report():
+    """Relevé de l'agent BL-RMO d'un PC (Parc, méthode « Agent »). Pas de session :
+    l'accès est protégé par le jeton du PC. La réponse donne les modules à relever."""
+    if park_monitor is None:
+        return jsonify({'status': 'error', 'message': 'Surveillance du parc non démarrée'}), 503
+    rep, err = _read_report()
+    if err:
+        return err
+    found = park_monitor.agent_report(request.headers.get('X-Agent-Token', ''), rep, request.remote_addr)
+    if not found:
+        logger.warning(f"Agent : jeton inconnu depuis {request.remote_addr}")
+        return jsonify({'status': 'error', 'message': 'Jeton invalide'}), 403
+    dev, config = found
+    dante = (rep.get('modules') or {}).get('dante')
+    if isinstance(dante, dict) and 'dante' in config['modules'] and dante_monitor is not None:
+        info = rep.get('agent') or {}
+        try:
+            dante_monitor.record({'probe': {'host': info.get('host') or dev['name'], 'version': info.get('version'),
+                                            'netaudio': dante.get('netaudio'), 'python': info.get('python'),
+                                            'agent': True, 'device': dev['name']},
+                                  'ts': rep.get('ts'), 'duration': dante.get('duration'),
+                                  'status': dante.get('status'), 'clock': dante.get('clock'),
+                                  'errors': dante.get('errors') or []}, request.remote_addr)
+        except Exception as e:
+            logger.error(f"Dante : relevé de l'agent {dev['name']} non traité : {e}")
+    return jsonify({'status': 'success', 'device': dev['name'], 'config': config})
+
+
+@app.route('/api/park/devices/<int:device_id>/agent-token', methods=['GET', 'POST'])
+@auth.login_required
+def park_agent_token(device_id):
+    """GET : jeton de l'agent du PC ; POST : nouveau jeton (l'ancien est refusé aussitôt)."""
+    err = _park_ready()
+    if err:
+        return err
+    token = park_monitor.agent_token(device_id, regenerate=request.method == 'POST')
+    if not token:
+        return jsonify({'status': 'error', 'message': "Ce PC n'utilise pas l'agent BL-RMO"}), 404
+    if request.method == 'POST':
+        logger.info(f"Parc : nouveau jeton d'agent pour l'appareil {device_id}")
+    return jsonify({'status': 'success', 'token': token})
+
+
+ROLE_ALWAYS = {'login', 'logout', 'get_csrf_token', 'public_dashboard', 'static', 'chain_hook', 'dante_report', 'agent_report', 'dashboard_data'}
 # Lecteur : consulter et écouter
 ROLE_LECTEUR = {
     'index', 'stats', 'about_page', 'pige_page', 'chain_page', 'logs_page', 'account_page', 'system_page', 'config',

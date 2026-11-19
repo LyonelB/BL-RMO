@@ -1,0 +1,75 @@
+# Agent BL-RMO pour Windows : exe (PyInstaller) et installeur (Inno Setup).
+# - À chaque modification de agent/ sur main : installeur disponible dans l'onglet
+#   Actions de GitHub (artefact, 30 jours).
+# - Tag agent-vX.Y.Z (même numéro que VERSION dans agent/agent_bl_rmo.py) :
+#   version GitHub « Agent BL-RMO X.Y.Z » avec setup-agent-bl-rmo-X.Y.Z.exe.
+name: Agent BL-RMO
+
+on:
+  push:
+    branches: [main]
+    paths: ['agent/**', '.github/workflows/agent.yml']
+    tags: ['agent-v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: agent
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Version
+        id: v
+        run: |
+          $v = (Select-String -Path agent_bl_rmo.py -Pattern "^VERSION = '(.+)'").Matches[0].Groups[1].Value
+          if ($env:GITHUB_REF -like 'refs/tags/agent-v*' -and $env:GITHUB_REF_NAME -ne "agent-v$v") {
+            throw "Le tag $env:GITHUB_REF_NAME ne correspond pas à VERSION = '$v'"
+          }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Dépendances
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Exe (PyInstaller)
+        run: pyinstaller --noconfirm agent-bl-rmo.spec
+
+      - name: Vérification
+        run: |
+          dist\agent-bl-rmo\agent-bl-rmo.exe --version
+          if (-not (Test-Path dist\agent-bl-rmo\_internal\netaudio\bin\netaudio-daemon.exe)) { throw 'netaudio-daemon.exe absent' }
+          dist\agent-bl-rmo\agent-bl-rmo.exe netaudio --help | Select-Object -First 5
+          if ($LASTEXITCODE -ne 0) { throw 'netaudio embarqué : échec' }
+
+      - name: Installeur (Inno Setup)
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
+          & $iscc "/DAppVersion=${{ steps.v.outputs.version }}" setup-agent-bl-rmo.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC : code $LASTEXITCODE" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: setup-agent-bl-rmo-${{ steps.v.outputs.version }}
+          path: agent/Output/setup-agent-bl-rmo-*.exe
+          retention-days: 30
+
+      - name: Version GitHub
+        if: startsWith(github.ref, 'refs/tags/agent-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Agent BL-RMO ${{ steps.v.outputs.version }}
+          files: agent/Output/setup-agent-bl-rmo-*.exe
+          body: |
+            Installeur de l'agent BL-RMO pour Windows 10 et 11 (64 bits).
+            Télécharger setup-agent-bl-rmo-${{ steps.v.outputs.version }}.exe sur le PC, double-cliquer, coller le jeton du PC affiché dans BL-RMO (Parc › Appareils).

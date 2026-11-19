@@ -85,7 +85,7 @@
       <div class="section-title">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
         {{ _('PC de production') }}
-        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400">{{ _('SNMP (HOST-RESOURCES-MIB)') }}</span>
+        <span class="ml-auto text-[11px] font-normal normal-case tracking-normal text-gray-400">{{ _('Agent BL-RMO ou SNMP') }}</span>
       </div>
       <div class="overflow-x-auto">
       <table class="w-full text-sm">
@@ -180,18 +180,21 @@
         <div class="grid md:grid-cols-3 gap-4 text-sm">
           <label class="block"><span class="text-xs text-gray-500">{{ _('Type') }}</span>
             <select id="f-kind" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="kindChanged()">
-              <option value="pc">{{ _('PC Windows (SNMP)') }}</option><option value="nas">{{ _('NAS Synology (SNMP)') }}</option><option value="site">{{ _('Site web') }}</option></select></label>
+              <option value="pc">{{ _('PC Windows') }}</option><option value="nas">{{ _('NAS Synology (SNMP)') }}</option><option value="site">{{ _('Site web') }}</option></select></label>
           <label class="block"><span class="text-xs text-gray-500">{{ _('Nom') }}</span><input id="f-name" required maxlength="40" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
-          <label class="block k-snmp"><span class="text-xs text-gray-500">{{ _('Adresse IP') }}</span><input id="f-host" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 font-mono" placeholder="192.168.1.x"></label>
+          <label class="block k-pc"><span class="text-xs text-gray-500">{{ _('Relevé') }}</span>
+            <select id="f-method" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white" onchange="kindChanged()">
+              <option value="agent">{{ _('Agent BL-RMO installé sur le PC') }}</option><option value="snmp">{{ _('SNMP') }}</option></select></label>
+          <label class="block k-host"><span class="text-xs text-gray-500">{{ _('Adresse IP') }}</span><input id="f-host" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 font-mono" placeholder="192.168.1.x"></label>
           <label class="block k-site md:col-span-2"><span class="text-xs text-gray-500">{{ _('Adresse du site') }}</span><input id="f-url" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 font-mono" placeholder="{{ _('https://www.graffitiradio.fr') }}"></label>
           <label class="block k-site"><span class="text-xs text-gray-500">{{ _('Texte attendu (facultatif)') }}</span><input id="f-keyword" maxlength="100" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="{{ _('ex. Graffiti') }}"></label>
           <label class="block k-site"><span class="text-xs text-gray-500">{{ _('Réponse lente au-delà de (ms)') }}</span><input id="f-slow_ms" type="number" min="200" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="5000"></label>
           <label class="block k-pc"><span class="text-xs text-gray-500">{{ _('Usage') }}</span>
             <select id="f-always_on" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"><option value="0">{{ _('Peut être éteint : simple information') }}</option><option value="1">{{ _('24 h/24 : éteint = alerte') }}</option></select></label>
-          <label class="block k-snmp"><span class="text-xs text-gray-500" title="{{ _("Un relevé manqué n'alerte pas : l'alerte part si l'appareil reste sans réponse pendant ce délai") }}">{{ _('Alerte après (minutes sans réponse)') }}</span><input id="f-down_minutes" type="number" min="1" max="60" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="3"></label>
+          <label class="block k-host"><span class="text-xs text-gray-500" title="{{ _("Un relevé manqué n'alerte pas : l'alerte part si l'appareil reste sans réponse pendant ce délai") }}">{{ _('Alerte après (minutes sans réponse)') }}</span><input id="f-down_minutes" type="number" min="1" max="60" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="3"></label>
           <label class="block k-pc"><span class="text-xs text-gray-500">{{ _('Système (affichage)') }}</span><input id="f-os" maxlength="30" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" placeholder="{{ _('Windows 11') }}"></label>
           <label class="block k-snmp"><span class="text-xs text-gray-500">{{ _('Port SNMP') }}</span><input id="f-port" type="number" min="1" max="65535" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="161"></label>
-          <label class="block k-snmp"><span class="text-xs text-gray-500">{{ _('Seuil disque (%)') }}</span><input id="f-disk_pct" type="number" min="50" max="100" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="90"></label>
+          <label class="block k-host"><span class="text-xs text-gray-500">{{ _('Seuil disque (%)') }}</span><input id="f-disk_pct" type="number" min="50" max="100" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="90"></label>
           <label class="block k-pc"><span class="text-xs text-gray-500">{{ _('Seuil processeur (%)') }}</span><input id="f-cpu_pct" type="number" min="10" max="100" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="90"></label>
           <label class="block k-pc"><span class="text-xs text-gray-500">{{ _('pendant (minutes)') }}</span><input id="f-cpu_minutes" type="number" min="1" max="240" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="10"></label>
           <label class="block k-nas"><span class="text-xs text-gray-500">{{ _('Température max (°C)') }}</span><input id="f-temp_max" type="number" min="30" max="90" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5" value="60"></label>
@@ -205,6 +208,28 @@
           <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">{{ _('Chiffrement') }}</span>
             <select id="f-priv_proto" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5 bg-white"><option>AES</option><option>DES</option><option>AES192</option><option>AES256</option></select></label>
           <label class="block k-snmp k-v3"><span class="text-xs text-gray-500">{{ _('Mot de passe de chiffrement') }}</span><input id="f-priv_pass" type="password" autocomplete="new-password" class="mt-1 w-full border border-gray-200 rounded-lg px-2 py-1.5"></label>
+          <div class="k-agent md:col-span-3 border border-blue-100 bg-blue-50/40 rounded-lg p-3">
+            <div class="text-xs font-semibold text-blue-700 mb-2">{{ _('Agent BL-RMO') }}</div>
+            <p class="text-xs text-gray-600 leading-relaxed">{{ _("Installé sur le PC, l'agent envoie ses relevés à BL-RMO toutes les minutes : allumé depuis, processeur, mémoire, disques. Pas de SNMP à activer, aucun port ouvert sur le PC.") }}</p>
+            <label class="flex items-start gap-2 text-sm mt-3"><input type="checkbox" id="f-mod-dante" class="w-4 h-4 mt-0.5">
+              <span>{{ _('Dante') }} <span class="text-xs text-gray-500">{{ _(': relève aussi le réseau Dante (page Dante). Un seul PC relié au réseau Dante suffit.') }}</span></span></label>
+            <div id="agent-new" class="text-xs text-gray-500 mt-3">{{ _("Le jeton de l'agent est créé à l'enregistrement et s'affiche ici ensuite.") }}</div>
+            <div id="agent-tok" class="hidden mt-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs text-gray-500">{{ _('Jeton de ce PC') }}</span>
+                <input id="f-token" type="password" readonly class="font-mono text-xs border border-gray-200 rounded-lg px-2 py-1.5 w-72 max-w-full bg-white">
+                <button type="button" class="text-xs border border-gray-200 bg-white rounded-lg px-3 py-1.5 hover:bg-gray-50" onclick="toggleTok()" id="tok-show">{{ _('Afficher') }}</button>
+                <button type="button" class="text-xs border border-gray-200 bg-white rounded-lg px-3 py-1.5 hover:bg-gray-50" onclick="copyTok()">{{ _('Copier') }}</button>
+                <button type="button" class="text-xs border border-red-200 bg-white text-red-700 rounded-lg px-3 py-1.5 hover:bg-red-50" onclick="newTok(this)">{{ _('Nouveau jeton') }}</button>
+                <span id="tok-msg" class="text-xs"></span>
+              </div>
+              <ol class="text-xs text-gray-600 list-decimal pl-5 mt-3 space-y-1.5 leading-relaxed">
+                <li>{{ _("Sur le PC, télécharger l'installeur setup-agent-bl-rmo depuis les") }} <a href="https://github.com/LyonelB/BL-RMO/releases?q=agent&amp;expanded=true" target="_blank" rel="noopener" class="text-blue-600 underline">{{ _("versions de l'agent BL-RMO") }}</a>.</li>
+                <li>{{ _("Double-cliquer dessus. Si Windows affiche « Windows a protégé votre ordinateur » : Informations complémentaires, puis Exécuter quand même.") }}</li>
+                <li>{{ _("Indiquer l'adresse de BL-RMO") }} (<code class="font-mono" id="agent-url"></code>) {{ _("et coller le jeton. À la fin, l'installeur confirme que BL-RMO a reçu le premier relevé.") }}</li>
+              </ol>
+            </div>
+          </div>
           <label class="flex items-center gap-2 mt-6"><input type="checkbox" id="f-alert_email" class="w-4 h-4" checked> {{ _('Mails pour cet appareil') }}</label>
           <label class="flex items-center gap-2 mt-6"><input type="checkbox" id="f-enabled" class="w-4 h-4" checked> {{ _('Surveillé') }}</label>
         </div>
@@ -259,7 +284,7 @@
     $('t-pc').textContent = pcs.length ? _t('{a} en ligne sur {b}', { a: s.pc24_on, b: s.pc24_total }) : _t('Aucun');
     $('t-pc-dot').className = 'w-2.5 h-2.5 rounded-full ' + (!pcs.length ? 'bg-gray-300' : downPc.length ? 'bg-red-500' : mutePc.length ? 'bg-amber-500' : 'bg-green-500');
     $('t-pc-sub').innerHTML = downPc.length ? `<span class="text-red-600">${_t(downPc.length > 1 ? '{n} injoignables depuis {t}' : '{n} injoignable depuis {t}', { n: esc(downPc.map(d => d.name).join(', ')), t: when(downPc[0].since) })}</span>`
-      : mutePc.length ? `<span class="text-amber-700">${esc(mutePc.map(d => d.name).join(', '))} : ${_t('SNMP muet')}</span>` : (pcs.length ? esc(pcs.map(d => d.name).join(' · ')) : '&nbsp;');
+      : mutePc.length ? `<span class="text-amber-700">${mutePc.map(d => esc(d.name) + ' : ' + _t(d.method === 'agent' ? 'Agent muet' : 'SNMP muet')).join(', ')}</span>` : (pcs.length ? esc(pcs.map(d => d.name).join(' · ')) : '&nbsp;');
     const nas = dev.filter(d => d.kind === 'nas');
     if (!nas.length) { $('t-nas').textContent = _t('Aucun'); $('t-nas-dot').className = 'w-2.5 h-2.5 rounded-full bg-gray-300'; $('t-nas-sub').innerHTML = '&nbsp;'; }
     else {
@@ -288,7 +313,7 @@
       const off = d.state === 'off', alarm = off && d.always_on;
       let state;
       if (d.state === 'on') state = `<span class="text-green-600 font-medium">${_t('Allumé')}</span><div class="text-[11px] text-gray-500">${_t('depuis')} ${when(d.boot || d.since)}${d.rebooted_at && Date.now() / 1000 - d.rebooted_at < 86400 ? ' <span class="text-blue-700">' + _t('(redémarré)') + '</span>' : ''}</div>`;
-      else if (d.state === 'snmp') state = `<span class="text-amber-700 font-semibold">${_t('SNMP ne répond plus')}</span><div class="text-[11px] text-gray-500">${_t('depuis')} ${when(d.since)} · ${_t('le PC répond sur le réseau')}</div>`;
+      else if (d.state === 'snmp') state = `<span class="text-amber-700 font-semibold">${_t(d.method === 'agent' ? 'Agent ne répond plus' : 'SNMP ne répond plus')}</span><div class="text-[11px] text-gray-500">${_t('depuis')} ${when(d.since)} · ${_t('le PC répond sur le réseau')}</div>`;
       else if (alarm) state = `<span class="text-red-600 font-semibold">${_t('Injoignable')}</span><div class="text-[11px] text-gray-500">${_t('depuis')} ${when(d.since)}</div>`;
       else if (off) state = `<span class="text-gray-500 font-medium">${_t('Éteint')}</span><div class="text-[11px] text-gray-500">${_t('depuis')} ${when(d.since)}</div>`;
       else state = `<span class="text-gray-400">${_t('En attente du premier relevé')}</span>${d.error ? `<div class="text-[11px] text-gray-400">${esc(d.error)}</div>` : ''}`;
@@ -307,7 +332,7 @@
       }).join('');
       return `<tr class="border-b border-gray-50 ${alarm ? 'bg-red-50/50' : ''}">
         <td class="py-2.5 pr-3"><div class="font-medium text-gray-900">${esc(d.name)}${d.always_on ? badge24 : ''}</div>
-          <div class="text-[11px] text-gray-400 font-mono">${esc(d.host)}${d.os ? ' · ' + esc(d.os) : ''}${/windows 10/i.test(d.os) ? ' <span class="text-amber-700">' + _t('· sans mises à jour de sécurité') + '</span>' : ''}</div></td>
+          <div class="text-[11px] text-gray-400 font-mono">${esc(d.host)}${d.os ? ' · ' + esc(d.os) : ''}${d.method === 'agent' ? ' · ' + _t('agent') + (d.agent && d.agent.version ? ' ' + esc(d.agent.version) : '') + (d.agent && (d.agent.wanted || []).includes('dante') ? ' + Dante' : '') : ''}${/windows 10/i.test(d.os) ? ' <span class="text-amber-700">' + _t('· sans mises à jour de sécurité') + '</span>' : ''}</div></td>
         <td class="py-2.5 pr-3 text-xs">${state}</td>
         <td class="py-2.5 pr-3">${cpu}</td>
         <td class="py-2.5 pr-3 space-y-1">${dk}</td></tr>`;
@@ -403,7 +428,7 @@
 
   // ═══ Journal : événements du parc ═══
   const EV_CLS = { alert: 'bg-red-50 text-red-700', restored: 'bg-green-50 text-green-700', info: 'bg-gray-100 text-gray-600' };
-  const EV_LBL = { down: _t('Injoignable'), on: _t('Allumé'), off: _t('Éteint'), reboot: _t('Redémarrage'), disk: _t('Disque'), cpu: _t('Processeur'), nas: 'NAS', slow: _t('Lent'), snmp: 'SNMP' };
+  const EV_LBL = { down: _t('Injoignable'), on: _t('Allumé'), off: _t('Éteint'), reboot: _t('Redémarrage'), disk: _t('Disque'), cpu: _t('Processeur'), nas: 'NAS', slow: _t('Lent'), snmp: _t('Relevé') };
   const evLabel = e => e.level === 'restored' ? _t('Rétabli') : e.kind === 'down' && e.level === 'alert' ? _t('Injoignable') : EV_LBL[e.kind] || e.kind;
   function evTime(ts) { const d = new Date(String(ts).replace(' ', 'T')); return `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`; }
   const pad2 = n => String(n).padStart(2, '0');
@@ -473,7 +498,7 @@
     const r = await fetch('/api/park/devices', { credentials: 'include' });
     devices = (await r.json()).devices || [];
     $('dev-list').innerHTML = devices.map((d, i) => `<tr class="border-b border-gray-50">
-        <td class="py-2 pr-3 w-20 text-[11px] text-gray-400 uppercase">${KIND_LBL[d.kind]}</td>
+        <td class="py-2 pr-3 w-20 text-[11px] text-gray-400 uppercase">${KIND_LBL[d.kind]}${d.kind === 'pc' ? `<div class="normal-case">${d.config.method === 'agent' ? _t('agent') : 'SNMP'}</div>` : ''}</td>
         <td class="py-2 pr-3"><span class="font-medium ${d.enabled ? 'text-gray-900' : 'text-gray-400 line-through'}">${esc(d.name)}</span>${d.always_on ? badge24 : ''}</td>
         <td class="py-2 pr-3 font-mono text-xs text-gray-500">${esc(d.config.host || d.config.url || '')}</td>
         <td class="py-2 text-right whitespace-nowrap text-xs">
@@ -507,14 +532,16 @@
   }
   const FIELDS = ['name', 'host', 'port', 'url', 'keyword', 'slow_ms', 'os', 'disk_pct', 'cpu_pct', 'cpu_minutes', 'temp_max', 'version', 'community', 'user', 'auth_proto', 'auth_pass', 'priv_proto', 'priv_pass'];
   function kindChanged() {
-    const k = $('f-kind').value, v3 = $('f-version').value === '3';
+    const k = $('f-kind').value, v3 = $('f-version').value === '3', agent = k === 'pc' && $('f-method').value === 'agent';
     document.querySelectorAll('#dev-form [class*="k-"]').forEach(el => {
       const c = el.classList;
-      let show = (c.contains('k-snmp') && k !== 'site') || (c.contains('k-site') && k === 'site') || (c.contains('k-pc') && k === 'pc') || (c.contains('k-nas') && k === 'nas');
+      let show = (c.contains('k-host') && k !== 'site') || (c.contains('k-snmp') && k !== 'site' && !agent) || (c.contains('k-agent') && agent)
+        || (c.contains('k-site') && k === 'site') || (c.contains('k-pc') && k === 'pc') || (c.contains('k-nas') && k === 'nas');
       if (c.contains('k-v3') && !v3) show = false;
       if (c.contains('k-v12') && v3) show = false;
       el.classList.toggle('hidden', !show);
     });
+    document.querySelector('#dev-form button[onclick="testDevice()"]').classList.toggle('hidden', agent);   // l'agent envoie lui-même ses relevés
   }
   function editDevice(id) {
     const d = id ? devices.find(x => x.id === id) : null;
@@ -525,6 +552,12 @@
     const defaults = { port: 161, slow_ms: 5000, disk_pct: 90, cpu_pct: 90, cpu_minutes: 10, temp_max: 60, version: '2c', auth_proto: 'SHA', priv_proto: 'AES' };
     FIELDS.forEach(f => { const el = $('f-' + f); el.value = f === 'name' ? (d ? d.name : '') : (c[f] ?? defaults[f] ?? ''); });
     $('f-always_on').value = d && d.always_on ? '1' : '0';
+    $('f-method').value = d ? (c.method || 'snmp') : 'agent';
+    $('f-mod-dante').checked = !!(c.modules || []).includes('dante');
+    const tokShown = !!(d && c.method === 'agent');
+    $('agent-tok').classList.toggle('hidden', !tokShown); $('agent-new').classList.toggle('hidden', tokShown);
+    $('f-token').value = ''; $('f-token').type = 'password'; $('tok-show').textContent = _t('Afficher'); $('tok-msg').textContent = '';
+    if (tokShown) loadTok(d.id);
     $('f-down_minutes').value = d ? (d.down_minutes || 3) : 3;
     $('f-alert_email').checked = d ? d.alert_email !== false : true;
     $('f-enabled').checked = d ? d.enabled !== false : true;
@@ -537,6 +570,7 @@
     const k = $('f-kind').value, config = {};
     FIELDS.filter(f => f !== 'name').forEach(f => { const v = $('f-' + f).value; if (v !== '') config[f] = v; });
     if (config.version === '3') config.level = 'authPriv';
+    if (k === 'pc') { config.method = $('f-method').value; config.modules = $('f-mod-dante').checked ? ['dante'] : []; }
     const body = { kind: k, name: $('f-name').value.trim(), config, alert_email: $('f-alert_email').checked, enabled: $('f-enabled').checked, always_on: $('f-always_on').value === '1', down_minutes: $('f-down_minutes').value };
     if (editing) body.id = editing;
     return body;
@@ -558,10 +592,43 @@
   async function saveDevice(ev) {
     ev.preventDefault();
     try {
-      if (editing) await api(`/api/park/devices/${editing}`, 'PUT', formData());
-      else await api('/api/park/devices', 'POST', formData());
+      const body = formData();
+      if (editing) await api(`/api/park/devices/${editing}`, 'PUT', body);
+      else {
+        const r = await api('/api/park/devices', 'POST', body);
+        if (body.config.method === 'agent') {         // nouveau PC avec agent : afficher son jeton
+          await loadDevices(); editDevice(r.id); load();
+          $('f-msg').className = 'text-xs text-green-600'; $('f-msg').textContent = _t("Enregistré. Installez l'agent sur le PC avec ce jeton.");
+          return;
+        }
+      }
       closeForm(); loadDevices(); setTimeout(load, 1500); load();
     } catch (e) { $('f-msg').className = 'text-xs text-red-600'; $('f-msg').textContent = e.message; }
+  }
+
+  // ── Jeton de l'agent BL-RMO ──
+  async function loadTok(id) {
+    $('agent-url').textContent = location.origin;
+    try { $('f-token').value = (await api(`/api/park/devices/${id}/agent-token`, 'GET')).token; }
+    catch (e) { $('tok-msg').className = 'text-xs text-red-600'; $('tok-msg').textContent = e.message; }
+  }
+  function toggleTok() { const t = $('f-token'); t.type = t.type === 'password' ? 'text' : 'password'; $('tok-show').textContent = t.type === 'password' ? _t('Afficher') : _t('Masquer'); }
+  async function copyTok() {
+    try { await navigator.clipboard.writeText($('f-token').value); }
+    catch (e) { const t = $('f-token'); t.type = 'text'; t.select(); document.execCommand('copy'); }
+    $('tok-msg').className = 'text-xs text-green-600'; $('tok-msg').textContent = _t('Jeton copié');
+  }
+  function newTok(btn) {
+    if (!btn.classList.contains('armed')) {           // deux clics, sans boîte de dialogue du navigateur
+      btn.dataset.lbl = btn.textContent; btn.classList.add('armed'); btn.textContent = _t('Confirmer ?');
+      setTimeout(() => { if (btn.classList.contains('armed')) { btn.classList.remove('armed'); btn.textContent = btn.dataset.lbl; } }, 4000);
+      return;
+    }
+    btn.classList.remove('armed'); btn.textContent = btn.dataset.lbl;
+    api(`/api/park/devices/${editing}/agent-token`, 'POST').then(r => {
+      $('f-token').value = r.token; $('tok-msg').className = 'text-xs text-amber-700';
+      $('tok-msg').textContent = _t("Nouveau jeton : l'agent du PC est refusé tant que l'installation n'est pas relancée avec ce jeton.");
+    }).catch(e => { $('tok-msg').className = 'text-xs text-red-600'; $('tok-msg').textContent = e.message; });
   }
 
   // ── Menu ──

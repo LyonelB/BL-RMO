@@ -5,8 +5,9 @@ BL-RMO : surveillance du parc (PC de production, NAS, sites web).
 Appareils hors de la chaîne de diffusion, relevés toutes les minutes par le
 processus Flask (comme la chaîne) :
 
-  - PC Windows en SNMP (HOST-RESOURCES-MIB) : allumé ou éteint, depuis quand,
-    processeur (moyenne des cœurs, maximum depuis l'allumage), disques fixes.
+  - PC Windows en SNMP (HOST-RESOURCES-MIB) ou par l'agent BL-RMO installé sur le PC
+    (même relevé, envoyé par le PC à POST /api/agent/report) : allumé ou éteint, depuis
+    quand, processeur (moyenne des cœurs, maximum depuis l'allumage), disques fixes.
     « 24 h/24 » : éteint ou injoignable = alerte, redémarrage signalé.
     Sinon, éteint = simple information.
   - NAS Synology en SNMP (SYNOLOGY-MIB) : système, alimentation, ventilateurs,
@@ -21,6 +22,7 @@ annoncée par le PC ne repart pas de zéro après un arrêt.
 import json
 import logging
 import re
+import secrets
 import shutil
 import sqlite3
 import subprocess
@@ -43,6 +45,8 @@ FAILS_DOWN = 2                 # sites : relevés en erreur de suite avant « in
 REBOOT_TOLERANCE = 300         # s d'écart sur l'heure de démarrage avant de conclure à un redémarrage
 EVENTS_RETENTION_DAYS = 90
 SAMPLES_RETENTION_DAYS = 7     # disponibilité des sites
+AGENT_FRESH = 150              # s : au-delà, le dernier relevé de l'agent est trop ancien
+AGENT_MODULES = ('dante',)     # modules en option de l'agent (le module système est toujours là)
 
 # HOST-RESOURCES-MIB
 HR_UPTIME = '.1.3.6.1.2.1.25.1.1.0'
@@ -122,10 +126,17 @@ def validate_device(data, existing=None):
         'down_minutes': _num(data.get('down_minutes'), 'Délai avant alerte', 3, 1, 60, integer=True),
     }
     cfg = {}
+    agent = kind == 'pc' and raw.get('method') == 'agent'
     if kind in ('pc', 'nas'):
         cfg['host'] = _host(raw.get('host'))
-        cfg['port'] = _num(raw.get('port'), 'Port SNMP', 161, 1, 65535, integer=True)
-        cfg.update(_snmp_creds(raw, old))
+        if agent:
+            # Agent BL-RMO : pas d'accès SNMP ; le jeton du PC est gardé d'une modification à l'autre
+            cfg['method'] = 'agent'
+            cfg['agent_token'] = old.get('agent_token') or secrets.token_urlsafe(24)
+            cfg['modules'] = [m for m in AGENT_MODULES if m in (raw.get('modules') or [])]
+        else:
+            cfg['port'] = _num(raw.get('port'), 'Port SNMP', 161, 1, 65535, integer=True)
+            cfg.update(_snmp_creds(raw, old))
         cfg['disk_pct'] = _num(raw.get('disk_pct'), 'Seuil disque', 90, 50, 100, integer=True)
     if kind == 'pc':
         dev['always_on'] = bool(data.get('always_on', False))
@@ -144,7 +155,7 @@ def validate_device(data, existing=None):
 
 def public_device(dev):
     d = json.loads(json.dumps(dev))
-    for k in ('community', 'auth_pass', 'priv_pass'):
+    for k in ('community', 'auth_pass', 'priv_pass', 'agent_token'):
         if (d.get('config') or {}).get(k):
             d['config'][k] = SECRET_MASK
     return d
@@ -353,6 +364,8 @@ def host_alive(host, ports=(445, 139, 135, 5000, 22, 80)):
 def run_probe(dev):
     """Relevé brut d'un appareil (bouton Tester)."""
     k, cfg = dev['kind'], dev['config']
+    if cfg.get('method') == 'agent':
+        return {'ok': False, 'message': "Agent BL-RMO : pas de test d'ici, l'agent envoie ses relevés toutes les minutes"}
     try:
         if k == 'pc':
             return {'ok': True, 'data': probe_pc(cfg)}
@@ -387,6 +400,7 @@ class ParkMonitor:
         self._state = {}               # id -> état (enregistré en base, survit aux redémarrages)
         self._inflight = set()
         self._next = {}
+        self._agents = {}              # id -> dernier relevé de l'agent BL-RMO (en mémoire)
         self._running = False
         self._pool = ThreadPoolExecutor(max_workers=6, thread_name_prefix='park-probe')
         self._init_db()
@@ -515,6 +529,15 @@ class ParkMonitor:
         try:
             if dev['kind'] == 'site':
                 self._record_site(dev, probe_site(dev['config']))
+            elif dev['config'].get('method') == 'agent':
+                with self._lock:
+                    a = self._agents.get(dev['id'])
+                if a and a.get('system') and time.time() - a['ts'] < AGENT_FRESH:
+                    self._record_snmp(dev, a['system'], None)
+                else:
+                    err = ("Pas de relevé de l'agent depuis " + datetime.fromtimestamp(a['ts']).strftime('%H:%M')) if a \
+                        else "Aucun relevé de l'agent"
+                    self._record_snmp(dev, None, err, host_alive(dev['config']['host']))
             else:
                 try:
                     data = probe_pc(dev['config']) if dev['kind'] == 'pc' else probe_nas(dev['config'])
@@ -589,6 +612,8 @@ class ParkMonitor:
         pc = dev['kind'] == 'pc'
         always = pc and dev.get('always_on') or dev['kind'] == 'nas'
         prev = st.get('state')
+        agent = dev['config'].get('method') == 'agent'
+        lbl = 'Agent' if agent else 'SNMP'       # source des relevés : agent BL-RMO ou SNMP
         delay = 60 * int(dev.get('down_minutes') or 3)
         if data is None:
             st['error'] = error
@@ -601,18 +626,19 @@ class ParkMonitor:
                 # Répond sur le réseau, mais plus en SNMP : ni éteint ni redémarré
                 if prev == 'off' and always:
                     st['alerts'].pop('down', None)
-                    self._event(dev, 'down', 'restored', 'Répond de nouveau sur le réseau (SNMP muet)', f"{name} rétabli")
+                    self._event(dev, 'down', 'restored', f'Répond de nouveau sur le réseau ({lbl} muet)', f"{name} rétabli")
                 st['state'], st['since'] = 'snmp', st['silent_since']
-                st['alerts']['snmp'] = 'SNMP ne répond plus'
-                self._event(dev, 'snmp', 'alert', f"SNMP ne répond plus ({error}), l'appareil répond sur le réseau",
-                            f"{name} : SNMP ne répond plus")
+                st['alerts']['snmp'] = f'{lbl} ne répond plus'
+                self._event(dev, 'snmp', 'alert', f"{lbl} ne répond plus ({error}), l'appareil répond sur le réseau",
+                            f"{name} : {lbl} ne répond plus")
             elif not alive and prev != 'off':
                 if st['alerts'].pop('snmp', None):
-                    self._event(dev, 'snmp', 'restored', 'Plus de réponse SNMP ni réseau : voir « injoignable »')
+                    self._event(dev, 'snmp', 'restored', f'Plus de réponse {lbl} ni réseau : voir « injoignable »')
                 st['state'], st['since'] = 'off', st['silent_since']
                 if always:
                     st['alerts']['down'] = 'Injoignable'
-                    self._event(dev, 'down', 'alert', f"Ne répond plus, ni en SNMP ni sur le réseau ({error})", f"{name} injoignable")
+                    self._event(dev, 'down', 'alert', f"Ne répond plus, ni en {lbl} ni sur le réseau ({error})" if not agent
+                                else f"Ne répond plus, ni l'agent ni sur le réseau ({error})", f"{name} injoignable")
                 else:
                     self._event(dev, 'off', 'info', 'Éteint')
                 st['cpu'] = None
@@ -634,8 +660,8 @@ class ParkMonitor:
             st['state'], st['since'] = 'on', now
             if prev == 'snmp':
                 st['alerts'].pop('snmp', None)
-                self._event(dev, 'snmp', 'restored', 'SNMP répond de nouveau' + (' (redémarré)' if rebooted else ''),
-                            f"{name} : SNMP rétabli" + (' (redémarré)' if rebooted else ''))
+                self._event(dev, 'snmp', 'restored', f'{lbl} répond de nouveau' + (' (redémarré)' if rebooted else ''),
+                            f"{name} : {lbl} rétabli" + (' (redémarré)' if rebooted else ''))
             elif prev == 'off':
                 if always:
                     st['alerts'].pop('down', None)
@@ -755,6 +781,49 @@ class ParkMonitor:
         except sqlite3.Error:
             pass
 
+    # ── Agent BL-RMO ─────────────────────────────────────────────────────
+    def agent_report(self, token, rep, remote):
+        """Relevé envoyé par l'agent d'un PC. Renvoie (appareil, réglages de l'agent),
+        ou None si le jeton ne correspond à aucun PC en méthode « Agent »."""
+        if not token:
+            return None
+        with self._lock:
+            dev = next((d for d in self._devices.values()
+                        if d['kind'] == 'pc' and d['config'].get('method') == 'agent'
+                        and secrets.compare_digest(str(d['config'].get('agent_token', '')), str(token))), None)
+            if not dev:
+                return None
+            mods = rep.get('modules') or {}
+            system = mods.get('system')
+            if not (isinstance(system, dict) and isinstance(system.get('disks'), list)):
+                system = None
+            prev = self._agents.get(dev['id'])
+            if not prev or time.time() - prev['ts'] >= AGENT_FRESH:
+                self._next[dev['id']] = 0          # retour de l'agent : affiché sans attendre le relevé suivant
+            self._agents[dev['id']] = {'ts': time.time(), 'system': system, 'remote': remote,
+                                       'info': rep.get('agent') or {}, 'errors': rep.get('errors') or [],
+                                       'modules': sorted(k for k in mods if isinstance(mods[k], dict))}
+            dev = json.loads(json.dumps(dev))
+        config = {'interval': INTERVAL, 'modules': ['system'] + list(dev['config'].get('modules') or [])}
+        return dev, config
+
+    def agent_token(self, did, regenerate=False):
+        """Jeton de l'agent d'un PC (Parc › Appareils). Nouveau jeton : l'ancien est refusé aussitôt."""
+        with self._lock:
+            dev = self._devices.get(did)
+            if not dev or dev['config'].get('method') != 'agent':
+                return None
+            token = dev['config'].get('agent_token')
+        if regenerate or not token:
+            token = secrets.token_urlsafe(24)
+            dev = self.get_device(did)
+            dev['config']['agent_token'] = token
+            data = {k: v for k, v in dev.items() if k not in ('id', 'position')}
+            with self._conn() as c:
+                c.execute('UPDATE park_devices SET data=? WHERE id=?', (json.dumps(data, ensure_ascii=False), did))
+            self._load()
+        return token
+
     # ── Lecture ──────────────────────────────────────────────────────────
     def _availability(self):
         since = time.time() - 86400
@@ -790,6 +859,13 @@ class ParkMonitor:
                         'down_minutes': d.get('down_minutes', 3)}
                 if d['kind'] == 'pc':
                     item.update({k: st.get(k) for k in ('cpu', 'cpu_max', 'cpu_max_at', 'ram_pct', 'disks', 'sysname')})
+                    item['method'] = cfg.get('method') or 'snmp'
+                    if item['method'] == 'agent':
+                        a = self._agents.get(d['id']) or {}
+                        item['agent'] = {'last': a.get('ts'), 'version': (a.get('info') or {}).get('version'),
+                                         'os': (a.get('info') or {}).get('os'), 'modules': a.get('modules') or [],
+                                         'wanted': ['system'] + list(cfg.get('modules') or []),
+                                         'errors': a.get('errors') or []}
                 elif d['kind'] == 'nas':
                     item.update({'cpu': st.get('cpu'), 'ram_pct': st.get('ram_pct'), 'nas': st.get('nas'),
                                  'uptime': st.get('uptime')})

@@ -139,12 +139,21 @@
 
     <div class="section">
       <div class="section-title">{{ _('Sonde Dante') }}</div>
-      <p class="text-sm text-gray-600 leading-relaxed">{{ _("BL-RMO n'est pas branché sur le réseau Dante. La sonde tourne sur un PC qui l'est (COOR), lit le réseau avec netaudio, en lecture seule, et envoie le relevé ici toutes les minutes. Elle ne peut rien modifier, et rien n'écoute sur ce PC.") }}</p>
+      <p class="text-sm text-gray-600 leading-relaxed">{{ _("BL-RMO n'est pas branché sur le réseau Dante. Un PC qui l'est lit le réseau avec netaudio, en lecture seule, et envoie le relevé ici toutes les minutes. Il ne peut rien modifier, et rien n'écoute sur ce PC.") }}</p>
       <div class="grid sm:grid-cols-3 gap-3 mt-4 text-sm" id="probe-info"></div>
     </div>
 
     <div class="section">
-      <div class="section-title">{{ _('Jeton') }}</div>
+      <div class="section-title">{{ _("Avec l'agent BL-RMO") }}</div>
+      <ol class="text-sm text-gray-600 space-y-2 list-decimal pl-5 leading-relaxed">
+        <li>{{ _('Dans') }} <a href="/park#appareils" class="text-blue-600 underline">{{ _('Parc › Appareils') }}</a>{{ _(", ajouter ou modifier le PC relié au réseau Dante : relevé « Agent BL-RMO », cocher Dante.") }}</li>
+        <li>{{ _("Installer l'agent sur ce PC avec le jeton affiché dans sa fiche. L'installeur retire l'ancienne sonde Dante si elle est présente.") }}</li>
+      </ol>
+    </div>
+
+    <details class="section">
+      <summary class="cursor-pointer text-xs font-semibold text-gray-500">{{ _("Ancienne sonde (script PowerShell), remplacée par l'agent") }}</summary>
+      <div class="mt-4">
       <p class="text-xs text-gray-500 mb-3">{{ _("La sonde envoie ce jeton avec chaque relevé. Après un nouveau jeton, relancer l'installeur sur le PC pour le saisir.") }}</p>
       <div class="flex flex-wrap items-center gap-2">
         <input id="token" type="password" readonly class="font-mono text-xs border border-gray-200 rounded-lg px-3 py-2 w-80 max-w-full bg-gray-50">
@@ -153,20 +162,12 @@
         <button class="btn warn" onclick="newToken(this)">{{ _('Nouveau jeton') }}</button>
       </div>
       <div class="text-xs mt-2" id="token-msg"></div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">{{ _('Installation sur le PC Windows') }}</div>
-      <ol class="text-sm text-gray-600 space-y-3 list-decimal pl-5">
-        <li>{{ _('Installer Python 3.10 ou plus récent depuis python.org, pour tous les utilisateurs (pas la version du Microsoft Store).') }}</li>
-        <li>{{ _('Copier sonde-dante.py et installer-sonde-dante.ps1 (dossier install/windows du dépôt) dans un dossier du PC.') }}</li>
-        <li>{{ _('Ouvrir PowerShell en administrateur dans ce dossier et lancer :') }}
-          <code class="cmd mt-2" id="cmd-install"></code></li>
-        <li>{{ _("Coller le jeton quand l'installeur le demande. Il installe netaudio, copie la sonde dans C:\\ProgramData\\BL-RMO\\sonde-dante, fait un premier relevé et crée la tâche planifiée « BL-RMO Sonde Dante » (compte SYSTEM, au démarrage).") }}</li>
-      </ol>
-      <p class="text-xs text-gray-500 mt-4">{{ _('Journal de la sonde : C:\\ProgramData\\BL-RMO\\sonde-dante\\sonde-dante.log. Désinstaller :') }}</p>
+      <p class="text-xs text-gray-500 mt-4">{{ _('Installation (PowerShell en administrateur, dossier install/windows du dépôt) :') }}</p>
+      <code class="cmd mt-2" id="cmd-install"></code>
+      <p class="text-xs text-gray-500 mt-3">{{ _('Désinstaller :') }}</p>
       <code class="cmd mt-2">powershell -ExecutionPolicy Bypass -File installer-sonde-dante.ps1 -Desinstaller</code>
-    </div>
+      </div>
+    </details>
 
     <div class="section">
       <div class="section-title">{{ _('Référence') }}</div>
@@ -291,7 +292,7 @@
     const cell = (k, v, cls) => `<div><div class="text-[11px] text-gray-400 uppercase tracking-wide">${k}</div><div class="font-medium ${cls || 'text-gray-800'}">${v}</div></div>`;
     $('probe-info').innerHTML = cell(_t('PC'), esc(pr.host || '-') + (r.remote ? ` <span class="text-xs text-gray-400 font-mono">${esc(r.remote)}</span>` : ''))
       + cell(_t('Dernier relevé'), ago(r.age), stale ? 'text-red-600' : '')
-      + cell(_t('Versions'), `<span class="text-xs">${_t('sonde')} ${esc(pr.version || '?')} · netaudio ${esc(pr.netaudio || '?')} · Python ${esc(pr.python || '?')}</span>`);
+      + cell(_t('Versions'), `<span class="text-xs">${pr.agent ? _t('agent BL-RMO') : _t('sonde')} ${esc(pr.version || '?')} · netaudio ${esc(pr.netaudio || '?')} · Python ${esc(pr.python || '?')}</span>`);
   }
 
   async function load() {

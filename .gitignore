@@ -98,3 +98,8 @@ dab_state.json
 # Dongle DAB+ Si468x : SID appris par ensemble
 si468x_sids.json
 si468x_sids.json.tmp
+
+# Agent BL-RMO : construction
+agent/build/
+agent/dist/
+agent/Output/
