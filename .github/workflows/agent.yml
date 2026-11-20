@@ -72,4 +72,4 @@ jobs:
           files: agent/Output/setup-agent-bl-rmo-*.exe
           body: |
             Installeur de l'agent BL-RMO pour Windows 10 et 11 (64 bits).
-            Télécharger setup-agent-bl-rmo-${{ steps.v.outputs.version }}.exe sur le PC, double-cliquer, coller le jeton du PC affiché dans BL-RMO (Parc › Appareils).
+            Télécharger setup-agent-bl-rmo-${{ steps.v.outputs.version }}.exe sur le PC, le lancer, coller le jeton du PC affiché dans BL-RMO (Parc › Appareils).

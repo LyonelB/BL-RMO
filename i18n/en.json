@@ -1494,7 +1494,7 @@
   "Avec l'agent BL-RMO": "With the BL-RMO agent",
   "BL-RMO n'est pas branché sur le réseau Dante. Un PC qui l'est lit le réseau avec netaudio, en lecture seule, et envoie le relevé ici toutes les minutes. Il ne peut rien modifier, et rien n'écoute sur ce PC.": "BL-RMO is not connected to the Dante network. A PC that is reads the network with netaudio, read-only, and sends the report here every minute. It cannot change anything, and nothing listens on that PC.",
   "Dans": "In",
-  "Double-cliquer dessus. Si Windows affiche « Windows a protégé votre ordinateur » : Informations complémentaires, puis Exécuter quand même.": "Double-click it. If Windows shows \"Windows protected your PC\": More info, then Run anyway.",
+  "Lancer l'installeur. Si Windows affiche « Windows a protégé votre ordinateur » : Informations complémentaires, puis Exécuter quand même.": "Run the installer. If Windows shows \"Windows protected your PC\": More info, then Run anyway.",
   "Désinstaller :": "Uninstall:",
   "Enregistré. Installez l'agent sur le PC avec ce jeton.": "Saved. Install the agent on the PC with this token.",
   "Indiquer l'adresse de BL-RMO": "Enter the BL-RMO address",
