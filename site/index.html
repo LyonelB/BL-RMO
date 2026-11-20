@@ -108,13 +108,26 @@
   .alerts p { margin: 0; }
 
   /* ── Galerie ── */
-  .gallery { display: grid; grid-template-columns: 1.15fr 1fr; gap: 28px; align-items: start; }
-  .gallery figure { margin: 0; }
-  .gallery img { border-radius: var(--radius-s); border: 1px solid var(--line); }
-  .gallery figcaption { color: var(--muted); font-size: .95rem; margin-top: 10px; }
-  .gallery figcaption strong { color: var(--ink); font-weight: 650; }
-  .stack { display: grid; gap: 28px; }
-  @media (max-width: 860px) { .gallery { grid-template-columns: 1fr; } }
+  /* ── Carrousel : une capture à la fois, choisie par onglet ou flèches ── */
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+  .tabs button { font: inherit; font-size: .95rem; font-weight: 600; color: var(--muted); background: var(--surface);
+    border: 1px solid var(--line); border-radius: 999px; padding: 7px 16px; cursor: pointer; }
+  .tabs button:hover { color: var(--ink); border-color: var(--tick-major); }
+  .tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .carousel { position: relative; }
+  .slide { display: none; margin: 0; }
+  .slide.on { display: block; }
+  .slide a { display: block; border-radius: var(--radius-l); overflow: hidden; border: 1px solid var(--line); background: #fff;
+    box-shadow: 0 24px 60px rgba(15,23,42,.12); aspect-ratio: 16 / 10; }
+  .slide img { width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .slide figcaption { color: var(--muted); font-size: .97rem; margin-top: 14px; }
+  .slide figcaption strong { color: var(--ink); font-weight: 650; }
+  .arrow { position: absolute; top: calc(50% - 40px); width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line);
+    background: rgba(255,255,255,.95); color: var(--ink); font-size: 1.3rem; line-height: 1; cursor: pointer;
+    box-shadow: 0 6px 18px rgba(15,23,42,.12); display: grid; place-items: center; }
+  .arrow:hover { border-color: var(--tick-major); }
+  .arrow.prev { left: -22px; } .arrow.next { right: -22px; }
+  @media (max-width: 860px) { .arrow.prev { left: 6px; } .arrow.next { right: 6px; } }
 
   /* ── Agent ── */
   .agent { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
@@ -139,7 +152,7 @@
   pre .c { color: #94a3b8; }
   @media (max-width: 860px) { .install { grid-template-columns: 1fr; } }
 
-  .install > *, .agent > *, .gallery > *, .path > * { min-width: 0; }   /* le bloc de commandes défile au lieu d'élargir la page */
+  .install > *, .agent > *, .path > * { min-width: 0; }   /* le bloc de commandes défile au lieu d'élargir la page */
   footer { margin: 110px 0 0; padding: 30px 0 46px; border-top: 1px solid var(--line); color: var(--muted); font-size: .92rem; }
   footer p { margin: 0 0 6px; }
   footer a { color: var(--ink); }
@@ -221,27 +234,29 @@
     </div>
   </section>
 
-  <section aria-labelledby="t-dante">
-    <h2 id="t-dante"><span lang="fr">Le réseau Dante, enfin visible sans Dante Controller.</span><span lang="en">The Dante network, visible without Dante Controller.</span></h2>
-    <p class="intro">
-      <span lang="fr">Un PC du studio lit le réseau en lecture seule avec la bibliothèque libre netaudio et envoie l'état à BL-RMO. Rien à brancher sur le réseau audio, rien à configurer sur les appareils.</span>
-      <span lang="en">A studio PC reads the network, read-only, with the open-source netaudio library and sends its state to BL-RMO. Nothing to plug into the audio network, nothing to set up on the devices.</span>
-    </p>
-    <div class="gallery">
-      <figure>
-        <img src="img/dante.webp" width="1144" height="920" loading="lazy" alt="Page Dante : cinq appareils en ligne, douze abonnements actifs, horloge DHD-dante-64 leader">
-        <figcaption><strong><span lang="fr">Appareils et abonnements.</span><span lang="en">Devices and subscriptions.</span></strong> <span lang="fr">Un appareil ou une route qui disparaît est signalé.</span><span lang="en">A device or route that disappears is flagged.</span></figcaption>
+  <section aria-labelledby="t-pages">
+    <h2 id="t-pages"><span lang="fr">Une page par domaine, toujours à jour.</span><span lang="en">One page per domain, always up to date.</span></h2>
+    <p class="intro"><span lang="fr">La chaîne de diffusion, le réseau Dante et le parc ont chacun leur page, avec leur état, leur journal et leurs alertes. Cliquez sur une capture pour l'agrandir.</span><span lang="en">The broadcast chain, the Dante network and the assets each have their own page, with status, log and alerts. Click a screenshot to enlarge it.</span></p>
+    <div class="tabs" role="tablist" aria-label="Captures">
+      <button type="button" role="tab" id="tab-chain" aria-controls="slide-chain" aria-selected="true"><span lang="fr">Chaîne</span><span lang="en">Chain</span></button>
+      <button type="button" role="tab" id="tab-dante" aria-controls="slide-dante" aria-selected="false" tabindex="-1">Dante</button>
+      <button type="button" role="tab" id="tab-park" aria-controls="slide-park" aria-selected="false" tabindex="-1"><span lang="fr">Parc</span><span lang="en">Assets</span></button>
+    </div>
+    <div class="carousel">
+      <figure class="slide on" id="slide-chain" role="tabpanel" aria-labelledby="tab-chain">
+        <a href="img/chain.webp" target="_blank" rel="noopener"><img src="img/chain.webp" width="1470" height="919" alt="Synoptique de la chaîne : studio, faisceau 5 GHz, pylône et réception FM, tous les appareils en vert"></a>
+        <figcaption><strong><span lang="fr">Chaîne de diffusion.</span><span lang="en">Broadcast chain.</span></strong> <span lang="fr">Du studio à l'antenne, chaque appareil et chaque liaison, son état et depuis quand.</span><span lang="en">From studio to air, every device and every link, its state and since when.</span></figcaption>
       </figure>
-      <div class="stack">
-        <figure>
-          <img src="img/dante-levels.webp" width="1144" height="920" loading="lazy" alt="Niveaux Dante : sorties antenne et PGM 2 à -1 dB, entrées win 1 avec signal, autres canaux muets">
-          <figcaption><strong><span lang="fr">Niveaux par canal.</span><span lang="en">Per-channel levels.</span></strong> <span lang="fr">Pour voir d'un coup d'œil si un canal porte du signal.</span><span lang="en">To see at a glance whether a channel carries signal.</span></figcaption>
-        </figure>
-        <figure>
-          <img src="img/park.webp" width="1144" height="600" loading="lazy" alt="Page Parc : trois PC de production allumés, processeur et disques">
-          <figcaption><strong><span lang="fr">Les PC du studio.</span><span lang="en">Studio PCs.</span></strong> <span lang="fr">Allumé depuis quand, processeur, disques.</span><span lang="en">On since when, processor, disks.</span></figcaption>
-        </figure>
-      </div>
+      <figure class="slide" id="slide-dante" role="tabpanel" aria-labelledby="tab-dante">
+        <a href="img/dante.webp" target="_blank" rel="noopener"><img src="img/dante.webp" width="1144" height="715" loading="lazy" alt="Page Dante : cinq appareils en ligne, douze abonnements actifs, horloge DHD-dante-64 leader"></a>
+        <figcaption><strong>Dante.</strong> <span lang="fr">Appareils, abonnements, horloge et niveaux par canal, lus en lecture seule par netaudio depuis un PC du studio. Rien à configurer sur les appareils.</span><span lang="en">Devices, subscriptions, clock and per-channel levels, read-only through netaudio from a studio PC. Nothing to set up on the devices.</span></figcaption>
+      </figure>
+      <figure class="slide" id="slide-park" role="tabpanel" aria-labelledby="tab-park">
+        <a href="img/park.webp" target="_blank" rel="noopener"><img src="img/park.webp" width="1144" height="715" loading="lazy" alt="Page Parc : trois PC de production allumés, NAS normal, site web en ligne"></a>
+        <figcaption><strong><span lang="fr">Parc.</span><span lang="en">Assets.</span></strong> <span lang="fr">PC du studio, NAS et sites web : allumé depuis quand, processeur, disques.</span><span lang="en">Studio PCs, NAS and websites: on since when, processor, disks.</span></figcaption>
+      </figure>
+      <button type="button" class="arrow prev" aria-label="Capture précédente / Previous">&#8249;</button>
+      <button type="button" class="arrow next" aria-label="Capture suivante / Next">&#8250;</button>
     </div>
   </section>
 
@@ -332,6 +347,30 @@ bash install.sh</code></pre>
       dial.style.setProperty('--from', (x(hi - 4 * (hi - lo) / 20.5) - nx) + 'px');   // unités du dessin SVG
       requestAnimationFrame(() => requestAnimationFrame(() => dial.classList.add('tuned')));
     }
+  })();
+
+  // ── Carrousel : onglets, flèches et touches gauche / droite ──
+  (function () {
+    const tabs = [...document.querySelectorAll('.tabs [role="tab"]')];
+    let cur = 0;
+    function show(i, focus) {
+      cur = (i + tabs.length) % tabs.length;
+      tabs.forEach((t, k) => {
+        const on = k === cur;
+        t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute('aria-controls')).classList.toggle('on', on);
+      });
+      if (focus) tabs[cur].focus();
+    }
+    tabs.forEach((t, k) => {
+      t.addEventListener('click', () => show(k));
+      t.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); show(cur + 1, true); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); show(cur - 1, true); }
+      });
+    });
+    document.querySelector('.arrow.prev').addEventListener('click', () => show(cur - 1));
+    document.querySelector('.arrow.next').addEventListener('click', () => show(cur + 1));
   })();
 </script>
 </body>
