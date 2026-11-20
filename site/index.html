@@ -57,9 +57,9 @@
   .meet { color: var(--accent); font-weight: 600; margin: 0 0 14px; }
   h1 {
     font-stretch: 72%; font-weight: 800; line-height: .98; letter-spacing: -.01em;
-    font-size: clamp(2.6rem, 7.2vw, 5.6rem); margin: 0; max-width: 15ch;
+    font-size: clamp(2rem, 4.4vw, 3rem); margin: 0;
   }
-  .lead { color: var(--muted); font-size: 1.2rem; max-width: 60ch; margin: 22px 0 30px; }
+  .lead { color: var(--muted); font-size: 1.2rem; margin: 20px 0 30px; }
   .ctas { display: flex; flex-wrap: wrap; gap: 12px; }
   .btn { display: inline-flex; align-items: center; gap: 10px; padding: 13px 20px; border-radius: var(--radius-s); font-weight: 650; text-decoration: none; font-size: 1rem; }
   .btn.primary { background: var(--accent); color: #fff; }
@@ -88,8 +88,8 @@
   .shot-bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--tick); display: block; }
 
   section { padding: 96px 0 0; }
-  h2 { font-stretch: 80%; font-weight: 750; font-size: clamp(1.9rem, 3.6vw, 2.7rem); line-height: 1.08; margin: 0 0 14px; max-width: 24ch; }
-  .intro { color: var(--muted); max-width: 62ch; margin: 0 0 40px; }
+  h2 { font-stretch: 80%; font-weight: 750; font-size: clamp(1.6rem, 2.8vw, 2.15rem); line-height: 1.12; margin: 0 0 14px; }
+  .intro { color: var(--muted); margin: 0 0 40px; }
 
   /* ── Le chemin du signal : une vraie séquence ── */
   .path { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; position: relative; }
@@ -104,7 +104,7 @@
     .path li { padding: 0 0 28px 40px; }
     .path li::before { top: 4px; }
   }
-  .alerts { margin: 44px 0 0; padding: 22px 24px; border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 var(--radius-s) var(--radius-s) 0; max-width: 760px; }
+  .alerts { margin: 44px 0 0; padding: 22px 24px; border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 var(--radius-s) var(--radius-s) 0; }
   .alerts p { margin: 0; }
 
   /* ── Galerie ── */
@@ -117,12 +117,14 @@
   @media (max-width: 860px) { .gallery { grid-template-columns: 1fr; } }
 
   /* ── Agent ── */
-  .agent { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+  .agent ol { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
   .agent ol { margin: 0; padding-left: 1.2em; color: var(--muted); }
-  .agent ol li { margin: 0 0 10px; }
+  .agent ol li { padding-left: .2em; }
+  .agent ol li { margin: 0; }
+  .agent h2 { margin-bottom: 24px; }
   .agent ol li::marker { color: var(--accent); font-weight: 700; }
-  .agent img { border-radius: var(--radius-s); box-shadow: 0 18px 44px rgba(15,23,42,.14); justify-self: center; }
-  @media (max-width: 860px) { .agent { grid-template-columns: 1fr; } }
+  .agent img { border-radius: var(--radius-s); box-shadow: 0 18px 44px rgba(15,23,42,.14); margin-top: 36px; }
+  @media (max-width: 860px) { .agent ol { grid-template-columns: 1fr; gap: 12px; } }
 
   /* ── Installation ── */
   .install { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
@@ -136,7 +138,7 @@
 
   .install > *, .agent > *, .gallery > *, .path > * { min-width: 0; }   /* le bloc de commandes défile au lieu d'élargir la page */
   footer { margin: 110px 0 0; padding: 30px 0 46px; border-top: 1px solid var(--line); color: var(--muted); font-size: .92rem; }
-  footer p { margin: 0 0 6px; max-width: 80ch; }
+  footer p { margin: 0 0 6px; }
   footer a { color: var(--ink); }
 </style>
 </head>
