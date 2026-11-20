@@ -2,7 +2,7 @@
 
 **Radio Monitoring**, formerly FM-Monitor. · 🇫🇷 [Version française](README.md)
 
-![Version](https://img.shields.io/badge/version-0.9.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Linux%20mini--PC-lightgrey.svg)
@@ -246,7 +246,7 @@ Chain SNMP monitoring uses `snmpget`: `sudo apt install snmp` if it is not alrea
 
 ### Moving from FM-Monitor to BL-RMO
 
-An installation made before version 0.10 still uses the `~/fm-monitor` folder and the `fm-monitor*` services. The migration script moves everything to the new names, without touching the data (logger, clips, databases, `config.json`):
+An installation made before version 1.0 still uses the `~/fm-monitor` folder and the `fm-monitor*` services. The migration script moves everything to the new names, without touching the data (logger, clips, databases, `config.json`):
 
 ```bash
 cd ~/fm-monitor
@@ -355,16 +355,9 @@ On the device, the syslog server must be the **IP address** of BL-RMO (not `bl-r
 - [x] v0.3 to v0.7: Icecast2, SSL, automatic installation, alerts, local access, public mode, webhook, mobile interface
 - [x] v0.8.0: TEF668X tuner, 24 h logger, broadcast chain, logs and traps, accounts and roles
 - [x] v0.9.0: new name BL-RMO, logs in three tabs
-- [x] DAB+ reception (continuation of BL-DMO), validated on site
-- [x] FM, DAB+, chain and logger dashboard
-- [x] Navigation by domain: FM, DAB+, Chain, Assets and System, each with its log, logger and settings
-- [x] One logger per reception: FM and watched DAB+ station
-- [x] Site sensors (temperature, humidity... of a shelter), outside the signal path
-- [x] English version of the interface and the mails
+- [x] v1.0.0: DAB+ reception (continuation of BL-DMO), navigation by domain (FM, DAB+, Chain, Dante, Assets, System), one logger per reception, Assets page, site sensors, English version, Dante monitoring (devices, subscriptions, clock, levels) with [netaudio](https://github.com/chris-ritsen/network-audio-controller), BL-RMO agent for Windows PCs, bl-rmo names
 
 ### Next
-- [x] Dante monitoring, step 1: Dante page (devices, subscriptions, clock) fed by the Dante probe, built on [netaudio](https://github.com/chris-ritsen/network-audio-controller)
-- [x] BL-RMO agent for Windows PCs: double-click installer, system and Dante modules set in BL-RMO
 - [ ] Move the studio PCs to the agent, installer signing (SignPath Foundation)
 - [ ] Dante monitoring, step 2: alerts, change log and dashboard tile
 

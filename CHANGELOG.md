@@ -4,7 +4,25 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
+
 ## [Non publié]
+
+---
+
+## [1.0.0] - 2026-11-20
+
+Première version stable : réception FM et DAB+, chaîne de diffusion, parc et réseau Dante dans une seule interface, en français ou en anglais.
+
+**Points forts**
+- **Réception DAB+** (reprise de BL-DMO) : page DAB+, station suivie, alertes, pige, récepteurs USB.
+- **Navigation par domaine** : FM, DAB+, Chaîne, Dante, Parc et Système, chacun avec son journal, sa pige et sa configuration.
+- **Page Parc** : PC de production, NAS Synology et sites web.
+- **Version anglaise** de l'interface, des mails et du README.
+- **Surveillance Dante** : appareils, abonnements, horloge et niveaux par canal.
+- **Agent BL-RMO** pour les PC Windows : installeur à double-cliquer, relevés système et Dante, réglés depuis BL-RMO.
+- **Noms bl-rmo** : dossier, services et adresse, avec un script de migration pour les installations existantes.
+
+Le mode RTL-SDR en FM, l'analyse MPX et Docker sont toujours présents mais ne sont plus développés ; ils seront retirés dans la prochaine version.
 
 ### Agent BL-RMO pour les PC Windows
 - **Un agent à installer sur les PC du parc** (`agent/agent_bl_rmo.py`), qui envoie ses relevés à BL-RMO toutes les minutes (`POST /api/agent/report`, jeton propre à chaque PC). Les modules se choisissent dans BL-RMO et arrivent dans la réponse : rien à refaire sur le PC.
