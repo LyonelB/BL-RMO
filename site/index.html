@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="fr" data-lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BL-RMO</title>
+<meta name="description" content="BL-RMO surveille la réception FM et DAB+, la chaîne de diffusion, le réseau Dante et les PC du studio d'une radio. Libre et auto-hébergé.">
+<meta name="theme-color" content="#f8fafc">
+<meta property="og:title" content="BL-RMO, surveillance radio libre">
+<meta property="og:description" content="Réception FM et DAB+, chaîne de diffusion, réseau Dante et PC du studio dans une seule interface.">
+<meta property="og:image" content="img/dashboard.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Couleurs de l'interface de BL-RMO (Tailwind slate et blue) */
+    --bg: #f8fafc;         /* fond des pages */
+    --surface: #ffffff;    /* cartes */
+    --line: #e2e8f0;       /* bordures */
+    --tick: #cbd5e1;       /* graduations du cadran */
+    --tick-major: #94a3b8;
+    --ink: #0f172a;        /* texte */
+    --muted: #64748b;      /* texte secondaire */
+    --accent: #2563eb;     /* bleu de BL-RMO : aiguille, boutons, liens */
+    --accent-dark: #1d4ed8;
+    --ok: #22c55e;
+    --radius-s: 6px;
+    --radius-l: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: 'Archivo', system-ui, sans-serif; font-size: 1.0625rem; line-height: 1.6;
+    font-stretch: 100%;
+  }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+  img { max-width: 100%; height: auto; display: block; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+  html[data-lang="fr"] [lang="en"], html[data-lang="en"] [lang="fr"] { display: none !important; }
+
+  /* ── En-tête ── */
+  header { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-weight: 700; font-size: 1.1rem; }
+  .badge { background: #2563eb; color: #fff; font-weight: 800; font-size: .78rem; padding: 8px 6px; border-radius: 9px; letter-spacing: .02em; }
+  .top-links { display: flex; align-items: center; gap: 18px; font-size: .95rem; }
+  .top-links a { color: var(--muted); text-decoration: none; }
+  .top-links a:hover { color: var(--ink); }
+  @media (max-width: 520px) { .top-links .nav-install { display: none; } }
+  .lang { background: var(--surface); border: 1px solid var(--line); color: var(--muted); font: inherit; font-size: .85rem; padding: 4px 10px; border-radius: 999px; cursor: pointer; }
+  .lang:hover { color: var(--ink); border-color: var(--tick-major); }
+
+  /* ── Accroche ── */
+  .hero { padding: 56px 0 8px; }
+  .meet { color: var(--accent); font-weight: 600; margin: 0 0 14px; }
+  h1 {
+    font-stretch: 72%; font-weight: 800; line-height: .98; letter-spacing: -.01em;
+    font-size: clamp(2.6rem, 7.2vw, 5.6rem); margin: 0; max-width: 15ch;
+  }
+  .lead { color: var(--muted); font-size: 1.2rem; max-width: 60ch; margin: 22px 0 30px; }
+  .ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; padding: 13px 20px; border-radius: var(--radius-s); font-weight: 650; text-decoration: none; font-size: 1rem; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent-dark); }
+  .btn.ghost { color: var(--ink); border: 1px solid var(--line); background: var(--surface); }
+  .btn.ghost:hover { border-color: var(--tick-major); }
+  .btn svg { width: 18px; height: 18px; }
+  .facts { color: var(--muted); font-size: .95rem; margin: 18px 0 0; }
+
+  /* ── Cadran FM : l'élément marquant ── */
+  .dial { margin: 64px 0 0; position: relative; }
+  .dial svg { width: 100%; height: auto; overflow: visible; }
+  .dial .tick { stroke: var(--tick); }
+  .dial .tick.major { stroke: var(--tick-major); }
+  .dial .num { fill: var(--muted); font-size: 13px; font-family: 'Archivo', sans-serif; font-stretch: 80%; }
+  .dial .needle { stroke: var(--accent); stroke-width: 3; filter: drop-shadow(0 0 5px rgba(37,99,235,.45)); }
+  .dial .needle-label { fill: var(--accent); font-weight: 700; font-size: 15px; font-family: 'Archivo', sans-serif; }
+  .dial .needle-group { transform: translateX(var(--from, 0px)); }
+  .dial.tuned .needle-group { transform: translateX(0); transition: transform 1.6s cubic-bezier(.2,.8,.2,1); }
+  .dial-cap { display: flex; justify-content: space-between; color: var(--muted); font-size: .85rem; margin-top: 6px; }
+  @media (prefers-reduced-motion: reduce) { .dial .needle-group, .dial.tuned .needle-group { transform: none; transition: none; } }
+
+  /* ── Capture principale ── */
+  .shot { margin: 40px 0 0; border-radius: var(--radius-l); overflow: hidden; border: 1px solid var(--line); background: #fff; box-shadow: 0 24px 60px rgba(15,23,42,.12); }
+  .shot-bar { background: #f1f5f9; display: flex; gap: 7px; padding: 10px 14px; }
+  .shot-bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--tick); display: block; }
+
+  section { padding: 96px 0 0; }
+  h2 { font-stretch: 80%; font-weight: 750; font-size: clamp(1.9rem, 3.6vw, 2.7rem); line-height: 1.08; margin: 0 0 14px; max-width: 24ch; }
+  .intro { color: var(--muted); max-width: 62ch; margin: 0 0 40px; }
+
+  /* ── Le chemin du signal : une vraie séquence ── */
+  .path { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; position: relative; }
+  .path::before { content: ''; position: absolute; left: 0; right: 0; top: 13px; height: 2px; background: linear-gradient(90deg, var(--tick), var(--accent)); }
+  .path li { position: relative; padding: 40px 20px 0 0; }
+  .path li::before { content: ''; position: absolute; top: 6px; left: 0; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); }
+  .path h3 { margin: 0 0 6px; font-size: 1.15rem; font-weight: 700; }
+  .path p { margin: 0; color: var(--muted); font-size: .97rem; }
+  @media (max-width: 860px) {
+    .path { grid-template-columns: 1fr; }
+    .path::before { left: 7px; right: auto; top: 0; bottom: 0; width: 2px; height: auto; background: linear-gradient(180deg, var(--tick), var(--accent)); }
+    .path li { padding: 0 0 28px 40px; }
+    .path li::before { top: 4px; }
+  }
+  .alerts { margin: 44px 0 0; padding: 22px 24px; border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 var(--radius-s) var(--radius-s) 0; max-width: 760px; }
+  .alerts p { margin: 0; }
+
+  /* ── Galerie ── */
+  .gallery { display: grid; grid-template-columns: 1.15fr 1fr; gap: 28px; align-items: start; }
+  .gallery figure { margin: 0; }
+  .gallery img { border-radius: var(--radius-s); border: 1px solid var(--line); }
+  .gallery figcaption { color: var(--muted); font-size: .95rem; margin-top: 10px; }
+  .gallery figcaption strong { color: var(--ink); font-weight: 650; }
+  .stack { display: grid; gap: 28px; }
+  @media (max-width: 860px) { .gallery { grid-template-columns: 1fr; } }
+
+  /* ── Agent ── */
+  .agent { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+  .agent ol { margin: 0; padding-left: 1.2em; color: var(--muted); }
+  .agent ol li { margin: 0 0 10px; }
+  .agent ol li::marker { color: var(--accent); font-weight: 700; }
+  .agent img { border-radius: var(--radius-s); box-shadow: 0 18px 44px rgba(15,23,42,.14); justify-self: center; }
+  @media (max-width: 860px) { .agent { grid-template-columns: 1fr; } }
+
+  /* ── Installation ── */
+  .install { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+  .install h3 { margin: 0 0 10px; font-size: 1.15rem; }
+  .install ul { margin: 0; padding-left: 1.1em; color: var(--muted); }
+  .install ul li { margin: 0 0 8px; }
+  pre { margin: 0; background: #0f172a; border: 1px solid #0f172a; border-radius: var(--radius-s); padding: 18px 20px; overflow-x: auto; font-size: .92rem; line-height: 1.7; color: #e2e8f0; }
+  code { font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; }
+  pre .c { color: #94a3b8; }
+  @media (max-width: 860px) { .install { grid-template-columns: 1fr; } }
+
+  .install > *, .agent > *, .gallery > *, .path > * { min-width: 0; }   /* le bloc de commandes défile au lieu d'élargir la page */
+  footer { margin: 110px 0 0; padding: 30px 0 46px; border-top: 1px solid var(--line); color: var(--muted); font-size: .92rem; }
+  footer p { margin: 0 0 6px; max-width: 80ch; }
+  footer a { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <a class="brand" href="./"><span class="badge">RMO</span> BL-RMO</a>
+    <nav class="top-links">
+      <a class="nav-install" href="#installer"><span lang="fr">Installer</span><span lang="en">Install</span></a>
+      <a href="https://github.com/LyonelB/BL-RMO">GitHub</a>
+      <button class="lang" id="lang" type="button" aria-label="Changer de langue / Switch language">English</button>
+    </nav>
+  </header>
+
+  <main>
+  <div class="hero">
+    <p class="meet"><span lang="fr">Voici BL-RMO.</span><span lang="en">Meet BL-RMO.</span></p>
+    <h1><span lang="fr">Sachez avant vos auditeurs que quelque chose a décroché.</span><span lang="en">Know before your listeners that something dropped.</span></h1>
+    <p class="lead">
+      <span lang="fr">BL-RMO surveille toute la chaîne d'une radio, du studio jusqu'à l'antenne : réception FM et DAB+, console, codecs, faisceau, émetteur, réseau Dante et PC du studio. Une seule page pour voir que tout va bien, un mail dès que ce n'est plus le cas.</span>
+      <span lang="en">BL-RMO watches a radio station's whole chain, from the studio to the air: FM and DAB+ reception, console, codecs, STL, transmitter, Dante network and studio PCs. One page to see that everything is fine, an email as soon as it is not.</span>
+    </p>
+    <div class="ctas">
+      <a class="btn primary" href="https://github.com/LyonelB/BL-RMO">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
+        <span lang="fr">Voir le code sur GitHub</span><span lang="en">See the code on GitHub</span>
+      </a>
+      <a class="btn ghost" href="#installer"><span lang="fr">Installer BL-RMO</span><span lang="en">Install BL-RMO</span></a>
+    </div>
+    <p class="facts">
+      <span lang="fr">Libre sous licence MIT, auto-hébergé sur un mini-PC Linux, en français et en anglais. Conçu et utilisé chaque jour à Graffiti Radio, La Roche-sur-Yon.</span>
+      <span lang="en">Free software under the MIT licence, self-hosted on a Linux mini PC, in French and English. Built and used every day at Graffiti Radio, La Roche-sur-Yon, France.</span>
+    </p>
+
+    <div class="dial" id="dial" aria-hidden="true">
+      <svg viewBox="0 0 1000 86" id="dial-svg"></svg>
+      <div class="dial-cap"><span>FM 87.5 MHz</span><span id="dial-hi">108 MHz</span></div>
+    </div>
+
+    <div class="shot">
+      <div class="shot-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+      <img src="img/dashboard.webp" width="1489" height="920" alt="Tableau de bord de BL-RMO : réception FM et DAB+ avec niveaux, chaîne de diffusion en vert, pige en cours d'enregistrement">
+    </div>
+  </div>
+
+  <section aria-labelledby="t-path">
+    <h2 id="t-path"><span lang="fr">Du micro à l'auditeur, chaque maillon a un œil dessus.</span><span lang="en">From microphone to listener, every link is watched.</span></h2>
+    <p class="intro">
+      <span lang="fr">BL-RMO suit le signal dans l'ordre où il voyage. Quand un maillon lâche, on voit tout de suite lequel, et pas seulement qu'il n'y a plus de son.</span>
+      <span lang="en">BL-RMO follows the signal in the order it travels. When a link fails, you see which one straight away, not just that the sound is gone.</span>
+    </p>
+    <ol class="path">
+      <li>
+        <h3><span lang="fr">Studio</span><span lang="en">Studio</span></h3>
+        <p><span lang="fr">PC de diffusion et de pige, NAS et sites web. Un agent sur chaque PC Windows envoie son état toutes les minutes.</span><span lang="en">Playout and logger PCs, NAS and websites. An agent on each Windows PC reports its state every minute.</span></p>
+      </li>
+      <li>
+        <h3>Dante</h3>
+        <p><span lang="fr">Appareils, abonnements, horloge et niveaux par canal : qui reçoit quoi, et si le signal passe.</span><span lang="en">Devices, subscriptions, clock and per-channel levels: who receives what, and whether signal flows.</span></p>
+      </li>
+      <li>
+        <h3><span lang="fr">Console et codecs</span><span lang="en">Console and codecs</span></h3>
+        <p><span lang="fr">État en SNMP, journaux syslog et traps des appareils, flux web écouté.</span><span lang="en">SNMP status, syslog and traps from each device, web stream checked.</span></p>
+      </li>
+      <li>
+        <h3><span lang="fr">Faisceau et émetteur</span><span lang="en">STL and transmitter</span></h3>
+        <p><span lang="fr">Liaison studio-émetteur, émetteur, capteurs du site : température, humidité.</span><span lang="en">Studio-to-transmitter link, transmitter, site sensors: temperature, humidity.</span></p>
+      </li>
+      <li>
+        <h3><span lang="fr">Antenne</span><span lang="en">On air</span></h3>
+        <p><span lang="fr">Réception FM et DAB+ comme un auditeur : signal, RDS, stéréo, silences, écoute en direct et pige 24 h sur 24.</span><span lang="en">FM and DAB+ received like a listener: signal, RDS, stereo, silence, live listening and a 24/7 logger.</span></p>
+      </li>
+    </ol>
+    <div class="alerts">
+      <p><span lang="fr">Une perte de signal, un flux coupé, un PC éteint, un appareil qui ne répond plus : un mail part aussitôt, et un autre quand tout est rétabli.</span><span lang="en">Lost signal, a stream down, a PC off, a device not answering: an email goes out at once, and another when it is back.</span></p>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-dante">
+    <h2 id="t-dante"><span lang="fr">Le réseau Dante, enfin visible sans Dante Controller.</span><span lang="en">The Dante network, visible without Dante Controller.</span></h2>
+    <p class="intro">
+      <span lang="fr">Un PC du studio lit le réseau en lecture seule avec la bibliothèque libre netaudio et envoie l'état à BL-RMO. Rien à brancher sur le réseau audio, rien à configurer sur les appareils.</span>
+      <span lang="en">A studio PC reads the network, read-only, with the open-source netaudio library and sends its state to BL-RMO. Nothing to plug into the audio network, nothing to set up on the devices.</span>
+    </p>
+    <div class="gallery">
+      <figure>
+        <img src="img/dante.webp" width="1144" height="920" loading="lazy" alt="Page Dante : cinq appareils en ligne, douze abonnements actifs, horloge DHD-dante-64 leader">
+        <figcaption><strong><span lang="fr">Appareils et abonnements.</span><span lang="en">Devices and subscriptions.</span></strong> <span lang="fr">Un appareil ou une route qui disparaît est signalé.</span><span lang="en">A device or route that disappears is flagged.</span></figcaption>
+      </figure>
+      <div class="stack">
+        <figure>
+          <img src="img/dante-levels.webp" width="1144" height="920" loading="lazy" alt="Niveaux Dante : sorties antenne et PGM 2 à -1 dB, entrées win 1 avec signal, autres canaux muets">
+          <figcaption><strong><span lang="fr">Niveaux par canal.</span><span lang="en">Per-channel levels.</span></strong> <span lang="fr">Pour voir d'un coup d'œil si un canal porte du signal.</span><span lang="en">To see at a glance whether a channel carries signal.</span></figcaption>
+        </figure>
+        <figure>
+          <img src="img/park.webp" width="1144" height="600" loading="lazy" alt="Page Parc : trois PC de production allumés, processeur et disques">
+          <figcaption><strong><span lang="fr">Les PC du studio.</span><span lang="en">Studio PCs.</span></strong> <span lang="fr">Allumé depuis quand, processeur, disques.</span><span lang="en">On since when, processor, disks.</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-agent">
+    <div class="agent">
+      <div>
+        <h2 id="t-agent"><span lang="fr">Un agent pour les PC Windows, installé en une minute.</span><span lang="en">An agent for Windows PCs, installed in a minute.</span></h2>
+        <ol>
+          <li><span lang="fr">Ajoutez le PC dans BL-RMO, page Parc, et copiez son jeton.</span><span lang="en">Add the PC in BL-RMO, Assets page, and copy its token.</span></li>
+          <li><span lang="fr">Sur le PC, lancez l'installeur et collez le jeton.</span><span lang="en">On the PC, run the installer and paste the token.</span></li>
+          <li><span lang="fr">L'installeur confirme que BL-RMO a reçu le premier relevé. Ce que l'agent relève se règle ensuite depuis BL-RMO.</span><span lang="en">The installer confirms that BL-RMO received the first report. What the agent reads is then set from BL-RMO.</span></li>
+        </ol>
+        <p class="facts" style="margin-top:20px">
+          <span lang="fr">Pas de SNMP à activer, aucun port ouvert sur le PC.</span><span lang="en">No SNMP to enable, no port opened on the PC.</span>
+          <a href="https://github.com/LyonelB/BL-RMO/releases?q=agent&amp;expanded=true"><span lang="fr">Télécharger l'agent</span><span lang="en">Download the agent</span></a>
+        </p>
+      </div>
+      <img src="img/agent-setup.webp" width="586" height="456" loading="lazy" alt="Fin de l'installation de l'agent BL-RMO : BL-RMO a bien reçu le premier relevé de ce PC">
+    </div>
+  </section>
+
+  <section id="installer" aria-labelledby="t-install">
+    <h2 id="t-install"><span lang="fr">Installer BL-RMO</span><span lang="en">Install BL-RMO</span></h2>
+    <div class="install">
+      <div>
+        <h3><span lang="fr">Ce qu'il faut</span><span lang="en">What you need</span></h3>
+        <ul>
+          <li><span lang="fr">Un mini-PC sous Debian 13.</span><span lang="en">A mini PC running Debian 13.</span></li>
+          <li><span lang="fr">Pour la FM : un tuner</span><span lang="en">For FM: a</span> <a href="https://github.com/FMDX-org/Headless-TEF-lite-SE">Headless TEF Lite SE</a><span lang="fr"> et une antenne extérieure.</span><span lang="en"> tuner and an outdoor antenna.</span></li>
+          <li><span lang="fr">Pour le DAB+, en option : une clé RTL-SDR et une antenne bande III.</span><span lang="en">For DAB+, optional: an RTL-SDR dongle and a band III antenna.</span></li>
+          <li><span lang="fr">Pour la chaîne : des appareils joignables en SNMP, ping ou HTTP.</span><span lang="en">For the chain: devices reachable over SNMP, ping or HTTP.</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3><span lang="fr">Trois commandes</span><span lang="en">Three commands</span></h3>
+<pre><code><span class="c"># <span lang="fr">récupérer le script, le relire, le lancer</span><span lang="en">get the script, read it, run it</span></span>
+curl -sSL https://raw.githubusercontent.com/LyonelB/BL-RMO/main/install.sh -o install.sh
+less install.sh
+bash install.sh</code></pre>
+        <p class="facts"><span lang="fr">Le détail est dans le</span><span lang="en">Details are in the</span> <a href="https://github.com/LyonelB/BL-RMO#readme">README</a>.</p>
+      </div>
+    </div>
+  </section>
+  </main>
+
+  <footer>
+    <p><span lang="fr">BL-RMO est un logiciel libre sous licence MIT, développé par Lyonel Bernard pour Graffiti Radio (88.6 FM et DAB+).</span><span lang="en">BL-RMO is free software under the MIT licence, developed by Lyonel Bernard for Graffiti Radio (88.6 FM and DAB+).</span></p>
+    <p><span lang="fr">Merci à</span><span lang="en">Thanks to</span> <a href="https://github.com/chris-ritsen/network-audio-controller">netaudio</a>, <a href="https://github.com/kkonradpl/FM-DX-Tuner">FM-DX-Tuner</a>, <a href="https://github.com/FMDX-org">FMDX.org</a> <span lang="fr">et</span><span lang="en">and</span> <a href="https://github.com/AlbrechtL/welle.io">welle.io</a>.</p>
+  </footer>
+</div>
+
+<script>
+  // ── Langue : celle du navigateur, puis le choix du visiteur ──
+  (function () {
+    const root = document.documentElement, btn = document.getElementById('lang');
+    let lang = (navigator.language || 'fr').toLowerCase().startsWith('fr') ? 'fr' : 'en';
+    try { lang = localStorage.getItem('blrmo-lang') || lang; } catch (e) {}
+    function set(l) {
+      lang = l; root.dataset.lang = l; root.lang = l;
+      btn.textContent = l === 'fr' ? 'English' : 'Français';
+      try { localStorage.setItem('blrmo-lang', l); } catch (e) {}
+    }
+    btn.addEventListener('click', () => set(lang === 'fr' ? 'en' : 'fr'));
+    set(lang);
+  })();
+
+  // ── Cadran FM : graduations de 87,5 à 108 MHz, aiguille sur 88,6 ──
+  (function () {
+    const svg = document.getElementById('dial-svg'), NS = 'http://www.w3.org/2000/svg';
+    // Petit écran : on montre le bas de la bande, pour que les graduations restent lisibles
+    const narrow = svg.getBoundingClientRect().width < 640;
+    const lo = 87.5, hi = narrow ? 95 : 108, W = narrow ? 400 : 1000, x = f => (f - lo) / (hi - lo) * W;
+    if (narrow) { svg.setAttribute('viewBox', '0 0 400 86'); document.getElementById('dial-hi').textContent = hi + ' MHz'; }
+    const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+    for (let f = 875; f <= hi * 10; f += 1) {
+      const mhz = f / 10, major = f % 10 === 0, half = f % 5 === 0;
+      svg.appendChild(el('line', { x1: x(mhz), x2: x(mhz), y1: 34, y2: major ? 62 : half ? 54 : 48, class: 'tick' + (major ? ' major' : ''), 'stroke-width': major ? 1.6 : 1 }));
+      if (major && (narrow || (f / 10) % 2 === 0)) svg.appendChild(el('text', { x: x(mhz), y: 82, 'text-anchor': 'middle', class: 'num' })).textContent = f / 10;
+    }
+    const g = el('g', { class: 'needle-group' }), nx = x(88.6);
+    g.appendChild(el('line', { x1: nx, x2: nx, y1: 14, y2: 70, class: 'needle' }));
+    g.appendChild(el('text', { x: nx + 10, y: 26, class: 'needle-label' })).textContent = '88.6  Graffiti Radio';
+    svg.appendChild(g);
+    // Un seul mouvement : l'aiguille balaye la bande et se cale sur 88,6
+    const dial = document.getElementById('dial');
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      dial.style.setProperty('--from', (x(hi - 4 * (hi - lo) / 20.5) - nx) + 'px');   // unités du dessin SVG
+      requestAnimationFrame(() => requestAnimationFrame(() => dial.classList.add('tuned')));
+    }
+  })();
+</script>
+</body>
+</html>

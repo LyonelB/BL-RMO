@@ -7,6 +7,10 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+### Site de présentation et licence
+- **Site de BL-RMO** (`site/`), publié sur GitHub Pages par `.github/workflows/site.yml` : présentation, captures, chemin du signal surveillé, agent Windows, installation ; en français ou en anglais selon le navigateur.
+- **Fichier LICENSE** (MIT), annoncé jusqu'ici dans le README seulement.
+
 ---
 
 ## [1.0.0] - 2026-11-20

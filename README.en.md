@@ -1,6 +1,6 @@
 # 📻 BL-RMO
 
-**Radio Monitoring**, formerly FM-Monitor. · 🇫🇷 [Version française](README.md)
+**Radio Monitoring**, formerly FM-Monitor. · 🌐 [Website](https://lyonelb.github.io/BL-RMO/) · 🇫🇷 [Version française](README.md)
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
@@ -379,7 +379,7 @@ On the device, the syslog server must be the **IP address** of BL-RMO (not `bl-r
 
 ## 📄 License
 
-MIT: free to use, modify and distribute.
+MIT: free to use, modify and distribute. Full text in [LICENSE](LICENSE).
 
 ---
 
