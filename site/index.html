@@ -117,14 +117,17 @@
   @media (max-width: 860px) { .gallery { grid-template-columns: 1fr; } }
 
   /* ── Agent ── */
-  .agent ol { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
-  .agent ol { margin: 0; padding-left: 1.2em; color: var(--muted); }
-  .agent ol li { padding-left: .2em; }
-  .agent ol li { margin: 0; }
-  .agent h2 { margin-bottom: 24px; }
-  .agent ol li::marker { color: var(--accent); font-weight: 700; }
-  .agent img { border-radius: var(--radius-s); box-shadow: 0 18px 44px rgba(15,23,42,.14); margin-top: 36px; }
-  @media (max-width: 860px) { .agent ol { grid-template-columns: 1fr; gap: 12px; } }
+  .agent { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: step; }
+  .steps li { counter-increment: step; display: grid; grid-template-columns: 34px 1fr; gap: 14px; align-items: start;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-l); padding: 16px 18px; }
+  .steps li::before { content: counter(step); width: 30px; height: 30px; border-radius: 50%; background: #eff6ff; color: var(--accent);
+    font-weight: 700; display: grid; place-items: center; font-size: .95rem; }
+  .steps h3 { margin: 0 0 2px; font-size: 1.02rem; font-weight: 650; }
+  .steps p { margin: 0; color: var(--muted); font-size: .97rem; }
+  .agent-note { color: var(--muted); font-size: .95rem; margin: 18px 0 0; }
+  .agent img { border-radius: var(--radius-s); box-shadow: 0 18px 44px rgba(15,23,42,.14); width: 100%; }
+  @media (max-width: 860px) { .agent { grid-template-columns: 1fr; } }
 
   /* ── Installation ── */
   .install { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
@@ -243,18 +246,19 @@
   </section>
 
   <section aria-labelledby="t-agent">
+    <h2 id="t-agent"><span lang="fr">Un agent pour les PC Windows, installé en une minute.</span><span lang="en">An agent for Windows PCs, installed in a minute.</span></h2>
+    <p class="intro"><span lang="fr">Il remplace SNMP sur les PC du studio et lit aussi le réseau Dante. Pas de SNMP à activer, aucun port ouvert sur le PC.</span><span lang="en">It replaces SNMP on studio PCs and also reads the Dante network. No SNMP to enable, no port opened on the PC.</span></p>
     <div class="agent">
       <div>
-        <h2 id="t-agent"><span lang="fr">Un agent pour les PC Windows, installé en une minute.</span><span lang="en">An agent for Windows PCs, installed in a minute.</span></h2>
-        <ol>
-          <li><span lang="fr">Ajoutez le PC dans BL-RMO, page Parc, et copiez son jeton.</span><span lang="en">Add the PC in BL-RMO, Assets page, and copy its token.</span></li>
-          <li><span lang="fr">Sur le PC, lancez l'installeur et collez le jeton.</span><span lang="en">On the PC, run the installer and paste the token.</span></li>
-          <li><span lang="fr">L'installeur confirme que BL-RMO a reçu le premier relevé. Ce que l'agent relève se règle ensuite depuis BL-RMO.</span><span lang="en">The installer confirms that BL-RMO received the first report. What the agent reads is then set from BL-RMO.</span></li>
+        <ol class="steps">
+          <li><div><h3><span lang="fr">Ajouter le PC dans BL-RMO</span><span lang="en">Add the PC in BL-RMO</span></h3>
+            <p><span lang="fr">Page Parc, relevé « Agent BL-RMO » : BL-RMO crée le jeton du PC, à copier.</span><span lang="en">Assets page, "BL-RMO agent" reading: BL-RMO creates the PC's token, ready to copy.</span></p></div></li>
+          <li><div><h3><span lang="fr">Lancer l'installeur sur le PC</span><span lang="en">Run the installer on the PC</span></h3>
+            <p><span lang="fr">Indiquer l'adresse de BL-RMO et coller le jeton. Le reste se fait tout seul.</span><span lang="en">Enter the BL-RMO address and paste the token. The rest is automatic.</span></p></div></li>
+          <li><div><h3><span lang="fr">Vérifier le premier relevé</span><span lang="en">Check the first report</span></h3>
+            <p><span lang="fr">L'installeur confirme que BL-RMO l'a reçu. Les modules (système, Dante) se règlent ensuite depuis BL-RMO.</span><span lang="en">The installer confirms that BL-RMO received it. Modules (system, Dante) are then set from BL-RMO.</span></p></div></li>
         </ol>
-        <p class="facts" style="margin-top:20px">
-          <span lang="fr">Pas de SNMP à activer, aucun port ouvert sur le PC.</span><span lang="en">No SNMP to enable, no port opened on the PC.</span>
-          <a href="https://github.com/LyonelB/BL-RMO/releases?q=agent&amp;expanded=true"><span lang="fr">Télécharger l'agent</span><span lang="en">Download the agent</span></a>
-        </p>
+        <p class="agent-note"><a href="https://github.com/LyonelB/BL-RMO/releases?q=agent&amp;expanded=true"><span lang="fr">Télécharger l'agent</span><span lang="en">Download the agent</span></a> <span lang="fr">(Windows 10 et 11, 64 bits)</span><span lang="en">(Windows 10 and 11, 64-bit)</span></p>
       </div>
       <img src="img/agent-setup.webp" width="586" height="456" loading="lazy" alt="Fin de l'installation de l'agent BL-RMO : BL-RMO a bien reçu le premier relevé de ce PC">
     </div>
