@@ -42,6 +42,24 @@ def _product(d):
     return model.strip('_') or '-'
 
 
+def _network(d):
+    """Adresses et liaison, comme l'onglet « Informations sur l'appareil » de Dante Controller.
+    L'interface secondaire n'existe qu'en mode redondant ; sans trafic, son câble est
+    probablement débranché (« Lien interrompu » dans Dante Controller)."""
+    ifaces = {i.get('interface'): i for i in d.get('interfaces') or [] if isinstance(i, dict)}
+    red = d.get('dante_redundancy') or {}
+    mode = red.get('current') or (d.get('network_redundancy') or {}).get('current_mode') or ''
+    traffic = {e.get('entry_index'): e for e in ((d.get('network_interface_traffic') or {}).get('interfaces') or [])
+               if isinstance(e, dict)}
+    secondary = None
+    if mode == 'redundant' and ifaces.get('secondary'):
+        t = traffic.get(1) or {}
+        flowing = (t.get('receive_rate_bits_per_second') or 0) + (t.get('transmit_rate_bits_per_second') or 0)
+        secondary = {'ip': ifaces['secondary'].get('ip_address') or '', 'traffic': bool(flowing) if t else None}
+    return {'ip': (ifaces.get('primary') or {}).get('ip_address') or d.get('ipv4') or '',
+            'link_mbps': _num(d.get('link_speed_mbps')), 'redundancy': mode, 'secondary': secondary}
+
+
 def parse_report(rep):
     """Relevé brut de la sonde -> {devices, subscriptions, leaders, errors}."""
     status = (rep.get('status') or {}).get('dante') or {}
@@ -59,8 +77,10 @@ def parse_report(rep):
         cs = ck.get('clock_status') or {}
         audio = _num(d.get('rx_count')) is not None or _num(d.get('tx_count')) is not None
         devices.append({
-            'name': name, 'ip': d.get('ipv4') or '', 'manufacturer': d.get('manufacturer') or '',
-            'product': _product(d), 'online': bool(d.get('online')) and d.get('availability_state', 'online') == 'online',
+            'name': name, 'manufacturer': d.get('manufacturer') or '', **_network(d),
+            'product_version': d.get('friendly_product_version') or '',
+            'dante_version': d.get('platform_software_version') or '',
+            'product': d.get('product_name') or _product(d), 'online': bool(d.get('online')) and d.get('availability_state', 'online') == 'online',
             'audio': audio,                      # faux : appareil annoncé qui ne répond pas aux lectures
             'latency_ms': _num(d.get('active_latency_ms')), 'sample_rate': _num(d.get('sample_rate_hz')),
             'rx': _num(d.get('rx_count')), 'tx': _num(d.get('tx_count')),

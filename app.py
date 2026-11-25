@@ -2474,6 +2474,22 @@ def agent_report():
     return jsonify({'status': 'success', 'device': dev['name'], 'config': config})
 
 
+@app.route('/api/park/devices/<int:device_id>/agent-update', methods=['POST'])
+@auth.login_required
+def park_agent_update(device_id):
+    """Demande à l'agent du PC de passer à la dernière version publiée sur GitHub.
+    L'agent la télécharge à son prochain relevé, vérifie l'empreinte et l'installe."""
+    err = _park_ready()
+    if err:
+        return err
+    try:
+        version = park_monitor.request_agent_update(device_id)
+    except ValueError as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+    logger.info(f"Parc : mise à jour de l'agent demandée pour l'appareil {device_id} ({version})")
+    return jsonify({'status': 'success', 'version': version})
+
+
 @app.route('/api/park/devices/<int:device_id>/agent-token', methods=['GET', 'POST'])
 @auth.login_required
 def park_agent_token(device_id):

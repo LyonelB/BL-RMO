@@ -1532,6 +1532,17 @@
   "Sorties": "Outputs",
   "Entrées": "Inputs",
   "muet": "muted",
+  ", ajouter ou modifier le PC relié au réseau Dante : relevé « Agent BL-RMO », cocher Dante et indiquer l'adresse de ce PC sur le réseau Dante.": ", add or edit the PC connected to the Dante network: \"BL-RMO agent\" reading, tick Dante and enter this PC's address on the Dante network.",
+  "Interface Dante : adresse IP de ce PC sur le réseau Dante": "Dante interface: this PC's IP address on the Dante network",
+  "Les appareils apparaissent alors avec leur adresse Dante, comme dans Dante Controller. Vide : toutes les interfaces du PC.": "Devices then show their Dante address, as in Dante Controller. Empty: all of the PC's interfaces.",
+  "Mise à jour vers {v} demandée": "Update to {v} requested",
+  "Agent {v} disponible": "Agent {v} available",
+  "Mettre à jour l'agent": "Update the agent",
+  "Dante {v}": "Dante {v}",
+  "secondaire {ip}": "secondary {ip}",
+  "sans trafic": "no traffic",
+  "Interface Dante : adresse IPv4 attendue (adresse du PC sur le réseau Dante)": "Dante interface: IPv4 address expected (the PC's address on the Dante network)",
+  "Aucune version de l'agent trouvée sur GitHub": "No agent release found on GitHub",
   "_patterns": {
     "Adresse ou masque invalide : {a} / {b}": "Invalid address or mask: {a} / {b}",
     "alimentation en panne": "power supply failed",
@@ -1600,6 +1611,8 @@
     "Émetteur rétabli - {n} dB": "Transmitter restored - {n} dB",
     "Agent ne répond plus ({e}), l'appareil répond sur le réseau": "Agent no longer responds ({e}), the device answers on the network",
     "Ne répond plus, ni l'agent ni sur le réseau ({e})": "No response, neither agent nor network ({e})",
-    "Pas de relevé de l'agent depuis {t}": "No report from the agent since {t}"
+    "Pas de relevé de l'agent depuis {t}": "No report from the agent since {t}",
+    "L'agent est déjà à jour ({v})": "The agent is already up to date ({v})",
+    "Aucune version de l'agent trouvée sur GitHub ({e})": "No agent release found on GitHub ({e})"
   }
 }

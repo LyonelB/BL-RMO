@@ -21,6 +21,7 @@ annoncée par le PC ne repart pas de zéro après un arrêt.
 """
 import json
 import logging
+import ipaddress
 import re
 import secrets
 import shutil
@@ -47,6 +48,44 @@ EVENTS_RETENTION_DAYS = 90
 SAMPLES_RETENTION_DAYS = 7     # disponibilité des sites
 AGENT_FRESH = 150              # s : au-delà, le dernier relevé de l'agent est trop ancien
 AGENT_MODULES = ('dante',)     # modules en option de l'agent (le module système est toujours là)
+AGENT_RELEASES = 'https://api.github.com/repos/LyonelB/BL-RMO/releases?per_page=30'
+AGENT_RELEASE_CHECK = 6 * 3600 # s entre deux recherches d'une nouvelle version de l'agent
+
+
+def version_tuple(v):
+    try:
+        return tuple(int(x) for x in str(v).split('.'))
+    except (TypeError, ValueError):
+        return (0,)
+
+
+def fetch_agent_release():
+    """Dernière version de l'agent publiée sur GitHub (tag agent-vX.Y.Z) :
+    {version, url, sha256, published}. L'empreinte vient du fichier .sha256 publié avec l'installeur."""
+    import urllib.request
+    req = urllib.request.Request(AGENT_RELEASES, headers={'User-Agent': 'bl-rmo', 'Accept': 'application/vnd.github+json'})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        releases = json.loads(r.read().decode('utf-8'))
+    best = None
+    for rel in releases:
+        tag = rel.get('tag_name') or ''
+        if rel.get('draft') or rel.get('prerelease') or not tag.startswith('agent-v'):
+            continue
+        version = tag[len('agent-v'):]
+        assets = {a.get('name'): a.get('browser_download_url') for a in rel.get('assets') or []}
+        exe = f'setup-agent-bl-rmo-{version}.exe'
+        if exe in assets and exe + '.sha256' in assets and (not best or version_tuple(version) > version_tuple(best['version'])):
+            best = {'version': version, 'url': assets[exe], 'sha_url': assets[exe + '.sha256'],
+                    'published': rel.get('published_at')}
+    if not best:
+        return None
+    req = urllib.request.Request(best.pop('sha_url'), headers={'User-Agent': 'bl-rmo'})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        sha = r.read().decode('ascii', 'replace').split()[0].strip().lower()
+    if not re.fullmatch(r'[0-9a-f]{64}', sha):
+        raise ValueError('empreinte SHA-256 illisible')
+    best['sha256'] = sha
+    return best
 
 # HOST-RESOURCES-MIB
 HR_UPTIME = '.1.3.6.1.2.1.25.1.1.0'
@@ -134,6 +173,15 @@ def validate_device(data, existing=None):
             cfg['method'] = 'agent'
             cfg['agent_token'] = old.get('agent_token') or secrets.token_urlsafe(24)
             cfg['modules'] = [m for m in AGENT_MODULES if m in (raw.get('modules') or [])]
+            iface = str(raw.get('dante_interface') or '').strip()
+            if iface:
+                try:
+                    iface = str(ipaddress.IPv4Address(iface))
+                except ValueError:
+                    raise ValueError("Interface Dante : adresse IPv4 attendue (adresse du PC sur le réseau Dante)")
+            cfg['dante_interface'] = iface
+            if old.get('update_to'):
+                cfg['update_to'] = old['update_to']      # mise à jour demandée, gardée à la modification
         else:
             cfg['port'] = _num(raw.get('port'), 'Port SNMP', 161, 1, 65535, integer=True)
             cfg.update(_snmp_creds(raw, old))
@@ -401,6 +449,8 @@ class ParkMonitor:
         self._inflight = set()
         self._next = {}
         self._agents = {}              # id -> dernier relevé de l'agent BL-RMO (en mémoire)
+        self.agent_release = None      # dernière version de l'agent publiée sur GitHub
+        self.agent_release_error = ''
         self._running = False
         self._pool = ThreadPoolExecutor(max_workers=6, thread_name_prefix='park-probe')
         self._init_db()
@@ -506,7 +556,24 @@ class ParkMonitor:
             return
         self._running = True
         threading.Thread(target=self._loop, name='park-monitor', daemon=True).start()
+        threading.Thread(target=self._release_loop, name='park-agent-release', daemon=True).start()
         logger.info(f"Surveillance du parc démarrée ({len(self._devices)} appareils)")
+
+    def _release_loop(self):
+        while self._running:
+            self.check_agent_release()
+            time.sleep(AGENT_RELEASE_CHECK)
+
+    def check_agent_release(self):
+        try:
+            rel = fetch_agent_release()
+            self.agent_release, self.agent_release_error = rel, ''
+            if rel:
+                logger.info(f"Agent BL-RMO : dernière version publiée {rel['version']}")
+        except Exception as e:
+            self.agent_release_error = str(e)[:200]
+            logger.warning(f"Agent BL-RMO : versions publiées illisibles ({e})")
+        return self.agent_release
 
     def _loop(self):
         last_clean = 0
@@ -800,12 +867,54 @@ class ParkMonitor:
             prev = self._agents.get(dev['id'])
             if not prev or time.time() - prev['ts'] >= AGENT_FRESH:
                 self._next[dev['id']] = 0          # retour de l'agent : affiché sans attendre le relevé suivant
+            info = rep.get('agent') or {}
             self._agents[dev['id']] = {'ts': time.time(), 'system': system, 'remote': remote,
-                                       'info': rep.get('agent') or {}, 'errors': rep.get('errors') or [],
+                                       'info': info, 'errors': rep.get('errors') or [],
                                        'modules': sorted(k for k in mods if isinstance(mods[k], dict))}
             dev = json.loads(json.dumps(dev))
-        config = {'interval': INTERVAL, 'modules': ['system'] + list(dev['config'].get('modules') or [])}
+        cfg = dev['config']
+        config = {'interval': INTERVAL, 'modules': ['system'] + list(cfg.get('modules') or []),
+                  'dante_interface': cfg.get('dante_interface') or ''}
+        wanted = cfg.get('update_to')
+        if wanted:
+            rel = self.agent_release
+            if version_tuple(info.get('version')) >= version_tuple(wanted):
+                self._set_config(dev['id'], update_to=None)          # mise à jour faite
+                logger.info(f"Parc : agent de {dev['name']} à jour ({info.get('version')})")
+            elif rel and rel['version'] == wanted:
+                config['update'] = {'version': rel['version'], 'url': rel['url'], 'sha256': rel['sha256']}
         return dev, config
+
+    def _set_config(self, did, **values):
+        """Modifie des réglages d'un appareil sans passer par le formulaire (None : retire la clé)."""
+        dev = self.get_device(did)
+        if not dev:
+            return None
+        for k, v in values.items():
+            if v is None:
+                dev['config'].pop(k, None)
+            else:
+                dev['config'][k] = v
+        data = {k: v for k, v in dev.items() if k not in ('id', 'position')}
+        with self._conn() as c:
+            c.execute('UPDATE park_devices SET data=? WHERE id=?', (json.dumps(data, ensure_ascii=False), did))
+        self._load()
+        return dev
+
+    def request_agent_update(self, did):
+        """Demande à l'agent d'un PC de passer à la dernière version publiée (bouton dans Parc)."""
+        with self._lock:
+            dev = self._devices.get(did)
+            if not dev or dev['config'].get('method') != 'agent':
+                raise ValueError("Ce PC n'utilise pas l'agent BL-RMO")
+            current = ((self._agents.get(did) or {}).get('info') or {}).get('version')
+        rel = self.agent_release or self.check_agent_release()
+        if not rel:
+            raise ValueError("Aucune version de l'agent trouvée sur GitHub" + (f" ({self.agent_release_error})" if self.agent_release_error else ''))
+        if current and version_tuple(current) >= version_tuple(rel['version']):
+            raise ValueError(f"L'agent est déjà à jour ({current})")
+        self._set_config(did, update_to=rel['version'])
+        return rel['version']
 
     def agent_token(self, did, regenerate=False):
         """Jeton de l'agent d'un PC (Parc › Appareils). Nouveau jeton : l'ancien est refusé aussitôt."""
@@ -865,7 +974,11 @@ class ParkMonitor:
                         item['agent'] = {'last': a.get('ts'), 'version': (a.get('info') or {}).get('version'),
                                          'os': (a.get('info') or {}).get('os'), 'modules': a.get('modules') or [],
                                          'wanted': ['system'] + list(cfg.get('modules') or []),
-                                         'errors': a.get('errors') or []}
+                                         'errors': a.get('errors') or [],
+                                         'latest': (self.agent_release or {}).get('version'),
+                                         'update_to': cfg.get('update_to'),
+                                         'update_state': (a.get('info') or {}).get('update'),
+                                         'dante_interface': cfg.get('dante_interface') or ''}
                 elif d['kind'] == 'nas':
                     item.update({'cpu': st.get('cpu'), 'ram_pct': st.get('ram_pct'), 'nas': st.get('nas'),
                                  'uptime': st.get('uptime')})

@@ -7,6 +7,13 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+### Agent 1.2.0 : adresses Dante, netaudio 0.6.2, mise à jour depuis BL-RMO
+- **Interface Dante** : dans Parc › Appareils, pour le PC qui relève le réseau Dante, adresse de ce PC sur le réseau Dante (par exemple 192.168.2.4). L'agent limite alors netaudio à cette interface (`--interface`) : les PC en Dante Virtual Soundcard apparaissent avec leur adresse Dante (192.168.2.x) au lieu de leur adresse sur le réseau du studio, comme dans Dante Controller. dhd-core, qui n'est pas un appareil Dante, n'apparaît plus : prendre l'état actuel comme référence après le changement.
+- **Page Dante, appareils** : modèle (comme Dante Controller), vitesse de liaison, interface secondaire en mode redondant (« sans trafic » si elle ne passe rien, le « Lien interrompu » de Dante Controller) et colonne « Versions » (version produit et version Dante).
+- **netaudio 0.6.2** dans l'agent.
+- **Mise à jour de l'agent depuis BL-RMO** : BL-RMO cherche toutes les 6 heures la dernière version publiée sur GitHub (tag `agent-vX.Y.Z`). Dans Parc, « Agent X disponible » et un bouton « Mettre à jour l'agent » (administrateur). À son relevé suivant, l'agent télécharge l'installeur sur GitHub, vérifie son empreinte SHA-256 (fichier `.sha256` publié avec l'installeur) et le lance en mode silencieux par une tâche planifiée à part (« BL-RMO Agent Update ») ; l'adresse et le jeton sont gardés. Une mise à jour qui échoue est retentée après une heure ; son état s'affiche dans Parc.
+- **Construction** : l'empreinte SHA-256 de l'installeur est publiée avec chaque version de l'agent.
+
 ### Site de présentation et licence
 - **Site de BL-RMO** (`site/`), publié sur GitHub Pages par `.github/workflows/site.yml` : présentation, captures, chemin du signal surveillé, agent Windows, installation ; en français ou en anglais selon le navigateur.
 - **Fichier LICENSE** (MIT), annoncé jusqu'ici dans le README seulement.

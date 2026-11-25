@@ -1,5 +1,5 @@
 # Construction de l'agent BL-RMO (GitHub Actions, Windows)
-netaudio==0.6.1
+netaudio==0.6.2
 psutil==7.2.2
 pyinstaller==6.22.3
 pyinstaller-hooks-contrib==2026.10

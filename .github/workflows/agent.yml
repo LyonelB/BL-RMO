@@ -58,10 +58,21 @@ jobs:
           & $iscc "/DAppVersion=${{ steps.v.outputs.version }}" setup-agent-bl-rmo.iss
           if ($LASTEXITCODE -ne 0) { throw "ISCC : code $LASTEXITCODE" }
 
+      - name: Empreinte SHA-256
+        run: |
+          # Lue par BL-RMO pour la mise à jour des agents : l'agent refuse un installeur différent
+          Get-ChildItem Output\setup-agent-bl-rmo-*.exe | ForEach-Object {
+            $h = (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLower()
+            "$h  $($_.Name)" | Out-File -Encoding ascii -NoNewline "$($_.FullName).sha256"
+            "$h  $($_.Name)"
+          }
+
       - uses: actions/upload-artifact@v4
         with:
           name: setup-agent-bl-rmo-${{ steps.v.outputs.version }}
-          path: agent/Output/setup-agent-bl-rmo-*.exe
+          path: |
+            agent/Output/setup-agent-bl-rmo-*.exe
+            agent/Output/setup-agent-bl-rmo-*.exe.sha256
           retention-days: 30
 
       - name: Version GitHub
@@ -69,7 +80,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: Agent BL-RMO ${{ steps.v.outputs.version }}
-          files: agent/Output/setup-agent-bl-rmo-*.exe
+          files: |
+            agent/Output/setup-agent-bl-rmo-*.exe
+            agent/Output/setup-agent-bl-rmo-*.exe.sha256
           body: |
             Installeur de l'agent BL-RMO pour Windows 10 et 11 (64 bits).
             Télécharger setup-agent-bl-rmo-${{ steps.v.outputs.version }}.exe sur le PC, le lancer, coller le jeton du PC affiché dans BL-RMO (Parc › Appareils).

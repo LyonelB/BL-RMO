@@ -107,7 +107,7 @@
           <th class="py-2 pr-3 font-semibold">{{ _('Appareil') }}</th><th class="py-2 pr-3 font-semibold">{{ _('État') }}</th>
           <th class="py-2 pr-3 font-semibold">{{ _('Adresse IP') }}</th><th class="py-2 pr-3 font-semibold">{{ _('Horloge') }}</th>
           <th class="py-2 pr-3 font-semibold">{{ _('Latence') }}</th><th class="py-2 pr-3 font-semibold">{{ _('Fréquence') }}</th>
-          <th class="py-2 pr-3 font-semibold">{{ _('Canaux') }}</th></tr></thead>
+          <th class="py-2 pr-3 font-semibold">{{ _('Canaux') }}</th><th class="py-2 pr-3 font-semibold">{{ _('Versions') }}</th></tr></thead>
         <tbody id="dev-body"></tbody>
       </table>
       </div>
@@ -157,7 +157,7 @@
     <div class="section">
       <div class="section-title">{{ _("Avec l'agent BL-RMO") }}</div>
       <ol class="text-sm text-gray-600 space-y-2 list-decimal pl-5 leading-relaxed">
-        <li>{{ _('Dans') }} <a href="/park#appareils" class="text-blue-600 underline">{{ _('Parc › Appareils') }}</a>{{ _(", ajouter ou modifier le PC relié au réseau Dante : relevé « Agent BL-RMO », cocher Dante.") }}</li>
+        <li>{{ _('Dans') }} <a href="/park#appareils" class="text-blue-600 underline">{{ _('Parc › Appareils') }}</a>{{ _(", ajouter ou modifier le PC relié au réseau Dante : relevé « Agent BL-RMO », cocher Dante et indiquer l'adresse de ce PC sur le réseau Dante.") }}</li>
         <li>{{ _("Installer l'agent sur ce PC avec le jeton affiché dans sa fiche. L'installeur retire l'ancienne sonde Dante si elle est présente.") }}</li>
       </ol>
     </div>
@@ -268,12 +268,24 @@
       return `<tr class="border-b border-gray-50 align-top">
         <td class="py-2 pr-3"><div class="font-medium text-gray-900">${esc(d.name)}</div><div class="text-[11px] text-gray-400">${esc(d.product || '')}</div></td>
         <td class="py-2 pr-3">${state}</td>
-        <td class="py-2 pr-3 font-mono text-xs text-gray-600">${esc(d.ip || '-')}</td>
+        <td class="py-2 pr-3"><div class="font-mono text-xs text-gray-600">${esc(d.ip || '-')}</div>${netLine(d)}</td>
         <td class="py-2 pr-3">${clk}</td>
         <td class="py-2 pr-3">${num(d.latency_ms, ' ms')}</td>
         <td class="py-2 pr-3">${num(d.sample_rate ? (d.sample_rate / 1000).toString().replace('.', _DEC) : null, ' kHz')}</td>
-        <td class="py-2 pr-3">${d.rx == null && d.tx == null ? '<span class="text-gray-300">-</span>' : `<span class="font-mono text-xs text-gray-600">${d.rx ?? 0} / ${d.tx ?? 0}</span>`}</td></tr>`;
-    }).join('') : `<tr><td colspan="7" class="py-8 text-center text-gray-400">${_t('Aucun appareil pour le moment.')}</td></tr>`;
+        <td class="py-2 pr-3">${d.rx == null && d.tx == null ? '<span class="text-gray-300">-</span>' : `<span class="font-mono text-xs text-gray-600">${d.rx ?? 0} / ${d.tx ?? 0}</span>`}</td>
+        <td class="py-2 pr-3">${d.product_version || d.dante_version ? `<div class="font-mono text-xs text-gray-600">${esc(d.product_version || '-')}</div>`
+          + (d.dante_version ? `<div class="text-[11px] text-gray-400">${_t('Dante {v}', { v: esc(d.dante_version) })}</div>` : '') : '<span class="text-gray-300">-</span>'}</td></tr>`;
+    }).join('') : `<tr><td colspan="8" class="py-8 text-center text-gray-400">${_t('Aucun appareil pour le moment.')}</td></tr>`;
+  }
+
+  // ── Liaison et interface secondaire, comme Dante Controller ──
+  function netLine(d) {
+    const parts = [];
+    if (d.link_mbps) parts.push(d.link_mbps >= 1000 ? (d.link_mbps / 1000).toString().replace('.', _DEC) + ' Gbps' : d.link_mbps + ' Mbps');
+    let html = parts.length ? `<div class="text-[11px] text-gray-400">${parts.join(' · ')}</div>` : '';
+    if (d.secondary) html += `<div class="text-[11px] ${d.secondary.traffic === false ? 'text-amber-700' : 'text-gray-400'}">${_t('secondaire {ip}', { ip: esc(d.secondary.ip || '-') })}`
+      + (d.secondary.traffic === false ? ' · ' + _t('sans trafic') : '') + '</div>';
+    return html;
   }
 
   // ── Abonnements ──

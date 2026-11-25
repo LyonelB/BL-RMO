@@ -108,7 +108,7 @@ The RTL-SDR dongle comes back in another role: **a second tuner dedicated to DAB
 - **Windows PCs**, through the **BL-RMO agent** or over SNMP: on or off and since when, processor (current value and maximum since power-on), disk usage; "24/7": off or restarted = alert, otherwise information only
 - **Synology NAS** over SNMP (v2c or v3): system, power supply, fans, temperature, disks, volumes, DSM update
 - **Websites**: HTTPS response, expected text, response time, 24 h availability
-- **BL-RMO agent** (Windows 10 and 11, 64-bit): simple installation with `setup-agent-bl-rmo-x.y.z.exe`, to download in the [agent releases](https://github.com/LyonelB/BL-RMO/releases?q=agent&expanded=true). It asks for the BL-RMO address and the PC token (Assets › Devices, "BL-RMO agent" reading), installs the agent as a startup scheduled task and checks that BL-RMO receives the first report. The agent sends its readings every minute; modules (system, Dante) are chosen in BL-RMO. No SNMP to enable, no port opened on the PC. Sources in `agent/`, installer built by GitHub Actions
+- **BL-RMO agent** (Windows 10 and 11, 64-bit): simple installation with `setup-agent-bl-rmo-x.y.z.exe`, to download in the [agent releases](https://github.com/LyonelB/BL-RMO/releases?q=agent&expanded=true). It asks for the BL-RMO address and the PC token (Assets › Devices, "BL-RMO agent" reading), installs the agent as a startup scheduled task and checks that BL-RMO receives the first report. The agent sends its readings every minute; modules (system, Dante) are chosen in BL-RMO. No SNMP to enable, no port opened on the PC. One-click update from Assets: the agent downloads the new release from GitHub, checks its fingerprint and installs it. Sources in `agent/`, installer built by GitHub Actions
 - SNMP on a Windows 10 or 11 PC, without agent: `install/windows/activer-snmp-bl-rmo.ps1` (PowerShell as administrator), read-only, restricted to the BL-RMO address
 - **Status**, **Log** (events of the last 90 days, filters, CSV export) and **Devices** tabs
 
@@ -118,7 +118,7 @@ The RTL-SDR dongle comes back in another role: **a second tuner dedicated to DAB
 - **Levels**: peak per channel at the time of the reading (once a minute), to see whether a channel carries signal; also in the subscription list
 - **Clock**: clock leader and its source; reported if there is no leader, several, or a different one than usual
 - **Reference**: a device or subscription seen once and then gone is reported, until an administrator uses the current state as reference
-- **Read by the BL-RMO agent** of a PC on the Dante network, Dante module ticked in Assets › Devices: reads the network with [netaudio](https://github.com/chris-ritsen/network-audio-controller), read-only, and sends the report to BL-RMO every minute; no port opened on the PC. The former PowerShell script probe (`install/windows/installer-sonde-dante.ps1`) is still accepted
+- **Read by the BL-RMO agent** of a PC on the Dante network, Dante module ticked in Assets › Devices, with this PC's address on the Dante network to show the devices' Dante addresses: reads the network with [netaudio](https://github.com/chris-ritsen/network-audio-controller), read-only, and sends the report to BL-RMO every minute; no port opened on the PC. The former PowerShell script probe (`install/windows/installer-sonde-dante.ps1`) is still accepted
 - First step: visualisation. Alerts, log and dashboard tile to come
 
 ### 📜 Logs and traps
