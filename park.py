@@ -102,6 +102,7 @@ UCD_MEM = '.1.3.6.1.4.1.2021.4'               # .5 total, .6 disponible, .14 tam
 
 SYNO_DISK_STATUS = {1: 'Normal', 2: 'Initialisé', 3: 'Non initialisé', 4: 'Partition système en panne', 5: 'En panne'}
 SYNO_DISK_HEALTH = {1: 'Normal', 2: 'Avertissement', 3: 'Critique', 4: 'Défaillant'}
+POOL_RE = re.compile(r'^(storage pool|groupe de stockage)\b', re.I)
 SYNO_RAID_STATUS = {1: 'Normal', 2: 'Réparation', 3: 'Migration', 4: 'Extension', 5: 'Suppression',
                     6: 'Création', 7: 'Synchronisation', 8: 'Vérification', 9: 'Assemblage',
                     10: 'Annulation', 11: 'Dégradé', 12: 'En panne', 13: 'Vérification', 14: 'Synchronisation',
@@ -349,6 +350,10 @@ def probe_nas(cfg):
                      'total': tot, 'used': max(0, tot - free),
                      'pct': round(100.0 * (tot - free) / tot, 1) if tot else None,
                      'level': 'ok' if st == 1 else 'down' if st in (11, 12) else 'warn'})
+    # Le groupe de stockage (Storage Pool) est toujours alloué à 100 % aux volumes qu'il porte :
+    # son remplissage n'a pas de sens. On ne garde que son état RAID (dégradé, réparation...).
+    pools = [x for x in vols if POOL_RE.match(x['name'])]
+    vols = [x for x in vols if not POOL_RE.match(x['name'])]
     mem = None
     mt, ma = _int(v['mem_total']), _int(v['mem_avail'])
     if mt:
@@ -361,7 +366,7 @@ def probe_nas(cfg):
             'upgrade': SYNO_UPGRADE.get(_int(v['upgrade']), ''),
             'uptime': up / 100.0 if up is not None else None,
             'cpu': round(sum(cpu) / len(cpu), 1) if cpu else None, 'ram_pct': mem,
-            'disks': disks, 'volumes': vols, 'partial': partial}
+            'disks': disks, 'volumes': vols, 'pools': pools, 'partial': partial}
 
 
 def probe_site(cfg, timeout=10):
@@ -803,6 +808,11 @@ class ParkMonitor:
                     self._set_alert(dev, st, key, v['pct'] >= lim or (key in st['alerts'] and v['pct'] >= lim - 2), 'nas',
                                     f"{v['name']} rempli à {v['pct']:.0f} % (seuil {lim} %)", f"{v['name']} revenu à {v['pct']:.0f} %",
                                     f"{name} : {v['name']} presque plein", f"{name} : {v['name']} normal")
+            for p in data.get('pools') or []:
+                self._set_alert(dev, st, 'raid:' + p['name'], p['level'] != 'ok', 'nas',
+                                f"{p['name']} : {p['status_label']}", f"{p['name']} : normal",
+                                f"{name} : {p['name']} {p['status_label'].lower()}", f"{name} : {p['name']} normal")
+                st['alerts'].pop('full:' + p['name'], None)   # ancienne alerte de remplissage, sans objet
         self._save_state(did, st)
 
     def _record_site(self, dev, r):
