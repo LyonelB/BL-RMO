@@ -5,6 +5,9 @@ Pilote le dongle par son port série et sert la même API HTTP que welle-cli
 (fork welle-monitor) : /mux.json, /mp3/<sid>, /slide/<sid>, /status. La
 surveillance DAB+ (dab_monitor.py), l'écoute, la pige et le diaporama de
 BL-RMO fonctionnent ainsi sans changement avec l'un ou l'autre récepteur.
+En plus, /dongle.json donne les détails propres au dongle (firmware 2.0.0 :
+sous-canaux, PTY et langue de chaque service, heure du multiplex) pour
+l'onglet Récepteur de la page DAB+.
 
 Le Si4684 ne décode qu'un service à la fois : celui passé par --sid (le service
 surveillé). Les autres services du multiplex sont listés (présence suivie) sans
@@ -28,6 +31,7 @@ import subprocess
 import sys
 import threading
 import time
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -44,6 +48,38 @@ PTY = ['', 'Infos', 'Actualité', 'Info', 'Sport', 'Éducation', 'Fiction', 'Cul
        'Divers', 'Musique pop', 'Rock', 'Variétés', 'Classique léger', 'Classique', 'Autre musique',
        'Météo', 'Économie', 'Enfants', 'Société', 'Religion', 'Libre antenne', 'Voyage', 'Loisirs',
        'Jazz', 'Country', 'Musique nationale', 'Rétro', 'Folk', 'Documentaire', 'Test alarme', 'Alarme']
+TOTAL_CU = 864                                  # capacité d'un multiplex (unités de capacité)
+SUB_MODES = {0: 'audio', 1: 'données', 2: 'FIDC', 3: 'paquets', 4: 'DAB+', 5: 'DAB', 7: 'X-PAD'}
+
+
+def protection_label(p):
+    """Protection du Si468x : 1-5 UEP 1 à 5, 6-9 EEP 1-A à 4-A, 10-13 EEP 1-B à 4-B."""
+    try:
+        p = int(p)
+    except (TypeError, ValueError):
+        return ''
+    if 1 <= p <= 5:
+        return f'UEP {p}'
+    if 6 <= p <= 9:
+        return f'EEP {p - 5}-A'
+    if 10 <= p <= 13:
+        return f'EEP {p - 9}-B'
+    return ''
+
+
+def sub_type(mode, comp):
+    """Type d'un sous-canal ($SUB) : pour l'audio, l'ASCTy du compID distingue DAB+ et DAB."""
+    try:
+        c = int(comp or '0', 16)
+    except ValueError:
+        c = 0
+    if (c >> 14) & 3 == 0 and mode in (0, 4, 5):
+        ascty = ((c >> 16) & 0xFF) >> 2
+        if ascty == 63:
+            return 'DAB+'
+        if ascty == 0:
+            return 'DAB'
+    return SUB_MODES.get(mode, str(mode))
 
 
 def norm_sid(s):
@@ -100,6 +136,13 @@ class Dongle:
         self.selected_id = None
         self.selected_ack = True            # $I d'avant l'accusé *SERVICE= : service précédent, ignoré
         self.recent = []                    # dernières lignes de contrôle (diagnostic)
+        # Firmware 2.0.0 : détails du multiplex pour l'onglet Récepteur (/dongle.json)
+        self.port = port
+        self.version = ''                   # *VER=
+        self.subs = {}                      # id local -> sous-canal ($SUB)
+        self.svx = {}                       # id local -> PTY, ECC, langue ($SVX)
+        self.mux_time = None                # ($TIME en secondes UTC, heure de réception)
+        self.fib_hist = []                  # [(heure, FIBERR cumulé)] pour un taux par seconde
         self._load_cache()
         threading.Thread(target=self._read, daemon=True, name='si468x-serial').start()
 
@@ -139,7 +182,7 @@ class Dongle:
             if line[9:] == self.selected_id:
                 self.selected_ack = True
             return
-        if self.tuning and line.startswith(('$S=', '$L=', '$SIDS=')):
+        if self.tuning and line.startswith(('$S=', '$L=', '$SIDS=', '$SUB=', '$SVX=')):
             return
         if line.startswith('$S='):
             kv = parse_kv(line[3:])
@@ -156,6 +199,12 @@ class Dongle:
                     try:
                         self.rf['fiberr'] = int(kv['FIBERR'])
                         self.s_fiberr = True
+                        h = self.fib_hist
+                        if h and self.rf['fiberr'] < h[-1][1]:
+                            h.clear()                       # compteur remis à zéro (nouveau réglage)
+                        h.append((now, self.rf['fiberr']))
+                        while len(h) > 2 and now - h[0][0] > 10:
+                            h.pop(0)
                     except ValueError:
                         pass
                 for k in ('CU', 'ALVL'):
@@ -226,11 +275,55 @@ class Dongle:
                     pass
         elif line.startswith('$CHIP='):
             self.chip = line[6:]
+        elif line.startswith('*VER='):
+            self.version = line[5:].strip()
+        elif line.startswith('$SUB='):
+            # $SUB=<id>:<CU début>,<nombre de CU>,<kbit/s>,<protection>,<type>,<compID hex>;...
+            got = {}
+            for part in line[5:].split(';'):
+                i, _, rest = part.partition(':')
+                f = rest.split(',')
+                if not i.strip().isdigit() or len(f) < 5:
+                    continue
+                try:
+                    start, cu, kbps, prot, mode = (int(x) for x in f[:5])
+                except ValueError:
+                    continue
+                if cu <= 0 or start + cu > TOTAL_CU:
+                    continue
+                comp = f[5].strip().upper() if len(f) > 5 else ''
+                got[i.strip()] = {'start': start, 'cu': cu, 'kbps': kbps, 'protection': protection_label(prot),
+                                  'type': sub_type(mode, comp)}
+            with self.lock:
+                self.subs.update(got)
+        elif line.startswith('$SVX='):
+            # $SVX=<id>:<PTY>,<ECC hex>,<langue>,<UA>;...
+            got = {}
+            for part in line[5:].split(';'):
+                i, _, rest = part.partition(':')
+                f = rest.split(',')
+                if not i.strip().isdigit() or len(f) < 3:
+                    continue
+                try:
+                    pty, lang = int(f[0]), int(f[2])
+                except ValueError:
+                    continue
+                got[i.strip()] = {'pty': PTY[pty] if 0 <= pty < len(PTY) else '', 'ecc': f[1].strip().upper(),
+                                  'lang': lang}
+            with self.lock:
+                self.svx.update(got)
+        elif line.startswith('$TIME='):
+            try:
+                t = datetime.strptime(line[6:].strip(), '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=timezone.utc)
+                self.mux_time = (t.timestamp(), now)
+            except ValueError:
+                pass
 
     # ── Démarrage et sélection du service ─────────────────────────────
     def start(self):
         self.send('ENABLE=0', 0.3)
         self.send('ENABLE=1', 0.3)
+        self.send('VER=1', 0.2)
         self.send('MODE=dab', 1.2)
         self.tune()
 
@@ -239,6 +332,7 @@ class Dongle:
             self.services, self.ens, self.current_id, self.info, self.dls = [], {'eid': '', 'label': '', 'ecc': ''}, None, {}, ''
         with self.lock:
             self.rf.update(lock=False, cnr=0.0, fic=0.0)
+            self.subs, self.svx, self.fib_hist = {}, {}, []
         self.unlock_since, self.lock_since = time.time(), None
         self.tuning = True
         self.sids_line = False
@@ -387,11 +481,7 @@ class Dongle:
                     br = int(info.get('BITRATE', 0))
                 except ValueError:
                     br = 0
-                try:
-                    prot = int(info.get('PROTECTION', 0))
-                    prot_s = (f'UEP {prot}' if prot <= 5 else f'EEP {prot}') if prot else ''
-                except ValueError:
-                    prot_s = ''
+                prot_s = protection_label(info.get('PROTECTION'))
                 try:
                     pty = PTY[int(info.get('PTY', 0))]
                 except (ValueError, IndexError):
@@ -408,6 +498,49 @@ class Dongle:
                     d['alvl'] = rf['alvl']        # niveau audio après soft mute, 0-100 (expérimental)
             out['services'].append(d)
         return out
+
+    # ── Onglet Récepteur de la page DAB+ ──────────────────────────────
+    def details(self):
+        """Tout ce que le dongle donne en plus de /mux.json (firmware 2.0.0)."""
+        now = time.time()
+        with self.lock:
+            rf, ens = dict(self.rf), dict(self.ens)
+            services, subs, svx = list(self.services), dict(self.subs), dict(self.svx)
+            sid_of, cur, hist = dict(self.sid_of), self.current_id, list(self.fib_hist)
+        lost = not rf['lock'] and self.unlock_since and now - self.unlock_since > 5
+        rate = None
+        if len(hist) >= 2 and hist[-1][0] - hist[0][0] >= 1:
+            rate = round((hist[-1][1] - hist[0][1]) / (hist[-1][0] - hist[0][0]), 1)
+        mt = None
+        if self.mux_time and now - self.mux_time[1] < 300:
+            t, at = self.mux_time
+            mt = {'utc': t + (now - at), 'offset': round(t - at, 1), 'age': round(now - at)}
+        rows = []
+        if not lost:
+            for s in services:
+                sub, x = subs.get(s['id']), svx.get(s['id'], {})
+                rows.append({
+                    'id': s['id'], 'sid': sid_of.get(s['id'], ''), 'label': s['label'], 'short': s['short'],
+                    'type': (sub or {}).get('type') or s['type_label'], 'sub': sub,
+                    'pty': x.get('pty', ''), 'lang': x.get('lang', 0), 'current': s['id'] == cur,
+                })
+            rows.sort(key=lambda r: (r['sub'] is None, (r['sub'] or {}).get('start', 0), int(r['id'])))
+        seen, used = set(), 0
+        for r in rows:
+            sub = r['sub']
+            if sub and (sub['start'], sub['cu']) not in seen:     # sous-canal partagé : compté une fois
+                seen.add((sub['start'], sub['cu']))
+                used += sub['cu']
+        return {
+            'chip': self.chip, 'version': self.version, 'port': self.port, 'card': self.card,
+            'channel': self.channel, 'frequency_mhz': BAND_III[self.channel] / 1000,
+            'lock': rf['lock'], 'lock_since': self.lock_since, 'unlock_since': self.unlock_since,
+            'signal': rf['signal'], 'cnr': rf['cnr'], 'snr': rf['snr'], 'fic': rf['fic'],
+            'fiberr': rf['fiberr'], 'fiberr_rate': rate,
+            'ensemble': {} if lost else ens, 'time': mt,
+            'capacity': {'used': used, 'total': TOTAL_CU} if seen else None,
+            'services': rows,
+        }
 
     def current_sid(self):
         with self.lock:
@@ -507,6 +640,8 @@ def make_handler(dongle, audio):
                 return self._json(dongle.mux())
             if path == '/status':
                 return self._json({'alive': time.time() - dongle.last_line < 10})
+            if path == '/dongle.json':
+                return self._json(dongle.details())
             if path.startswith('/slide/'):
                 with dongle.lock:
                     slide = dongle.slide

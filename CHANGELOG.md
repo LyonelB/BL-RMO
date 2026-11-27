@@ -7,6 +7,13 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+### DAB+ : onglet Récepteur du dongle Si468x (firmware 2.0.0)
+- **Onglet « Récepteur »** sur la page DAB+, affiché seulement quand le récepteur choisi est le dongle Si468x. Rien ne change dans les autres onglets ni sur le tableau de bord.
+- **Dongle** : puce, version du firmware, port série, carte son ; niveau, CNR (MER), SNR de la puce, qualité FIC, erreurs FIC par seconde (sur les 10 dernières secondes) et durée de synchronisation.
+- **Multiplex** : ensemble, canal, EId et ECC, heure diffusée par le multiplex avec son écart à l'heure du serveur ; capacité utilisée (barre des sous-canaux, station suivie en bleu foncé) et tableau de tous les services : SId, unités de capacité, débit, protection, type, PTY et langue.
+- **Pilote du dongle** (`si468x_server.py`) : lit les lignes `$SUB` (sous-canaux), `$SVX` (PTY, ECC, langue), `$TIME` (heure du multiplex) et `*VER` (version) du firmware 2.0.0 de mc_popa, servies par `/dongle.json` (route `/api/dab/dongle` côté BL-RMO). Les firmwares précédents restent pris en charge, sans ces détails.
+- **Protection** du service décodé dans `/mux.json` : libellé correct (EEP 3-A au lieu de « EEP 8 »).
+
 ### Agent 1.2.0 : adresses Dante, netaudio 0.6.2, mise à jour depuis BL-RMO
 - **Interface Dante** : dans Parc › Appareils, pour le PC qui relève le réseau Dante, adresse de ce PC sur le réseau Dante (par exemple 192.168.2.4). L'agent limite alors netaudio à cette interface (`--interface`) : les PC en Dante Virtual Soundcard apparaissent avec leur adresse Dante (192.168.2.x) au lieu de leur adresse sur le réseau du studio, comme dans Dante Controller. dhd-core, qui n'est pas un appareil Dante, n'apparaît plus : prendre l'état actuel comme référence après le changement.
 - **Page Dante, appareils** : modèle (comme Dante Controller), vitesse de liaison, interface secondaire en mode redondant (« sans trafic » si elle ne passe rien, le « Lien interrompu » de Dante Controller) et colonne « Versions » (version produit et version Dante).

@@ -1475,6 +1475,25 @@ def dab_slide(sid):
     abort(404)
 
 
+@app.route('/api/dab/dongle')
+@auth.login_required
+@limiter.exempt
+def dab_dongle():
+    """Onglet Récepteur : détails du dongle Si468x (sous-canaux, PTY, langue, heure du multiplex)."""
+    cfg = dab_reader.config()
+    if cfg.get('receiver') != 'si468x' or not cfg.get('enabled'):
+        return jsonify({'status': 'error', 'message': 'Le récepteur DAB+ n\'est pas le dongle Si468x'}), 404
+    try:
+        r = _dab_welle('/dongle.json', timeout=3)
+        data = r.json() if r.status_code == 200 else {}
+        if 'services' in data:
+            return jsonify({'status': 'ok', **data})
+        msg = 'Pilote du dongle à relancer : sudo systemctl restart bl-rmo-dab'
+    except Exception:
+        msg = 'Le pilote du dongle ne répond pas'
+    return jsonify({'status': 'error', 'message': msg}), 503
+
+
 @app.route('/api/dab/listen/<sid>')
 @auth.login_required
 @limiter.exempt

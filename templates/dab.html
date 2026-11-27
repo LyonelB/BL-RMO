@@ -41,6 +41,7 @@
       <a href="#direct" data-tab="direct" role="tab" class="tab">{{ _('Direct') }}</a>
       <a href="#journal" data-tab="journal" role="tab" class="tab">{{ _('Journal') }}</a>
       <a href="#pige" data-tab="pige" role="tab" class="tab">{{ _('Pige') }}</a>
+      <a href="#recepteur" data-tab="recepteur" role="tab" class="tab hidden" id="tab-link-recepteur">{{ _('Récepteur') }}</a>
       <a href="#configuration" data-tab="configuration" role="tab" class="tab need-admin">{{ _('Configuration') }}</a>
     </nav>
   </header>
@@ -302,6 +303,62 @@
       </div>
     </div>
 
+    <!-- ═══════════════════════ RÉCEPTEUR (dongle Si468x seulement) ═══════════════════════ -->
+    <div id="tab-recepteur" class="tab-pane hidden">
+    <div id="dg-error" class="section hidden" style="border-color:#fde68a;background:#fffbeb">
+      <div class="text-xs text-amber-800" id="dg-error-text"></div>
+    </div>
+
+    <!-- ── Dongle ───────────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title"><span>{{ _('Dongle') }}</span></div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div class="min-w-0"><div class="text-xs text-gray-400">{{ _('Puce') }}</div><div class="font-medium text-gray-900" id="dg-chip">-</div></div>
+        <div class="min-w-0"><div class="text-xs text-gray-400">{{ _('Firmware') }}</div><div class="font-medium text-gray-900 truncate" id="dg-version">-</div></div>
+        <div class="min-w-0"><div class="text-xs text-gray-400">{{ _('Port série') }}</div><div class="font-medium text-gray-900 truncate" id="dg-port">-</div></div>
+        <div class="min-w-0"><div class="text-xs text-gray-400">{{ _('Carte son') }}</div><div class="font-medium text-gray-900" id="dg-card">-</div></div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm mt-5 pt-4 border-t border-gray-100">
+        <div><div class="text-xs text-gray-400">{{ _('Niveau') }}</div><div class="font-medium font-mono" id="dg-signal">-</div></div>
+        <div><div class="text-xs text-gray-400">{{ _('CNR (MER)') }}</div><div class="font-medium font-mono" id="dg-cnr">-</div></div>
+        <div><div class="text-xs text-gray-400">{{ _('SNR de la puce') }}</div><div class="font-medium font-mono" id="dg-snr">-</div></div>
+        <div><div class="text-xs text-gray-400">{{ _('Qualité FIC') }}</div><div class="font-medium font-mono" id="dg-fic">-</div></div>
+        <div><div class="text-xs text-gray-400" title="{{ _('Blocs FIC reçus avec erreurs, par seconde sur les 10 dernières secondes') }}">{{ _('Erreurs FIC') }}</div><div class="font-medium font-mono" id="dg-fiberr">-</div></div>
+        <div><div class="text-xs text-gray-400">{{ _('Synchronisation') }}</div><div class="font-medium" id="dg-lock">-</div></div>
+      </div>
+    </div>
+
+    <!-- ── Multiplex ────────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title"><span>{{ _('Multiplex') }}</span></div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div class="min-w-0"><div class="text-xs text-gray-400">{{ _('Ensemble') }}</div><div class="font-medium truncate" id="dg-ens">-</div></div>
+        <div class="min-w-0"><div class="text-xs text-gray-400">{{ _('Canal') }}</div><div class="font-medium" id="dg-channel">-</div></div>
+        <div class="min-w-0"><div class="text-xs text-gray-400">{{ _('EId, ECC') }}</div><div class="font-medium font-mono" id="dg-eid">-</div></div>
+        <div class="min-w-0"><div class="text-xs text-gray-400" title="{{ _('Heure diffusée par le multiplex, comparée à celle du serveur') }}">{{ _('Heure du multiplex') }}</div><div class="font-medium font-mono" id="dg-time">-</div></div>
+      </div>
+      <div class="mt-5" id="dg-cap-wrap">
+        <div class="flex justify-between text-xs text-gray-500 mb-1">
+          <span>{{ _('Capacité utilisée :') }} <span class="font-medium text-gray-800 font-mono" id="dg-cap">-</span></span>
+          <span class="font-mono" id="dg-free"></span>
+        </div>
+        <div class="relative h-3 rounded overflow-hidden bg-gray-100" id="dg-bar"></div>
+      </div>
+      <div class="overflow-x-auto mt-5">
+        <table class="w-full text-xs text-left">
+          <thead><tr class="text-gray-400 border-b border-gray-100">
+            <th class="py-2 pr-3 font-medium">{{ _('Service') }}</th><th class="pr-3 font-medium">SId</th>
+            <th class="pr-3 font-medium">CU</th><th class="pr-3 font-medium text-right">{{ _('Débit') }}</th>
+            <th class="pr-3 font-medium">{{ _('Protection') }}</th><th class="pr-3 font-medium">{{ _('Type') }}</th>
+            <th class="pr-3 font-medium">PTY</th><th class="font-medium">{{ _('Langue') }}</th>
+          </tr></thead>
+          <tbody id="dg-services" class="text-gray-700"><tr><td colspan="8" class="py-6 text-center text-gray-400">{{ _('Chargement…') }}</td></tr></tbody>
+        </table>
+      </div>
+      <p class="text-[11px] text-gray-400 mt-3">{{ _('Le débit, la protection, le PTY et la langue de chaque service demandent le firmware 2.0.0 du dongle.') }}</p>
+    </div>
+    </div>
+
     <!-- ═══════════════════════ RÉGLAGES (administrateur) ═══════════════════════ -->
     <div id="tab-configuration" class="tab-pane hidden need-admin">
     <!-- ── Réglages (administrateur) ────────────────────────── -->
@@ -516,6 +573,10 @@
     $('rx-sub').textContent = up ? (rf.hardware || 'welle-cli') + (s.receiver_since ? _t(' · depuis ') + fmtDur(Date.now() / 1000 - s.receiver_since) : '')
       : (s.receiver_error || ' ');
     $('rx-sub').title = $('rx-sub').textContent;
+    // Onglet Récepteur : seulement avec le dongle Si468x
+    const dongleTab = !!s.enabled && s.receiver === 'si468x';
+    $('tab-link-recepteur').classList.toggle('hidden', !dongleTab);
+    if (!dongleTab && curTab === 'recepteur') { history.replaceState(null, '', '#direct'); showTab('direct'); }
     // Ensemble et RF
     $('ens-label').textContent = rf.ensemble_label || '-';
     const dongle = s.receiver === 'si468x';
@@ -942,13 +1003,97 @@
     $('sidebar-overlay').classList.add('hidden');
   }
 
-  // ═══ Onglets : #direct, #journal, #pige, #configuration ═══════════════════
-  const TABS = ['direct', 'journal', 'pige', 'configuration'];
+  // ═══ Onglet Récepteur (dongle Si468x, firmware 2.0.0) ═══════════════════
+  // Langues DAB (ETSI TS 101 756, tableau 9) -> codes ISO, nommées par le navigateur
+  const DAB_LANG = ['', 'sq', 'br', 'ca', 'hr', 'cy', 'cs', 'da', 'de', 'en', 'es', 'eo', 'et', 'eu', 'fo', 'fr', 'fy', 'ga', 'gd',
+    'gl', 'is', 'it', 'se', 'la', 'lv', 'lb', 'lt', 'hu', 'mt', 'nl', 'no', 'oc', 'pl', 'pt', 'ro', 'rm', 'sr', 'sk', 'sl', 'fi',
+    'sv', 'tr', 'nl-BE', 'wa'];
+  let langNames = null;
+  try { langNames = new Intl.DisplayNames([document.documentElement.lang || 'fr'], { type: 'language' }); } catch (e) {}
+  const langName = n => { const c = DAB_LANG[n]; if (!c) return ''; try { const t = langNames ? langNames.of(c) : c; return t.charAt(0).toUpperCase() + t.slice(1); } catch (e) { return c; } };
+  const fix = (v, d = 1) => Number(v).toFixed(d).replace('.', _DEC);
+
+  async function loadDongle() {
+    let d;
+    try {
+      const r = await fetch('/api/dab/dongle', { credentials: 'include' });
+      if (r.status === 401 || r.redirected) { location.href = '/login?timeout=1'; return; }
+      d = await r.json();
+    } catch (e) { d = { status: 'error', message: e.message }; }
+    $('dg-error').classList.toggle('hidden', d.status === 'ok');
+    if (d.status !== 'ok') { $('dg-error-text').textContent = _t(d.message || 'Erreur'); return; }
+    renderDongle(d);
+  }
+
+  function renderDongle(d) {
+    const now = Date.now() / 1000, set = (id, v) => { $(id).textContent = v || '-'; };
+    set('dg-chip', d.chip ? 'Si' + d.chip : '');
+    set('dg-version', d.version);
+    set('dg-port', (d.port || '').replace('/dev/serial/by-id/', ''));
+    $('dg-port').title = d.port || '';
+    set('dg-card', d.card ? `${d.card}, 48 kHz` : '');
+    const on = d.lock;
+    set('dg-signal', `${fix(d.signal)} dBµV`);
+    set('dg-cnr', on ? `${fix(d.cnr, 0)} dB` : '');
+    set('dg-snr', on ? `${fix(d.snr, 0)} dB` : '');
+    set('dg-fic', on ? `${Math.round(d.fic)} %` : '');
+    set('dg-fiberr', d.fiberr_rate == null ? '' : `${fix(d.fiberr_rate)} /s`);
+    $('dg-fiberr').className = 'font-medium font-mono ' + (d.fiberr_rate > 0 ? 'text-amber-600' : '');
+    $('dg-lock').textContent = on ? _t('depuis {d}', { d: fmtDur(now - d.lock_since) })
+                                  : _t('perdue depuis {d}', { d: fmtDur(now - d.unlock_since) });
+    $('dg-lock').className = 'font-medium ' + (on ? 'text-green-600' : 'text-red-600');
+    // Multiplex
+    const e = d.ensemble || {};
+    set('dg-ens', e.label);
+    set('dg-channel', `${d.channel}, ${fix(d.frequency_mhz, 3)} MHz`);
+    set('dg-eid', e.eid ? `${e.eid}${e.ecc ? ', ' + e.ecc : ''}` : '');
+    if (d.time) {
+      const t = new Date(d.time.utc * 1000), off = d.time.offset;
+      $('dg-time').innerHTML = `${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())} <span class="text-xs text-gray-400 font-normal">(`
+        + esc(_t('écart {s} s', { s: (off > 0 ? '+' : '') + fix(off, 0) })) + ')</span>';
+      $('dg-time').className = 'font-medium font-mono ' + (Math.abs(off) > 90 ? 'text-amber-600' : '');
+    } else set('dg-time', '');
+    // Capacité : station suivie en bleu foncé, les autres sous-canaux en alternance claire
+    const cap = d.capacity, rows = d.services || [];
+    $('dg-cap-wrap').classList.toggle('hidden', !cap);
+    if (cap) {
+      $('dg-cap').textContent = _t('{u} CU sur {t} ({p} %)', { u: cap.used, t: cap.total, p: Math.round(cap.used / cap.total * 100) });
+      $('dg-free').textContent = _t('libre {n}', { n: cap.total - cap.used });
+      const seen = new Set();
+      let k = 0;
+      $('dg-bar').innerHTML = rows.filter(r => r.sub).map(r => {
+        const key = r.sub.start + ':' + r.sub.cu;
+        if (seen.has(key)) return '';
+        seen.add(key);
+        const shared = rows.filter(x => x.sub && x.sub.start === r.sub.start && x.sub.cu === r.sub.cu);
+        const cur = shared.some(x => x.current), cls = cur ? 'bg-blue-600' : (k++ % 2 ? 'bg-blue-200' : 'bg-blue-300');
+        const tip = `${shared.map(x => x.label).join(', ')} : CU ${r.sub.start}-${r.sub.start + r.sub.cu - 1}, ${r.sub.kbps} kbit/s`;
+        return `<div class="absolute top-0 bottom-0 ${cls} border-r border-white" title="${esc(tip)}"
+          style="left:${r.sub.start / cap.total * 100}%;width:${r.sub.cu / cap.total * 100}%"></div>`;
+      }).join('');
+    }
+    $('dg-services').innerHTML = rows.length ? rows.map(r => {
+      const sb = r.sub || {};
+      return `<tr class="border-b border-gray-50 ${r.current ? 'bg-blue-50/50' : ''}">
+        <td class="py-1.5 pr-3 ${r.current ? 'font-medium text-blue-700' : ''}" title="${esc(r.short)}">${esc(r.label || '-')}</td>
+        <td class="pr-3 font-mono">${esc((r.sid || '').toUpperCase())}</td>
+        <td class="pr-3 font-mono whitespace-nowrap">${r.sub ? `${sb.start}-${sb.start + sb.cu - 1}` : ''}</td>
+        <td class="pr-3 font-mono text-right whitespace-nowrap">${r.sub ? `${sb.kbps} kbit/s` : ''}</td>
+        <td class="pr-3 whitespace-nowrap">${esc(sb.protection || '')}</td>
+        <td class="pr-3">${esc(_t(r.type || ''))}</td>
+        <td class="pr-3">${esc(_t(r.pty || ''))}</td>
+        <td>${esc(langName(r.lang))}</td></tr>`;
+    }).join('') : `<tr><td colspan="8" class="py-6 text-center text-gray-400">${esc(_t('Pas de multiplex reçu pour le moment.'))}</td></tr>`;
+  }
+
+  // ═══ Onglets : #direct, #journal, #pige, #recepteur, #configuration ═══════
+  const TABS = ['direct', 'journal', 'pige', 'recepteur', 'configuration'];
   let curTab = null;
   const loaded = {};
   function showTab(t) {
     if (t === 'reglages') t = 'configuration';                     // ancien nom de l'onglet
     if (!TABS.includes(t) || (t === 'configuration' && !isAdmin)) t = 'direct';
+    if (t === 'recepteur' && st && st.receiver !== 'si468x') t = 'direct';   // onglet du dongle Si468x seulement
     const was = curTab;
     curTab = t;
     TABS.forEach(x => $('tab-' + x).classList.toggle('hidden', x !== t));
@@ -960,6 +1105,7 @@
     if (t === 'direct' && was && was !== 'direct') { loadStatus(); loadDls(); }
     if (t === 'journal') loadJournal();
     if (t === 'pige' && !loaded.pige) { loaded.pige = true; initPige(); }
+    if (t === 'recepteur') loadDongle();
   }
   window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
 
@@ -1386,6 +1532,7 @@
   setInterval(() => { if (curTab === 'direct' || Date.now() - statusT > 15000) { statusT = Date.now(); loadStatus(); } }, 2000);
   setInterval(() => { if (curTab === 'direct') loadDls(); }, 20000);
   setInterval(() => { if (curTab === 'journal') loadJournal(); }, 30000);
+  setInterval(() => { if (curTab === 'recepteur') loadDongle(); }, 3000);
   setInterval(loadUptime, 60000);
 </script>
 </body>
