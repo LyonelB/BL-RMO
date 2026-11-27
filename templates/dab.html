@@ -1048,9 +1048,9 @@
     set('dg-channel', `${d.channel}, ${fix(d.frequency_mhz, 3)} MHz`);
     set('dg-eid', e.eid ? `${e.eid}${e.ecc ? ', ' + e.ecc : ''}` : '');
     if (d.time) {
-      const t = new Date(d.time.utc * 1000), off = d.time.offset;
+      const t = new Date(d.time.utc * 1000), off = Math.round(d.time.offset) || 0;   // pas de « -0 »
       $('dg-time').innerHTML = `${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())} <span class="text-xs text-gray-400 font-normal">(`
-        + esc(_t('écart {s} s', { s: (off > 0 ? '+' : '') + fix(off, 0) })) + ')</span>';
+        + esc(_t('écart {s} s', { s: (off > 0 ? '+' : '') + off })) + ')</span>';
       $('dg-time').className = 'font-medium font-mono ' + (Math.abs(off) > 90 ? 'text-amber-600' : '');
     } else set('dg-time', '');
     // Capacité : station suivie en bleu foncé, les autres sous-canaux en alternance claire
